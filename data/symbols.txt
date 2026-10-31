@@ -52,3 +52,102 @@
 # ---- sound (Z80)
 0FC312 z80_boot_stub          # 28 bytes of Z80 code/data copied to Z80 RAM $0000 by z80_load (sub_0FC350)
 0FC5CC z80_driver             # Z80 sound driver blob, $1400 bytes ($0FC5CC-$0FD9CB), copied to Z80 RAM $0C00
+
+# --- engine (issue #7): boot, main loop, objects, VDP, level scripts. Evidence: docs/subsystems/*.md
+003EC8 HiScoreInitOnce        # hiscore_table <- DefaultHiScores unless the RAM magic "PAUL" at $FFFFF6 survived a soft reset
+007406 Boot                   # Reset continues here: sp, VDP/CRAM/VSRAM/RAM clear, sound init, port 1, VDP regs, IRQ mask 5, -> ColdStart
+0074D8 NextLevel              # level++ (attract: wraps 8 -> 1), per-level reset, load, spawn players, start script, then GameLoop
+00765E GameLoop               # one iteration per frame: pause, HUD, VDP list, scroll, script, input, objects, sprites, pacing, VDP flush
+0078A6 FramePaceWait          # wait until vblank_count reaches frame_target, then frame_target = vblank_count+1 (no catch-up)
+0078D0 LevelEnd               # level_exit set: stats/bonus, game over -> hi-score, next level
+008162 CramClear              # 64 CRAM words = 0
+00818C VsramClear             # 80 VSRAM words = 0 (writes past the 40 real entries)
+00800C VramClearDma           # DMA fill of VRAM
+0086C4 RamClear               # $FF0000..$FFFF8B = 0 (keeps $FFFF8C.. : hi-scores, options, magic)
+00867A VdpSetRegs             # a1 = list of $8xxx register words (0-terminated); regs 0/1 shadowed in vdp_reg01
+00869C VdpRegTable            # data: initial VDP registers (H40, plane A $E000, B $C000, sprites $F400, hscroll $F000, 64x32)
+0086D8 WaitFrames             # WaitVBlank d1+1 times
+0086F6 VramClearAlt           # CPU fill
+00871A VramClear              # CPU fill of VRAM (and $2000.. second half)
+008782 VramFillWords          # d1 bytes at VRAM d2 = word d6
+0087C4 VramWriteWord          # VRAM[d2] = d0.w
+0087E6 VramWriteLong          # VRAM[d2] = d0.l
+008808 VdpSetBgColor          # reg 7 = d0
+0080FE CramUpload             # 64 CRAM words from (a0)
+00812A CramUploadChanged      # only the entries flagged in pal_changed
+008970 PalFadeStep            # pal_cur steps one level per channel towards pal_target; flags changes; clears pal_fading when equal
+008A06 PalClearCurrent        # pal_cur = black
+008A18 PalSetTargetBlack      # pal_fading = $FF, pal_target = 4 x black line ($0081DA)
+008A4C PalFade                # blocking fade: loop WaitVBlank, PalFadeStep, WaitVBlank, CramUpload until pal_fading = 0
+008A7C Copy32                 # 32 bytes (a0)+ -> (a1)+ (one palette line)
+008B02 ResetCheatsRng         # cheat flags off, rng_state = $87654321
+008B1A LevelResetPlayers      #
+008B3C ClearObjectPools       # all object pools and counts, scroll accumulators, flags
+00881C Random                 # rng_state LFSR-ish step -> d0
+008FA8 SetPlayerState         # a4 = player, d0 = state (6 = shot a human, ...), timer 200
+0072F8 AddScore250            # a4 = player; AddScore500 $007306, 750 $007314, 1000 $007322, 1250 $007330,
+00733E AddScore2000           # 4000 $00734C, 5000 $00735A, 10000 $007368
+007376 AddScoreBcd            # d0 = BCD amount, added to p1_score / p2_score by a4+$24 (player index)
+00E9FA PalCycle               # when pal_cycle_on: 8 bytes of palette line 0 rotate every 8 frames, CRAM upload
+# objects
+00930E ObjAlloc               # a6 = first free slot of obj_table (80 slots); does not bump obj_count
+0092DC ObjSpawnTemplate       # a1 = 18-byte template: type.w x.w y.w row.b depth.b ai.l hit.l hp.w; obj_count++
+00B398 ObjRunAll              # per live slot: jmp (+$20); each AI routine ends with bra ObjNext
+00B3BE ObjNext                #
+00B4A6 ObjMoveX               # x += sign(+$E) per carry of 8 x (+$B += +$A): 8.8-ish speed
+012316 ObjScrollX             # x -= row_delta[+6 + 28]: object rides its scroll row
+012332 ObjKillIfLeftOf        # despawn if x <= d0
+012342 ObjKillIfRightOf       # despawn if x >= d0
+013228 ObjQueueSprite         # QueueSprite(d1 = frame, x, y, priority = +7)
+0057BA HitAllShootable        # smart bomb: on-hit + kill of every shootable object (except types $0F/$13/$14)
+0073A0 MissileFindTarget      # a4 = missile: object under the missile's aim point -> missile +$22/+$26
+00700C PickupShotTest         # PlayerShoot: pickups pool, PickupHitTable[type]
+007048 PickupHitTable         # data: 14 longs, pickup type -> hit routine
+007086 PickupHitBox           # like HitBox, for the pickups pool; collect = sound + d6 effect
+007138 PickupSmartBomb        #
+0123F0 MissilesRun            # pool $FF80F2 (32 x $2A): player missiles / explosions, bra table by state 1..7
+01243C EffectsRun             # pool $FF8632 (32 x $C): fixed-position animations (frame list +8, 0-terminated)
+0126B4 SparksRun              # pool $FF9572 (32 x $12): animations with 8.8 velocity
+012886 DebrisRun              # pool $FF97B2 (32 x $18): animations with gravity
+012BB0 PickupsRun             # pool $FF9AB2 ($1A each)
+# level scripts and scrolling
+009326 ScriptStart            # script_ptr = LevelScripts[level], script_clock = 0
+00933E ScriptNext             # read delay.w: 0 = run next command now, else script_due = clock + delay
+009358 ScriptTick             # per frame: clock++; when clock == due run the command(s)
+009376 ScriptExec             # opcode.w -> jsr ScriptOps[op] (a0 = args, handler advances a0)
+00938A ScriptOps              # data: 63 longs, opcode -> handler (entry 0 unused). tools/py/levelscript.py
+00B36C LevelScripts           # data: 12 longs, level -> script ($01E504 ...)
+0099AA ScrGoto                # op $03: a0 = long
+00A130 ScrPokeWord            # op $21: value.w, address.l
+00A138 ScrPokeLong            # op $18: value.l, address.l
+00A140 ScrNative              # op $14: jmp to a routine address.l (it may read more args)
+009C18 ScrText                # op $16: PrintText(text record.l)
+009C36 ScrEndLevel            # op $23: level_exit = $FF
+00B2E6 ScrGosub               # op $3D: one-level call, return address in script_ret
+00B2F2 ScrReturn              # op $3E
+00B35A ScrDemoSkip            # native: offset.w, taken only in the attract demo (control_mode 7)
+00A2A8 ScrLoadPalette         # native: line.w, palette.l -> pal_target line, CramUpload
+00B2FA ScrSetPlayers          # native: player index fields by control_mode
+004752 ScrollRows             # per-row hscroll from scroll_script: (rows, speed 8.8) groups, 0 = switch to plane B, -1 end
+00498A BgStreamLayers         # per layer: when its row position passes the next column, queue the next map column (0 = end -> level_exit)
+0047CE BgStreamL6             #
+004820 BgStreamL5             #
+004872 BgStreamL2             #
+0048C4 BgStreamL4             #
+004916 BgStreamL1             # selects the layer tables for level 1, then BgStreamLayers
+# VDP command list (built during the frame, run after the vblank wait)
+011D12 VdpListReset           # vdp_list_ptr = vdp_list ($FFB252), vdp_list_data = $FFB452
+011D28 VdpListEnd             # writes command 0
+011D32 VdpListRun             # interpret vdp_list: word command, args (VdpListJump)
+011D38 VdpListNext            #
+011D40 VdpListJump            # bra table: 0 end, 1 copy words, 2 fill, 3 write word, 4 CRAM line, 5 fill d6, 6 tile rect, 7 hscroll rows, 8 vscroll
+011F58 VdpQueueVScroll        # command 8: d0 = vscroll A, d1 = vscroll B
+012212 VdpQueueFillRows       # command 2 x d3 rows ($80 apart)
+012234 VdpQueueTileRect       # command 6: rect of tilemap words from vdp_list_data
+0121D6 HScrollClear           # hscroll RAM = 0, queue command 7, run the list now
+011FA2 DmaToVram              # immediate DMA, args in dma_args ($FFA0E0: len.w, src.l, dst.w)
+011F94 DmaToVramSave          # same, registers saved
+01320A LoadTiles              # a0 = (len.w, data), d1 = tile index -> DmaToVram
+011EC4 VramFillDma            #
+013376 SpriteQueueReset       # spr_queue_ptr = $FFA250, spr_queue_data = $FFA318, spr_queue_n = 0
+0152A8 SpriteMappings         # data: word offsets -> pieces (size, y, tile, tile-base RAM word, x), -1 terminated

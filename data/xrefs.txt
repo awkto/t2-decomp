@@ -2922,12 +2922,34 @@
 00a888 mem ffff9e0c rw.w
 00a88e mem 00a8aa lea.l
 00a892 call 0092dc
+00a8bc mem 00a8aa lea.l
+00a8c0 call 0092dc
 00a8cc mem 00a8de lea.l
 00a8d0 call 0092dc
 00a8f0 mem 00a902 lea.l
 00a8f4 call 0092dc
 00a914 mem 00a938 lea.l
 00a918 call 0092dc
+00a94a mem 00aa08 lea.l
+00a94e call 0092dc
+00a958 mem 00aa1a lea.l
+00a95c call 0092dc
+00a966 mem 00aa2c lea.l
+00a96a call 0092dc
+00a974 mem 00aa08 lea.l
+00a978 call 0092dc
+00a988 mem 00aa1a lea.l
+00a98c call 0092dc
+00a99c mem 00aa2c lea.l
+00a9a0 call 0092dc
+00a9b0 mem 00aa08 lea.l
+00a9b4 call 0092dc
+00a9c4 mem 00aa1a lea.l
+00a9c8 call 0092dc
+00a9d8 mem 00aa2c lea.l
+00a9dc call 0092dc
+00a9ec mem ffffae84 lea.l
+00a9fe mem ffff9e0e rw.w
 00aa3e mem 00aa58 lea.l
 00aa42 call 0092dc
 00aa50 mem ffff9e12 rw.w
@@ -2967,6 +2989,9 @@
 00ad14 mem 00ad36 lea.l
 00ad18 call 0092dc
 00ad30 call 010408
+00ad48 call 00ad9c
+00ad6e call 00ad9c
+00ad94 mem ffff9ed2 w.l
 00ad9c mem 00adbe lea.l
 00ada0 call 0092dc
 00adb8 call 010642
@@ -3028,6 +3053,15 @@
 00b1d2 call 0092dc
 00b1d6 mem ffffae84 lea.l
 00b1e6 mem ffff9eca w.l
+00b202 mem 00b272 lea.l
+00b206 mem 00b260 lea.l
+00b20a call 0092dc
+00b21e mem 00b260 lea.l
+00b222 call 0092dc
+00b23e mem ffff8032 w.l
+00b248 mem ffff8082 w.l
+00b252 mem ffff8036 w.w
+00b258 mem ffff8086 w.w
 00b2e8 mem ffff9f62 w.l
 00b2f2 mem ffff9f62 r.l
 00b2fa mem ffff9df5 r.b

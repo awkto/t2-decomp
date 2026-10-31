@@ -2,7 +2,7 @@
 
 # --- engine (issue #7): object / script handler pointers (docs/subsystems/objects.md, levels.md).
 # Taken from the ROM: script opcode table $00938A, pickup table $007048, OPTIONS records $0014F2,
-# every `move.l #imm,($20|$1C,aN)` and every spawn template passed to SpawnFromTemplate $0092DC.
+# every `move.l #imm,($20|$1C,aN)` and every spawn template passed to ObjSpawnTemplate $0092DC.
 # script op (table $00938A, ScriptOps): 62
 009486
 0094f2
@@ -573,3 +573,50 @@
 006e7e
 006ee6
 006f5a
+# level-script native routines (op $14 ScrNative targets, from tools/py/levelscript.py)
+009290
+009f0c
+00a24e
+00a25a
+00a266
+00a270
+00a2a8
+00a2d4
+00a304
+00a31a
+00a32a
+00a33a
+00a3f4
+00a41a
+00a46e
+00a4b2
+00a4d2
+00a4f4
+00a510
+00a712
+00a82c
+00a85e
+00a880
+00a8bc
+00a914
+00a94a
+00ab4e
+00ab62
+00ab76
+00acb0
+00ad48
+00ad9c
+00aefa
+00af1c
+00afd4
+00affc
+00b02a
+00b0b2
+00b1ce
+00b200
+00b2fa
+00b342
+00b35a
+00d0f8
+013c74
+013e04

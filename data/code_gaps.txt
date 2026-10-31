@@ -85,10 +85,11 @@
 00a81a  00a82c     18  data     refs 00a81a; used by 00a80c; 18 bytes read at runtime
 00a84c  00a85e     18  data     refs 00a84c; used by 00a82c; 18 bytes read at runtime
 00a86e  00a880     18  data     refs 00a86e; used by 00a85e; 18 bytes read at runtime
-00a898  00a8cc     52  data     refs 00a898,00a8aa; used by 00a880,00a88e; 36 bytes read at runtime
+00a898  00a8bc     36  data     refs 00a898,00a8aa; used by 00a880,00a88e,00a8bc; 36 bytes read at runtime
 00a8de  00a8f0     18  data     refs 00a8de; used by 00a8cc; 18 bytes read at runtime
 00a902  00a914     18  data     refs 00a902; used by 00a8f0; 18 bytes read at runtime
-00a938  00aa3e    262  data     refs 00a938; used by 00a914; 18 bytes read at runtime
+00a938  00a94a     18  data     refs 00a938; used by 00a914; 18 bytes read at runtime
+00aa08  00aa3e     54  data     refs 00aa08,00aa1a,00aa2c; used by 00a94a,00a958,00a966,00a974...
 00aa58  00aa6a     18  data     refs 00aa58; used by 00aa3e; 18 bytes read at runtime
 00aac0  00aad2     18  data     refs 00aac0; used by 00aa6a; 18 bytes read at runtime
 00ab3c  00ab4e     18  data     refs 00ab3c; used by 00aad2; 18 bytes read at runtime
@@ -97,7 +98,7 @@
 00ac9e  00acb0     18  data     refs 00ac9e; used by 00ac6a
 00acbe  00acf2     52  data     refs 00acbe; used by 00acb0; 18 bytes read at runtime
 00ad02  00ad14     18  data     refs 00ad02; used by 00acf2; 18 bytes read at runtime
-00ad36  00ad9c    102  data     refs 00ad36; used by 00ad14; 18 bytes read at runtime
+00ad36  00ad48     18  data     refs 00ad36; used by 00ad14; 18 bytes read at runtime
 00adbe  00add0     18  data     refs 00adbe; used by 00ad9c; 18 bytes read at runtime
 00ae60  00ae72     18  data     refs 00ae60; used by 00add0; 18 bytes read at runtime
 00aee8  00aefa     18  data     refs 00aee8; used by 00ae72; 18 bytes read at runtime
@@ -108,7 +109,8 @@
 00b07c  00b0b2     54  data     refs 00b07c; used by 00b060; 18 bytes read at runtime
 00b116  00b192    124  data     refs 00b116; used by 00b0b2; 18 bytes read at runtime
 00b1bc  00b1ce     18  data     refs 00b1bc; used by 00b192
-00b1ee  00b2e6    248  data     refs 00b1ee; used by 00b1ce; 18 bytes read at runtime
+00b1ee  00b200     18  data     refs 00b1ee; used by 00b1ce; 18 bytes read at runtime
+00b260  00b2e6    134  data     refs 00b260,00b272; used by 00b202,00b206,00b21e
 00b36c  00b398     44  data     refs 00b36c; used by 00932e; 32 bytes read at runtime
 00ba5a  00ba62      8  table    refs 00ba5a; used by 00b8d0,00b9c8; 8 bytes symbolic pointer table (data)
 00bc86  00bcc6     64  table    refs 00bc86; used by 00bae4,00bbe8; 64 bytes symbolic pointer table (data)
@@ -168,4 +170,4 @@
 01dc68  01e346   1758  data     refs 01dc68,01dc84,01dcb6,01dcc6,01e2e6,01e316; used by 01db5c,01db88,01db96,01dba6...; 1710 bytes read at runtime
 01e504  020000   6908  data     refs 01f2e2; used by 00cd30; 1598 bytes read at runtime
 0fc312  0fc32e     28  data*    Z80 boot stub (28 bytes) copied to Z80 RAM $0000 by sub_0FC350; refs 0fc312; used by 0fc358; 27 bytes read at runtime
-# totals: data=60918  padding=12  string=4074  table=184  unknown=198
+# totals: data=60532  padding=12  string=4074  table=184  unknown=198
