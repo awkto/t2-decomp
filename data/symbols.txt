@@ -1,0 +1,13 @@
+# ROM symbols: addr name   # note.  Overrides the generated sub_/loc_/dat_ names in src/t2.s,
+# data/functions.txt, data/callgraph.txt.  Names must be valid assembler identifiers and unique.
+# "?" = guess.
+
+# ---- boot / interrupts
+000200 Reset             # entry point (vector 1)
+000306 unused_vector     # every unused exception vector points here (rte)
+000308 VBlank            # vector 30 (level 6)
+00039E ExtInt            # vector 26 (level 2, external interrupt)
+
+# ---- sound (Z80)
+0FC312 z80_boot_stub     # 28 bytes of Z80 code/data copied to Z80 RAM $0000 by z80_load (sub_0FC350)
+0FC5CC z80_driver        # Z80 sound driver blob, $1400 bytes ($0FC5CC-$0FD9CB), copied to Z80 RAM $0C00 (full Z80 disassembly: later)

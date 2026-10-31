@@ -1,0 +1,4 @@
+# 68k code area: start end (hex, end exclusive).  Bounds gap-fill and indirect-target checks in tools/py/disasm.py.
+# Widen when runtime coverage shows code elsewhere.
+000200 020000   # main program (data tables and graphics are interleaved)
+0fbad2 0fc5cc   # sound-driver interface (68k side); $0F8000-$0FBAD1 is sound data, $0FC5CC-$0FD9CB the Z80 blob

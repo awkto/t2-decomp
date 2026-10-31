@@ -1,0 +1,7 @@
+# Manual classification of non-code gaps in the code area (see data/code_regions.txt).
+# Read by tools/py/disasm.py when writing data/code_gaps.txt; keyed by gap start (hex).
+# start  class    note
+# classes: table (pointer/lookup table), string, padding, data (graphics/records/streams),
+#          dead (unreferenced, never read), unknown
+0fc312  data     Z80 boot stub (28 bytes) copied to Z80 RAM $0000 by sub_0FC350
+0fc5cc  data     Z80 sound driver blob ($1400 bytes), copied to Z80 RAM $0C00; incbin'd, not disassembled
