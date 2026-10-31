@@ -10,3 +10,6 @@ runs/
 .claude/
 __pycache__/
 states/*.state
+/rom
+/ext
+tools/harness/harness
