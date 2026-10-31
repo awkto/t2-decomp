@@ -27,6 +27,8 @@ static opt_t opts[] = {
 	OPT("vsync", T_BOOL, "on", "", 0, "sync presentation to the display"),
 	OPT("mouse", T_BOOL, "on", "", 0, "mouse control (the mouse is a Menacer light gun on port 2; off leaves port 2 empty)"),
 	OPT("mouse_right", T_ENUM, "B", "A|B|C", 0, "Menacer button on the right mouse button (the trigger is A on the left button, middle = Start)"),
+	OPT("aim", T_ENUM, "fast", "fast|game", 0, "crosshair response: fast = follows the mouse within a frame (in-memory patch of the game's aim smoothing, the ROM file is not changed), game = the original 4-8 frame lag"),
+	OPT("aim_correct", T_BOOL, "on", "", 0, "host-side X correction so the shot lands within 1-2 px of the mouse"),
 	OPT("mute", T_BOOL, "off", "", 0, "no audio"),
 	OPT("volume", T_INT, "100", "0..100", 0, "audio volume in percent"),
 	OPT("rom", T_STR, "", "", 0, "path of the ROM to run (remembered automatically)"),

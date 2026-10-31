@@ -25,6 +25,7 @@
 
 #include "emu.h"
 #include "gun.h"
+#include "mouse.h"
 #include "options.h"
 #include "overlay.h"
 #include "sha1.h"
@@ -76,12 +77,17 @@ EMSCRIPTEN_KEEPALIVE int web_gun_state(int which)
 	return which == 0 ? x : which == 1 ? y : which == 2 ? off : (int)b;
 }
 
+/* the screen the mouse logic sees (SCR_* of mouse.h): 0 game, 1 logo, 2 title, 3 menu, 4 options, 5 continue */
+EMSCRIPTEN_KEEPALIVE int web_screen(void) { return mouse_screen(); }
+
 /* the page's settings (right button): set an option, keep it in the ini */
 EMSCRIPTEN_KEEPALIVE int web_set_option(const char *key, const char *val)
 {
 	char err[200];
 	if (!options_set(key, val, OPT_INI, err, sizeof err))
 		return 0;
+	if (!strcmp(key, "aim_correct"))
+		mouse_set_aim_correct(options_bool("aim_correct"));
 	if (!strcmp(key, "mouse_right"))
 		gun_set_right(options_str("mouse_right")[0]);
 	if (options_save(WEB_INI))
@@ -170,20 +176,20 @@ static unsigned live_pad(void)
 static bool m_down[4];
 static int m_hold[4];
 
-static void mouse_button(int b, bool down)
+static void web_mouse_button(int b, bool down)
 {
 	m_down[b] = down;
 	if (down)
 		m_hold[b] = MIN_HOLD;
 	if (down || m_hold[b] <= 0)
-		gun_button(b, down);
+		mouse_button(b, down);
 }
 
 static void mouse_frame_end(void)
 {
 	for (int b = MOUSE_LEFT; b <= MOUSE_MIDDLE; b++)
 		if (m_hold[b] > 0 && --m_hold[b] == 0 && !m_down[b])
-			gun_button(b, false);
+			mouse_button(b, false);
 }
 
 /* ------------------------------------------------------------------ video */
@@ -270,9 +276,9 @@ static void mouse_from_window(int x, int y)
 {
 	int gx, gy, on = window_to_game(x, y, &gx, &gy);
 	if (on == 0)
-		gun_leave();
+		mouse_leave();
 	else if (on > 0)
-		gun_move(gx, gy);
+		mouse_move(gx, gy);
 }
 
 static uint32_t rgba_from_565(uint16_t p)
@@ -368,15 +374,18 @@ static void poll_events(void)
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			mouse_from_window(e.button.x, e.button.y);
-			mouse_button(e.button.button == SDL_BUTTON_RIGHT ? MOUSE_RIGHT :
+			web_mouse_button(e.button.button == SDL_BUTTON_RIGHT ? MOUSE_RIGHT :
 			             e.button.button == SDL_BUTTON_MIDDLE ? MOUSE_MIDDLE : MOUSE_LEFT,
 			             e.type == SDL_MOUSEBUTTONDOWN);
 			break;
+		case SDL_MOUSEWHEEL:
+			mouse_wheel(e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y);
+			break;
 		case SDL_WINDOWEVENT:
 			if (e.window.event == SDL_WINDOWEVENT_LEAVE) {
-				gun_leave();
+				mouse_leave();
 				for (int b = MOUSE_LEFT; b <= MOUSE_MIDDLE; b++)
-					mouse_button(b, false);
+					web_mouse_button(b, false);
 			}
 			break;
 		case SDL_JOYDEVICEADDED:
@@ -448,7 +457,7 @@ static bool logic_frame(void)
 	if (S.paused && !S.step)
 		return false;
 	emu_set_pad(0, live_pad());
-	gun_frame();
+	emu_set_pad(0, emu_get_pad(0) | mouse_frame());
 	emu_run_frame();
 	mouse_frame_end();
 	S.step = false;
@@ -545,8 +554,10 @@ int main(int argc, char **argv)
 		web_sync();
 	const bool mouse_on = options_bool("mouse");
 	S.volume = options_int("volume");
-	gun_set_enabled(mouse_on);
+	mouse_set_enabled(mouse_on);
 	gun_set_right(options_str("mouse_right")[0]);
+	mouse_set_aim_correct(options_bool("aim_correct"));
+	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));    /* read once: a change needs a reload */
 
 	if (!emu_init(rom, WEB_SAVES, mouse_on, err, sizeof err)) {
 		fprintf(stderr, "%s\n", err);
