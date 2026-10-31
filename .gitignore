@@ -1,4 +1,4 @@
-rom/
+rom
 *.zip
 *.smd
 proto/*.png

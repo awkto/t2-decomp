@@ -1,0 +1,64 @@
+# Menacer-by-mouse test (port/tools/aimtest.sh). Coordinates are game pixels (320x224).
+# Boot: the title menu's default is START 1 PLAYER - USE MENACER (Menacer on port 2).
+run 1300
+press S 4
+run 90
+press S 4
+run 90
+press S 4
+run 90
+press S 4
+run 90
+press S 4
+run 90
+press S 4
+run 90
+shot intro
+# the gun's Start button (middle mouse) skips the intro text
+mouse 160 112
+click M 4
+run 1500
+shot play
+
+# aim: the game's crosshair must follow the mouse
+mouse 40 60
+run 12
+shot aim1
+mouse 280 180
+run 12
+shot aim2
+mouse 80 160
+run 12
+shot aim3
+mouse 240 60
+run 12
+shot aim4
+mouse leave
+run 12
+shot aim_off
+
+# fire: left click = trigger; look for hits and score changes
+mouse 160 112
+run 6
+shot fire0
+mouse 180 130
+run 6
+click L 4
+run 20
+shot fire1
+mouse 100 130
+run 6
+click L 4
+run 20
+shot fire2
+mouse 230 130
+run 6
+click L 4
+run 20
+shot fire3
+mouse 160 100
+run 6
+click L 4
+run 20
+shot fire4
+echo done
