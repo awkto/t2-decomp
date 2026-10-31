@@ -1,0 +1,98 @@
+# Power-on to level 1 with the mouse alone: no pad command anywhere in this script.
+# Logos -> PRESS START -> main menu -> OPTIONS (credits, EXIT) -> START 1 PLAYER - USE MENACER.
+# Run by port/tools/mousetest.sh, which checks the `echo step` / peek lines against what the game
+# should hold (tools/py/mousecheck.py).
+mouse 160 112
+untilscreen logo 600
+screen
+click L 4
+untilscreen intro 1500
+screen
+click L 4
+untilscreen title 1500
+screen
+run 5
+shot title
+save title
+click L 4
+untilscreen menu 900
+run 40
+screen
+shot menu
+echo step menu-start
+peek cursor FF9F60 2
+mouse 100 92
+run 20
+echo step hover-row2
+peek cursor FF9F60 2
+shot menu_row2
+mouse 100 118
+run 20
+echo step hover-row3
+peek cursor FF9F60 2
+wheel -1
+run 20
+echo step wheel-down-to-row4
+peek cursor FF9F60 2
+wheel 1
+run 20
+echo step wheel-up-to-row3
+peek cursor FF9F60 2
+mouse 100 150
+run 20
+echo step hover-row4
+peek cursor FF9F60 2
+shot menu_row4
+save menu
+click L 4
+untilscreen options 300
+run 40
+screen
+shot options
+echo step options-start
+peek opt_credits FFAE84 2
+mouse 100 44
+run 10
+click L 4
+run 20
+echo step left-click-credits-up
+peek opt_credits FFAE84 2
+click R 4
+run 20
+click R 4
+run 20
+echo step two-right-clicks-credits-down
+peek opt_credits FFAE84 2
+wheel 1
+run 20
+echo step wheel-up
+peek opt_credits FFAE84 2
+mouse 100 68
+run 20
+echo step options-hover-row1
+peek cursor FF9F60 2
+shot options2
+mouse 100 140
+run 20
+echo step options-hover-exit
+peek cursor FF9F60 2
+click L 4
+untilscreen menu 300
+run 40
+echo step back-in-menu
+screen
+peek cursor FF9F60 2
+mouse 100 44
+run 20
+echo step hover-row0
+peek cursor FF9F60 2
+click L 4
+untilscreen game 600
+run 2000
+echo step in-game
+peek mode FF9DF5 1
+peek level FF80CC 2
+peek credits FF80CA 1
+peek energy FF801E 2
+shot play
+save l1
