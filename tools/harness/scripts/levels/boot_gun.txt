@@ -1,0 +1,31 @@
+# Power-on -> "PRESS START" -> level-skip cheat code (pad 1: U D L R U D L R) -> main menu ->
+# "START 1 PLAYER - USE MENACER" -> level 1. Run with GUN=1 GUNMODE=lightgun.
+# Saves: title (PRESS START, cheat not entered yet), l01 (level 1 just started, mode 4, cheat on).
+peekeach level FF80CC 2
+peekeach cheat FFA0A6 1
+run 1300
+press S 5
+run 480
+save title
+run 2
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 3
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 23
+press S 5
+run 180
+press S 3
+waitfor FF80CC 2 1 600
+save l01

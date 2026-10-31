@@ -1,0 +1,9 @@
+# Honest 1P joypad playthrough from level 1 (state p01 from boot_pad.txt, PAD2=1): no cheats, the
+# bot continues while credits last. Saves hp<level>.state at each level change.
+load p01
+peekeach level FF80CC 2
+peekeach credits FF80CA 1
+botcfg p1 pad1
+botcfg savelevels hp
+bot until 0 400000
+shot honest_pad_end
