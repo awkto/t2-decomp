@@ -564,7 +564,7 @@ ColdStart:
 	bsr.w sub_000D76
 	clr.b (0xffffa234).l
 	jsr (sub_00871A,pc)
-	jsr (sub_0042CE,pc)
+	jsr (StoryIntro,pc)
 	tst.b (0xffffa234).l
 	bne.s loc_000958
 	jsr (sub_0041E6,pc)
@@ -3103,7 +3103,7 @@ loc_0042A8:
 loc_0042C8:
 	dbra d2,loc_0042A8
 	rts
-sub_0042CE:
+StoryIntro:
 	bsr.w sub_0032AC
 	jsr (sub_00871A,pc)
 	lea.l (dat_031E3A).l,a0

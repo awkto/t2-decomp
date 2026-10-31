@@ -96,7 +96,7 @@
 0041e6    44 sub_0041E6  # 11 insns
 004212    60 sub_004212  # 13 insns
 00424e   128 sub_00424E  # 32 insns
-0042ce   830 sub_0042CE  # 195 insns
+0042ce   830 StoryIntro  # 195 insns
 004650    24 sub_004650  # 6 insns
 004668    26 sub_004668  # 6 insns
 004682    68 sub_004682  # 18 insns
