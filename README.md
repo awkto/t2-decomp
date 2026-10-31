@@ -23,8 +23,22 @@ own crosshair, left click fires, right click is a second Menacer button (`mouse_
 middle click is Start. Keyboard and gamepad drive the normal pad on port 1. Headless scripting
 (`mouse X Y`, `click L|R|M [N]`) and all options are in `docs/port.md`.
 
+## Play it in a browser
+The same host also builds to WebAssembly (Emscripten): a static site with no game data. You give it
+your own ROM (file picker or drag and drop, raw or `.smd`, sha1 checked); the ROM, settings and
+savestates stay in your browser (IndexedDB) and are never uploaded.
+
+    EMSDK=path/to/emsdk tools/web_build.sh          # -> build/web/
+    cd build/web && python3 -m http.server 8000
+
+Open it, drop the ROM, press "Click to play" (browsers start sound only after a click), pick
+"1 PLAYER - USE MENACER". The mouse is the gun exactly as in the native host; a tap on a touch
+screen aims and fires. `.github/workflows/pages.yml` builds it on every push to `main` for GitHub
+Pages. Details and the headless test (`tools/web_test.sh`) are in `docs/web.md`.
+
 ## Layout (so far)
 - `port/` - `t2port`, the SDL2 host with Genesis Plus GX linked in; `port/tools/aimtest.sh` is its headless aim/fire test
+- `web/`, `port/src/web/`, `tools/web_build.sh`, `tools/web_test.sh` - the browser build (`docs/web.md`)
 - `tools/harness/` - headless libretro harness (patched GPGX core) with Menacer support (`GUN=1`, `gun X Y BTN N`)
 - `tools/vm/` - helpers to farm heavy builds/tests out to remote Linux machines
 - `tools/py/ppm2png.py` - PPM to PNG for screenshots (standard library only)
