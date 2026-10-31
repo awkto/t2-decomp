@@ -77,7 +77,7 @@ EMSCRIPTEN_KEEPALIVE int web_gun_state(int which)
 	return which == 0 ? x : which == 1 ? y : which == 2 ? off : (int)b;
 }
 
-/* the screen the mouse logic sees (SCR_* of mouse.h): 0 game, 1 logo, 2 title, 3 menu, 4 options, 5 continue */
+/* the screen the mouse logic sees (SCR_* of mouse.h): 0 game, 1 logo, 2 title, 3 menu, 4 options, 5 continue, 6 story intro */
 EMSCRIPTEN_KEEPALIVE int web_screen(void) { return mouse_screen(); }
 
 /* the page's settings (right button): set an option, keep it in the ini */

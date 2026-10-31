@@ -127,6 +127,8 @@ the wheel move the main menu cursor, OPTIONS credits are changed with clicks, an
 first row starts the game with no key pressed. Screenshots of the stage go to `runs/web/`: look at them, the game's crosshair must
 sit on the commanded pixel and shots must fire (gunpower drops, impacts and explosions).
 
+`tools/vm/webtest.sh` (run on a VM with emsdk 6.0.13 in `/opt/emsdk`, and node 18 with puppeteer-core 23 and chrome-headless-shell in `/opt/webtest`) builds and runs the whole test. With the menu-by-mouse flow added, all 31 checks pass, with no console errors, at 60 emulated frames/s.
+
 Result (4-vCPU VM, chrome-headless-shell 127, SwiftShader, emsdk 6.0.13): all checks pass, no console
 errors, 59.6 emulated frames/s, game running about 2.4 s after navigation; the crosshair sat on each
 commanded pixel in the screenshots (40,60; 280,180; 80,160; 240,60; touch 120,90), shots fired.
