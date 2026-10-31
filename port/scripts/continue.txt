@@ -1,0 +1,50 @@
+# Continue and high-score initials by mouse (state `l1` from menuflow.txt).
+load l1
+mouse 160 100
+run 10
+poke FF9EA8 4 00500000
+poke FF801E 2 0200
+untilscreen continue 600
+run 30
+echo step continue-screen
+screen
+peek credits FF80CA 1
+peek p1_state FF8022 2
+shot continue
+click L 6
+run 120
+echo step after-left-click
+screen
+peek credits FF80CA 1
+peek energy FF801E 2
+peek p1_state FF8022 2
+shot continued
+save cont
+# lose again with no credits and let the countdown run out: game over, then the initials screen
+poke FF801E 2 0000
+untilscreen continue 600
+run 1500
+echo step hiscore-entry
+peek level FF80CC 2
+shot hs_grid
+mouse 35 62
+run 10
+click L 4
+run 20
+mouse 67 62
+run 10
+click L 4
+run 20
+mouse 98 62
+run 10
+click L 4
+run 20
+shot hs_abc
+mouse 274 158
+run 10
+click L 4
+run 300
+echo step hiscore-done
+peek hs1_initials FFFF9E 4
+peek hs1_score FFFFA2 4
+shot hs_table

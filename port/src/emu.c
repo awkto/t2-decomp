@@ -19,6 +19,39 @@
 #define RETRO_DEVICE_MENACER RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_LIGHTGUN, 1)
 
 extern uint8_t work_ram[0x10000];     /* core/genesis.c */
+/* the core's cartridge area (core/cart_hw/md_cart.h: ext.md_cart.rom, 16-bit byte-swapped on little endian) */
+#define MAXROMSIZE 33554432          /* as the core is built (port/cmake/gpgx.cmake) */
+#include "types.h"
+#include "md_cart.h"
+extern union { md_cart_t md_cart; } ext;    /* core/genesis.c: external_t (the cartridge is its first member) */
+
+extern uint8_t sat[0x400];            /* core/vdp_ctrl.c: sprite attribute table, host-endian words */
+extern unsigned int m68k_get_reg(int reg);   /* core/m68k/m68kcpu.c; M68K_REG_A7 = 15, M68K_REG_PC = 16 */
+
+/* Lag patch (docs/gun.md, "Latency"; the same code as tools/py/gunpatch.py): MenacerReadXY
+ * ($01E442) averages the last 8-16 per-frame HV latches, so the crosshair trails the mouse by
+ * 4-8 frames. This replacement for the averaging body at $01E460 converts only the newest
+ * latch (same H->X table, same Y offset). Applied to the in-memory copy after the sha1 check;
+ * the ROM file is never written. */
+#define AIM_PATCH_ADDR 0x1E460
+static const uint8_t aim_patch[] = {
+	0x20, 0x79, 0xff, 0xff, 0xa0, 0x9e,         /* movea.l ($FFA09E).l,a0   ring write pointer */
+	0xb1, 0xfc, 0xff, 0xff, 0xa0, 0x7e,         /* cmpa.l  #$FFFFA07E,a0    at the ring start? */
+	0x66, 0x06,                                 /* bne.s   +6 */
+	0x41, 0xf9, 0xff, 0xff, 0xa0, 0x9e,         /* lea     ($FFA09E).l,a0   wrap to the ring end */
+	0x70, 0x00,                                 /* moveq   #0,d0 */
+	0x10, 0x20,                                 /* move.b  -(a0),d0         newest H counter */
+	0x43, 0xf9, 0xff, 0xff, 0x9f, 0x7e,         /* lea     ($FF9F7E).l,a1   H -> X/2 table */
+	0x10, 0x31, 0x00, 0x00,                     /* move.b  (a1,d0.w),d0 */
+	0xd0, 0x40,                                 /* add.w   d0,d0            X */
+	0x33, 0xc0, 0xff, 0xff, 0x9f, 0x6e,         /* move.w  d0,($FF9F6E).l */
+	0x72, 0x00,                                 /* moveq   #0,d1 */
+	0x12, 0x20,                                 /* move.b  -(a0),d1         newest V counter */
+	0xd2, 0x79, 0xff, 0xff, 0x9f, 0x78,         /* add.w   ($FF9F78).l,d1   + Y offset */
+	0x33, 0xc1, 0xff, 0xff, 0x9f, 0x70,         /* move.w  d1,($FF9F70).l */
+	0x4e, 0x75,                                 /* rts */
+};
+static bool g_aim_fast = true;
 
 static char g_workdir[1024] = ".";
 static const uint16_t *g_fb;
@@ -273,6 +306,11 @@ bool emu_init(const char *rom_path, const char *workdir, bool use_gun, char *err
 		snprintf(err, errlen, "core failed to load %s", rom_path);
 		return false;
 	}
+	/* The core reads the ROM from the file, not from our buffer: patch its copy (after the sha1 check
+	 * above; the file on disk is untouched). The core byte-swaps the ROM, hence the ^ 1. */
+	if (g_aim_fast)
+		for (size_t i = 0; i < sizeof aim_patch; i++)
+			ext.md_cart.rom[(AIM_PATCH_ADDR + i) ^ 1] = aim_patch[i];
 	retro_set_controller_port_device(1, use_gun ? RETRO_DEVICE_MENACER : RETRO_DEVICE_NONE);
 	retro_get_system_av_info(&g_av);
 	g_boot = malloc(emu_state_size());
@@ -322,6 +360,27 @@ unsigned emu_pad_from_letters(const char *s)
 	}
 	return m;
 }
+
+/* the game's crosshair: the first 16x16 sprite using tile $7B6 (docs/gun.md); top-left corner */
+bool emu_crosshair_sprite(int *x, int *y)
+{
+	const uint16_t *w = (const uint16_t *)sat;
+	int n = 0, i = 0;
+	do {
+		const uint16_t *e = w + 4 * i;
+		if ((e[2] & 0x7FF) == 0x7B6 && (e[1] & 0x0F00) == 0x0500) {
+			*y = (e[0] & 0x3FF) - 128;
+			*x = (e[3] & 0x1FF) - 128;
+			return true;
+		}
+		i = e[1] & 0x7F;
+	} while (i && ++n < 80);
+	return false;
+}
+
+void emu_set_aim_fast(bool on) { g_aim_fast = on; }
+uint32_t emu_cpu_pc(void) { return m68k_get_reg(16); }
+uint32_t emu_cpu_sp(void) { return m68k_get_reg(15); }
 
 void emu_set_gun(int x, int y, bool offscreen, unsigned buttons)
 {

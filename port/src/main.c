@@ -21,6 +21,7 @@
 
 #include "emu.h"
 #include "gun.h"
+#include "mouse.h"
 #include "options.h"
 #include "overlay.h"
 #include "romfind.h"
@@ -258,10 +259,10 @@ static void mouse_from_window(video_t *v, int x, int y)
 {
 	int gx, gy, on = window_to_game(v, x, y, &gx, &gy);
 	if (on == 0) {
-		gun_leave();
+		mouse_leave();
 		SDL_ShowCursor(SDL_ENABLE);       /* outside the image: the OS cursor is useful again */
 	} else if (on > 0) {
-		gun_move(gx, gy);
+		mouse_move(gx, gy);
 		SDL_ShowCursor(gun_enabled() ? SDL_DISABLE : SDL_ENABLE);
 	}
 }
@@ -324,8 +325,10 @@ int main(int argc, char **argv)
 	const bool mute = options_bool("mute");
 	const bool no_mouse = !options_bool("mouse");
 	const int volume = options_int("volume");
-	gun_set_enabled(!no_mouse);
+	mouse_set_enabled(!no_mouse);
 	gun_set_right(options_str("mouse_right")[0]);
+	mouse_set_aim_correct(options_bool("aim_correct"));
+	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));
 
 	char savedir[1024];
 	if (a.savedir)
@@ -490,16 +493,19 @@ int main(int argc, char **argv)
 				SDL_GetMouseState(&mx, &my);
 				mouse_from_window(&v, mx, my);
 				bool down = e.type == SDL_MOUSEBUTTONDOWN;
-				gun_button(e.button.button == SDL_BUTTON_RIGHT ? MOUSE_RIGHT :
+				mouse_button(e.button.button == SDL_BUTTON_RIGHT ? MOUSE_RIGHT :
 				           e.button.button == SDL_BUTTON_MIDDLE ? MOUSE_MIDDLE : MOUSE_LEFT, down);
 				break;
 			}
+			case SDL_MOUSEWHEEL:
+				mouse_wheel(e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y);
+				break;
 			case SDL_WINDOWEVENT:
 				if (e.window.event == SDL_WINDOWEVENT_LEAVE) {
-					gun_leave();
-					gun_button(MOUSE_LEFT, false);
-					gun_button(MOUSE_RIGHT, false);
-					gun_button(MOUSE_MIDDLE, false);
+					mouse_leave();
+					mouse_button(MOUSE_LEFT, false);
+					mouse_button(MOUSE_RIGHT, false);
+					mouse_button(MOUSE_MIDDLE, false);
 					SDL_ShowCursor(SDL_ENABLE);
 				}
 				break;
@@ -548,7 +554,7 @@ int main(int argc, char **argv)
 			emu_set_pad(0, live_pad());
 		}
 		if (scripted || !paused || step) {
-			gun_frame();
+			emu_set_pad(0, emu_get_pad(0) | mouse_frame());
 			emu_run_frame();
 			ran = true;
 			step = false;

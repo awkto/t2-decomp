@@ -196,6 +196,78 @@ const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSO
   check('ROM kept in IndexedDB (Forget ROM offered)', await page.evaluate(() => !document.getElementById('btn-forget').hidden));
   check('right-button setting is B again', (await page.evaluate(() => document.getElementById('sel-right').value)) === 'B');
 
+  // ---- the menu flow by mouse alone: reload (a fresh game), no key is pressed from here on ----
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => !document.getElementById('play-panel').hidden, { timeout: 30000 });
+  await page.click('#btn-play');
+  await waitState('running', 30000);
+  const SCR = { game: 0, logo: 1, title: 2, menu: 3, options: 4, continue: 5, intro: 6 };
+  const screen = () => page.evaluate(() => Module._web_screen());
+  const ram = a => page.evaluate(a => Module._web_ram16(a), a);
+  // fast forward (Tab = 4x; the only key, and it is not a game key) until pred() holds
+  const ffUntil = async (pred, what, ms = 120000) => {
+    const t = Date.now();
+    await page.keyboard.down('Tab');
+    try {
+      while (!(await pred())) {
+        if (Date.now() - t > ms) throw new Error('timeout waiting for ' + what);
+        await sleep(40);
+      }
+    } finally { await page.keyboard.up('Tab'); }
+  };
+  const g2 = await page.evaluate(() => { const r = document.getElementById('canvas').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+  const s2 = Math.min(Math.floor(g2.w / 320), Math.floor(g2.h / 224));
+  const at2 = (gx, gy) => [g2.x + Math.floor((g2.w - 320 * s2) / 2) + (gx + 0.5) * s2, g2.y + Math.floor((g2.h - 224 * s2) / 2) + (gy + 0.5) * s2];
+  const mv = async (gx, gy) => { await page.mouse.move(...at2(gx, gy)); await sleep(100); };
+  const clickAt = async (gx, gy, button = 'left') => { await mv(gx, gy); await page.mouse.click(...at2(gx, gy), { button }); await sleep(100); };
+  await mv(160, 112);
+  await ffUntil(async () => (await screen()) === SCR.logo, 'the logo screen');
+  await page.mouse.click(...at2(160, 112));                   // Start waits for the logo's window
+  await ffUntil(async () => (await screen()) === SCR.intro, 'the story text');
+  await page.mouse.click(...at2(160, 112));
+  await ffUntil(async () => (await screen()) === SCR.title, 'PRESS START');
+  res.shots.push(await shot('10-mouse-title'));
+  await page.mouse.click(...at2(160, 112));
+  await ffUntil(async () => (await screen()) === SCR.menu, 'the main menu');
+  await sleep(300);
+  res.shots.push(await shot('11-mouse-menu'));
+  check('mouse only: logos, story, PRESS START -> main menu', true);
+  await mv(100, 92);                                          // row 2
+  await ffUntil(async () => (await ram(0xFF9F60)) === 2, 'cursor on row 2', 20000);
+  check('hover moves the menu cursor to row 2', (await ram(0xFF9F60)) === 2, await ram(0xFF9F60));
+  res.shots.push(await shot('12-mouse-hover-row2'));
+  await page.mouse.wheel({ deltaY: -100 });                   // wheel up: one row up
+  await ffUntil(async () => (await ram(0xFF9F60)) === 1, 'wheel up', 20000);
+  check('wheel up moves the cursor up', (await ram(0xFF9F60)) === 1, await ram(0xFF9F60));
+  await clickAt(100, 150);                                    // OPTIONS (row 4)
+  await ffUntil(async () => (await screen()) === SCR.options, 'OPTIONS', 20000);
+  await sleep(300);
+  const c0 = await ram(0xFFAE84);
+  await clickAt(100, 44);                                     // credits row: left click = up
+  await ffUntil(async () => (await ram(0xFFAE84)) !== c0, 'credits up', 20000);
+  const c1 = await ram(0xFFAE84);
+  check('OPTIONS: left click raises credits', c1 === c0 + 1, [c0, c1]);
+  await page.mouse.click(...at2(100, 44), { button: 'right' });
+  await ffUntil(async () => (await ram(0xFFAE84)) === c0, 'credits down', 20000);
+  check('OPTIONS: right click lowers credits', (await ram(0xFFAE84)) === c0, await ram(0xFFAE84));
+  res.shots.push(await shot('13-mouse-options'));
+  await clickAt(100, 140);                                    // EXIT
+  await ffUntil(async () => (await screen()) === SCR.menu, 'back in the menu', 20000);
+  await sleep(300);
+  await clickAt(100, 44);                                     // START 1 PLAYER - USE MENACER
+  await ffUntil(async () => (await ram(0xFF80CC)) === 1, 'level 1', 60000);
+  check('mouse only: menu -> level 1', (await screen()) === SCR.game, await screen());
+  check('mouse only: Menacer mode 4', ((await ram(0xFF9DF4)) & 0xFF) === 4, await ram(0xFF9DF4));
+  f = await frame(); await ffTo(f + 600);
+  res.shots.push(await shot('14-mouse-level1'));
+  // the shot lands where the mouse is, to within 2 px (aim_correct), a few frames after the move
+  for (const gx of [30, 101, 177, 250, 301]) {
+    await moveTo(gx, 100);
+    f = await frame(); await waitFrame(f + 4);
+    const px = await ram(0xFF8004);
+    check('aim_correct: p1_x for mouse x ' + gx, Math.abs(px - gx) <= 2, px);
+  }
+
   res.errors = errors;
   res.warnings = warnings.slice(0, 20);
   res.logs = logs.slice(0, 20);

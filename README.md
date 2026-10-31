@@ -18,10 +18,15 @@ Build the native host (needs CMake, SDL2 dev files, and a Genesis-Plus-GX checko
     cmake -S port -B build/port -DCMAKE_BUILD_TYPE=Release && cmake --build build/port -j4
     build/port/t2port --rom path/to/your.rom        # raw .md/.bin or interleaved .smd, sha1 checked
 
-Pick "START 1 PLAYER - USE MENACER" (the default) at the title menu: the mouse aims the game's
-own crosshair, left click fires, right click is a second Menacer button (`mouse_right=A|B|C`),
-middle click is Start. Keyboard and gamepad drive the normal pad on port 1. Headless scripting
-(`mouse X Y`, `click L|R|M [N]`) and all options are in `docs/port.md`.
+The whole game plays with the mouse alone. In game it is the Menacer: it aims the game's own
+crosshair (it follows the mouse within a frame, `aim=game` brings back the original lag), left click
+fires, right click is the missile (Menacer button B; `mouse_right=A|B|C`), middle click is Start
+(pause). On the title and menu screens the host turns mouse clicks into pad presses: click to start,
+move over a row of the main menu or OPTIONS to select it, left click to choose (or change a value),
+right click or the wheel to change values back. A left click also continues after losing all energy.
+The high-score initials are shot with the mouse like anything else. Keyboard and gamepad drive the
+normal pad on port 1 (the second player in "1 MENACER / 2 JOYPAD 1"). Headless scripting
+(`mouse X Y`, `click L|R|M [N]`, `wheel N`) and all options are in `docs/port.md`.
 
 ## Play it in a browser
 The same host also builds to WebAssembly (Emscripten): a static site with no game data. You give it

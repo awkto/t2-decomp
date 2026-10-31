@@ -1,0 +1,15 @@
+# right mouse button = Menacer D0 = missile (state `l1` from menuflow.txt)
+load l1
+mouse 160 100
+run 30
+echo step before
+peek missiles FF8018 2
+click R 1
+run 10
+echo step one-frame-right-click
+peek missiles FF8018 2
+click R 4
+run 10
+echo step four-frame-right-click
+peek missiles FF8018 2
+shot missile

@@ -25,6 +25,15 @@ const char *emu_find_rom(const char *explicit_path, const char *argv0);
  * to the raw layout in memory. Caller frees. NULL (with err) on failure; no sha1 check. */
 uint8_t *emu_read_rom(const char *path, size_t *len, char *err, size_t errlen);
 
+/* Before emu_init: patch the in-memory ROM so the crosshair follows the mouse within a frame
+ * instead of lagging 4-8 frames behind (default on). The ROM file is never changed. */
+void emu_set_aim_fast(bool on);
+/* top-left corner of the game's crosshair sprite in the VDP sprite table (false if none) */
+bool emu_crosshair_sprite(int *x, int *y);
+/* the 68k program counter and stack pointer right now (between frames) */
+uint32_t emu_cpu_pc(void);
+uint32_t emu_cpu_sp(void);
+
 /* Verify sha1 and boot the core. Port 2 gets a Menacer (use_gun) or nothing.
  * A ROM with the wrong sha1 is refused. */
 bool emu_init(const char *rom_path, const char *workdir, bool use_gun, char *err, size_t errlen);

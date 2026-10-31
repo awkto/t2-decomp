@@ -38,16 +38,24 @@ The page's canvas fills the stage in CSS. The SDL window follows the canvas's CS
 reports pointer positions in CSS pixels; `window_to_game` scales them to the drawing buffer and
 inverts the picture's placement: centred at the largest whole-number scale that fits (the same rule
 and the same numbers as `gun_map_window` in `gun.c`; a canvas smaller than 320x224 gets the picture
-fitted to it instead). The pixel goes to `gun_move`, and `gun_frame` hands it to the core before every
-emulated frame.
+fitted to it instead). The pixel goes to `mouse_move`, and `mouse_frame` hands it (X corrected, option
+`aim_correct`) and the buttons to the core before every emulated frame, and returns the pad-1 presses
+for the menus. The whole mouse logic (`mouse.c`, menus, continue, aim correction) is the same code as
+in the native host; the in-memory aim patch (option `aim`, default `fast`) is applied in `emu.c`.
+The `aim` option is read once at start (change it in the ini and reload); `aim_correct` is live.
 
 | Input | Effect |
 |---|---|
 | Pointer over the picture | Menacer aim (the game draws the crosshair) |
 | Pointer outside the picture (the letterbox bars) or leaving the canvas | gun off screen |
 | Left button | trigger (Menacer A) |
-| Middle button | Menacer Start (skips the intro text, pauses) |
-| Right button | Menacer A, B or C: option `mouse_right`, default B; the "Right click" box in the page header sets it and keeps it in the ini |
+| Middle button | Menacer Start (skips the intro text, pauses); Start on the menus |
+| Right button | Menacer A, B or C: option `mouse_right`, default B (D0 = the missile); the "Right click" box in the page header sets it and keeps it in the ini. On OPTIONS: value down |
+| Wheel | main menu: cursor up/down; OPTIONS: value up/down |
+| Click on the logos, story text, PRESS START | Start (pad press injected by `mouse.c`) |
+| Main menu: move over a row, left click | select the row, left click starts it |
+| OPTIONS: move over a row; left / right click | select; value up / down; left click on EXIT leaves |
+| Left click on the continue screen | the gun's Start: continue |
 | Touch tap | SDL turns it into a mouse move + left click: aims and fires |
 
 A press is held for at least 4 emulated frames, so a click that is shorter than a frame is not lost.
@@ -113,8 +121,13 @@ mouse is moved over the canvas to 7 game pixels (placed with the same letterbox 
 the page's code) and the gun position the C side holds must equal each pixel; off the picture it must be
 off screen; left, right (B, then C after the setting) and middle buttons must give the Menacer masks
 1, 2/4 and 8; the context menu must be suppressed, the cursor hidden; a touch tap must aim. Any console
-error fails the run. Screenshots of the stage go to `runs/web/`: look at them, the game's crosshair must
+error fails the run. Then, from a fresh game (reload), the menu flow is done by mouse only: clicks through
+the logos, story text and PRESS START (waiting for each screen with `Module._web_screen()`), hovering and
+the wheel move the main menu cursor, OPTIONS credits are changed with clicks, and a left click on the
+first row starts the game with no key pressed. Screenshots of the stage go to `runs/web/`: look at them, the game's crosshair must
 sit on the commanded pixel and shots must fire (gunpower drops, impacts and explosions).
+
+`tools/vm/webtest.sh` (run on a VM with emsdk 6.0.13 in `/opt/emsdk`, and node 18 with puppeteer-core 23 and chrome-headless-shell in `/opt/webtest`) builds and runs the whole test. With the menu-by-mouse flow added, all 31 checks pass, with no console errors, at 60 emulated frames/s.
 
 Result (4-vCPU VM, chrome-headless-shell 127, SwiftShader, emsdk 6.0.13): all checks pass, no console
 errors, 59.6 emulated frames/s, game running about 2.4 s after navigation; the crosshair sat on each

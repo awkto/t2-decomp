@@ -1,0 +1,34 @@
+# 2 PLAYER - 1 MENACER / 2 JOYPAD 1 started by mouse (state `menu` from menuflow.txt); the second
+# player is a scripted pad. Mouse = P1 (gun), pad 1 = P2.
+load menu
+run 5
+mouse 100 92
+run 20
+echo step hover-row2
+peek cursor FF9F60 2
+click L 4
+untilscreen game 600
+run 2000
+echo step 2p-in-game
+peek mode FF9DF5 1
+peek level FF80CC 2
+peek p1_index FF8024 2
+peek p2_index FF8074 2
+mouse 60 100
+run 10
+crosshair p1_a
+peek p2x_a FF8054 2
+shot twop_a
+mouse 250 150
+hold R
+run 40
+hold -
+crosshair p1_b
+peek p2x_b FF8054 2
+shot twop_b
+click L 6
+run 10
+click R 6
+run 20
+shot twop_c
+echo step 2p-done
