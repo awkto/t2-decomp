@@ -38,7 +38,7 @@
 001584 sub_001584 -> sub_0FBB6C^
 001598 sub_001598 -> -
 0015a2 sub_0015A2 -> sub_004212 sub_007F00 WaitFrames WaitVBlank VramClear PalFade VdpListReset VdpListEnd VdpListRun
-0015ec sub_0015EC -> sub_001A1E sub_004212 sub_007DEE sub_007F00 WaitFrames WaitVBlank sub_00874E PalFade Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueVScroll sub_0122CA LoadTiles
+0015ec Ending -> sub_001A1E sub_004212 sub_007DEE sub_007F00 WaitFrames WaitVBlank sub_00874E PalFade Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueVScroll sub_0122CA LoadTiles
 001a1e sub_001A1E -> sub_007DF6^
 001a30 TitleScreen -> CheatCodeCheck sub_001A38 sub_007DEE WaitVBlank ReadPad1
 001a38 sub_001A38 -> sub_001ADC CramUpload VdpSetRegs WaitFrames VramClear Copy32 HScrollClear LoadTiles
@@ -142,16 +142,14 @@
 005b2e sub_005B2E -> sub_01275A
 005b56 sub_005B56 -> sub_005BBE sub_012A46
 005bbe sub_005BBE -> sub_007322
-005bdc sub_005BDC -> -
 005bec sub_005BEC -> HitBox^
 005c0a sub_005C0A -> -
 005c10 sub_005C10 -> sub_005A24 AddScore250
 005cc6 sub_005CC6 -> HitBox^
 005cd2 sub_005CD2 -> -
 005cd8 sub_005CD8 -> sub_005DA2
-005ce6 sub_005CE6 -> -
 005cee sub_005CEE -> HitBox^
-005d10 sub_005D10 -> -
+005d9c sub_005D9C -> -
 005da2 sub_005DA2 -> sub_00735A
 005dc0 sub_005DC0 -> HitBox^
 005dcc sub_005DCC -> -
@@ -159,25 +157,23 @@
 005dea sub_005DEA -> HitBox^
 005df6 sub_005DF6 -> -
 005dfc sub_005DFC -> sub_00735A
-005e14 sub_005E14 -> HitBox^
+005e1c sub_005E1C -> HitBox^
 005e28 sub_005E28 -> -
 005e36 sub_005E36 -> sub_00735A
-005e4e sub_005E4E -> -
 005e56 sub_005E56 -> HitBox^
 005e62 sub_005E62 -> -
 005e70 sub_005E70 -> sub_00735A
-005e88 sub_005E88 -> -
 005e90 sub_005E90 -> HitBox^
 005e9c sub_005E9C -> -
 005eaa sub_005EAA -> sub_00735A
-005ec2 sub_005EC2 -> HitBox^
+005eca sub_005ECA -> HitBox^
 005ed6 sub_005ED6 -> -
 005ee4 sub_005EE4 -> sub_00735A
-005f04 sub_005F04 -> HitBox^ sub_005F32^
+005f04 HitHumanSoldier -> HitBox^ sub_005F32^
 005f1a sub_005F1A -> sub_013DA8
 005f32 sub_005F32 -> -
 005f34 sub_005F34 -> SetPlayerState
-005f4e sub_005F4E -> HitBox HitBox^
+005f56 sub_005F56 -> HitBox HitBox^
 005f7a sub_005F7A -> -
 005f80 sub_005F80 -> -
 005fde sub_005FDE -> -
@@ -190,10 +186,9 @@
 0060f4 sub_0060F4 -> HitBox^
 006100 sub_006100 -> -
 006106 sub_006106 -> AddScore2000
-00611e sub_00611E -> HitBox^
+006126 sub_006126 -> HitBox^
 006146 sub_006146 -> sub_006252 sub_0072B2
 006154 sub_006154 -> sub_007368
-00616c sub_00616C -> -
 006174 sub_006174 -> HitBox^
 006194 sub_006194 -> sub_006252 sub_0072B2
 0061a2 sub_0061A2 -> sub_00735A
@@ -204,10 +199,10 @@
 006214 sub_006214 -> sub_006252
 00621e sub_00621E -> sub_00735A
 006252 sub_006252 -> sub_0124EC
-00627a sub_00627A -> HitBox HitBox^
+00627a HitTruck -> HitBox HitBox^
 00628e sub_00628E -> sub_013D04
 00629e sub_00629E -> -
-0062b0 sub_0062B0 -> HitBox HitBox^
+0062b0 HitSwatVan -> HitBox HitBox^
 0062d4 sub_0062D4 -> sub_0062E2^ sub_006304^
 0062dc sub_0062DC -> sub_006304^
 0062e2 sub_0062E2 -> AddScore250 sub_01253C
@@ -226,20 +221,25 @@
 0063c0 sub_0063C0 -> HitBox^
 0063cc sub_0063CC -> -
 0063d2 sub_0063D2 -> sub_0072CE
+0063f2 sub_0063F2 -> HitBox^
+0063fe sub_0063FE -> -
+006404 sub_006404 -> sub_007322
+006424 sub_006424 -> HitBox^
+006430 sub_006430 -> -
+006436 sub_006436 -> sub_00734C
 006456 sub_006456 -> HitBox^
 006462 sub_006462 -> -
 006468 sub_006468 -> sub_00734C
-006480 sub_006480 -> HitBox^
+006488 sub_006488 -> HitBox^
 0064a0 sub_0064A0 -> -
 0064a6 sub_0064A6 -> sub_007322
-0064d0 sub_0064D0 -> HitBox^
+0064e0 sub_0064E0 -> HitBox^
 0064ec sub_0064EC -> -
 0064f2 sub_0064F2 -> sub_00735A
-00650a sub_00650A -> -
 006512 sub_006512 -> HitBox^
 00651e sub_00651E -> -
 006524 sub_006524 -> AddScore250
-00653c sub_00653C -> HitBox^
+006544 sub_006544 -> HitBox^
 006550 sub_006550 -> -
 006556 sub_006556 -> sub_0072DC
 006576 sub_006576 -> HitBox^
@@ -251,17 +251,26 @@
 0065d2 sub_0065D2 -> HitBox^
 0065de sub_0065DE -> -
 0065e4 sub_0065E4 -> -
-0065fc sub_0065FC -> HitBox^ sub_00662E^
+0065fc HitHumanB -> HitBox^ sub_00662E^
 006612 sub_006612 -> sub_013DA8
 00662e sub_00662E -> -
 006630 sub_006630 -> SetPlayerState
-006652 sub_006652 -> HitBox^ sub_006684^
+006652 HitHumanC -> HitBox^ sub_006684^
 006668 sub_006668 -> sub_013DA8
 006684 sub_006684 -> -
 006686 sub_006686 -> SetPlayerState
 0066a8 sub_0066A8 -> HitBox^
 0066b4 sub_0066B4 -> -
 0066ba sub_0066BA -> sub_00735A
+0066da sub_0066DA -> sub_0066EA^
+0066e0 sub_0066E0 -> sub_0066EA^
+0066e6 sub_0066E6 -> -
+0066ea sub_0066EA -> HitBox^
+0066f2 sub_0066F2 -> -
+0066f8 sub_0066F8 -> -
+006724 sub_006724 -> HitBox^
+006730 sub_006730 -> sub_006252 sub_0072B2
+00673e sub_00673E -> sub_00735A
 00675e sub_00675E -> HitBox^
 006770 sub_006770 -> sub_006252 sub_0072B2
 00677e sub_00677E -> sub_00735A
@@ -274,59 +283,58 @@
 00683a sub_00683A -> HitBox^
 006846 sub_006846 -> -
 00684c sub_00684C -> sub_006870 AddScore250
-006868 sub_006868 -> -
 006870 sub_006870 -> -
 006894 sub_006894 -> HitBox^
 0068a0 sub_0068A0 -> -
 0068a6 sub_0068A6 -> sub_006870 AddScore250
-0068c2 sub_0068C2 -> -
 0068ca sub_0068CA -> HitBox^
 0068d6 sub_0068D6 -> -
 0068dc sub_0068DC -> sub_006870 AddScore250
 006900 sub_006900 -> HitBox^
 00690c sub_00690C -> sub_009A5E sub_013D04
 0069a2 sub_0069A2 -> sub_007314
-0069b4 sub_0069B4 -> -
 0069bc sub_0069BC -> HitBox^
 0069c8 sub_0069C8 -> -
 0069ce sub_0069CE -> sub_007330
-0069e6 sub_0069E6 -> -
 0069ee sub_0069EE -> HitBox^
 006a00 sub_006A00 -> -
 006a06 sub_006A06 -> sub_0072CE
 006ae0 sub_006AE0 -> HitBox^
 006aec sub_006AEC -> -
 006af2 sub_006AF2 -> sub_006870 AddScore250
-006b2a sub_006B2A -> -
 006b32 sub_006B32 -> HitBox^
 006b3e sub_006B3E -> -
 006b44 sub_006B44 -> sub_006870 AddScore250
-006b60 sub_006B60 -> -
 006b68 sub_006B68 -> HitBox^
 006b74 sub_006B74 -> -
 006b7a sub_006B7A -> sub_007314 sub_01016C
 006b96 sub_006B96 -> HitBox^
 006ba2 sub_006BA2 -> sub_013DBE
 006bd8 sub_006BD8 -> -
-006bda sub_006BDA -> -
 006be2 sub_006BE2 -> HitBox^
 006bee sub_006BEE -> sub_013DBE
 006c24 sub_006C24 -> -
-006c2e sub_006C2E -> HitBox^
+006c2e HitT1000Mill -> HitBox^
 006c42 sub_006C42 -> sub_006E32
 006c5e sub_006C5E -> AddScore2000
+006c8e sub_006C8E -> HitBox^
+006cb0 sub_006CB0 -> sub_006E32
+006cd4 sub_006CD4 -> AddScore2000
 006e32 sub_006E32 -> sub_01253C
 006e52 sub_006E52 -> HitBox HitBox^
 006e66 sub_006E66 -> sub_007322
 006e7e sub_006E7E -> -
-006e80 sub_006E80 -> -
 006e90 sub_006E90 -> HitBox HitBox^
 006ea8 sub_006EA8 -> sub_0072CE
 006eca sub_006ECA -> sub_0072CE
 006ee6 sub_006EE6 -> -
-006ee8 sub_006EE8 -> -
+006ef8 sub_006EF8 -> HitBox^
 006f04 sub_006F04 -> sub_007314 sub_00B192 sub_013D04
 006f5a sub_006F5A -> -
+006f64 sub_006F64 -> HitBox^
+006f78 sub_006F78 -> HitBox^
+006f8c sub_006F8C -> -
+00700a sub_00700A -> -
 00700c PickupShotTest -> -
 007086 PickupHitBox -> sub_012AF4 sub_013E30
 0070ca sub_0070CA -> PickupHitBox
@@ -346,7 +354,7 @@
 0071f8 sub_0071F8 -> PickupHitBox
 00720c sub_00720C -> PickupHitBox sub_00711A^
 007230 sub_007230 -> PickupHitBox
-007258 sub_007258 -> PickupHitBox
+007260 sub_007260 -> PickupHitBox
 00728a sub_00728A -> -
 007292 sub_007292 -> PickupHitBox sub_007C40 sub_007C54
 0072b2 sub_0072B2 -> AddScoreBcd^
@@ -365,7 +373,7 @@
 007368 sub_007368 -> AddScoreBcd^
 007376 AddScoreBcd -> -
 0073a0 MissileFindTarget -> sub_013D04
-00745c GameStart -> ReadInput ReadInputAim PlayersButtons sub_0015A2 sub_0015EC sub_001C4A sub_001D3A sub_002B5C sub_003360 SortHiScores ScrollRows BgStreamL6 BgStreamL5 BgStreamL2 BgStreamL4 BgStreamL1 sub_007AFE sub_007C9A sub_007CD8 WaitFrames WaitVBlank InitPort2 PalFade LevelResetPlayers ClearObjectPools sub_008C52 sub_008C68 SetPlayerState EnergyHud GunpowerHud ScriptStart ScriptTick ObjRunAll PalCycle VdpListReset VdpListEnd VdpListRun MissilesRun EffectsRun SparksRun DebrisRun PickupsRun sub_0131F2 BuildSpriteTable SpriteQueueReset sub_013D04 sub_013E1A sub_013F7E MenacerInit sub_0FBAD2 sub_0FBAE2 sub_0FBB6C
+00745c GameStart -> ReadInput ReadInputAim PlayersButtons sub_0015A2 Ending sub_001C4A sub_001D3A sub_002B5C sub_003360 SortHiScores ScrollRows BgStreamL6 BgStreamL5 BgStreamL2 BgStreamL4 BgStreamL1 sub_007AFE sub_007C9A sub_007CD8 WaitFrames WaitVBlank InitPort2 PalFade LevelResetPlayers ClearObjectPools sub_008C52 sub_008C68 SetPlayerState EnergyHud GunpowerHud ScriptStart ScriptTick ObjRunAll PalCycle VdpListReset VdpListEnd VdpListRun MissilesRun EffectsRun SparksRun DebrisRun PickupsRun sub_0131F2 BuildSpriteTable SpriteQueueReset sub_013D04 sub_013E1A sub_013F7E MenacerInit sub_0FBAD2 sub_0FBAE2 sub_0FBB6C
 007a6e sub_007A6E -> -
 007a92 BcdAdd -> sub_007AD4
 007ad4 sub_007AD4 -> -
@@ -454,13 +462,13 @@
 008f2e sub_008F2E -> Copy32
 008f7e sub_008F7E -> CramUpload WaitVBlank PalFadeStep
 008fa8 SetPlayerState -> sub_007B14 sub_007B28 sub_007B3C sub_007B50 sub_007B64 sub_007BB8
-00902e sub_00902E -> sub_0090B2
-009054 sub_009054 -> sub_00909C
-009066 sub_009066 -> sub_00909C
-009078 sub_009078 -> sub_00909C
-00908a sub_00908A -> sub_00909C
-00909c sub_00909C -> sub_0090B2^
-0090b2 sub_0090B2 -> SetPlayerState sub_013D92
+00902e sub_00902E -> PlayerDamage
+009054 sub_009054 -> PlayerDamageNearest
+009066 sub_009066 -> PlayerDamageNearest
+009078 sub_009078 -> PlayerDamageNearest
+00908a sub_00908A -> PlayerDamageNearest
+00909c PlayerDamageNearest -> PlayerDamage^
+0090b2 PlayerDamage -> SetPlayerState sub_013D92
 009104 EnergyHud -> sub_00920C sub_009242
 009186 GunpowerHud -> GunpowerFirePeriod sub_00920C sub_009242
 0091c4 GunpowerFirePeriod -> -
@@ -538,7 +546,7 @@
 00a130 ScrPokeWord -> -
 00a138 ScrPokeLong -> -
 00a140 ScrNative -> -
-00a144 sub_00A144 -> ObjAlloc sub_009EF8 sub_00D30A VdpQueueTileRect
+00a144 sub_00A144 -> ObjAlloc sub_009EF8 TruckDamageInit VdpQueueTileRect
 00a228 sub_00A228 -> VdpQueueTileRect
 00a24e sub_00A24E -> sub_013D04
 00a25a sub_00A25A -> sub_013D04
@@ -566,12 +574,15 @@
 00a4d2 sub_00A4D2 -> ObjSpawnTemplate
 00a4f4 sub_00A4F4 -> ObjSpawnTemplate
 00a510 sub_00A510 -> ObjSpawnTemplate
+00a52c sub_00A52C -> sub_00A5B2
+00a5b2 sub_00A5B2 -> ObjAlloc
 00a5f6 sub_00A5F6 -> -
 00a5fa sub_00A5FA -> Random sub_009A02
 00a644 sub_00A644 -> ObjSpawnTemplate
 00a666 sub_00A666 -> ObjSpawnTemplate
 00a692 sub_00A692 -> ObjSpawnTemplate
 00a712 sub_00A712 -> ObjSpawnTemplate
+00a764 sub_00A764 -> ObjSpawnTemplate
 00a7e8 sub_00A7E8 -> ObjSpawnTemplate
 00a80c sub_00A80C -> ObjSpawnTemplate
 00a82c sub_00A82C -> ObjSpawnTemplate
@@ -592,6 +603,7 @@
 00ac06 sub_00AC06 -> ObjSpawnTemplate
 00ac6a sub_00AC6A -> ObjSpawnTemplate
 00acb0 sub_00ACB0 -> ObjSpawnTemplate
+00acd0 sub_00ACD0 -> ObjSpawnTemplate
 00acf2 sub_00ACF2 -> ObjSpawnTemplate
 00ad14 sub_00AD14 -> ObjSpawnTemplate sub_010408
 00ad48 sub_00AD48 -> sub_00AD9C
@@ -606,7 +618,10 @@
 00afe8 sub_00AFE8 -> -
 00affc sub_00AFFC -> ObjSpawnTemplate
 00b02a sub_00B02A -> ObjSpawnTemplate sub_0112A8 sub_0112BE
+00b08e sub_00B08E -> -
 00b0b2 sub_00B0B2 -> ObjSpawnTemplate sub_0115FA sub_0118C0 sub_0118CE
+00b128 sub_00B128 -> ObjSpawnTemplate
+00b170 sub_00B170 -> ObjSpawnTemplate
 00b192 sub_00B192 -> ObjSpawnTemplate
 00b1ce sub_00B1CE -> ObjSpawnTemplate
 00b200 sub_00B200 -> ObjSpawnTemplate
@@ -754,7 +769,7 @@
 00d0c8 sub_00D0C8 -> ObjNext^
 00d0d4 sub_00D0D4 -> sub_00902E ObjNext^ sub_00D0F8
 00d0f8 sub_00D0F8 -> -
-00d112 sub_00D112 -> Random sub_00D1D2 sub_00D2B8^ sub_00D322 QueueSprite
+00d112 sub_00D112 -> Random sub_00D1D2 sub_00D2B8^ TruckDamage QueueSprite
 00d1d2 sub_00D1D2 -> Random sub_00D236 VdpQueueVScroll QueueSprite
 00d232 sub_00D232 -> sub_00D238^
 00d236 sub_00D236 -> -
@@ -762,8 +777,8 @@
 00d27a sub_00D27A -> sub_00D1D2 sub_00D2B8^
 00d2ac sub_00D2AC -> ObjScrollX
 00d2b8 sub_00D2B8 -> ObjNext^ ObjQueueSprite QueueSprite
-00d30a sub_00D30A -> -
-00d322 sub_00D322 -> Random ScriptNext sub_00D444 sub_00D46E VdpQueueTileRect
+00d30a TruckDamageInit -> -
+00d322 TruckDamage -> Random ScriptNext sub_00D444 sub_00D46E VdpQueueTileRect
 00d444 sub_00D444 -> sub_01253C
 00d46e sub_00D46E -> ObjAlloc
 00d4e6 sub_00D4E6 -> ObjNext^ VdpQueueTileRect
@@ -841,7 +856,7 @@
 00e864 sub_00E864 -> ObjNext^ sub_0124B8 sub_0124D2 sub_01254E
 00e8c8 sub_00E8C8 -> ObjNext^ VdpQueueTileRect sub_01227A
 00e91e sub_00E91E -> Copy32 sub_0099C8 sub_009B14 ObjNext^
-00e9c4 sub_00E9C4 -> CramUpload PalFadeStep ObjNext^
+00e9c4 MillEndFade -> CramUpload PalFadeStep ObjNext^
 00e9fa PalCycle -> CramUpload
 00ea26 sub_00EA26 -> sub_00EC16^
 00ea2e sub_00EA2E -> sub_01253C sub_012A9C
@@ -917,7 +932,7 @@
 00f7a4 sub_00F7A4 -> ObjNext^ sub_00D236 ObjQueueSprite
 00f7e4 sub_00F7E4 -> -
 00f7f0 sub_00F7F0 -> ObjNext^ ObjScrollX ObjQueueSprite
-00f83c sub_00F83C -> ObjNext^ ObjQueueSprite
+00f83e sub_00F83E -> ObjNext^ ObjQueueSprite
 00f86c sub_00F86C -> ObjNext^ ObjScrollX ObjQueueSprite
 00f89e sub_00F89E -> -
 00f8a2 sub_00F8A2 -> ObjNext^ ObjScrollX ObjKillIfLeftOf ObjQueueSprite
@@ -1013,7 +1028,7 @@
 010dd6 sub_010DD6 -> sub_00D236 sub_010D20^
 010dee sub_010DEE -> ScriptNext sub_010D20^ ObjScrollX
 010e4a sub_010E4A -> sub_011092^
-010e82 sub_010E82 -> sub_00E10C sub_011092^
+010e82 HeliPassCheck -> sub_00E10C sub_011092^
 010ef6 sub_010EF6 -> ScriptNext sub_00E10C sub_011092^
 010f86 sub_010F86 -> ObjNext^
 010fb0 sub_010FB0 -> ObjNext^ sub_00E10C sub_010D0C sub_011072 sub_011092^ VdpQueueFillRows VdpQueueTileRect
@@ -1028,19 +1043,19 @@
 0112be sub_0112BE -> -
 0112c4 sub_0112C4 -> sub_0122CA
 0112de sub_0112DE -> VdpQueueTileRect
-0112fe sub_0112FE -> ObjMoveX sub_011334 sub_011616 sub_011B10^ ObjScrollX
+0112fe sub_0112FE -> ObjMoveX sub_011334 sub_011616 T1000FrozenCheck^ ObjScrollX
 011334 sub_011334 -> Random
-011360 sub_011360 -> ObjMoveX sub_011334 sub_011616 sub_011B10^ ObjScrollX
-011394 sub_011394 -> sub_009066 sub_011334 sub_011616 sub_011B10^ sub_013D04
+011360 sub_011360 -> ObjMoveX sub_011334 sub_011616 T1000FrozenCheck^ ObjScrollX
+011394 sub_011394 -> sub_009066 sub_011334 sub_011616 T1000FrozenCheck^ sub_013D04
 0113d0 sub_0113D0 -> -
-0113d8 sub_0113D8 -> sub_00908A sub_011334 sub_011616 sub_011B10^ sub_01277C sub_013D04
+0113d8 sub_0113D8 -> sub_00908A sub_011334 sub_011616 T1000FrozenCheck^ sub_01277C sub_013D04
 011438 sub_011438 -> -
 011448 sub_011448 -> Random sub_0115FA
-0114c0 sub_0114C0 -> Random sub_0115FA sub_011B10^
-011514 sub_011514 -> sub_011616 sub_011B10^
-011558 sub_011558 -> sub_011616 sub_011B10^ ObjScrollX
+0114c0 sub_0114C0 -> Random sub_0115FA T1000FrozenCheck^
+011514 sub_011514 -> sub_011616 T1000FrozenCheck^
+011558 sub_011558 -> sub_011616 T1000FrozenCheck^ ObjScrollX
 011580 sub_011580 -> sub_013DA8
-0115ac sub_0115AC -> sub_00D236 sub_011448^ sub_011558^ sub_011616 sub_011B10^ ObjScrollX
+0115ac sub_0115AC -> sub_00D236 sub_011448^ sub_011558^ sub_011616 T1000FrozenCheck^ ObjScrollX
 0115ee sub_0115EE -> -
 0115fa sub_0115FA -> Random
 011616 sub_011616 -> sub_0118C0 sub_0118DC sub_0118EA ObjQueueSprite ObjQueueSprite^
@@ -1049,12 +1064,12 @@
 0118dc sub_0118DC -> sub_0118F4^
 0118ea sub_0118EA -> -
 0118f4 sub_0118F4 -> -
-011a44 sub_011A44 -> sub_011616 sub_011B10^
-011a76 sub_011A76 -> sub_011616 sub_011B10^
+011a44 sub_011A44 -> sub_011616 T1000FrozenCheck^
+011a76 sub_011A76 -> sub_011616 T1000FrozenCheck^
 011a90 sub_011A90 -> ScriptNext ObjNext^ sub_011334 sub_011616 sub_01277C sub_013E02
 011af0 sub_011AF0 -> -
 011af8 sub_011AF8 -> ObjNext^ sub_013D90
-011b10 sub_011B10 -> ObjNext^
+011b10 T1000FrozenCheck -> ObjNext^
 011b4e sub_011B4E -> VdpQueueTileRect QueueSprite
 011bf4 sub_011BF4 -> ObjNext^ sub_011B4E
 011c2c sub_011C2C -> ObjNext^ VdpQueueFillRows
@@ -1146,7 +1161,6 @@
 013042 sub_013042 -> -
 013052 sub_013052 -> ShotHitTest sub_01303E^
 013188 sub_013188 -> sub_00C48E sub_012432^ ObjQueueSprite
-0131b2 sub_0131B2 -> -
 0131f2 sub_0131F2 -> -
 01320a LoadTiles -> -
 01320c sub_01320C -> DmaToVram
@@ -1194,6 +1208,40 @@
 01477c sub_01477C -> VdpQueueTileRect
 014792 sub_014792 -> ObjNext^ VdpQueueTileRect sub_01480A
 01480a sub_01480A -> VdpQueueTileRect sub_01227A
+014866 sub_014866 -> ObjNext^ ObjMoveX sub_011616
+0148ae sub_0148AE -> sub_009066 ObjNext^ sub_011616 sub_013D04
+0148e8 sub_0148E8 -> -
+0148f0 sub_0148F0 -> sub_00908A ObjNext^ sub_011616 sub_01277C sub_013D04
+01494e sub_01494E -> -
+014956 sub_014956 -> Random
+0149b4 sub_0149B4 -> Random ObjNext^ sub_011616 sub_0118C0 sub_0118EA
+014a34 sub_014A34 -> ScriptNext ObjNext^ sub_011616
+014aa6 sub_014AA6 -> ObjNext^ sub_011616
+014ab2 sub_014AB2 -> ObjNext^ sub_011616
+014ae2 sub_014AE2 -> ObjNext^ sub_011616
+014afe sub_014AFE -> ObjNext^ sub_011616
+014b26 sub_014B26 -> ObjNext^ sub_011616
+014b58 sub_014B58 -> sub_009066 sub_011616 sub_013D04 sub_014D4C^ sub_014D7A^
+014c6a sub_014C6A -> ObjNext^ sub_011616
+014ca2 sub_014CA2 -> ObjNext^ sub_011616
+014cce sub_014CCE -> ObjNext^ sub_011616
+014cfa sub_014CFA -> ObjNext^ sub_011616
+014d3c sub_014D3C -> -
+014d4c sub_014D4C -> ObjMoveX sub_011616 sub_014D7A^
+014d7a sub_014D7A -> ObjNext^
+014d80 sub_014D80 -> ObjNext^ sub_011616
+014dda sub_014DDA -> ObjNext^ sub_00D236 sub_011616 sub_013DA8
+014e40 sub_014E40 -> -
+014e4c sub_014E4C -> ObjNext^ sub_010666
+014e84 sub_014E84 -> ObjNext^ sub_010666
+014e90 sub_014E90 -> ObjNext^ sub_011616
+014f08 sub_014F08 -> ObjNext^ sub_011616
+014f5e sub_014F5E -> ObjNext^ sub_011616
+014f7c sub_014F7C -> ObjNext^ sub_011616
+014fc2 sub_014FC2 -> ObjNext^ sub_011616
+015190 sub_015190 -> ObjNext^ sub_011616
+0151b8 sub_0151B8 -> -
+0151c0 sub_0151C0 -> ObjNext^ sub_011616
 0151cc sub_0151CC -> sub_01253C
 0151ea sub_0151EA -> sub_0151F4^
 0151f0 sub_0151F0 -> -

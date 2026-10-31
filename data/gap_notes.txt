@@ -5,3 +5,18 @@
 #          dead (unreferenced, never read), unknown
 0fc312  data     Z80 boot stub (28 bytes) copied to Z80 RAM $0000 by sub_0FC350
 0fc5cc  data     Z80 sound driver blob ($1400 bytes), copied to Z80 RAM $0C00; incbin'd, not disassembled
+# --- gun-bot / levels (issue #6): the gaps the level campaign left unclassified, and what is left unexecuted
+000ff4  table    MenuModeTable $000FF0 rows 4..5: 02 (control_mode 2, Menacer only, no menu row) and 00; never selected
+010a90  table    last entry of the word table $010A8A ($026C..$026F); the other three are read
+012cba  table    last entry of the word table $012CB0 ($01AE, $01B0 ...); not reached in play
+#
+# Unexecuted code after the issue #6 campaign (91.7 % of the code-area instructions executed; these are not
+# gaps, they are traced but never-run instructions; largest runs first, see docs/coverage.md):
+#   $014AFE-$014FF2, $011514-$0115F8, $011616.. parts   level 8 second phase (after the T-1000 freezes and
+#       shatters) and his gun-damage >= 5 branch: reachable, the bot does not win the steel mill (docs/levels.md)
+#   $0003DE/$0004B6 parts ($00042A.., $00051E..)        control_mode 2 (Menacer only, Y unclamped): no menu row,
+#       only via MenuModeTable row 4: unreachable in normal play
+#   $012108, $0129B0, $011EC4 VramFillDma, $00BE94,    not reached by any run; why (which situation calls
+#   $008C8E parts, $00807C, $0046C6                    them) is not worked out yet: classified "unknown"
+#   $007C10 (8 bytes), $007C3E/$007C78               BCD helpers; the two "stray" starts are rts after an
+#       sbcd that capstone decodes as 4 bytes (disassembler issue, the bytes still round-trip)
