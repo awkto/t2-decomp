@@ -78,3 +78,45 @@ FFFF9E 4 hiscore_table        # 10 x 8 bytes: 3 ASCII initials + 0, BCD score lo
 # $001B9E PressStartLoop, $00116A MainMenuInput, $0013A8 OptionsInput, $008DFE..$008E66 ContinueCountdown (1P). See docs/gun.md.
 # FF8050 = pad 1 state (same address as p2_buttons):         # word, ReadPad1 result (pad 1, b7 Start b6 A b5 C b4 B b3 R b2 L b1 D b0 U); the host checks its injected presses here
 # FFAE84 = OPTIONS credits value (options_values+0):        # word, OPTIONS row 0 value (credits 3..5); rows are 14 bytes apart (options_values)
+
+#
+# --- engine (issue #7): main loop, object pools, scroll, VDP list, level script. Evidence: docs/subsystems/*.md
+FF80B8 4 vdp_list_data        # long, next free byte of the VDP list's data area (starts $FFB452)
+FF80BC 4 vdp_list_ptr         # long, next free command slot in vdp_list
+FF80CE 4 script_ptr           # long, next command of the level script
+FF80D2 2 script_clock         # word, frames since the script started (ScriptTick)
+FF80D4 2 script_due           # word, script_clock value at which the next command runs
+FF80D6 2 missile_count        # word, live slots in missile_pool
+FF80D8 2 effect_count         # word, live slots in effect_pool
+FF80DC 2 spark_count          # word, live slots in spark_pool
+FF80DE 2 debris_count         # word, live slots in debris_pool
+FF80E0 2 pickup_count         # word, live slots in pickup_pool
+FF80F2 1344 missile_pool        # 32 x $2A: player missiles and their explosions (MissilesRun)
+FF8632 384 effect_pool          # 32 x $C: +0 flag, +2 X, +4 Y, +8 frame list ptr (EffectsRun)
+FF9572 576 spark_pool           # 32 x $12: +2 X, +4 Y, +8 frame list, +$C..$11 8.8 velocity (SparksRun)
+FF97B2 768 debris_pool          # 32 x $18: +2 X, +4 Y, +8 frames, +$E.. velocity with gravity (DebrisRun)
+FF9AB2 26 pickup_pool          # $1A each: +0 flags (low byte = pickup type, PickupHitTable), +2 X, +4 Y, +$14 life timer
+FF9E98 4 scroll_script        # long, ROM table of (rows, 8.8 speed) groups for ScrollRows (set by script ops $05/$06/$18)
+FF9EB8 2 sprite_prio_depth    # word, objects with depth (+7) <= this get the sprite priority bit (in front of high planes)
+FF9EBA 2 obj_9eba             # word, cleared by ObjRunAll each frame
+FF9F62 4 script_ret           # long, return address of ScrGosub (one level)
+FFA0A4 1 pal_cycle_on         # byte, nonzero: PalCycle runs every frame
+FFA0AE 2 frame_target         # word, vblank_count at which the next frame may start (FramePace)
+FFA0DA 4 vdp_reg01            # 2 words, shadow of VDP reg 0 and 1 commands ($80xx, $81xx)
+FFA0E0 10 dma_args            # DmaToVram: +0 length (words), +2 source long, +6 VRAM address, +8 cmd scratch
+FFA0F0 4 rng_state            # long, Random state, $87654321 at reset
+FFA0F4 64 pal_changed          # 64 flags, set by PalFadeStep for CramUploadChanged
+FFA134 128 pal_target           # 64 words, palette a fade moves to
+FFA1B4 128 pal_cur              # 64 words, palette in CRAM (uploaded by CramUpload)
+FFA246 1 pal_fading           # byte, nonzero while PalFadeStep still changes pal_cur
+FFA250 200 spr_queue            # (queue index.b, priority.b) pairs, bubble-sorted by BuildSpriteTable
+FFA318 800 spr_queue_args       # 4 words per queued sprite: frame id, X, Y, priority
+FFA638 640 spr_table            # VDP sprite attribute table built in RAM (80 x 8), copied to VRAM $F400 by VDP list command 1
+FFA958 160 hit_list             # (object ptr, on-hit routine) pairs collected by HitBox during ShotHitTest
+FFAA5C 1024 hscroll_ram          # hscroll table image (one entry per 8-line row: A word, B word, stride $20), VDP list command 7 -> VRAM $F000
+FFAF92 64 scroll_acc           # words, 8.8 position accumulators of the scroll groups
+FFAFD2 256 row_pos              # words, scroll position of every row (plane A rows then plane B rows)
+FFB0D2 256 row_delta            # words, this frame's scroll step of every row; ObjScrollX index = obj +6 + 28
+FFB252 512 vdp_list             # VDP command list (word commands + args), run by VdpListRun after the vblank wait
+FFB452 1024 vdp_list_area        # data area for list commands that carry tilemap data (VdpQueueTileRect)
+FFFFF6 4 ram_magic            # long, "PAUL" once the hi-score table has been initialised (survives a soft reset)

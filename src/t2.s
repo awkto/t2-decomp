@@ -26,19 +26,38 @@
 	.equ p2_gunpower, 0xff806c
 	.equ p2_energy, 0xff806e
 	.equ p2_index, 0xff8074
+	.equ vdp_list_data, 0xff80b8
+	.equ vdp_list_ptr, 0xff80bc
 	.equ credits, 0xff80ca
 	.equ level, 0xff80cc
+	.equ script_ptr, 0xff80ce
+	.equ script_clock, 0xff80d2
+	.equ script_due, 0xff80d4
+	.equ missile_count, 0xff80d6
+	.equ effect_count, 0xff80d8
 	.equ obj_count, 0xff80da
+	.equ spark_count, 0xff80dc
+	.equ debris_count, 0xff80de
+	.equ pickup_count, 0xff80e0
+	.equ missile_pool, 0xff80f2
+	.equ effect_pool, 0xff8632
 	.equ obj_table, 0xff87b2
+	.equ spark_pool, 0xff9572
+	.equ debris_pool, 0xff97b2
+	.equ pickup_pool, 0xff9ab2
 	.equ spr_queue_n, 0xff9df2
 	.equ control_mode, 0xff9df5
 	.equ spr_queue_ptr, 0xff9df6
 	.equ spr_queue_data, 0xff9dfa
 	.equ shot_xy, 0xff9e94
+	.equ scroll_script, 0xff9e98
 	.equ sfx_request, 0xff9ea4
 	.equ p1_score, 0xff9ea8
 	.equ p2_score, 0xff9eb0
+	.equ sprite_prio_depth, 0xff9eb8
+	.equ obj_9eba, 0xff9eba
 	.equ menu_cursor, 0xff9f60
+	.equ script_ret, 0xff9f62
 	.equ btn_prev2, 0xff9f66
 	.equ players_alive, 0xff9f6d
 	.equ gun_x, 0xff9f6e
@@ -55,15 +74,35 @@
 	.equ gun_ring, 0xffa07e
 	.equ gun_ring_ptr, 0xffa09e
 	.equ fire_flag, 0xffa0a2
+	.equ pal_cycle_on, 0xffa0a4
 	.equ cheat_levelskip, 0xffa0a6
 	.equ p1_out_2p, 0xffa0a7
 	.equ cheat_index, 0xffa0ac
+	.equ frame_target, 0xffa0ae
 	.equ shot_damage, 0xffa0ca
+	.equ vdp_reg01, 0xffa0da
+	.equ dma_args, 0xffa0e0
 	.equ vblank_count, 0xffa0ee
+	.equ rng_state, 0xffa0f0
+	.equ pal_changed, 0xffa0f4
+	.equ pal_target, 0xffa134
+	.equ pal_cur, 0xffa1b4
 	.equ level_exit, 0xffa234
 	.equ saved_vblank, 0xffa238
+	.equ pal_fading, 0xffa246
+	.equ spr_queue, 0xffa250
+	.equ spr_queue_args, 0xffa318
+	.equ spr_table, 0xffa638
+	.equ hit_list, 0xffa958
+	.equ hscroll_ram, 0xffaa5c
 	.equ options_values, 0xffae84
+	.equ scroll_acc, 0xffaf92
+	.equ row_pos, 0xffafd2
+	.equ row_delta, 0xffb0d2
+	.equ vdp_list, 0xffb252
+	.equ vdp_list_area, 0xffb452
 	.equ hiscore_table, 0xffff9e
+	.equ ram_magic, 0xfffff6
 | data 0x000000-0x000200
 	.incbin "baserom.md",0x0,0x200
 Reset:
@@ -132,7 +171,7 @@ dat_00028E:
 	.incbin "baserom.md",0x28E,0x6C
 loc_0002FA:
 	tst.w (0xc00004).l
-	jmp (loc_007406).l
+	jmp (Boot).l
 IntNull:
 	rte
 VBlankInt:
@@ -526,7 +565,7 @@ PlayerShoot:
 	move.w #0x5e,d0
 	jsr (sub_013D04).l
 	move.l (0x4,a4),(0xffff9e94).l
-	jsr (sub_00700C,pc)
+	jsr (PickupShotTest,pc)
 	move.w (0x14,a4),d2
 	add.w d2,d2
 	move.w d2,(0xffffa0ca).l
@@ -550,20 +589,20 @@ loc_0008FE:
 	rts
 ColdStart:
 	jsr (sub_01DB36).l
-	jsr (sub_008162,pc)
-	jsr (sub_00818C,pc)
-	jsr (sub_00800C,pc)
+	jsr (CramClear,pc)
+	jsr (VsramClear,pc)
+	jsr (VramClearDma,pc)
 	lea.l (dat_00571A,pc),a1
-	jsr (sub_00867A,pc)
+	jsr (VdpSetRegs,pc)
 	move.w #0x32,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	move.b #0x0,(0xffff9df5).l
 	move.w #0x400,(0xffff80ca).l
 	bsr.w sub_00099E
 	bsr.w sub_000CC6
 	bsr.w sub_000D76
 	clr.b (0xffffa234).l
-	jsr (sub_00871A,pc)
+	jsr (VramClear,pc)
 	jsr (StoryIntro,pc)
 	tst.b (0xffffa234).l
 	bne.s loc_000958
@@ -588,30 +627,30 @@ loc_000986:
 sub_00099E:
 	move.w #0x0,d0
 	jsr (sub_0056FA,pc)
-	jsr (sub_00871A,pc)
-	jsr (sub_0121D6).l
+	jsr (VramClear,pc)
+	jsr (HScrollClear).l
 	lea.l (dat_00576A,pc),a1
-	jsr (sub_00867A).l
+	jsr (VdpSetRegs).l
 	lea.l (dat_0268DE).l,a0
 	move.w #0x6c7,d1
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_025DFC).l,a0
 	move.w #0x670,d1
 	move.w d1,(0xffff9e2c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_00829A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C).l
+	jsr (Copy32).l
 	lea.l (dat_0082FA,pc),a0
-	jsr (sub_008A7C).l
+	jsr (Copy32).l
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C).l
+	jsr (Copy32).l
 	lea.l (dat_000A34,pc),a0
 	move.w #0x4000,d6
 	jsr (sub_007DEE).l
 	clr.w (0xffffa0ee).l
 	st.b (0xffffa246).l
-	jsr (sub_008A4C).l
+	jsr (PalFade).l
 	clr.w (0xffffa0ee).l
 loc_000A2A:
 	bsr.w WaitStartWindow
@@ -645,27 +684,27 @@ CheatCodeTable:
 sub_000CC6:
 	move.w #0x0,d0
 	jsr (sub_0056FA,pc)
-	jsr (sub_00871A,pc)
-	jsr (sub_0121D6).l
+	jsr (VramClear,pc)
+	jsr (HScrollClear).l
 	lea.l (dat_00576A,pc),a1
-	jsr (sub_00867A).l
+	jsr (VdpSetRegs).l
 	lea.l (dat_0B4242).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_00825A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0082FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	clr.w (0xffffa0ee).l
 	bsr.w sub_000D42
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	clr.w (0xffffa0ee).l
 loc_000D38:
 	bsr.w WaitStartWindow
@@ -673,7 +712,7 @@ loc_000D38:
 	beq.s loc_000D38
 	rts
 sub_000D42:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_0B55E4).l,a0
 	move.w #0xc318,d1
 	moveq #0x10,d2
@@ -681,33 +720,33 @@ sub_000D42:
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
 	jsr (sub_0122CA).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	rts
 sub_000D76:
 	move.w #0x0,d0
 	jsr (sub_0056FA,pc)
-	jsr (sub_00871A,pc)
-	jsr (sub_0121D6).l
+	jsr (VramClear,pc)
+	jsr (HScrollClear).l
 	lea.l (dat_00576A,pc),a1
-	jsr (sub_00867A).l
+	jsr (VdpSetRegs).l
 	lea.l (dat_0B0D20).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_025DFC).l,a0
 	move.w #0x670,d1
 	move.w d1,(0xffff9e2c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_00829A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0082FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	clr.w (0xffffa0ee).l
 	bsr.w sub_000E60
 	move.w #0x4000,d6
@@ -715,7 +754,7 @@ sub_000D76:
 	jsr (sub_007DEE).l
 	jsr (sub_007DEE).l
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	clr.w (0xffffa0ee).l
 loc_000E14:
 	bsr.w sub_000E60
@@ -743,7 +782,7 @@ loc_000E5C:
 	sf.b d0
 	rts
 sub_000E60:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w (0xffffa0ee).l,d0
 	move.w d0,d1
 	andi.w #0xe0,d1
@@ -762,9 +801,9 @@ loc_000E7E:
 	moveq #0x8,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	rts
 | data 0x000EB4-0x000ED4
 dat_000EB4:
@@ -772,32 +811,32 @@ dat_000EB4:
 sub_000ED4:
 	move.w #0x0,d0
 	jsr (sub_0056FA,pc)
-	jsr (sub_00871A,pc)
-	jsr (sub_0121D6).l
+	jsr (VramClear,pc)
+	jsr (HScrollClear).l
 	lea.l (dat_00576A,pc),a1
-	jsr (sub_00867A).l
+	jsr (VdpSetRegs).l
 	lea.l (dat_0B8286).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0B57C4).l,a0
 	move.w #0x190,d1
 	move.w d1,(0xffff9e5a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_025DFC).l,a0
 	move.w #0x670,d1
 	move.w d1,(0xffff9e2c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 loc_000F32:
 	lea.l (dat_00823A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0085FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	bsr.w sub_00102A
 	sf.b (0xffffa234).l
 	clr.w (0xffff9f60).l
@@ -808,7 +847,7 @@ loc_000F32:
 loc_000F76:
 	bsr.w sub_00107E
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 MainMenuLoop:
 	bsr.w sub_00102A
 	bsr.w MainMenuInput
@@ -846,16 +885,16 @@ MenuModeTable:
 | data 0x000FF4-0x000FF6
 	.incbin "baserom.md",0xFF4,0x2
 sub_000FF6:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_0BA848).l,a0
 	move.w #0xc000,d1
 	moveq #0x28,d2
 	moveq #0x1c,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	rts
 sub_00102A:
 	bsr.w ReadPort2Id
@@ -898,27 +937,27 @@ loc_001090:
 	bsr.w sub_001130
 	bra.s sub_0010B8
 loc_001098:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w #0xc000,d1
 	moveq #0x28,d2
 	moveq #0x1c,d3
-	jsr (sub_012212).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueFillRows).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 sub_0010B8:
 	move.w #0x7a,d0
 	jsr (sub_013D04).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w #0xe004,d1
 	move.w #0x2,d2
 	move.w #0x19,d3
-	jsr (sub_012212).l
+	jsr (VdpQueueFillRows).l
 	move.w #0xe04a,d1
 	move.w #0x2,d2
 	move.w #0x19,d3
-	jsr (sub_012212).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueFillRows).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	move.w (0xffff9f60).l,d3
 	asl.w #0x7,d3
 	move.w d3,d4
@@ -936,16 +975,16 @@ sub_0010B8:
 	jsr (sub_007E08).l
 	rts
 sub_001130:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_0B7886).l,a0
 	move.w #0xc000,d1
 	moveq #0x28,d2
 	moveq #0x1c,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e5a).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	rts
 MainMenuInput:
 	jsr (WaitVBlank).l
@@ -1144,39 +1183,76 @@ loc_0014EA:
 	move.b (a2)+,(a1)+
 	dbra d0,loc_0014EA
 	rts
-| data 0x0014F2-0x0015A2
+| data 0x0014F2-0x001538
 dat_0014F2:
-	.incbin "baserom.md",0x14F2,0xB0
+	.incbin "baserom.md",0x14F2,0x46
+sub_001538:
+	move.w (a1),d0
+	addi.w #0x5e,d0
+	cmpi.w #0x67,d0
+	blt.s loc_001550
+	cmpi.w #0x6e,d0
+	bgt.s loc_001550
+	jmp (sub_0FBBAE).l
+loc_001550:
+	cmpi.w #0x80,d0
+	blt.s loc_001558
+	addq.w #0x1,d0
+loc_001558:
+	jmp (sub_0FBB96).l
+sub_00155E:
+	move.w (a1),d0
+	asl.w #0x2,d0
+	movea.l (sub_001568,pc,d0.w),a1
+	jmp (a1)
+sub_001568:
+	dc.w 0x0001,0x3d92	| ori.b #$92, d1
+	dc.w 0x0001,0x3da8	| ori.b #$a8, d1
+	dc.w 0x0001,0x3dbe	| ori.b #$be, d1
+	dc.w 0x0001,0x3dd6	| ori.b #$d6, d1
+	dc.w 0x0001,0x3dec	| ori.b #$ec, d1
+	dc.w 0x0001,0x3e04	| ori.b #$4, d1
+	dc.w 0x0001,0x3e1a	| ori.b #$1a, d1
+sub_001584:
+	move.w (a1),d0
+	move.b (dat_001590,pc,d0.w),d0
+	jmp (sub_0FBB6C).l
+| data 0x001590-0x001598
+dat_001590:
+	.incbin "baserom.md",0x1590,0x8
+sub_001598:
+	move.b #0xff,(0xffffa234).l
+	rts
 sub_0015A2:
 	bsr.w sub_004212
-	jsr (sub_00871A,pc)
+	jsr (VramClear,pc)
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	move.w #0xe614,d3
 	lea.l (dat_003295,pc),a0
 	move.w #0x2000,d6
 loc_0015C0:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007F00,pc)
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	tst.b (a0)
 	bne.s loc_0015C0
 	move.w #0xc8,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	rts
 sub_0015EC:
 	bsr.w sub_004212
 	lea.l (dat_038E6E).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_00841A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
-	jsr (sub_011D12).l
+	jsr (Copy32,pc)
+	jsr (VdpListReset).l
 	lea.l (dat_03A4B0).l,a0
 	move.w #0xc392,d1
 	moveq #0x16,d2
@@ -1184,16 +1260,16 @@ sub_0015EC:
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
 	jsr (sub_0122CA).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	move.w #0xe188,d3
 	lea.l (dat_001728,pc),a0
 	move.w #0xa000,d6
 loc_001652:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007F00,pc)
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	tst.b (a0)
 	bne.s loc_001652
 	lea.l (dat_001739,pc),a0
@@ -1205,9 +1281,9 @@ loc_001652:
 loc_001686:
 	jsr (sub_007DEE).l
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	move.w #0x12c,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	jsr (sub_00874E).l
 	clr.w (0xffffa0ee).l
 	lea.l (dat_0017E7,pc),a0
@@ -1227,15 +1303,15 @@ loc_0016BC:
 	andi.w #0x1f,d1
 	move.w d1,(0xffffa238).l
 loc_0016F2:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w (0xffffa0ee).l,d0
 	andi.w #0x1ff,d0
 	asr.w #0x1,d0
 	moveq #0x0,d1
-	jsr (sub_011F58).l
+	jsr (VdpQueueVScroll).l
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	cmpi.w #0x6a4,(0xffffa0ee).l
 	bne.s loc_0016BC
 	rts
@@ -1260,39 +1336,39 @@ TitleScreen:
 	bsr.w sub_001A38
 	bra.w PressStartLoop
 sub_001A38:
-	jsr (sub_00871A,pc)
-	jsr (sub_0121D6).l
+	jsr (VramClear,pc)
+	jsr (HScrollClear).l
 	lea.l (dat_00576A,pc),a1
-	jsr (sub_00867A).l
+	jsr (VdpSetRegs).l
 	lea.l (dat_00827A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0082FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (0xffffa134).l,a0
-	jsr (sub_0080FE).l
+	jsr (CramUpload).l
 	lea.l (0xffffa134).l,a0
 	lea.l (0xffffa1b4).l,a1
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0C0000).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e5c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_025DFC).l,a0
 	move.w #0x670,d1
 	move.w d1,(0xffff9e2c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0C75A2).l,a3
 	bsr.w sub_001ADC
 	moveq #0x64,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	lea.l (dat_0C7FA2).l,a3
 sub_001ADC:
 	move.w #0x80,d0
@@ -1300,7 +1376,7 @@ sub_001ADC:
 	moveq #0x0,d0
 loc_001AE8:
 	move.w d0,-(sp)
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w d0,d3
 	addq.w #0x1,d3
 	add.w d3,d3
@@ -1313,7 +1389,7 @@ loc_001AE8:
 	move.w #0x28,d2
 	move.w #0x0,d6
 	move.w (0xffff9e5c).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w (sp)+,d3
 	move.w (sp),d0
 	move.w #0xcd00,d1
@@ -1324,10 +1400,10 @@ loc_001AE8:
 	move.w #0x28,d2
 	move.w #0x0,d6
 	move.w (0xffff9e5c).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank).l
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	move.w (sp)+,d0
 	addq.w #0x1,d0
 	cmpi.w #0x7,d0
@@ -1413,13 +1489,13 @@ sub_001C4A:
 	lea.l (dat_001CD6,pc),a0
 	move.w #0xa000,d6
 loc_001C60:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007F00,pc)
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	tst.b (a0)
 	bne.s loc_001C60
-	jsr (sub_00B2FA).l
+	jsr (ScrSetPlayers).l
 	move.b #0x2,(0xffff9f6d).l
 	cmpi.b #0x3,(0xffff9df5).l
 	blt.s loc_001C98
@@ -1427,9 +1503,9 @@ loc_001C60:
 loc_001C98:
 	lea.l (dat_0083DE,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	lea.l (0xffff8000).l,a4
 	move.w #0x0,(0x14,a4)
 	move.w #0x0,(0x16,a4)
@@ -1494,19 +1570,19 @@ sub_001DB4:
 	lea.l (dat_0A20F4).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_09C0D8).l,a0
 	move.w #0x64,d1
 	move.w d1,(0xffff9e48).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_09C632).l,a0
 	move.w #0x8c,d1
 	move.w d1,(0xffff9e74).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0A78D6).l,a0
 	move.w #0x250,d1
 	move.w d1,(0xffff9e5a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x1f2,(0xffff9e34).l
 	move.w #0x1da,(0xffff9e5e).l
 	move.w #0x322,(0xffff9e76).l
@@ -1521,20 +1597,20 @@ sub_001DB4:
 	lea.l (dat_0DB9D8).l,a0
 	move.w #0x522,d1
 	move.w d1,(0xffff9e44).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_027202).l,a0
 	move.w #0x59a,d1
 	move.w d1,(0xffff9e3c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0A1AB2).l,a0
 	move.w #0x527,d1
 	move.w d1,(0xffff9e42).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0269E0).l,a0
 	move.w #0x559,d1
 	move.w d1,(0xffff9e3a).l
-	jsr (sub_01320A).l
-	jsr (sub_011D12).l
+	jsr (LoadTiles).l
+	jsr (VdpListReset).l
 	lea.l (dat_01346D).l,a1
 	move.w #0x4fb,d1
 	jsr (sub_013394).l
@@ -1544,42 +1620,42 @@ sub_001DB4:
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc100,d1
 	lea.l (dat_0A5C16).l,a0
 	moveq #0x20,d2
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
-	jsr (sub_011D12).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
+	jsr (VdpListReset).l
 	move.w #0xebc0,d1
 	lea.l (dat_0A63E6).l,a0
 	moveq #0x20,d2
 	moveq #0x3,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xeb80,d1
 	lea.l (dat_0A63E6).l,a0
 	moveq #0x20,d2
 	moveq #0x3,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_00861A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0085DA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0085FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x4a,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -1590,82 +1666,82 @@ sub_001FB2:
 	lea.l (dat_09A296).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_097654).l,a0
 	move.w #0xb7,d1
 	move.w d1,(0xffff9e72).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0540B0).l,a0
 	move.w #0x225,d1
 	move.w d1,(0xffff9e4c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0C89A2).l,a0
 	move.w #0x289,d1
 	move.w d1,(0xffff9e34).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x289,(0xffff9e74).l
 	lea.l (dat_027202).l,a0
 	move.w #0x59a,d1
 	move.w d1,(0xffff9e3c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0269E0).l,a0
 	move.w #0x559,d1
 	move.w d1,(0xffff9e3a).l
-	jsr (sub_01320A).l
-	jsr (sub_011D12).l
+	jsr (LoadTiles).l
+	jsr (VdpListReset).l
 	move.w #0xc140,d1
 	lea.l (dat_09B958).l,a0
 	moveq #0x20,d2
 	moveq #0xe,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc100,d1
 	lea.l (dat_09B958).l,a0
 	moveq #0x20,d2
 	moveq #0xe,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc840,d1
 	lea.l (dat_09BDB8).l,a0
 	moveq #0x20,d2
 	moveq #0x4,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc800,d1
 	lea.l (dat_09BDB8).l,a0
 	moveq #0x20,d2
 	moveq #0x4,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xca40,d1
 	lea.l (dat_09BEF8).l,a0
 	moveq #0x20,d2
 	moveq #0x6,d3
 	move.l #0x6000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xca00,d1
 	lea.l (dat_09BEF8).l,a0
 	moveq #0x20,d2
 	moveq #0x6,d3
 	move.l #0x6000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_0085BA,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0085DA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x40,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -1675,7 +1751,7 @@ sub_002154:
 	lea.l (dat_08CE50).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x5bb,(0xffff9e42).l
 	move.w #0x295,(0xffff9e5e).l
 	move.w #0x295,(0xffff9e5c).l
@@ -1683,11 +1759,11 @@ sub_002154:
 	lea.l (dat_0AC5DA).l,a0
 	move.w #0x2ad,d1
 	move.w d1,(0xffff9e68).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0DBA3A).l,a0
 	move.w #0x3f4,d1
 	move.w d1,(0xffff9e56).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_08CE10).l,a0
 	move.w #0x3f2,d1
 	move.w d1,(0xffff9e78).l
@@ -1697,7 +1773,7 @@ sub_002154:
 	move.w #0x514,(0xffff9e3a).l
 	move.w #0x4ec,(0xffff9e6c).l
 	move.w #0x4c2,(0xffff9e3e).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_01345F).l,a1
 	move.w #0x6c7,d1
 	jsr (sub_013394).l
@@ -1710,25 +1786,25 @@ sub_002154:
 	moveq #0x6,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xca00,d1
 	lea.l (dat_089C0E).l,a0
 	moveq #0x20,d2
 	moveq #0x6,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_00859A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00863A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x40,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -1744,11 +1820,11 @@ sub_00229E:
 	lea.l (dat_085D8C).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_08C72E).l,a0
 	move.w #0x204,d1
 	move.w d1,(0xffff9e6a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x23b,(0xffff9e78).l
 	move.w #0x5bb,(0xffff9e42).l
 	move.w #0x23d,(0xffff9e70).l
@@ -1756,17 +1832,17 @@ sub_00229E:
 	lea.l (dat_0D9556).l,a0
 	move.w #0x344,d1
 	move.w d1,(0xffff9e1a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0DCCBC).l,a0
 	move.w #0x468,d1
 	move.w d1,(0xffff9e5c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x46c,(0xffff9e5a).l
 	move.w #0x555,(0xffff9e3c).l
 	move.w #0x514,(0xffff9e3a).l
 	move.w #0x4cb,(0xffff9e3e).l
 	move.w #0x4f5,(0xffff9e58).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_01345F).l,a1
 	move.w #0x6c7,d1
 	jsr (sub_013394).l
@@ -1779,25 +1855,25 @@ sub_00229E:
 	moveq #0x6,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xca00,d1
 	lea.l (dat_089C0E).l,a0
 	moveq #0x20,d2
 	moveq #0x6,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_00857A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00863A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x40,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -1813,15 +1889,15 @@ sub_00241E:
 	lea.l (dat_06F4D0).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_073902).l,a0
 	move.w #0x16c,d1
 	move.w d1,(0xffff9e4e).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_07E2B0).l,a0
 	move.w #0x22a,d1
 	move.w d1,(0xffff9e78).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x3e9,(0xffff9e4c).l
 	move.w #0x1cd,(0xffff9e5a).l
 	move.w #0x4aa,(0xffff9e5c).l
@@ -1838,7 +1914,7 @@ sub_00241E:
 	move.w #0x503,(0xffff9e3c).l
 	move.w #0x422,(0xffff9e56).l
 	move.w #0x372,(0xffff9e1c).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_013454).l,a1
 	move.w #0x5d2,d1
 	jsr (sub_013394).l
@@ -1848,63 +1924,63 @@ sub_00241E:
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc100,d1
 	lea.l (dat_072232).l,a0
 	moveq #0x20,d2
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc540,d1
 	lea.l (dat_0729B2).l,a0
 	moveq #0x20,d2
 	moveq #0xb,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
-	jsr (sub_011D12).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
+	jsr (VdpListReset).l
 	move.w #0xe100,d1
 	lea.l (dat_073132).l,a0
 	moveq #0x18,d2
 	moveq #0x18,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xe130,d1
 	lea.l (dat_073142).l,a0
 	moveq #0x10,d2
 	moveq #0x18,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xe150,d1
 	lea.l (dat_073142).l,a0
 	moveq #0x8,d2
 	moveq #0x18,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xe160,d1
 	lea.l (dat_073172).l,a0
 	moveq #0x8,d2
 	moveq #0x18,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_00851A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00855A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x19,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -1914,27 +1990,27 @@ sub_002632:
 	lea.l (dat_025DFC).l,a0
 	move.w #0x670,d1
 	move.w d1,(0xffff9e2c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_061C22).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_02585A).l,a0
 	move.w #0x5b7,d1
 	move.w d1,(0xffff9e28).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_068648).l,a0
 	move.w #0x1c3,d1
 	move.w d1,(0xffff9e54).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0BCBBA).l,a0
 	move.w #0x257,d1
 	move.w d1,(0xffff9e36).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0473C4).l,a0
 	move.w #0x3b2,d1
 	move.w d1,(0xffff9e44).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x1c4,(0xffff9e46).l
 	move.w #0x174,(0xffff9e50).l
 	move.w #0x10e,(0xffff9e4e).l
@@ -1960,7 +2036,7 @@ sub_002632:
 	move.w #0x2d9,(0xffff9e6e).l
 	move.w #0x44a,(0xffff9e68).l
 	move.w #0x3d6,(0xffff9e6c).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_01345A).l,a1
 	move.w #0x5e4,d1
 	jsr (sub_013394).l
@@ -1970,25 +2046,25 @@ sub_002632:
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc100,d1
 	lea.l (dat_065264).l,a0
 	moveq #0x20,d2
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_0084BA,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00849A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x28,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -1997,27 +2073,27 @@ sub_00281E:
 	lea.l (dat_0433E2).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_02585A).l,a0
 	move.w #0x599,d1
 	move.w d1,(0xffff9e28).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_050BEE).l,a0
 	move.w #0xb2,d1
 	move.w d1,(0xffff9e4a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0540B0).l,a0
 	move.w #0x221,d1
 	move.w d1,(0xffff9e4c).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0269E0).l,a0
 	move.w #0x53f,d1
 	move.w d1,(0xffff9e3a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_05C8CC).l,a0
 	move.w #0x28f,d1
 	move.w d1,(0xffff9e54).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x3c3,(0xffff9e1a).l
 	move.w #0x4eb,(0xffff9e42).l
 	move.w #0x333,(0xffff9e4e).l
@@ -2026,7 +2102,7 @@ sub_00281E:
 	move.w #0xb2,(0xffff9e36).l
 	move.w #0x28f,(0xffff9e44).l
 	move.w #0x357,(0xffff9e3c).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_013469).l,a1
 	move.w #0x5c6,d1
 	jsr (sub_013394).l
@@ -2036,26 +2112,26 @@ sub_00281E:
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc100,d1
 	lea.l (dat_046C44).l,a0
 	moveq #0x20,d2
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	jsr (sub_00BE42).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_0084BA,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00849A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x2,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -2065,11 +2141,11 @@ sub_002980:
 	lea.l (dat_02585A).l,a0
 	move.w #0x595,d1
 	move.w d1,(0xffff9e28).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0433E2).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0x183,(0xffff9e46).l
 	move.w #0x245,(0xffff9e1c).l
 	move.w #0x2f5,(0xffff9e56).l
@@ -2089,7 +2165,7 @@ sub_002980:
 	move.w #0x401,(0xffff9e30).l
 	move.w #0x183,(0xffff9e44).l
 	move.w #0x183,(0xffff9e48).l
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	lea.l (dat_013448).l,a1
 	move.w #0x5c2,d1
 	jsr (sub_013394).l
@@ -2105,26 +2181,26 @@ sub_002980:
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc100,d1
 	lea.l (dat_046C44).l,a0
 	moveq #0x20,d2
 	moveq #0x18,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	jsr (sub_00BE42).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_0084BA,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00847A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	move.w #0x2,d0
 	jsr (sub_0FBB6C).l
 	rts
@@ -2250,57 +2326,57 @@ sub_0032AC:
 	move.w #0x80,d0
 	jsr (sub_013D04).l
 	move.w #0x0,(0xffff80b6).l
-	jsr (sub_00818C,pc)
-	jsr (sub_00800C,pc)
+	jsr (VsramClear,pc)
+	jsr (VramClearDma,pc)
 	lea.l (dat_00576A,pc),a1
-	jsr (sub_00867A).l
-	jsr (sub_0121D6).l
+	jsr (VdpSetRegs).l
+	jsr (HScrollClear).l
 	lea.l (dat_024816).l,a0
 	move.w #0x7b6,d1
 	move.w d1,(0xffff9e26).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_025138).l,a0
 	move.w #0x6c7,d1
 	move.w d1,(0xffff9e2a).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_025DFC).l,a0
 	move.w #0x670,d1
 	move.w d1,(0xffff9e2c).l
-	jsr (sub_01320A).l
-	jsr (sub_011D12).l
+	jsr (LoadTiles).l
+	jsr (VdpListReset).l
 	move.l #0x0,(0xffffaa5c).l
 	move.l #0x4a88,(0xffff9e98).l
-	jsr (sub_004752,pc)
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (ScrollRows,pc)
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	jsr (sub_002B08,pc)
 	jsr (sub_007C54,pc)
 	rts
 sub_003360:
 	move.w #0x0,d0
 	jsr (sub_0056FA,pc)
-	jsr (sub_0121D6).l
-	jsr (sub_0086F6,pc)
-	jsr (sub_00818C,pc)
+	jsr (HScrollClear).l
+	jsr (VramClearAlt,pc)
+	jsr (VsramClear,pc)
 	lea.l (dat_057778).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e26).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0365BC).l,a0
 	move.w #0x12f,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_0082DA,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0082FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00843A,pc),a0
-	jsr (sub_008A7C,pc)
-	jsr (sub_011D12).l
-	jsr (sub_013376).l
+	jsr (Copy32,pc)
+	jsr (VdpListReset).l
+	jsr (SpriteQueueReset).l
 	jsr (BuildSpriteTable).l
 	move.w #0xc302,d1
 	lea.l (dat_059E9A).l,a0
@@ -2308,7 +2384,7 @@ sub_003360:
 	moveq #0x15,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e26).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc328,d1
 	lea.l (dat_059E9A).l,a0
 	moveq #0x13,d2
@@ -2316,16 +2392,16 @@ sub_003360:
 	move.l #0x2000,d6
 	move.w (0xffff9e26).l,d7
 	jsr (sub_01227A).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	lea.l (dat_003C36,pc),a6
 loc_003434:
 	move.w (a6)+,d1
 	beq.w loc_0034DA
 	bpl.s loc_00349A
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.l a6,-(sp)
 	move.w #0xc384,d1
 	lea.l (dat_059F68).l,a0
@@ -2333,7 +2409,7 @@ loc_003434:
 	moveq #0x13,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e26).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc3aa,d1
 	lea.l (dat_059F68).l,a0
 	moveq #0x11,d2
@@ -2342,8 +2418,8 @@ loc_003434:
 	move.w (0xffff9e26).l,d7
 	jsr (sub_01227A).l
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	movea.l (sp)+,a6
 	bra.w loc_003434
 loc_00349A:
@@ -2376,25 +2452,25 @@ loc_0034DA:
 	move.w #0xc000,d6
 	jsr (sub_007E08,pc)
 	move.w #0x46,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	jsr (sub_00874E,pc)
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w #0xc91e,d1
 	lea.l (dat_059D8C).l,a0
 	moveq #0x5,d2
 	moveq #0x6,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e26).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc928,d1
 	lea.l (dat_059D96).l,a0
 	moveq #0x5,d2
 	moveq #0x6,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e26).l,d7
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (0xffff8000).l,a4
 	clr.l (0x46,a4)
 	clr.l (0x4a,a4)
@@ -2464,14 +2540,14 @@ loc_00363A:
 loc_00363E:
 	jsr (sub_013E04).l
 	move.w #0x5a,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	moveq #0x0,d0
 	jsr (sub_0FBB6C).l
 	move.w #0x4,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	jsr (sub_001A38).l
 	move.w #0x46,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	lea.l (0xffff8000).l,a4
 	bsr.w sub_003814
 	move.l d1,d0
@@ -2497,10 +2573,10 @@ sub_00368C:
 	bra.w sub_00388C
 loc_0036C2:
 	move.w #0x64,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	jsr (sub_003C06,pc)
 	move.w #0x14,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	rts
 sub_0036D8:
 	bsr.w sub_003B4A
@@ -2546,7 +2622,7 @@ sub_003762:
 	bsr.w sub_003B4A
 loc_003786:
 	move.w #0x2,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	moveq #0x78,d0
 	jsr (sub_013D04).l
 	moveq #0x0,d7
@@ -2560,10 +2636,10 @@ loc_003786:
 	cmpi.l #0xff00ff,d7
 	bne.s loc_003786
 	move.w #0x64,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	jsr (sub_003C06,pc)
 	move.w #0x14,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	rts
 sub_0037D4:
 	tst.w (0x24,a4)
@@ -2634,7 +2710,7 @@ sub_003862:
 	move.l #0x1388,d5
 sub_00388C:
 	move.w #0x2,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	moveq #0x78,d0
 	jsr (sub_013D04).l
 	moveq #0x0,d7
@@ -2648,10 +2724,10 @@ sub_00388C:
 	cmpi.l #0xff00ff,d7
 	bne.s sub_00388C
 	move.w #0x64,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	jsr (sub_003C06,pc)
 	move.w #0x14,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	rts
 sub_0038DA:
 	tst.w (0x24,a4)
@@ -2829,7 +2905,7 @@ loc_003B48:
 	rts
 sub_003B4A:
 	movem.l d4-d5,-(sp)
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w (0x4,a3),d0
 	lea.l (dat_03869E).l,a0
 	lea.l (0x0,a0,d0.w),a0
@@ -2838,25 +2914,25 @@ sub_003B4A:
 	moveq #0x6,d3
 	move.w #0xe000,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (0x6,a3),a0
 	lea.l (0xffffa194).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (0xffffa134).l,a0
-	jsr (sub_0080FE).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (CramUpload).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	movem.l (sp)+,d4-d5
 	rts
 sub_003BA6:
 	movem.l a0/a6,-(sp)
 	movem.w d0-d7,-(sp)
 	move.w (0xffff9e26).l,d7
-	jsr (sub_011D12).l
-	jsr (sub_012234).l
-	jsr (sub_011D28).l
+	jsr (VdpListReset).l
+	jsr (VdpQueueTileRect).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	movem.w (sp)+,d0-d7
 	movem.l (sp)+,a0/a6
 	rts
@@ -2875,17 +2951,17 @@ sub_003BF2:
 loc_003C04:
 	rts
 sub_003C06:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	move.w #0xe000,d1
 	moveq #0x28,d2
 	moveq #0x14,d3
-	jsr (sub_012212).l
+	jsr (VdpQueueFillRows).l
 	move.w #0xe91e,d1
 	moveq #0xa,d2
 	moveq #0x6,d3
-	jsr (sub_012212).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpQueueFillRows).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	rts
 | data 0x003C36-0x003EC8
 dat_003C36:
@@ -2932,7 +3008,7 @@ dat_003E62:
 	.incbin "baserom.md",0x3E62,0x32
 dat_003E94:
 	.incbin "baserom.md",0x3E94,0x34
-sub_003EC8:
+HiScoreInitOnce:
 	cmpi.l #0x5041554c,(0xfffffff6).l
 	beq.s loc_003EF8
 	move.l #0x5041554c,(0xfffffff6).l
@@ -2972,14 +3048,14 @@ DefaultHiScores:
 	.incbin "baserom.md",0x3F3C,0x5C
 sub_003F98:
 	jsr (sub_0032AC,pc)
-	jsr (sub_00871A,pc)
+	jsr (VramClear,pc)
 	lea.l (dat_02E808).l,a0
 	move.w #0x1,d1
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_02D406).l,a0
 	move.w #0x400,d1
 	move.w d1,(0xffff9e48).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.w #0xc000,d1
 	lea.l (dat_030EEA).l,a0
 	moveq #0x28,d2
@@ -2988,14 +3064,14 @@ sub_003F98:
 	move.w #0x1,d7
 	jsr (sub_004682,pc)
 	moveq #0x0,d0
-	jsr (sub_008808,pc)
+	jsr (VdpSetBgColor,pc)
 	lea.l (dat_00837A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00839A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	lea.l (dat_004087,pc),a0
 	move.w #0xe094,d3
 	move.w #0x2000,d6
@@ -3043,7 +3119,7 @@ dat_004093:
 sub_0041E6:
 	bsr.w sub_004212
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	lea.l (dat_004093,pc),a0
 	jsr (sub_00424E,pc)
 	jsr (sub_00424E,pc)
@@ -3054,20 +3130,20 @@ sub_0041E6:
 	rts
 sub_004212:
 	jsr (sub_0032AC,pc)
-	jsr (sub_00871A,pc)
+	jsr (VramClear,pc)
 	lea.l (dat_02D406).l,a0
 	move.w #0x3e8,d1
 	move.w d1,(0xffff9e48).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_00831A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00839A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA,pc),a0
-	jmp (sub_008A7C,pc)
+	jmp (Copy32,pc)
 sub_00424E:
-	jsr (sub_00871A,pc)
+	jsr (VramClear,pc)
 	move.w #0xe404,d3
 	move.w #0x2000,d6
 loc_00425A:
@@ -3079,14 +3155,14 @@ loc_00425A:
 	addq.l #0x4,sp
 	rts
 loc_004276:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007F00,pc)
 	move.w #0x78,d0
 	jsr (sub_013D04).l
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	tst.b (a0)
 	bne.s loc_00425A
 	addq.l #0x1,a0
@@ -3105,42 +3181,42 @@ loc_0042C8:
 	rts
 StoryIntro:
 	bsr.w sub_0032AC
-	jsr (sub_00871A,pc)
+	jsr (VramClear,pc)
 	lea.l (dat_031E3A).l,a0
 	move.w #0x1,d1
 	move.w d1,(0xffff9e38).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	lea.l (dat_02D406).l,a0
 	move.w #0x400,d1
 	move.w d1,(0xffff9e48).l
-	jsr (sub_01320A).l
+	jsr (LoadTiles).l
 	move.l #0x460c,(0xffff9e98).l
 	move.w #0xff28,(0xffffaa5e).l
 	clr.w (0xffffaa5c).l
 	lea.l (0xc00000).l,a5
 	move.w #0x8b00,(0x4,a5)
-	jsr (sub_011D12).l
-	jsr (sub_004752,pc)
+	jsr (VdpListReset).l
+	jsr (ScrollRows,pc)
 	move.w #0xc41c,d1
 	lea.l (dat_0316BA).l,a0
 	moveq #0xb,d2
 	moveq #0xc,d3
 	jsr (sub_004650,pc)
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	lea.l (dat_00831A,pc),a0
 	lea.l (0xffffa134).l,a1
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_00839A,pc),a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	move.l #0x4618,(0xffff9e9c).l
 	move.w #0xe084,(0xffff9ea0).l
 	move.l #0x460c,(0xffff9e98).l
 	moveq #0x0,d7
 loc_00438C:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	btst.b #0x0,d7
 	bne.s loc_0043C6
 	movea.l (0xffff9e9c).l,a0
@@ -3195,7 +3271,7 @@ loc_00442A:
 	moveq #0xc,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc428,d1
 	lea.l (dat_031AA2).l,a0
 	moveq #0x14,d2
@@ -3300,10 +3376,10 @@ loc_00458C:
 	move.l #0x4646,(0xffff9e9c).l
 	move.w #0xeb22,(0xffff9ea0).l
 loc_0045D0:
-	jsr (sub_004752,pc)
-	jsr (sub_011D28).l
+	jsr (ScrollRows,pc)
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank).l
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	jsr (ReadPad1,pc)
 	move.w (0xffff8050).l,d0
 	btst.b #0x7,d0
@@ -3321,7 +3397,7 @@ sub_004650:
 	move.w d7,-(sp)
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w (sp)+,d7
 	rts
 sub_004668:
@@ -3347,7 +3423,7 @@ loc_004690:
 	move.w d2,(0xffffa0e0).l
 	move.l #0xffffb452,(0xffffa0e2).l
 	move.w d1,(0xffffa0e6).l
-	jsr (sub_011F94).l
+	jsr (DmaToVramSave).l
 	lea.l (0x50,a0),a0
 	addi.w #0x80,d1
 	dbra d3,loc_004684
@@ -3371,7 +3447,7 @@ loc_0046DA:
 	move.w d2,(0xffffa0e0).l
 	move.l #0xffffb452,(0xffffa0e2).l
 	move.w d1,(0xffffa0e6).l
-	jsr (sub_011F94).l
+	jsr (DmaToVramSave).l
 	lea.l (0x50,a0),a0
 	addi.w #0x80,d1
 	dbra d3,loc_0046C8
@@ -3399,7 +3475,7 @@ loc_004732:
 	dbra d3,loc_004722
 	move.l a5,(0xffff80bc).l
 	rts
-sub_004752:
+ScrollRows:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffaf92).l,a1
 	lea.l (0xffffaa5c).l,a2
@@ -3437,7 +3513,7 @@ loc_0047AE:
 	move.w #0xf000,(a5)+
 	move.l a5,(0xffff80bc).l
 	rts
-sub_0047CE:
+BgStreamL6:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
 	lea.l (dat_005440,pc),a2
@@ -3448,15 +3524,15 @@ sub_0047CE:
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
-	bsr.w sub_00498A
+	bsr.w BgStreamLayers
 	lea.l (dat_00548A,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	clr.w (0xffffa0aa).l
-	bra.w sub_00498A
-sub_004820:
+	bra.w BgStreamLayers
+BgStreamL5:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
 	lea.l (dat_005302,pc),a2
@@ -3467,15 +3543,15 @@ sub_004820:
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0xe000,(0xffffa0aa).l
-	bsr.w sub_00498A
+	bsr.w BgStreamLayers
 	lea.l (dat_0053A6,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x80,d1
 	moveq #0x10,d2
 	clr.w (0xffffa0aa).l
-	bra.w sub_00498A
-sub_004872:
+	bra.w BgStreamLayers
+BgStreamL2:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
 	lea.l (dat_00522E,pc),a2
@@ -3486,15 +3562,15 @@ sub_004872:
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
-	bsr.w sub_00498A
+	bsr.w BgStreamLayers
 	lea.l (dat_005256,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	clr.w (0xffffa0aa).l
-	bra.w sub_00498A
-sub_0048C4:
+	bra.w BgStreamLayers
+BgStreamL4:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
 	lea.l (dat_005026,pc),a2
@@ -3505,15 +3581,15 @@ sub_0048C4:
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
-	bsr.w sub_00498A
+	bsr.w BgStreamLayers
 	lea.l (dat_0050C8,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	clr.w (0xffffa0aa).l
-	bra.w sub_00498A
-sub_004916:
+	bra.w BgStreamLayers
+BgStreamL1:
 	movea.l (0xffff9e98).l,a0
 	lea.l (dat_004F48,pc),a4
 	lea.l (dat_004FDC,pc),a5
@@ -3530,7 +3606,7 @@ loc_00494A:
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
-	bsr.w sub_00498A
+	bsr.w BgStreamLayers
 	bra.s loc_00496A
 loc_004962:
 	tst.w (a0)+
@@ -3545,7 +3621,7 @@ loc_00496A:
 	move.w #0x80,d1
 	moveq #0x10,d2
 	clr.w (0xffffa0aa).l
-sub_00498A:
+BgStreamLayers:
 	movea.l (a2)+,a3
 	move.w (a0)+,d7
 	ble.w loc_004A62
@@ -3585,7 +3661,7 @@ loc_0049EA:
 	bpl.s loc_004A16
 	cmpi.b #0x80,d5
 	bne.s loc_0049FA
-	jsr (sub_012212).l
+	jsr (VdpQueueFillRows).l
 	bra.s loc_004A4E
 loc_0049FA:
 	neg.w d5
@@ -3614,7 +3690,7 @@ loc_004A38:
 	bne.s loc_004A48
 	jsr (sub_01385A).l
 loc_004A48:
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 loc_004A4E:
 	movem.l (sp)+,d0-d3/d7/a0-a6
 loc_004A52:
@@ -3623,7 +3699,7 @@ loc_004A52:
 	asl.w #0x6,d7
 	add.w d7,d0
 	addq.l #0x2,a6
-	bra.w sub_00498A
+	bra.w BgStreamLayers
 loc_004A62:
 	rts
 | data 0x004A64-0x0056FA
@@ -3673,7 +3749,7 @@ dat_00553C:
 sub_0056FA:
 	jsr (sub_005708,pc)
 	st.b (0xffffa246).l
-	jmp (sub_008A4C,pc)
+	jmp (PalFade,pc)
 sub_005708:
 	move.w #0x3f,d7
 	lea.l (0xffffa134).l,a0
@@ -3686,7 +3762,7 @@ dat_00571A:
 	.incbin "baserom.md",0x571A,0x50
 dat_00576A:
 	.incbin "baserom.md",0x576A,0x50
-sub_0057BA:
+HitAllShootable:
 	lea.l (0xffff87b2).l,a6
 	lea.l (0xffffa958).l,a5
 	st.b (0xffffa0a5).l
@@ -3854,10 +3930,1340 @@ sub_00598E:
 	move.w #0x10,(0x14,a6)
 	move.l #0xc8ba,(0x20,a6)
 	rts
-| data 0x0059A4-0x00700C
+| data 0x0059A4-0x0059AC
 dat_0059A4:
-	.incbin "baserom.md",0x59A4,0x1668
-sub_00700C:
+	.incbin "baserom.md",0x59A4,0x8
+sub_0059AC:
+	lea.l (sub_0059E6,pc),a2
+	lea.l (dat_0059CE,pc),a3
+	jsr (HitBox,pc)
+	lea.l (sub_005A02,pc),a2
+	lea.l (dat_0059C6,pc),a3
+	jsr (HitBox,pc)
+	rts
+| data 0x0059C6-0x0059E6
+dat_0059C6:
+	.incbin "baserom.md",0x59C6,0x8
+dat_0059CE:
+	.incbin "baserom.md",0x59CE,0x18
+sub_0059E6:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,(a6)
+	move.l #0xb504,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+	lea.l (sub_005A00,pc),a0
+	rts
+sub_005A00:
+	rts
+sub_005A02:
+	lea.l (sub_005A08,pc),a0
+	rts
+sub_005A08:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x20,(0x14,a6)
+	move.l #0xb4c2,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+sub_005A24:
+	tst.b (0xffff9ec0).l
+	beq.s loc_005A3A
+	movea.l (0xffff9ed6).l,a1
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+loc_005A3A:
+	st.b (0xffff9ec0).l
+	move.l a6,(0xffff9ed6).l
+	rts
+sub_005A48:
+	lea.l (sub_005A54,pc),a2
+	lea.l (dat_005A78,pc),a3
+	jmp (HitBox,pc)
+sub_005A54:
+	lea.l (sub_005A5A,pc),a0
+	rts
+sub_005A5A:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x20,(0x14,a6)
+	move.l #0xb69a,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+	rts
+| data 0x005A78-0x005A80
+dat_005A78:
+	.incbin "baserom.md",0x5A78,0x8
+sub_005A80:
+	lea.l (sub_005A8C,pc),a2
+	lea.l (dat_005AB4,pc),a3
+	jmp (HitBox,pc)
+sub_005A8C:
+	lea.l (sub_005A92,pc),a0
+	rts
+sub_005A92:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x20,(0x14,a6)
+	move.l #0xb78c,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+	jsr (sub_005A24,pc)
+	rts
+| data 0x005AB4-0x005ABC
+dat_005AB4:
+	.incbin "baserom.md",0x5AB4,0x8
+sub_005ABC:
+	lea.l (sub_005AC8,pc),a2
+	lea.l (dat_005AF0,pc),a3
+	jmp (HitBox,pc)
+sub_005AC8:
+	lea.l (sub_005ACE,pc),a0
+	rts
+sub_005ACE:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x20,(0x14,a6)
+	move.l #0xb860,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+	jsr (sub_005A24,pc)
+	rts
+| data 0x005AF0-0x005AF8
+dat_005AF0:
+	.incbin "baserom.md",0x5AF0,0x8
+sub_005AF8:
+	lea.l (sub_005B10,pc),a2
+	lea.l (loc_005BE2+2,pc),a3
+	jsr (HitBox,pc)
+	lea.l (sub_005B2E,pc),a2
+	lea.l (sub_005BDC,pc),a3
+	jmp (HitBox,pc)
+sub_005B10:
+	jsr (sub_0072C0,pc)
+	bset.b #0xc,d5
+	move.w d5,(a6)
+	move.w #0x14,(0x14,a6)
+	move.l #0xda48,(0x20,a6)
+	lea.l (sub_005B56,pc),a0
+	rts
+sub_005B2E:
+	bset.b #0xc,d5
+	move.w d5,(a6)
+	move.w #0x14,(0x14,a6)
+	move.l #0xda48,(0x20,a6)
+	movem.l d0-d7/a0-a6,-(sp)
+	jsr (sub_01275A).l
+	movem.l (sp)+,d0-d7/a0-a6
+	lea.l (sub_005BBE,pc),a0
+	rts
+sub_005B56:
+	bsr.w sub_005BBE
+	btst.b #0xd,(a6)
+	beq.w loc_005BBC
+	cmpi.w #0x9,(0xffffa0ca).l
+	bge.s loc_005BBC
+	bclr.b #0xd,(a6)
+	movem.w (0x2,a6),d0-d1
+	subi.w #0x5a,d1
+	moveq #0x7,d2
+	btst.b #0xa,(a6)
+	beq.s loc_005B84
+	moveq #0xa,d2
+loc_005B84:
+	move.l a6,-(sp)
+	move.w (0x6,a6),d3
+	jsr (sub_012A46).l
+	move.b #0x4,(0x12,a6)
+	move.b #0xb4,(0xc,a6)
+	move.b #0xff,(0xf,a6)
+	bset.b #0x4,(a6)
+	move.w #0xf0,(0x18,a6)
+	movea.l (sp)+,a6
+	move.l #0xda18,(0x20,a6)
+	move.w #0x10,(0x24,a6)
+loc_005BBC:
+	rts
+sub_005BBE:
+	jsr (sub_007322,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x20,(0x24,a6)
+	move.l #0xda92,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+	rts
+sub_005BDC:
+	ori.b #0x58,(0x60,a0,d0.w)
+loc_005BE2:
+	ori.w #0xd,(a0)+
+	ori.l #0x1a0028,d0
+sub_005BEC:
+	lea.l (dat_005C3E,pc),a3
+	move.w (0x14,a6),d0
+	andi.w #0xf0,d0
+	eori.w #0xf0,d0
+	asr.w #0x1,d0
+	lea.l (0x0,a3,d0.w),a3
+	lea.l (sub_005C0A,pc),a2
+	jmp (HitBox,pc)
+sub_005C0A:
+	lea.l (sub_005C10,pc),a0
+	rts
+sub_005C10:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w (0x14,a6),d1
+	asr.w #0x4,d1
+	lea.l (dat_00C5C0,pc),a2
+	move.b (0x0,a2,d1.w),d1
+	move.w d1,(0x14,a6)
+	move.l #0xc66c,(0x20,a6)
+	addq.w #0x1,(0x32,a4)
+	jsr (sub_005A24,pc)
+	rts
+| data 0x005C3E-0x005CC6
+dat_005C3E:
+	.incbin "baserom.md",0x5C3E,0x88
+sub_005CC6:
+	lea.l (sub_005CD2,pc),a2
+	lea.l (sub_005CE6,pc),a3
+	jmp (HitBox,pc)
+sub_005CD2:
+	lea.l (sub_005CD8,pc),a0
+	rts
+sub_005CD8:
+	bsr.w sub_005DA2
+	move.l #0xc252,(0x20,a6)
+	rts
+sub_005CE6:
+	ori.b #0x18,(a0)
+	ori.b #0x18,-(a0)
+sub_005CEE:
+	lea.l (loc_005D9A+2,pc),a2
+	move.w #0x4f,d0
+	sub.w (0x24,a6),d0
+	lea.l (dat_00C196,pc),a1
+	move.b (0x0,a1,d0.w),d0
+	asl.w #0x3,d0
+	lea.l (loc_005D1C,pc,d0.w),a3
+	jmp (HitBox,pc)
+| data 0x005D0C-0x005D10
+	.incbin "baserom.md",0x5D0C,0x4
+sub_005D10:
+	dc.w 0x0002,0x0203	| ori.b #$3, d2
+	btst.l d1,d3
+	btst.l d1,d3
+	btst.l d1,d4
+	btst.l d2,d7
+loc_005D1C:
+	ori.b #0x10,(a0)
+	ori.b #0x10,-(a0)
+	ori.b #0x18,(a0)
+	ori.b #0x18,-(a0)
+	ori.b #0x20,(a0)
+	ori.b #0x20,-(a0)
+	ori.b #0x28,(a0)+
+	ori.b #0x28,(0x18,a0,d0.w)
+	ori.b #0x30,(0x28,a0)
+	ori.b #0x28,(a0)+
+	ori.b #0x28,(0x20,a0,d0.w)
+	ori.b #0x40,(0x28,a0)
+	ori.b #0x28,-(a0)
+	ori.w #0x28,d0
+	ori.b #0x28,(0x50,a0)
+	ori.b #0x30,(0x30,a0)
+	ori.w #0x30,-(a0)
+	ori.b #0x38,(0x60,a0,d0.w)
+	ori.b #0x38,(0x38).w
+	ori.w #0x38,(0x40,a0,d0.w)
+	ori.w #0x80,d0
+	ori.w #0x40,d0
+	ori.b #0x80,(0x38).w
+	ori.w #0x30,d0
+	ori.l #0x300028,d0
+	ori.b #0x50,(a0)+
+loc_005D9A:
+	dc.w 0x0018,0x41fa	| ori.b #$fa, (a0)+
+	dc.w 0x0004,0x4e75	| ori.b #$75, d4
+sub_005DA2:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x4,(0x24,a6)
+	move.l #0xc264,(0x20,a6)
+	addq.w #0x1,(0x34,a4)
+	rts
+sub_005DC0:
+	lea.l (sub_005DCC,pc),a2
+	lea.l (sub_005E14,pc),a3
+	jmp (HitBox,pc)
+sub_005DCC:
+	lea.l (sub_005DD2,pc),a0
+	rts
+sub_005DD2:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xbd22,(0x20,a6)
+	addq.w #0x1,(0x34,a4)
+	rts
+sub_005DEA:
+	lea.l (sub_005DF6,pc),a2
+	lea.l (sub_005E14,pc),a3
+	jmp (HitBox,pc)
+sub_005DF6:
+	lea.l (sub_005DFC,pc),a0
+	rts
+sub_005DFC:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xbf8e,(0x20,a6)
+	addq.w #0x1,(0x34,a4)
+	rts
+sub_005E14:
+	ori.w #0x40,d0
+	ori.l #0x4047fa,d0
+	dc.w 0x0030,0x45fa,0x0006	| ori.b #$fa, $6(a0, d0.w)
+	jmp (HitBox,pc)
+sub_005E28:
+	move.l #0xb896,(0x20,a6)
+	lea.l (sub_005E36,pc),a0
+	rts
+sub_005E36:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	addq.w #0x1,(0x34,a4)
+	move.l #0xb92e,(0x20,a6)
+	rts
+sub_005E4E:
+	ori.b #0x18,-(a0)
+	ori.w #0x18,d0
+sub_005E56:
+	lea.l (sub_005E88,pc),a3
+	lea.l (sub_005E62,pc),a2
+	jmp (HitBox,pc)
+sub_005E62:
+	move.l #0xb98e,(0x20,a6)
+	lea.l (sub_005E70,pc),a0
+	rts
+sub_005E70:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	addq.w #0x1,(0x34,a4)
+	move.l #0xba26,(0x20,a6)
+	rts
+sub_005E88:
+	ori.b #0x18,-(a0)
+	ori.w #0x18,d0
+sub_005E90:
+	lea.l (sub_005EC2,pc),a3
+	lea.l (sub_005E9C,pc),a2
+	jmp (HitBox,pc)
+sub_005E9C:
+	move.l #0xba8e,(0x20,a6)
+	lea.l (sub_005EAA,pc),a0
+	rts
+sub_005EAA:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	addq.w #0x1,(0x34,a4)
+	move.l #0xbb4e,(0x20,a6)
+	rts
+sub_005EC2:
+	ori.w #0x30,d0
+	ori.l #0x3047fa,d0
+	dc.w 0x0030,0x45fa,0x0006	| ori.b #$fa, $6(a0, d0.w)
+	jmp (HitBox,pc)
+sub_005ED6:
+	move.l #0xbbae,(0x20,a6)
+	lea.l (sub_005EE4,pc),a0
+	rts
+sub_005EE4:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	addq.w #0x1,(0x34,a4)
+	move.l #0xbc52,(0x20,a6)
+	rts
+| data 0x005EFC-0x005F04
+	.incbin "baserom.md",0x5EFC,0x8
+sub_005F04:
+	lea.l (sub_005F4E,pc),a3
+	lea.l (sub_005F1A,pc),a2
+	cmpi.w #0x6,(0xffffa0ca).l
+	bge.s sub_005F32
+	jmp (HitBox,pc)
+sub_005F1A:
+	jsr (sub_013DA8).l
+	move.l #0xc968,(0x20,a6)
+	move.w #0x28,(0x14,a6)
+	lea.l (sub_005F34,pc),a0
+sub_005F32:
+	rts
+sub_005F34:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xc95e,(0x20,a6)
+	addq.w #0x1,(0x38,a4)
+	moveq #0x6,d0
+	jsr (SetPlayerState,pc)
+	rts
+sub_005F4E:
+	ori.b #0x30,(a0)+
+	ori.b #0x30,(0x2e,a0,d3.w)
+	dc.w 0x002a,0x0c40,0x0003	| ori.b #$40, $3(a2)
+	bgt.w loc_005FCE
+	asl.w #0x4,d0
+	lea.l (dat_005F8E,pc,d0.w),a3
+	lea.l (0x8,a3),a1
+	lea.l (sub_005F7A,pc),a2
+	jsr (HitBox,pc)
+	movea.l a1,a3
+	jmp (HitBox,pc)
+sub_005F7A:
+	lea.l (sub_005F80,pc),a0
+	rts
+sub_005F80:
+	move.l #0xca12,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x005F8E-0x005FCE
+dat_005F8E:
+	.incbin "baserom.md",0x5F8E,0x40
+loc_005FCE:
+	subq.w #0x4,d0
+	asl.w #0x3,d0
+	lea.l (dat_005FE4,pc,d0.w),a3
+	lea.l (sub_005FDE,pc),a2
+	jmp (HitBox,pc)
+sub_005FDE:
+	lea.l (sub_005FDE,pc),a0
+	rts
+| data 0x005FE4-0x006004
+dat_005FE4:
+	.incbin "baserom.md",0x5FE4,0x20
+sub_006004:
+	lea.l (dat_006074,pc),a3
+	move.w (0x14,a6),d0
+	andi.w #0xf0,d0
+	eori.w #0xf0,d0
+	asr.w #0x1,d0
+	lea.l (0x0,a3,d0.w),a3
+	lea.l (sub_006022,pc),a2
+	jmp (HitBox,pc)
+sub_006022:
+	lea.l (sub_006028,pc),a0
+	rts
+sub_006028:
+	jsr (sub_0072CE,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.w #0x19,(0x24,a6)
+	move.l #0xd0c8,(0x20,a6)
+	rts
+sub_006042:
+	lea.l (dat_006074,pc),a3
+	move.w (0x14,a6),d0
+	andi.w #0xf0,d0
+	eori.w #0xf0,d0
+	asr.w #0x1,d0
+	lea.l (0x0,a3,d0.w),a3
+	lea.l (sub_006060,pc),a2
+	jmp (HitBox,pc)
+sub_006060:
+	lea.l (sub_006066,pc),a0
+	rts
+sub_006066:
+	move.l #0xc54a,(0x20,a6)
+	jsr (sub_0072CE,pc)
+	rts
+| data 0x006074-0x0060F4
+dat_006074:
+	.incbin "baserom.md",0x6074,0x80
+sub_0060F4:
+	lea.l (sub_00611E,pc),a3
+	lea.l (sub_006100,pc),a2
+	jmp (HitBox,pc)
+sub_006100:
+	lea.l (sub_006106,pc),a0
+	rts
+sub_006106:
+	jsr (AddScore2000,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xcafc,(0x20,a6)
+	addq.w #0x1,(0x36,a4)
+	rts
+sub_00611E:
+	ori.b #0x30,(0x50,a0)
+	dc.w 0x0030,0x47fa,0x0044	| ori.b #$fa, $44(a0, d0.w)
+	lea.l (loc_006166,pc),a2
+	move.b (0xffff9ebc).l,d0
+	cmpi.b #0xf,d0
+	bne.s loc_006142
+	bset.b #0xf,(a6)
+	lea.l (sub_006146,pc),a2
+loc_006142:
+	jmp (HitBox,pc)
+sub_006146:
+	jsr (sub_0072B2,pc)
+	jsr (sub_006252,pc)
+	lea.l (sub_006154,pc),a0
+	rts
+sub_006154:
+	jsr (sub_007368,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xcc98,(0x20,a6)
+loc_006166:
+	lea.l (sub_006154,pc),a0
+	rts
+sub_00616C:
+	ori.b #0x40,-(a0)
+	ori.w #0x20,d0
+sub_006174:
+	lea.l (dat_0061C2,pc),a3
+	lea.l (loc_0061BC,pc),a2
+	move.b (0xffff9ebc).l,d0
+	cmpi.b #0x7,d0
+	bne.s loc_006190
+	bset.b #0xf,(a6)
+	lea.l (sub_006194,pc),a2
+loc_006190:
+	jmp (HitBox,pc)
+sub_006194:
+	jsr (sub_0072B2,pc)
+	jsr (sub_006252,pc)
+	lea.l (sub_0061A2,pc),a0
+	rts
+sub_0061A2:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xce0c,(0x20,a6)
+	bset.b #0x3,(0xffff9ebc).l
+loc_0061BC:
+	lea.l (sub_0061A2,pc),a0
+	rts
+| data 0x0061C2-0x0061CA
+dat_0061C2:
+	.incbin "baserom.md",0x61C2,0x8
+sub_0061CA:
+	lea.l (dat_006200,pc),a3
+	lea.l (sub_0061D6,pc),a2
+	jmp (HitBox,pc)
+sub_0061D6:
+	jsr (sub_0072B2,pc)
+	jsr (sub_006252,pc)
+	lea.l (sub_0061E4,pc),a0
+	rts
+sub_0061E4:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xcec4,(0x20,a6)
+	bset.b #0x2,(0xffff9ebc).l
+	rts
+| data 0x006200-0x006208
+dat_006200:
+	.incbin "baserom.md",0x6200,0x8
+sub_006208:
+	lea.l (dat_00624A,pc),a3
+	lea.l (sub_006214,pc),a2
+	jmp (HitBox,pc)
+sub_006214:
+	jsr (sub_006252,pc)
+	lea.l (sub_00621E,pc),a0
+	rts
+sub_00621E:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xcfde,(0x20,a6)
+	btst.b #0xe,d5
+	bne.s loc_006240
+	bset.b #0x1,(0xffff9ebc).l
+	rts
+loc_006240:
+	bset.b #0x0,(0xffff9ebc).l
+	rts
+| data 0x00624A-0x006252
+dat_00624A:
+	.incbin "baserom.md",0x624A,0x8
+sub_006252:
+	movem.l d0-d7/a0-a6,-(sp)
+	cmpi.w #0xc,(0xffff80dc).l
+	bgt.s loc_006274
+	movem.w (0xffff9e94).l,d0-d1
+	move.w (0x6,a6),d2
+	subq.w #0x1,d2
+	jsr (sub_0124EC).l
+loc_006274:
+	movem.l (sp)+,d0-d7/a0-a6
+	rts
+sub_00627A:
+	lea.l (dat_0062A0,pc),a3
+	lea.l (sub_00628E,pc),a2
+	jsr (HitBox,pc)
+	lea.l (dat_0062A8,pc),a3
+	jmp (HitBox,pc)
+sub_00628E:
+	move.w #0x72,d0
+	jsr (sub_013D04).l
+	lea.l (sub_00629E,pc),a0
+	rts
+sub_00629E:
+	rts
+| data 0x0062A0-0x0062B0
+dat_0062A0:
+	.incbin "baserom.md",0x62A0,0x8
+dat_0062A8:
+	.incbin "baserom.md",0x62A8,0x8
+sub_0062B0:
+	lea.l (dat_00630C,pc),a3
+	lea.l (sub_0062FA,pc),a2
+	jsr (HitBox,pc)
+	lea.l (dat_006314,pc),a3
+	lea.l (sub_0062DC,pc),a2
+	jsr (HitBox,pc)
+	lea.l (dat_00631C,pc),a3
+	lea.l (sub_0062D4,pc),a2
+	jmp (HitBox,pc)
+sub_0062D4:
+	bset.b #0x9,(a6)
+	bne.s sub_006304
+	bra.s sub_0062E2
+sub_0062DC:
+	bset.b #0x8,(a6)
+	bne.s sub_006304
+sub_0062E2:
+	jsr (AddScore250,pc)
+	movem.w (0xffff9e94).l,d0-d1
+	move.w (0x6,a6),d2
+	subq.w #0x1,d2
+	jsr (sub_01253C).l
+sub_0062FA:
+	move.w #0x72,d0
+	jsr (sub_013D04).l
+sub_006304:
+	lea.l (sub_00630A,pc),a0
+	rts
+sub_00630A:
+	rts
+| data 0x00630C-0x006326
+dat_00630C:
+	.incbin "baserom.md",0x630C,0x8
+dat_006314:
+	.incbin "baserom.md",0x6314,0x8
+dat_00631C:
+	.incbin "baserom.md",0x631C,0xA
+sub_006326:
+	lea.l (dat_006354,pc),a3
+	lea.l (sub_006332,pc),a2
+	jmp (HitBox,pc)
+sub_006332:
+	move.l #0xdaee,(0x20,a6)
+	move.w #0x14,(0x24,a6)
+	lea.l (sub_006346,pc),a0
+	rts
+sub_006346:
+	jsr (sub_00735A,pc)
+	move.l #0xdb0c,(0x20,a6)
+	rts
+| data 0x006354-0x00635C
+dat_006354:
+	.incbin "baserom.md",0x6354,0x8
+sub_00635C:
+	lea.l (dat_006386,pc),a3
+	lea.l (sub_006368,pc),a2
+	jmp (HitBox,pc)
+sub_006368:
+	lea.l (sub_00636E,pc),a0
+	rts
+sub_00636E:
+	jsr (sub_0072CE,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xdb5a,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x006386-0x00638E
+dat_006386:
+	.incbin "baserom.md",0x6386,0x8
+sub_00638E:
+	lea.l (dat_0063B8,pc),a3
+	lea.l (sub_00639A,pc),a2
+	jmp (HitBox,pc)
+sub_00639A:
+	lea.l (sub_0063A0,pc),a0
+	rts
+sub_0063A0:
+	jsr (sub_0072EA,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xdbc4,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x0063B8-0x0063C0
+dat_0063B8:
+	.incbin "baserom.md",0x63B8,0x8
+sub_0063C0:
+	lea.l (dat_0063EA,pc),a3
+	lea.l (sub_0063CC,pc),a2
+	jmp (HitBox,pc)
+sub_0063CC:
+	lea.l (sub_0063D2,pc),a0
+	rts
+sub_0063D2:
+	jsr (sub_0072CE,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xfb52,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x0063EA-0x006456
+dat_0063EA:
+	.incbin "baserom.md",0x63EA,0x6C
+sub_006456:
+	lea.l (sub_006480,pc),a3
+	lea.l (sub_006462,pc),a2
+	jmp (HitBox,pc)
+sub_006462:
+	lea.l (sub_006468,pc),a0
+	rts
+sub_006468:
+	jsr (sub_00734C,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xe174,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+sub_006480:
+	ori.b #0x68,(0x50,a0)
+	ori.w #0x47fa,(0x46,a0)
+	cmpi.w #0x1,(0x2a,a6)
+	bne.s loc_006498
+	lea.l (loc_0064D8,pc),a3
+loc_006498:
+	lea.l (sub_0064A0,pc),a2
+	jmp (HitBox,pc)
+sub_0064A0:
+	lea.l (sub_0064A6,pc),a0
+	rts
+sub_0064A6:
+	jsr (sub_007322,pc)
+	subq.w #0x1,(0xffffa23c).l
+	bne.s loc_0064BC
+	movea.l (0xffff9eda).l,a1
+	bset.b #0xf,(a1)
+loc_0064BC:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xe1ca,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+sub_0064D0:
+	ori.b #0x60,-(a0)
+	ori.w #0x60,d0
+loc_0064D8:
+	ori.b #0x60,(0x64,a2,d0.w)
+	ori.w #0x47fa,-(a0)
+	dc.w 0x0028,0x45fa,0x0006	| ori.b #$fa, $6(a0)
+	jmp (HitBox,pc)
+sub_0064EC:
+	lea.l (sub_0064F2,pc),a0
+	rts
+sub_0064F2:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xe2c6,(0x20,a6)
+	addq.w #0x1,(0x34,a4)
+	rts
+sub_00650A:
+	ori.b #0x18,-(a0)
+	ori.w #0x18,d0
+sub_006512:
+	lea.l (sub_00653C,pc),a3
+	lea.l (sub_00651E,pc),a2
+	jmp (HitBox,pc)
+sub_00651E:
+	lea.l (sub_006524,pc),a0
+	rts
+sub_006524:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xea2e,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+sub_00653C:
+	ori.b #0x0,(a4)
+	ori.b #0x1a,(0x47fa,a0)
+	dc.w 0x0028,0x45fa,0x0006	| ori.b #$fa, $6(a0)
+	jmp (HitBox,pc)
+sub_006550:
+	lea.l (sub_006556,pc),a0
+	rts
+sub_006556:
+	jsr (sub_0072DC,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xea72,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x00656E-0x006576
+	.incbin "baserom.md",0x656E,0x8
+sub_006576:
+	lea.l (dat_00659C,pc),a3
+	lea.l (sub_006582,pc),a2
+	jmp (HitBox,pc)
+sub_006582:
+	lea.l (sub_006588,pc),a0
+	rts
+sub_006588:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xeb36,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x00659C-0x0065A4
+dat_00659C:
+	.incbin "baserom.md",0x659C,0x8
+sub_0065A4:
+	lea.l (dat_0065CA,pc),a3
+	lea.l (sub_0065B0,pc),a2
+	jmp (HitBox,pc)
+sub_0065B0:
+	lea.l (sub_0065B6,pc),a0
+	rts
+sub_0065B6:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xeb78,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x0065CA-0x0065D2
+dat_0065CA:
+	.incbin "baserom.md",0x65CA,0x8
+sub_0065D2:
+	lea.l (dat_0065F4,pc),a3
+	lea.l (sub_0065DE,pc),a2
+	jmp (HitBox,pc)
+sub_0065DE:
+	lea.l (sub_0065E4,pc),a0
+	rts
+sub_0065E4:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xebd2,(0x20,a6)
+	rts
+| data 0x0065F4-0x0065FC
+dat_0065F4:
+	.incbin "baserom.md",0x65F4,0x8
+sub_0065FC:
+	lea.l (dat_00664A,pc),a3
+	lea.l (sub_006612,pc),a2
+	cmpi.w #0x3,(0xffffa0ca).l
+	bge.s sub_00662E
+	jmp (HitBox,pc)
+sub_006612:
+	jsr (sub_013DA8).l
+	bclr.b #0xf,(a6)
+	move.l #0xeaf4,(0x20,a6)
+	move.w #0x1e,(0x24,a6)
+	lea.l (sub_006630,pc),a0
+sub_00662E:
+	rts
+sub_006630:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xead6,(0x20,a6)
+	addq.w #0x1,(0x38,a4)
+	moveq #0x6,d0
+	jsr (SetPlayerState,pc)
+	rts
+| data 0x00664A-0x006652
+dat_00664A:
+	.incbin "baserom.md",0x664A,0x8
+sub_006652:
+	lea.l (dat_0066A0,pc),a3
+	lea.l (sub_006668,pc),a2
+	cmpi.w #0x3,(0xffffa0ca).l
+	bge.s sub_006684
+	jmp (HitBox,pc)
+sub_006668:
+	jsr (sub_013DA8).l
+	move.l #0x1522a,(0x20,a6)
+	move.w #0x1e,(0x24,a6)
+	bclr.b #0xf,(a6)
+	lea.l (sub_006686,pc),a0
+sub_006684:
+	rts
+sub_006686:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0x15208,(0x20,a6)
+	addq.w #0x1,(0x38,a4)
+	moveq #0x6,d0
+	jsr (SetPlayerState,pc)
+	rts
+| data 0x0066A0-0x0066A8
+dat_0066A0:
+	.incbin "baserom.md",0x66A0,0x8
+sub_0066A8:
+	lea.l (dat_0066D2,pc),a3
+	lea.l (sub_0066B4,pc),a2
+	jmp (HitBox,pc)
+sub_0066B4:
+	lea.l (sub_0066BA,pc),a0
+	rts
+sub_0066BA:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0x151cc,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x0066D2-0x00675E
+dat_0066D2:
+	.incbin "baserom.md",0x66D2,0x8C
+sub_00675E:
+	move.w (0x1a,a6),d0
+	asl.w #0x3,d0
+	lea.l (dat_006796,pc,d0.w),a3
+	lea.l (sub_006770,pc),a2
+	jmp (HitBox,pc)
+sub_006770:
+	jsr (sub_0072B2,pc)
+	jsr (sub_006252,pc)
+	lea.l (sub_00677E,pc),a0
+	rts
+sub_00677E:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xe7c0,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x006796-0x0067C6
+dat_006796:
+	.incbin "baserom.md",0x6796,0x30
+sub_0067C6:
+	lea.l (dat_0067EA,pc),a3
+	lea.l (sub_0067D2,pc),a2
+	jmp (HitBox,pc)
+sub_0067D2:
+	lea.l (sub_0067D8,pc),a0
+	rts
+sub_0067D8:
+	jsr (sub_007314,pc)
+	move.l #0xf65a,(0x20,a6)
+	addq.w #0x1,(0x3c,a4)
+	rts
+| data 0x0067EA-0x0067F2
+dat_0067EA:
+	.incbin "baserom.md",0x67EA,0x8
+sub_0067F2:
+	lea.l (dat_006832,pc),a3
+	lea.l (sub_006806,pc),a2
+	jsr (HitBox,pc)
+	lea.l (dat_00682A,pc),a3
+	jmp (HitBox,pc)
+sub_006806:
+	lea.l (sub_00680C,pc),a0
+	rts
+sub_00680C:
+	jsr (sub_007322,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xed2e,(0x20,a6)
+	move.w #0x14,(0x24,a6)
+	addq.w #0x1,(0x3e,a4)
+	rts
+| data 0x00682A-0x00683A
+dat_00682A:
+	.incbin "baserom.md",0x682A,0x8
+dat_006832:
+	.incbin "baserom.md",0x6832,0x8
+sub_00683A:
+	lea.l (sub_006868,pc),a3
+	lea.l (sub_006846,pc),a2
+	jmp (HitBox,pc)
+sub_006846:
+	lea.l (sub_00684C,pc),a0
+	rts
+sub_00684C:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xeed4,(0x20,a6)
+	jsr (sub_006870,pc)
+	addq.w #0x1,(0x3e,a4)
+	rts
+sub_006868:
+	ori.b #0x64,(a3)
+	ori.b #0x64,-(a6)
+sub_006870:
+	tst.b (0xffff9ebe).l
+	beq.s loc_006886
+	movea.l (0xffff9ed2).l,a1
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+loc_006886:
+	st.b (0xffff9ebe).l
+	move.l a6,(0xffff9ed2).l
+	rts
+sub_006894:
+	lea.l (sub_0068C2,pc),a3
+	lea.l (sub_0068A0,pc),a2
+	jmp (HitBox,pc)
+sub_0068A0:
+	lea.l (sub_0068A6,pc),a0
+	rts
+sub_0068A6:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xf094,(0x20,a6)
+	jsr (sub_006870,pc)
+	addq.w #0x1,(0x3e,a4)
+	rts
+sub_0068C2:
+	ori.b #0x46,(a0)
+	ori.b #0x46,-(a0)
+sub_0068CA:
+	lea.l (dat_0068F8,pc),a3
+	lea.l (sub_0068D6,pc),a2
+	jmp (HitBox,pc)
+sub_0068D6:
+	lea.l (sub_0068DC,pc),a0
+	rts
+sub_0068DC:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xf27a,(0x20,a6)
+	jsr (sub_006870,pc)
+	addq.w #0x1,(0x3e,a4)
+	rts
+| data 0x0068F8-0x006900
+dat_0068F8:
+	.incbin "baserom.md",0x68F8,0x8
+sub_006900:
+	lea.l (sub_0069B4,pc),a3
+	lea.l (sub_00690C,pc),a2
+	jmp (HitBox,pc)
+sub_00690C:
+	move.l (0x20,a6),d0
+	cmpi.l #0xe026,d0
+	beq.s loc_006928
+	cmpi.l #0xdff0,d0
+	beq.s loc_006928
+	cmpi.l #0xde08,d0
+	bne.s loc_00695A
+loc_006928:
+	tst.w (0x26,a6)
+	bpl.s loc_00699C
+	move.w (0x2,a6),d5
+	move.w (0x4,a6),d1
+	jsr (sub_009A5E,pc)
+	movea.l #0x12ee6,a5
+	move.w (a5)+,(0x1a,a6)
+	move.l a5,(0x16,a6)
+	move.w #0x100,(0x14,a6)
+	move.l #0xe026,(0x20,a6)
+	bra.w loc_006982
+loc_00695A:
+	cmpi.l #0xdf46,d0
+	beq.w loc_00699C
+	cmpi.l #0xdf9c,d0
+	beq.w loc_00699C
+	tst.w (0x26,a6)
+	bpl.s loc_00698E
+	move.w #0x0,(0x14,a6)
+	move.l #0xdf46,(0x20,a6)
+loc_006982:
+	move.w #0x66,d0
+	jsr (sub_013D04).l
+	bra.s loc_00699C
+loc_00698E:
+	move.l #0xe05c,(0x20,a6)
+	move.w #0x1e,(0x24,a6)
+loc_00699C:
+	lea.l (sub_0069A2,pc),a0
+	rts
+sub_0069A2:
+	jsr (sub_007314,pc)
+	move.l #0xe0a4,(0x20,a6)
+	addq.w #0x1,(0x3c,a4)
+	rts
+sub_0069B4:
+	ori.b #0x37,(a0)
+	ori.b #0x37,-(a0)
+sub_0069BC:
+	lea.l (sub_0069E6,pc),a3
+	lea.l (sub_0069C8,pc),a2
+	jmp (HitBox,pc)
+sub_0069C8:
+	lea.l (sub_0069CE,pc),a0
+	rts
+sub_0069CE:
+	jsr (sub_007330,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xf436,(0x20,a6)
+	addq.w #0x1,(0x40,a4)
+	rts
+sub_0069E6:
+	ori.b #0x28,(a6)+
+	ori.b #0x28,ccr
+sub_0069EE:
+	move.w (0x1a,a6),d0
+	asl.w #0x3,d0
+	lea.l (dat_006A18,pc,d0.w),a3
+	lea.l (sub_006A00,pc),a2
+	jmp (HitBox,pc)
+sub_006A00:
+	lea.l (sub_006A06,pc),a0
+	rts
+sub_006A06:
+	jsr (sub_0072CE,pc)
+	move.l #0xf8ea,(0x20,a6)
+	addq.w #0x2,(0x3a,a4)
+	rts
+| data 0x006A18-0x006AE0
+dat_006A18:
+	.incbin "baserom.md",0x6A18,0xC8
+sub_006AE0:
+	lea.l (sub_006B2A,pc),a3
+	lea.l (sub_006AEC,pc),a2
+	jmp (HitBox,pc)
+sub_006AEC:
+	lea.l (sub_006AF2,pc),a0
+	rts
+sub_006AF2:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xfd64,(0x20,a6)
+	cmpi.b #0x2,(0xffff9ebe).l
+	bne.s loc_006B18
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bra.s loc_006B24
+loc_006B18:
+	tst.b (0xffffa0a5).l
+	bne.s loc_006B24
+	jsr (sub_006870,pc)
+loc_006B24:
+	addq.w #0x1,(0x36,a4)
+	rts
+sub_006B2A:
+	ori.b #0x64,(a3)
+	ori.b #0x64,-(a6)
+sub_006B32:
+	lea.l (sub_006B60,pc),a3
+	lea.l (sub_006B3E,pc),a2
+	jmp (HitBox,pc)
+sub_006B3E:
+	lea.l (sub_006B44,pc),a0
+	rts
+sub_006B44:
+	jsr (AddScore250,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0x1000c,(0x20,a6)
+	jsr (sub_006870,pc)
+	addq.w #0x1,(0x36,a4)
+	rts
+sub_006B60:
+	ori.b #0x64,(a3)
+	ori.b #0x64,-(a6)
+sub_006B68:
+	lea.l (dat_006B8E,pc),a3
+	lea.l (sub_006B74,pc),a2
+	jmp (HitBox,pc)
+sub_006B74:
+	lea.l (sub_006B7A,pc),a0
+	rts
+sub_006B7A:
+	jsr (sub_007314,pc)
+	tst.l (0xffff9eda).l
+	bne.s loc_006B8C
+	jsr (sub_01016C).l
+loc_006B8C:
+	rts
+| data 0x006B8E-0x006B96
+dat_006B8E:
+	.incbin "baserom.md",0x6B8E,0x8
+sub_006B96:
+	lea.l (sub_006BDA,pc),a3
+	lea.l (sub_006BA2,pc),a2
+	jmp (HitBox,pc)
+sub_006BA2:
+	bclr.b #0xf,(a6)
+	move.l #0x103a4,(0x20,a6)
+	move.w #0x18,(0x24,a6)
+	cmpi.w #0x6,(0xffffa0ca).l
+	blt.s loc_006BCC
+	move.l #0x103c6,(0x20,a6)
+	move.w #0x64,(0x24,a6)
+loc_006BCC:
+	jsr (sub_013DBE).l
+	lea.l (sub_006BD8,pc),a0
+	rts
+sub_006BD8:
+	rts
+sub_006BDA:
+	ori.b #0x46,(a0)
+	ori.b #0x46,-(a0)
+sub_006BE2:
+	lea.l (dat_006C26,pc),a3
+	lea.l (sub_006BEE,pc),a2
+	jmp (HitBox,pc)
+sub_006BEE:
+	bclr.b #0xf,(a6)
+	move.l #0x105d4,(0x20,a6)
+	move.w #0x18,(0x24,a6)
+	cmpi.w #0x6,(0xffffa0ca).l
+	blt.s loc_006C18
+	move.l #0x105f6,(0x20,a6)
+	move.w #0x64,(0x24,a6)
+loc_006C18:
+	jsr (sub_013DBE).l
+	lea.l (sub_006C24,pc),a0
+	rts
+sub_006C24:
+	rts
+| data 0x006C26-0x006C2E
+dat_006C26:
+	.incbin "baserom.md",0x6C26,0x8
+sub_006C2E:
+	btst.b #0xf,(a6)
+	bne.s loc_006C36
+	rts
+loc_006C36:
+	lea.l (dat_006C86,pc),a3
+	lea.l (sub_006C42,pc),a2
+	jmp (HitBox,pc)
+sub_006C42:
+	bclr.b #0xf,(a6)
+	move.l #0x11514,(0x20,a6)
+	move.w #0xc,(0x24,a6)
+	bsr.w sub_006E32
+	lea.l (sub_006C5E,pc),a0
+	rts
+sub_006C5E:
+	cmpi.w #0x5,(0xffffa0ca).l
+	blt.s loc_006C84
+	bclr.b #0xf,(a6)
+	move.w #0x3a,(0x8,a6)
+	move.l #0x11580,(0x20,a6)
+	move.w #0x64,(0x24,a6)
+	jsr (AddScore2000,pc)
+loc_006C84:
+	rts
+| data 0x006C86-0x006E32
+dat_006C86:
+	.incbin "baserom.md",0x6C86,0x1AC
+sub_006E32:
+	cmpi.w #0x5,(0xffffa0ca).l
+	blt.s loc_006E50
+	movem.w (0xffff9e94).l,d0-d1
+	move.w (0x6,a6),d2
+	subq.w #0x1,d2
+	jsr (sub_01253C).l
+loc_006E50:
+	rts
+sub_006E52:
+	lea.l (sub_006E80,pc),a3
+	lea.l (sub_006E66,pc),a2
+	jsr (HitBox,pc)
+	lea.l (loc_006E88,pc),a3
+	jmp (HitBox,pc)
+sub_006E66:
+	jsr (sub_007322,pc)
+	move.l #0x10be4,(0x20,a6)
+	addq.w #0x1,(0xffffa23c).l
+	lea.l (sub_006E7E,pc),a0
+	rts
+sub_006E7E:
+	rts
+sub_006E80:
+	ori.w #0x14,d0
+	ori.w #0x14,d0
+loc_006E88:
+	ori.w #0x28,(a0)
+	ori.w #0x14,d0
+sub_006E90:
+	lea.l (sub_006EE8,pc),a3
+	lea.l (sub_006EA8,pc),a2
+	jsr (HitBox,pc)
+	lea.l (loc_006EF0,pc),a3
+	lea.l (sub_006EA8,pc),a2
+	jmp (HitBox,pc)
+sub_006EA8:
+	jsr (sub_0072CE,pc)
+	addq.w #0x1,(0xffffa23e).l
+	addq.w #0x1,(0xffffa242).l
+	move.w #0xffff,(0x14,a6)
+	move.w #0xffff,(0x1a,a6)
+	lea.l (sub_006EE6,pc),a0
+	rts
+sub_006ECA:
+	jsr (sub_0072CE,pc)
+	addq.w #0x1,(0xffffa240).l
+	addq.w #0x1,(0xffffa244).l
+	lea.l (sub_006EE6,pc),a0
+	move.w #0xffff,(0x1a,a6)
+	rts
+sub_006EE6:
+	rts
+sub_006EE8:
+	ori.w #0x64,(a4)
+	ori.b #0x43,-(a1)
+loc_006EF0:
+	ori.b #0x42,(0x22,a4)
+	dc.w 0x0023,0x47fa	| ori.b #$fa, -(a3)
+	ori.w #0x45fa,-(a2)
+	dc.w 0x0006,0x4efa	| ori.b #$fa, d6
+	ror.b d5,d6
+sub_006F04:
+	movem.w (0xffff9e94).l,d0-d1
+	subi.w #0x50,d1
+	asr.w #0x4,d1
+	muls.w #0x14,d1
+	asr.w #0x4,d0
+	add.w d1,d0
+	add.w d0,d0
+	lea.l (0xffffae84).l,a0
+	move.w (0x0,a0,d0.w),d1
+	beq.s loc_006F54
+	sub.w (0xffffa0ca).l,d1
+	bgt.s loc_006F50
+	jsr (sub_007314,pc)
+	clr.w (0x0,a0,d0.w)
+	cmpi.w #0x14,(0xffff80da).l
+	bge.s loc_006F50
+	jsr (sub_00B192,pc)
+	moveq #0x70,d0
+	jsr (sub_013D04).l
+	bra.s loc_006F54
+loc_006F50:
+	move.w d1,(0x0,a0,d0.w)
+loc_006F54:
+	lea.l (sub_006F5A,pc),a0
+	rts
+sub_006F5A:
+	rts
+| data 0x006F5C-0x00700C
+	.incbin "baserom.md",0x6F5C,0xB0
+PickupShotTest:
 	lea.l (0xffff9ab2).l,a6
 	move.w (0xffff80e0).l,d7
 	subq.w #0x1,d7
@@ -3872,7 +5278,7 @@ loc_00701E:
 	move.w d7,-(sp)
 	ext.w d5
 	asl.w #0x2,d5
-	movea.l (dat_007048,pc,d5.w),a1
+	movea.l (PickupHitTable,pc,d5.w),a1
 	jsr (a1)
 	move.w (sp)+,d7
 loc_00703E:
@@ -3881,12 +5287,12 @@ loc_00703E:
 loc_007046:
 	rts
 | data 0x007048-0x007080
-dat_007048:
+PickupHitTable:
 	.incbin "baserom.md",0x7048,0x38
 loc_007080:
 	lea.l (0x1a,a6),a6
 	bra.s loc_00701E
-sub_007086:
+PickupHitBox:
 	movem.w (0xffff9e94).l,d0-d1
 	movem.w (0x2,a6),d2-d3
 	sub.w (a3)+,d2
@@ -3912,19 +5318,51 @@ loc_0070C6:
 sub_0070CA:
 	lea.l (dat_0070E6,pc),a3
 	moveq #0x1,d6
-	jsr (sub_007086,pc)
+	jsr (PickupHitBox,pc)
 	tst.w d6
 	beq.s loc_0070E4
 	move.w #0xfc18,(0x2a,a4)
 	move.w #0xffff,(0x1c,a4)
 loc_0070E4:
 	rts
-| data 0x0070E6-0x007138
+| data 0x0070E6-0x0070EE
 dat_0070E6:
-	.incbin "baserom.md",0x70E6,0x52
-loc_007138:
+	.incbin "baserom.md",0x70E6,0x8
+sub_0070EE:
+	lea.l (dat_007104,pc),a3
+	moveq #0x2,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_007102
+	move.w #0xffff,(0x1c,a4)
+loc_007102:
+	rts
+| data 0x007104-0x00710C
+dat_007104:
+	.incbin "baserom.md",0x7104,0x8
+sub_00710C:
+	lea.l (dat_007122,pc),a3
+	moveq #0x3,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s sub_007120
+sub_00711A:
+	moveq #0x3,d0
+	bsr.w sub_007C7C
+sub_007120:
+	rts
+| data 0x007122-0x00712A
+dat_007122:
+	.incbin "baserom.md",0x7122,0x8
+sub_00712A:
+	lea.l (dat_007166,pc),a3
+	moveq #0x0,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s sub_007164
+PickupSmartBomb:
 	movem.l d0-d7/a0-a6,-(sp)
-	jsr (sub_0057BA,pc)
+	jsr (HitAllShootable,pc)
 	tst.w d7
 	ble.s loc_007160
 	subq.w #0x1,d7
@@ -3934,23 +5372,205 @@ loc_007152:
 	jsr (sub_007BEC,pc)
 	dbra d7,loc_007152
 	moveq #0x1,d0
-	jsr (sub_008FA8,pc)
+	jsr (SetPlayerState,pc)
 loc_007160:
 	movem.l (sp)+,d0-d7/a0-a6
+sub_007164:
 	rts
-| data 0x007166-0x00719A
-	.incbin "baserom.md",0x7166,0x34
-loc_00719A:
+| data 0x007166-0x00716E
+dat_007166:
+	.incbin "baserom.md",0x7166,0x8
+sub_00716E:
+	lea.l (dat_007184,pc),a3
+	moveq #0x4,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_007182
+	move.w #0xfa24,(0x2e,a4)
+loc_007182:
+	rts
+| data 0x007184-0x00718C
+dat_007184:
+	.incbin "baserom.md",0x7184,0x8
+sub_00718C:
+	lea.l (dat_0071AC,pc),a3
+	moveq #0x7,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s sub_0071AA
+sub_00719A:
 	move.w (0x1e,a4),d0
 	addi.w #0x4000,d0
 	bcc.s loc_0071A6
 	moveq #-0x1,d0
 loc_0071A6:
 	move.w d0,(0x1e,a4)
+sub_0071AA:
 	rts
-| data 0x0071AC-0x0073A0
-	.incbin "baserom.md",0x71AC,0x1F4
-sub_0073A0:
+| data 0x0071AC-0x0071B4
+dat_0071AC:
+	.incbin "baserom.md",0x71AC,0x8
+sub_0071B4:
+	lea.l (dat_0071C0,pc),a3
+	moveq #0x5,d6
+	jsr (PickupHitBox,pc)
+	rts
+| data 0x0071C0-0x0071C8
+dat_0071C0:
+	.incbin "baserom.md",0x71C0,0x8
+sub_0071C8:
+	lea.l (dat_0071F0,pc),a3
+	moveq #0x8,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_0071EE
+	move.w #0x2,(0x14,a4)
+	move.w #0xffff,(0x1c,a4)
+	move.w #0xfc18,(0x2c,a4)
+	move.w #0xfc18,(0x2a,a4)
+loc_0071EE:
+	rts
+| data 0x0071F0-0x0071F8
+dat_0071F0:
+	.incbin "baserom.md",0x71F0,0x8
+sub_0071F8:
+	lea.l (dat_007204,pc),a3
+	moveq #0xa,d6
+	jsr (PickupHitBox,pc)
+	rts
+| data 0x007204-0x00720C
+dat_007204:
+	.incbin "baserom.md",0x7204,0x8
+sub_00720C:
+	lea.l (dat_007228,pc),a3
+	moveq #0x6,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_007226
+	cmpi.w #0x6,(0x16,a4)
+	beq.s loc_007226
+	bra.w sub_00711A
+loc_007226:
+	rts
+| data 0x007228-0x007230
+dat_007228:
+	.incbin "baserom.md",0x7228,0x8
+sub_007230:
+	lea.l (sub_007258,pc),a3
+	moveq #0x9,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_007256
+	move.w #0x3,(0x14,a4)
+	move.w #0xffff,(0x1c,a4)
+	move.w #0xfc18,(0x2c,a4)
+	move.w #0xfc18,(0x2a,a4)
+loc_007256:
+	rts
+sub_007258:
+	ori.b #0x10,(a0)+
+	dc.w 0x0030,0x0010,0x47fa,0x0028,0x7c0b	| ori.b #$10, ([$287c0b], $aaaa)
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_007288
+	cmpi.w #0x6,(0x16,a4)
+	beq.s loc_007282
+	move.w #0x6,(0x16,a4)
+	move.w (0x18,a4),(0x34,a4)
+loc_007282:
+	move.w #0x3,(0x18,a4)
+loc_007288:
+	rts
+sub_00728A:
+	ori.b #0x10,(a0)
+	ori.b #0x10,-(a0)
+sub_007292:
+	lea.l (dat_0072AA,pc),a3
+	moveq #0x0,d6
+	jsr (PickupHitBox,pc)
+	tst.w d6
+	beq.s loc_0072A8
+	jsr (sub_007C40,pc)
+	jsr (sub_007C54,pc)
+loc_0072A8:
+	rts
+| data 0x0072AA-0x0072B2
+dat_0072AA:
+	.incbin "baserom.md",0x72AA,0x8
+sub_0072B2:
+	movem.l d0/a0-a1,-(sp)
+	dc.w 0x203c,0x0000,0x0050	| move.l #$50, d0
+	bra.w AddScoreBcd
+sub_0072C0:
+	movem.l d0/a0-a1,-(sp)
+	dc.w 0x203c,0x0000,0x0050	| move.l #$50, d0
+	bra.w AddScoreBcd
+sub_0072CE:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x100,d0
+	bra.w AddScoreBcd
+sub_0072DC:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x150,d0
+	bra.w AddScoreBcd
+sub_0072EA:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x200,d0
+	bra.w AddScoreBcd
+AddScore250:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x250,d0
+	bra.w AddScoreBcd
+sub_007306:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x500,d0
+	bra.w AddScoreBcd
+sub_007314:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x750,d0
+	bra.w AddScoreBcd
+sub_007322:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x1000,d0
+	bra.w AddScoreBcd
+sub_007330:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x1250,d0
+	bra.w AddScoreBcd
+AddScore2000:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x2000,d0
+	bra.w AddScoreBcd
+sub_00734C:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x4000,d0
+	bra.w AddScoreBcd
+sub_00735A:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x5000,d0
+	bra.w AddScoreBcd
+sub_007368:
+	movem.l d0/a0-a1,-(sp)
+	move.l #0x10000,d0
+	bra.w AddScoreBcd
+AddScoreBcd:
+	lea.l (0xffff9eac).l,a0
+	tst.w (0x24,a4)
+	bmi.s loc_00739A
+	beq.s loc_00738A
+	lea.l (0xffff9eb4).l,a0
+loc_00738A:
+	movea.l a0,a1
+	move.l d0,(a1)+
+	andi.b #0xef,ccr
+	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	dc.w 0xc109	| abcd.b -(a1), -(a0)
+loc_00739A:
+	movem.l (sp)+,d0/a0-a1
+	rts
+MissileFindTarget:
 	move.l (0x4,a4),(0xffff9e94).l
 	clr.l (0x22,a6)
 	move.l a6,-(sp)
@@ -3984,17 +5604,17 @@ loc_0073F0:
 	move.l a6,(0x22,a1)
 	move.l (0x2,a6),(0x26,a1)
 	bra.s loc_0073E4
-loc_007406:
+Boot:
 	lea.l (0xffffff9c).l,sp
-	jsr (sub_008162,pc)
-	jsr (sub_0086C4,pc)
-	jsr (sub_008B02,pc)
+	jsr (CramClear,pc)
+	jsr (RamClear,pc)
+	jsr (ResetCheatsRng,pc)
 	jsr (sub_0FBB00).l
 	jsr (InitPort1,pc)
-	lea.l (dat_00869C,pc),a1
-	jsr (sub_00867A,pc)
-	jsr (sub_00818C,pc)
-	jsr (sub_00800C,pc)
+	lea.l (VdpRegTable,pc),a1
+	jsr (VdpSetRegs,pc)
+	jsr (VsramClear,pc)
+	jsr (VramClearDma,pc)
 	move.b #0x5,(0xffff9df5).l
 	move.w #0x2500,sr
 	jsr (WaitVBlank,pc)
@@ -4003,7 +5623,7 @@ loc_007406:
 	bne.s loc_007454
 	st.b (0xffffa247).l
 loc_007454:
-	jsr (sub_003EC8,pc)
+	jsr (HiScoreInitOnce,pc)
 	jmp (ColdStart,pc)
 GameStart:
 	move.b (0xffff9df5).l,d0
@@ -4031,7 +5651,7 @@ loc_0074C0:
 	clr.l (0xffff9eb0).l
 	clr.w (0xffff8018).l
 	clr.w (0xffff8068).l
-loc_0074D8:
+NextLevel:
 	move.w (0xffff80cc).l,d0
 	cmpi.b #0x7,(0xffff9df5).l
 	bne.s loc_0074F2
@@ -4047,7 +5667,7 @@ loc_0074FE:
 	move.w d0,(0xffff80cc).l
 	cmpi.w #0x6,(0xffff80cc).l
 	beq.s loc_007548
-	jsr (sub_008B1A,pc)
+	jsr (LevelResetPlayers,pc)
 	clr.w (0xffff9e06).l
 	clr.w (0xffff9e08).l
 	clr.w (0xffff9e0a).l
@@ -4060,7 +5680,7 @@ loc_0074FE:
 loc_007548:
 	move.b #0x0,(0xffffa235).l
 	jsr (sub_001D3A,pc)
-	bsr.w sub_008B3C
+	bsr.w ClearObjectPools
 	move.w #0x48,(0xffff9f6a).l
 	move.b #0xc0,(0xffff9f6c).l
 	cmpi.b #0x3,(0xffff9df5).l
@@ -4074,13 +5694,13 @@ loc_007548:
 loc_007596:
 	move.w #0xffff,(0x24,a4)
 	moveq #0x4,d0
-	jsr (sub_008FA8).l
+	jsr (SetPlayerState).l
 	cmpi.b #0x7,(0xffff9df5).l
 	blt.s loc_0075C2
 	lea.l (0xffff8000).l,a4
 	move.w #0xffff,(0x24,a4)
 	moveq #0x5,d0
-	jsr (sub_008FA8).l
+	jsr (SetPlayerState).l
 loc_0075C2:
 	lea.l (0xffff8000).l,a4
 	move.w #0xffff,(0x24,a4)
@@ -4092,15 +5712,15 @@ loc_0075C2:
 	jsr (sub_008C52,pc)
 	jsr (GunpowerHud,pc)
 	jsr (EnergyHud,pc)
-	jsr (sub_011D12).l
-	jsr (sub_009326,pc)
-	jsr (sub_013376).l
-	jsr (sub_00B398,pc)
+	jsr (VdpListReset).l
+	jsr (ScriptStart,pc)
+	jsr (SpriteQueueReset).l
+	jsr (ObjRunAll,pc)
 	jsr (BuildSpriteTable).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	st.b (0xffffa246).l
-	jsr (sub_008A4C,pc)
+	jsr (PalFade,pc)
 	move.b #0xff,(0xffffa235).l
 	jsr (sub_013E1A).l
 	clr.w (0xffff8000).l
@@ -4111,10 +5731,10 @@ loc_00763E:
 	jsr (WaitVBlank,pc)
 	move.w #0x8000,(0xffffa0ee).l
 	move.w #0x8001,(0xffffa0ae).l
-loc_00765E:
+GameLoop:
 	tst.b (0xffffa0a4).l
 	beq.s loc_00766A
-	jsr (sub_00E9FA,pc)
+	jsr (PalCycle,pc)
 loc_00766A:
 	cmpi.w #0xa,(0xffff80cc).l
 	beq.w loc_00778A
@@ -4150,7 +5770,7 @@ loc_0076CE:
 	bne.s loc_007706
 	move.b #0xff,(0xffffa234).l
 	move.b #0x8,(0xffff9df5).l
-	bra.w loc_0078D0
+	bra.w LevelEnd
 loc_007706:
 	jsr (sub_0FBAD2).l
 	movea.l a3,a4
@@ -4217,60 +5837,60 @@ loc_0077D6:
 	jsr (GunpowerHud,pc)
 	jsr (EnergyHud,pc)
 	tst.b (0xffffa234).l
-	bne.w loc_0078D0
-	jsr (sub_011D12).l
-	jsr (sub_009358,pc)
-	jsr (sub_004752,pc)
+	bne.w LevelEnd
+	jsr (VdpListReset).l
+	jsr (ScriptTick,pc)
+	jsr (ScrollRows,pc)
 	cmpi.w #0x1,(0xffff80cc).l
 	bne.s loc_007816
-	jsr (sub_004916,pc)
+	jsr (BgStreamL1,pc)
 loc_007816:
 	cmpi.w #0x2,(0xffff80cc).l
 	bne.s loc_007824
-	jsr (sub_004872,pc)
+	jsr (BgStreamL2,pc)
 loc_007824:
 	cmpi.w #0x4,(0xffff80cc).l
 	bne.s loc_007832
-	jsr (sub_0048C4,pc)
+	jsr (BgStreamL4,pc)
 loc_007832:
 	cmpi.w #0x5,(0xffff80cc).l
 	bne.s loc_007840
-	jsr (sub_004820,pc)
+	jsr (BgStreamL5,pc)
 loc_007840:
 	cmpi.w #0x6,(0xffff80cc).l
 	bne.s loc_00784E
-	jsr (sub_0047CE,pc)
+	jsr (BgStreamL6,pc)
 loc_00784E:
-	jsr (sub_013376).l
+	jsr (SpriteQueueReset).l
 	jsr (sub_013F7E).l
 	jsr (ReadInputAim,pc)
 	jsr (PlayersButtons,pc)
-	jsr (sub_012BB0).l
-	jsr (sub_0123F0).l
-	jsr (sub_01243C).l
-	jsr (sub_00B398,pc)
-	jsr (sub_0126B4).l
-	jsr (sub_012886).l
+	jsr (PickupsRun).l
+	jsr (MissilesRun).l
+	jsr (EffectsRun).l
+	jsr (ObjRunAll,pc)
+	jsr (SparksRun).l
+	jsr (DebrisRun).l
 	jsr (BuildSpriteTable).l
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	move.w (0xffffa0ae).l,d0
 	move.w (0xffffa0ee).l,d1
 	eor.w d0,d1
-	bpl.s loc_0078A6
+	bpl.s FramePaceWait
 	jsr (WaitVBlank,pc)
 	bra.s loc_0078AE
-loc_0078A6:
+FramePaceWait:
 	cmp.w (0xffffa0ee).l,d0
-	bgt.s loc_0078A6
+	bgt.s FramePaceWait
 loc_0078AE:
 	move.w (0xffffa0ee).l,d0
 	addq.w #0x1,d0
 	move.w d0,(0xffffa0ae).l
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	tst.b (0xffffa234).l
-	bne.w loc_0078D0
-	bra.w loc_00765E
-loc_0078D0:
+	bne.w LevelEnd
+	bra.w GameLoop
+LevelEnd:
 	clr.w (0xffff9ea4).l
 	cmpi.w #0xa,(0xffff80cc).l
 	beq.w loc_0079A6
@@ -4279,12 +5899,12 @@ loc_0078D0:
 	cmpi.b #0x7,(0xffff9df5).l
 	bne.s loc_007924
 loc_0078F6:
-	jsr (sub_011D12).l
-	jsr (sub_013376).l
+	jsr (VdpListReset).l
+	jsr (SpriteQueueReset).l
 	jsr (BuildSpriteTable).l
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	moveq #0x0,d0
 	jsr (sub_0FBB6C).l
 	bra.w loc_0079A6
@@ -4296,7 +5916,7 @@ loc_007924:
 	move.w #0x39,d0
 	jsr (sub_0FBB6C).l
 	move.w #0x96,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	tst.b (0xffff9f6d).l
 	bne.s loc_00795A
 	jsr (sub_0015A2).l
@@ -4320,7 +5940,7 @@ loc_007994:
 	jsr (sub_0FBB6C).l
 	jsr (sub_003360).l
 loc_0079A2:
-	bra.w loc_0074D8
+	bra.w NextLevel
 loc_0079A6:
 	cmpi.b #0x7,(0xffff9df5).l
 	bge.s loc_0079F0
@@ -4359,9 +5979,9 @@ loc_007A26:
 	clr.b (0xffffa0a7).l
 loc_007A3A:
 	move.w #0xa,(0xffff80cc).l
-	jsr (sub_009326,pc)
+	jsr (ScriptStart,pc)
 	move.b #0x0,(0xffffa235).l
-	bsr.w sub_008B3C
+	bsr.w ClearObjectPools
 	jsr (sub_001C4A,pc)
 	move.b #0xff,(0xffffa235).l
 	clr.w (0xffff8000).l
@@ -4527,6 +6147,7 @@ sub_007C2C:
 	move.b #0x1,(a1)+
 	andi.b #0xef,ccr
 	dc.w 0x8109,0x4e75	| sbcd -(a1), -(a0), #$4e75
+sub_007C40:
 	lea.l (0xffff80cb).l,a0
 	movea.l a0,a1
 	move.b #0x1,(a1)+
@@ -4610,7 +6231,7 @@ loc_007D1E:
 	add.w (0xffff9e2c).l,d0
 	or.w d6,d0
 	move.w d3,d2
-	jsr (sub_0087C4,pc)
+	jsr (VramWriteWord,pc)
 	addq.w #0x2,d3
 	move.w d5,d0
 	andi.w #0xf,d0
@@ -4622,7 +6243,7 @@ loc_007D3E:
 	add.w (0xffff9e2c).l,d0
 	or.w d6,d0
 	move.w d3,d2
-	jsr (sub_0087C4,pc)
+	jsr (VramWriteWord,pc)
 	addq.w #0x2,d3
 	dbra d7,loc_007D10
 	rts
@@ -4654,11 +6275,11 @@ loc_007D8E:
 	addq.w #0x1,d4
 	move.w #0x400,d5
 	addi.w #0x1a,d0
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007FA4,pc)
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 loc_007DB2:
 	move.b (a0)+,d0
 	andi.w #0xf,d0
@@ -4671,11 +6292,11 @@ loc_007DC4:
 	addq.w #0x1,d4
 	move.w #0x400,d5
 	addi.w #0x1a,d0
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007FA4,pc)
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 loc_007DE8:
 	dbra d7,loc_007D7A
 	rts
@@ -4746,7 +6367,7 @@ loc_007E9E:
 	add.w d5,d0
 	or.w d6,d0
 	move.w d3,d2
-	jsr (sub_0087C4).l
+	jsr (VramWriteWord).l
 	addq.w #0x2,d3
 	bra.w loc_007E0E
 loc_007EB0:
@@ -4760,20 +6381,20 @@ loc_007EB8:
 	add.w d5,d0
 	or.w d6,d0
 	move.w d3,d2
-	jsr (sub_0087C4).l
+	jsr (VramWriteWord).l
 	addq.w #0x2,d3
 	bra.s loc_007EB8
 loc_007ED0:
 	rts
 sub_007ED2:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007F00,pc)
 	move.w #0x78,d0
 	jsr (sub_013D04).l
-	jsr (sub_011D28).l
+	jsr (VdpListEnd).l
 	jsr (WaitVBlank,pc)
 	jsr (WaitVBlank,pc)
-	jsr (sub_011D32).l
+	jsr (VdpListRun).l
 	tst.b (a0)
 	bne.s sub_007ED2
 	rts
@@ -4873,7 +6494,7 @@ loc_007FF8:
 	bne.s loc_007FF8
 	move.w (sp)+,d0
 	rts
-sub_00800C:
+VramClearDma:
 	lea.l (0xc00000).l,a5
 	move.w (0x4,a5),d0
 	bset.b #0x4,(0xffffa0dd).l
@@ -4919,7 +6540,7 @@ loc_0080E0:
 	bclr.b #0x4,(0xffffa0dd).l
 	move.w (0xffffa0dc).l,(0xc00004).l
 	rts
-sub_0080FE:
+CramUpload:
 	lea.l (0xc00000).l,a5
 	move.w (0x4,a5),d0
 	move.w #0x8f02,(0x4,a5)
@@ -4932,7 +6553,7 @@ loc_008118:
 	move.w (a0)+,(a5)
 	dbra d0,loc_008118
 	rts
-sub_00812A:
+CramUploadChanged:
 	lea.l (0xc00000).l,a5
 	lea.l (0xffffa0f4).l,a1
 	move.l #0xc0000000,d2
@@ -4950,7 +6571,7 @@ loc_008152:
 	addi.l #0x20000,d2
 	dbra d0,loc_00813E
 	rts
-sub_008162:
+CramClear:
 	lea.l (0xc00000).l,a5
 	move.w #0x8f02,(0x4,a5)
 	move.l #0xc0000000,(0x4,a5)
@@ -4963,7 +6584,7 @@ loc_00817A:
 	move.w d2,(a5)
 	dbra d0,loc_00817A
 	rts
-sub_00818C:
+VsramClear:
 	lea.l (0xc00000).l,a5
 	move.w #0x8f02,(0x4,a5)
 	move.l #0x40000010,(0x4,a5)
@@ -5047,7 +6668,7 @@ dat_00863A:
 	.incbin "baserom.md",0x863A,0x20
 dat_00865A:
 	.incbin "baserom.md",0x865A,0x20
-sub_00867A:
+VdpSetRegs:
 	lea.l (0xc00004).l,a5
 	lea.l (0xffffa0da).l,a0
 	move.w (a1)+,d1
@@ -5064,9 +6685,9 @@ loc_008692:
 loc_00869A:
 	rts
 | data 0x00869C-0x0086C4
-dat_00869C:
+VdpRegTable:
 	.incbin "baserom.md",0x869C,0x28
-sub_0086C4:
+RamClear:
 	lea.l (0xffff0000).l,a0
 	moveq #0x0,d1
 loc_0086CC:
@@ -5074,9 +6695,9 @@ loc_0086CC:
 	cmpa.l #0xffffff8c,a0
 	bne.s loc_0086CC
 	rts
-sub_0086D8:
+WaitFrames:
 	jsr (WaitVBlank,pc)
-	dbra d1,sub_0086D8
+	dbra d1,WaitFrames
 	rts
 WaitVBlank:
 	move.w d0,-(sp)
@@ -5086,7 +6707,7 @@ loc_0086EA:
 	beq.s loc_0086EA
 	move.w (sp)+,d0
 	rts
-sub_0086F6:
+VramClearAlt:
 	lea.l (0xc00000).l,a5
 	move.w (0x4,a5),d0
 	move.w #0x67f,d1
@@ -5094,7 +6715,7 @@ sub_0086F6:
 	move.w #0x4100,(0x4,a5)
 	move.w #0x3,(0x4,a5)
 	bra.w sub_00873A
-sub_00871A:
+VramClear:
 	lea.l (0xc00000).l,a5
 	move.w (0x4,a5),d0
 	move.w #0x6ff,d1
@@ -5127,7 +6748,7 @@ loc_008770:
 	rts
 sub_008780:
 	moveq #0x0,d6
-sub_008782:
+VramFillWords:
 	lea.l (0xc00000).l,a5
 	move.w (0x4,a5),d0
 	lsr.w #0x1,d1
@@ -5150,7 +6771,7 @@ loc_0087B4:
 	bne.s loc_0087B4
 	dbra d1,loc_0087B2
 	rts
-sub_0087C4:
+VramWriteWord:
 	lea.l (0xc00000).l,a5
 	move.w d2,d1
 	andi.w #0x3fff,d2
@@ -5161,7 +6782,7 @@ sub_0087C4:
 	move.w d1,(0x4,a5)
 	move.w d0,(a5)
 	rts
-sub_0087E6:
+VramWriteLong:
 	lea.l (0xc00000).l,a5
 	move.w d2,d1
 	andi.w #0x3fff,d2
@@ -5172,13 +6793,13 @@ sub_0087E6:
 	move.w d1,(0x4,a5)
 	move.l d0,(a5)
 	rts
-sub_008808:
+VdpSetBgColor:
 	lea.l (0xc00000).l,a5
 	andi.w #0xff,d0
 	ori.w #0x8700,d0
 	move.w d0,(0x4,a5)
 	rts
-sub_00881C:
+Random:
 	movem.l d0-d2,-(sp)
 	move.l (0xffffa0f0).l,d0
 	subq.l #0x1,d0
@@ -5255,7 +6876,7 @@ loc_008914:
 	move.w #0x0,(0xa11100).l
 	move.w #0x2000,sr
 	rts
-sub_008970:
+PalFadeStep:
 	tst.b (0xffffa246).l
 	beq.w loc_0089FE
 	lea.l (0xffffa134).l,a0
@@ -5319,7 +6940,7 @@ loc_0089F4:
 loc_0089FE:
 	sf.b (0xffffa246).l
 	rts
-sub_008A06:
+PalClearCurrent:
 	lea.l (0xffffa1b4).l,a0
 	moveq #0x0,d0
 	moveq #0x1f,d1
@@ -5327,31 +6948,31 @@ loc_008A10:
 	move.l d0,(a0)+
 	dbra d1,loc_008A10
 	rts
-sub_008A18:
+PalSetTargetBlack:
 	st.b (0xffffa246).l
 	lea.l (0xffffa134).l,a1
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
-sub_008A4C:
+	jsr (Copy32,pc)
+PalFade:
 	jsr (WaitVBlank).l
-	jsr (sub_008970).l
+	jsr (PalFadeStep).l
 	jsr (WaitVBlank).l
 	moveq #0x64,d0
 loc_008A60:
 	nop
 	dbra d0,loc_008A60
 	lea.l (0xffffa1b4).l,a0
-	jsr (sub_0080FE).l
+	jsr (CramUpload).l
 	tst.b (0xffffa246).l
-	bne.s sub_008A4C
+	bne.s PalFade
 	rts
-sub_008A7C:
+Copy32:
 	move.l (a0)+,(a1)+
 	move.l (a0)+,(a1)+
 	move.l (a0)+,(a1)+
@@ -5379,7 +7000,7 @@ loc_008AA2:
 	or.w d1,d0
 loc_008AB4:
 	move.w d3,d2
-	jsr (sub_0087C4).l
+	jsr (VramWriteWord).l
 	addq.w #0x2,d3
 	dbra d7,loc_008AA2
 	sub.w d4,d3
@@ -5408,19 +7029,19 @@ loc_008AEA:
 	lea.l (0x80,a0),a0
 	dbra d5,sub_008AD4
 	rts
-sub_008B02:
+ResetCheatsRng:
 	sf.b (0xffffa235).l
 	sf.b (0xffffa0a6).l
 	move.l #0x87654321,(0xffffa0f0).l
 	rts
-sub_008B1A:
+LevelResetPlayers:
 	bsr.w sub_008BBE
 	bsr.w sub_008BB4
 	move.w #0x1,(0xffff8074).l
 	move.w #0xfe,(0xffff8076).l
 	move.w #0xe0,(0xffff8078).l
 	rts
-sub_008B3C:
+ClearObjectPools:
 	clr.b (0xffffa0a4).l
 	clr.b (0xffff9ebe).l
 	clr.b (0xffff9ec0).l
@@ -5566,7 +7187,7 @@ loc_008D22:
 	move.w (0xffffa0ee).l,(0xffffa238).l
 	bsr.w sub_008F2E
 	move.w #0x78,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	move.w (0xffffa238).l,(0xffffa0ee).l
 PlayerDied:
 	tst.b (0xffff80ca).l
@@ -5660,7 +7281,7 @@ loc_008EA4:
 	jsr (sub_007E08,pc)
 	jsr (sub_013DEC).l
 	move.w #0x3c,d1
-	jsr (sub_0086D8,pc)
+	jsr (WaitFrames,pc)
 	clr.b (0xffff9f6d).l
 	move.b #0xfe,(0xffffa234).l
 	bra.w loc_008DFC
@@ -5671,41 +7292,41 @@ sub_008F0A:
 	st.b (0xffffa246).l
 	lea.l (0xffffa134).l,a1
 	lea.l (0xffffb1d2).l,a0
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
 	bra.s sub_008F7E
 sub_008F2E:
 	st.b (0xffffa246).l
 	lea.l (0xffffb1d2).l,a1
 	lea.l (0xffffa1b4).l,a0
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
+	jsr (Copy32,pc)
 	lea.l (0xffffa134).l,a1
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0083FA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 	lea.l (dat_0081DA).l,a0
-	jsr (sub_008A7C,pc)
+	jsr (Copy32,pc)
 sub_008F7E:
 	moveq #0x1,d0
 loc_008F80:
 	move.w d0,-(sp)
 	jsr (WaitVBlank).l
 	jsr (WaitVBlank).l
-	jsr (sub_008970).l
+	jsr (PalFadeStep).l
 	lea.l (0xffffa1b4).l,a0
-	jsr (sub_0080FE).l
+	jsr (CramUpload).l
 	move.w (sp)+,d0
 	dbra d0,loc_008F80
 	rts
-sub_008FA8:
+SetPlayerState:
 	move.w (0x22,a4),d1
 	cmpi.w #0x2,d1
 	beq.s loc_00902C
@@ -5804,12 +7425,12 @@ sub_0090B2:
 	bset.b #0xf,d1
 	move.w d1,(0x30,a4)
 	move.w #0x3,d0
-	jsr (sub_008FA8,pc)
+	jsr (SetPlayerState,pc)
 	bra.s loc_009102
 loc_0090EC:
 	move.w d0,(0x1e,a4)
 	move.w #0x2,d0
-	jsr (sub_008FA8,pc)
+	jsr (SetPlayerState,pc)
 	jsr (sub_013D92).l
 	not.w (0x24,a4)
 loc_009102:
@@ -5979,8 +7600,8 @@ sub_0092A8:
 	jsr (sub_007DEE,pc)
 	movem.l (sp)+,d7/a6
 	rts
-sub_0092DC:
-	jsr (sub_00930E).l
+ObjSpawnTemplate:
+	jsr (ObjAlloc).l
 	move.w (a1)+,d2
 	bset.b #0xf,d2
 	move.w d2,(a6)
@@ -5993,7 +7614,7 @@ sub_0092DC:
 	move.w (a1)+,(0x8,a6)
 	addq.w #0x1,(0xffff80da).l
 	rts
-sub_00930E:
+ObjAlloc:
 	lea.l (0xffff87b2).l,a6
 	move.w #0x4f,d2
 loc_009318:
@@ -6003,39 +7624,39 @@ loc_009318:
 	dbra d2,loc_009318
 loc_009324:
 	rts
-sub_009326:
+ScriptStart:
 	move.w (0xffff80cc).l,d0
 	asl.w #0x2,d0
-	lea.l (dat_00B36C).l,a0
+	lea.l (LevelScripts).l,a0
 	movea.l (0x0,a0,d0.w),a0
 	clr.w (0xffff80d2).l
-sub_00933E:
+ScriptNext:
 	move.w (a0)+,d0
-	beq.w sub_009376
+	beq.w ScriptExec
 	add.w (0xffff80d2).l,d0
 	move.w d0,(0xffff80d4).l
 	move.l a0,(0xffff80ce).l
 sub_009356:
 	rts
-sub_009358:
+ScriptTick:
 	move.w (0xffff80d2).l,d0
 	addq.w #0x1,d0
 	move.w d0,(0xffff80d2).l
 	cmp.w (0xffff80d4).l,d0
 	bne.w sub_009356
 	movea.l (0xffff80ce).l,a0
-sub_009376:
+ScriptExec:
 	move.w (a0)+,d0
 	asl.w #0x2,d0
-	lea.l (dat_00938A).l,a1
+	lea.l (ScriptOps).l,a1
 	movea.l (0x0,a1,d0.w),a1
 	jsr (a1)
-	bra.w sub_00933E
+	bra.w ScriptNext
 | data 0x00938A-0x009486
-dat_00938A:
+ScriptOps:
 	.incbin "baserom.md",0x938A,0xFC
 sub_009486:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1,d0
 	bset.b #0xf,d0
 	bset.b #0xe,d0
@@ -6060,7 +7681,7 @@ loc_0094EC:
 	jsr (sub_00B488,pc)
 	rts
 sub_0094F2:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1,d0
 	bset.b #0xf,d0
 	bset.b #0xe,d0
@@ -6094,7 +7715,7 @@ loc_009570:
 	move.w d0,(0x4,a6)
 	rts
 sub_009576:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1,d0
 	bset.b #0xf,d0
 	bset.b #0xe,d0
@@ -6118,7 +7739,7 @@ loc_0095CC:
 	jsr (sub_00B772,pc)
 	rts
 sub_0095DE:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x11,d0
 	bset.b #0xf,d0
 	bset.b #0xe,d0
@@ -6142,10 +7763,10 @@ loc_009634:
 	jsr (sub_00B846,pc)
 	rts
 sub_009646:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x3,d0
 	bclr.b #0xf,d0
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3,d0
 	bne.s loc_009660
 	bset.b #0xd,d0
@@ -6170,7 +7791,7 @@ loc_00966C:
 	jsr (sub_013D04).l
 	rts
 sub_0096B6:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1d,d0
 	bset.b #0xf,d0
 	bset.b #0xe,d0
@@ -6191,7 +7812,7 @@ sub_0096B6:
 	addq.w #0x1,(0xffff9e06).l
 	rts
 sub_009718:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1,d0
 	bset.b #0xf,d0
 	bset.b #0xe,d0
@@ -6242,7 +7863,7 @@ loc_009796:
 	addq.w #0x1,(0xffff9e06).l
 	rts
 sub_0097D0:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x7,d0
 	bset.b #0xf,d0
 	move.w d0,(a6)
@@ -6253,7 +7874,7 @@ sub_0097D0:
 	move.b #0xff,(0xe,a6)
 	bra.s sub_009832
 sub_009802:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x7,d0
 	bset.b #0xf,d0
 	move.w d0,(a6)
@@ -6286,14 +7907,14 @@ sub_009866:
 	move.w d0,(0xe0,a4)
 	rts
 sub_00988E:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x800d,(a6)
 	move.w #0x160,(0x2,a6)
 	move.l #0xb86a,(0x20,a6)
 	move.l #0x5e1c,(0x1c,a6)
 	bra.s sub_0098CC
 sub_0098AE:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x800c,(a6)
 	move.w #0xffe0,(0x2,a6)
 	move.l #0xb962,(0x20,a6)
@@ -6316,7 +7937,7 @@ sub_0098FC:
 	move.w d0,(0x40,a4)
 	rts
 sub_009910:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0xb,d0
 	bset.b #0xf,d0
 	move.w d0,(a6)
@@ -6325,7 +7946,7 @@ sub_009910:
 	move.l #0x5e90,(0x1c,a6)
 	bra.s sub_00995A
 sub_009936:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0xa,d0
 	bset.b #0xf,d0
 	move.w d0,(a6)
@@ -6352,7 +7973,7 @@ sub_00998A:
 	move.w d0,(0x80,a4)
 	move.w d0,(0xa0,a4)
 	rts
-sub_0099AA:
+ScrGoto:
 	movea.l (a0)+,a0
 	rts
 sub_0099AE:
@@ -6381,7 +8002,7 @@ sub_0099FE:
 	move.w (a0)+,d5
 	move.w (a0)+,d1
 sub_009A02:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_009A5C
 	jsr (sub_009A5E,pc)
@@ -6402,14 +8023,15 @@ sub_009A02:
 loc_009A5C:
 	rts
 sub_009A5E:
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x38,d0
 	move.w d0,d4
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x7f,d0
 	addi.w #0x60,d0
 	move.w d0,d3
+sub_009A7A:
 	move.w d5,d0
 	move.b #0x1,d5
 	sub.w d0,d3
@@ -6473,7 +8095,7 @@ sub_009B16:
 	move.l a5,(0xffff80bc).l
 	rts
 sub_009B30:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0xe,(a6)
 	bclr.b #0x7,(a6)
 	move.w #0x10,(0x24,a6)
@@ -6489,7 +8111,7 @@ sub_009B30:
 	addq.w #0x1,(0xffff9e08).l
 	rts
 sub_009B78:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0xf,(a6)
 	move.w #0x1,(0x24,a6)
 	move.w #0x0,(0x4,a6)
@@ -6509,7 +8131,7 @@ loc_009BC0:
 	addq.w #0x1,(0xffff80da).l
 	rts
 sub_009BD2:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0xf,(a6)
 	move.w #0x1,(0x24,a6)
 	move.w #0xcf,(0x4,a6)
@@ -6522,7 +8144,7 @@ sub_009BD2:
 	move.w #0x0,(0x8,a6)
 	addq.w #0x1,(0xffff80da).l
 	rts
-sub_009C18:
+ScrText:
 	movea.l (a0)+,a1
 	move.l a0,-(sp)
 	movea.l a1,a0
@@ -6536,7 +8158,7 @@ sub_009C2A:
 sub_009C30:
 	jsr (sub_00BF46,pc)
 	rts
-sub_009C36:
+ScrEndLevel:
 	move.b #0xff,(0xffffa234).l
 	rts
 sub_009C40:
@@ -6549,7 +8171,7 @@ sub_009C4A:
 	move.w #0x300,d2
 	bra.w sub_009B14
 sub_009C62:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x15,d0
 	bset.b #0xf,d0
 	move.w d0,(a6)
@@ -6625,7 +8247,7 @@ loc_009D38:
 	moveq #0x7,d4
 	lea.l (dat_009E02,pc),a4
 loc_009D48:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_009D9A
 	move.w #0x14,d0
@@ -6643,7 +8265,7 @@ loc_009D48:
 	addq.w #0x1,(0xffff80da).l
 	dbra d4,loc_009D48
 loc_009D9A:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_009DEE
 	move.w #0x13,d0
@@ -6670,7 +8292,7 @@ loc_009DEE:
 dat_009E02:
 	.incbin "baserom.md",0x9E02,0x20
 sub_009E22:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_009E76
 	move.w #0x13,d0
@@ -6695,7 +8317,7 @@ loc_009E76:
 sub_009E86:
 	move.l #0xa000,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	addq.w #0x1,(0xffff9e0c).l
 	rts
@@ -6753,7 +8375,7 @@ sub_009F24:
 	clr.b (0xffff9ebc).l
 	move.w #0x140,d2
 	jsr (sub_009EF8,pc)
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A0DA
 	move.w #0x1,(0xffff9e18).l
@@ -6771,7 +8393,7 @@ sub_009F24:
 	move.w #0x28,(0x2a,a6)
 	addq.w #0x1,(0xffff80da).l
 	move.l a6,(0xffff9eca).l
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A0DA
 	move.w #0x17,d0
@@ -6786,7 +8408,7 @@ sub_009F24:
 	move.l #0xcdfe,(0x20,a6)
 	move.w #0x384,(0x8,a6)
 	addq.w #0x1,(0xffff80da).l
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A0DA
 	move.w #0x18,d0
@@ -6802,7 +8424,7 @@ sub_009F24:
 	move.w #0x2ee,(0x8,a6)
 	move.w #0x22c,(0x2a,a6)
 	addq.w #0x1,(0xffff80da).l
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A0DA
 	move.w #0x19,d0
@@ -6818,7 +8440,7 @@ sub_009F24:
 	move.l #0xcf9e,(0x20,a6)
 	move.w #0x2ee,(0x8,a6)
 	addq.w #0x1,(0xffff80da).l
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A0DA
 	move.w #0x19,d0
@@ -6842,7 +8464,7 @@ loc_00A0DA:
 	moveq #0xd,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e48).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	move.w #0x10,d0
 	jsr (sub_0FBB6C).l
@@ -6855,26 +8477,26 @@ sub_00A10A:
 	moveq #0xd,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e48).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	rts
-sub_00A130:
+ScrPokeWord:
 	move.w (a0)+,d0
 	movea.l (a0)+,a1
 	move.w d0,(a1)
 	rts
-sub_00A138:
+ScrPokeLong:
 	move.l (a0)+,d0
 	movea.l (a0)+,a1
 	move.l d0,(a1)
 	rts
-sub_00A140:
+ScrNative:
 	movea.l (a0)+,a1
 	jmp (a1)
 sub_00A144:
 	move.w #0x140,d2
 	jsr (sub_009EF8,pc)
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A1FA
 	move.l a6,(0xffff9eca).l
@@ -6892,7 +8514,7 @@ sub_00A144:
 	move.b #0x0,(0xc,a6)
 	addq.w #0x1,(0xffff80da).l
 	jsr (sub_00D30A,pc)
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A1FA
 	move.w #0x1b,d0
@@ -6915,7 +8537,7 @@ loc_00A1FA:
 	moveq #0xb,d3
 	move.l #0xe000,d6
 	move.w (0xffff9e4a).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	move.w #0xffff,(0xffff9ea6).l
 	rts
@@ -6927,7 +8549,7 @@ sub_00A228:
 	moveq #0xb,d3
 	move.l #0xe000,d6
 	move.w (0xffff9e4a).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	rts
 sub_00A24E:
@@ -6964,16 +8586,16 @@ sub_00A29A:
 	moveq #0xa,d2
 	jsr (sub_012A16).l
 	rts
-sub_00A2A8:
+ScrLoadPalette:
 	move.l a0,-(sp)
 	move.w (a0)+,d0
 	asl.w #0x5,d0
 	lea.l (0xffffa1b4).l,a1
 	lea.l (0x0,a1,d0.w),a1
 	movea.l (a0)+,a0
-	jsr (sub_008A7C).l
+	jsr (Copy32).l
 	lea.l (0xffffa1b4).l,a0
-	jsr (sub_0080FE).l
+	jsr (CramUpload).l
 	movea.l (sp)+,a0
 	lea.l (0x6,a0),a0
 	rts
@@ -7017,7 +8639,7 @@ sub_00A352:
 	moveq #0x1a,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e48).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	rts
 sub_00A378:
@@ -7035,7 +8657,7 @@ sub_00A388:
 	moveq #0x7,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e30).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	movea.l (sp)+,a0
 	rts
 sub_00A3B2:
@@ -7047,7 +8669,7 @@ sub_00A3B2:
 	moveq #0xa,d3
 	move.l #0x8000,d6
 	move.w (0xffff9e30).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	movea.l (sp)+,a0
 	rts
 sub_00A3DA:
@@ -7068,7 +8690,7 @@ sub_00A3F4:
 	clr.w (0xffff9ea6).l
 	rts
 sub_00A41A:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1e,d0
 	bset.b #0xe,d0
 	move.w d0,(a6)
@@ -7085,7 +8707,7 @@ sub_00A41A:
 	addq.w #0x1,(0xffff80da).l
 	rts
 sub_00A46E:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1e,d0
 	bset.b #0xe,d0
 	move.w d0,(a6)
@@ -7111,7 +8733,7 @@ loc_00A4C6:
 	rts
 sub_00A4D2:
 	lea.l (dat_00A4E2,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x3c,(0x14,a6)
 	rts
 | data 0x00A4E2-0x00A4F4
@@ -7119,29 +8741,88 @@ dat_00A4E2:
 	.incbin "baserom.md",0xA4E2,0x12
 sub_00A4F4:
 	lea.l (dat_00A4FE,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	rts
 | data 0x00A4FE-0x00A510
 dat_00A4FE:
 	.incbin "baserom.md",0xA4FE,0x12
 sub_00A510:
 	lea.l (dat_00A51A,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	rts
-| data 0x00A51A-0x00A644
+| data 0x00A51A-0x00A5F6
 dat_00A51A:
-	.incbin "baserom.md",0xA51A,0x12A
+	.incbin "baserom.md",0xA51A,0xDC
+sub_00A5F6:
+	move.w (a0)+,d5
+	move.w (a0)+,d1
+sub_00A5FA:
+	bsr.w sub_009A02
+	move.w #0x23,d0
+	bset.b #0xf,d0
+	move.w d0,(a6)
+	move.l #0xddba,(0x20,a6)
+	move.l #0x6900,(0x1c,a6)
+	move.w #0xa,(0x8,a6)
+	movea.l #0x12eb2,a5
+	move.w (a5)+,(0x1a,a6)
+	move.l a5,(0x16,a6)
+	jsr (Random).l
+	move.w d0,(0x26,a6)
+	move.w #0x6,(0x28,a6)
+	addq.w #0x1,(0xffff9e10).l
+	rts
 sub_00A644:
 	lea.l (dat_00A654,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	addq.w #0x1,(0xffff9e08).l
 	rts
-| data 0x00A654-0x00A712
+| data 0x00A654-0x00A666
 dat_00A654:
-	.incbin "baserom.md",0xA654,0xBE
+	.incbin "baserom.md",0xA654,0x12
+sub_00A666:
+	lea.l (dat_00A680,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w (a0)+,d0
+	addi.w #0xe300,d0
+	move.w d0,(0xa,a6)
+	addq.w #0x1,(0xffff9e0e).l
+	rts
+| data 0x00A680-0x00A692
+dat_00A680:
+	.incbin "baserom.md",0xA680,0x12
+sub_00A692:
+	lea.l (dat_00A700,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w (a0),d0
+	addi.w #0xe400,d0
+	move.w d0,(0xa,a6)
+	move.w #0xffff,(0x2a,a6)
+	lea.l (dat_00A700,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	addi.w #0x40,(0x2,a6)
+	move.w (a0),d0
+	addi.w #0xe410,d0
+	move.w d0,(0xa,a6)
+	move.w #0x0,(0x2a,a6)
+	lea.l (dat_00A700,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	addi.w #0x20,(0x2,a6)
+	move.w (a0)+,d0
+	addi.w #0xe400,d0
+	move.w d0,(0xa,a6)
+	move.w #0x1,(0x2a,a6)
+	bclr.b #0xf,(a6)
+	move.l a6,(0xffff9eda).l
+	move.w #0x2,(0xffffa23c).l
+	addq.w #0x3,(0xffff9e0e).l
+	rts
+| data 0x00A700-0x00A712
+dat_00A700:
+	.incbin "baserom.md",0xA700,0x12
 sub_00A712:
 	lea.l (dat_00A752,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0xc8,(0x24,a6)
 	clr.b (0xd,a6)
 	move.b #0x1,(0x12,a6)
@@ -7158,7 +8839,7 @@ dat_00A752:
 	.incbin "baserom.md",0xA752,0x96
 sub_00A7E8:
 	lea.l (dat_00A7FA,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	move.w (a0)+,(0xa,a6)
 	rts
@@ -7167,7 +8848,7 @@ dat_00A7FA:
 	.incbin "baserom.md",0xA7FA,0x12
 sub_00A80C:
 	lea.l (dat_00A81A,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	rts
 | data 0x00A81A-0x00A82C
@@ -7175,7 +8856,7 @@ dat_00A81A:
 	.incbin "baserom.md",0xA81A,0x12
 sub_00A82C:
 	lea.l (dat_00A84C,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,d0
 	bpl.s loc_00A840
 	neg.w d0
@@ -7189,7 +8870,7 @@ dat_00A84C:
 	.incbin "baserom.md",0xA84C,0x12
 sub_00A85E:
 	lea.l (dat_00A86E,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	addq.w #0x1,(0xffff9e0e).l
 	rts
 | data 0x00A86E-0x00A880
@@ -7197,19 +8878,24 @@ dat_00A86E:
 	.incbin "baserom.md",0xA86E,0x12
 sub_00A880:
 	lea.l (dat_00A898,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	addq.w #0x1,(0xffff9e0c).l
 	lea.l (dat_00A8AA,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	rts
-| data 0x00A898-0x00A8CC
+| data 0x00A898-0x00A8BC
 dat_00A898:
 	.incbin "baserom.md",0xA898,0x12
 dat_00A8AA:
-	.incbin "baserom.md",0xA8AA,0x22
+	.incbin "baserom.md",0xA8AA,0x12
+sub_00A8BC:
+	lea.l (dat_00A8AA,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x154,(0x2,a6)
+	rts
 sub_00A8CC:
 	lea.l (dat_00A8DE,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	move.w (a0)+,(0x4,a6)
 	rts
@@ -7218,7 +8904,7 @@ dat_00A8DE:
 	.incbin "baserom.md",0xA8DE,0x12
 sub_00A8F0:
 	lea.l (dat_00A902,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	move.w (a0)+,(0x4,a6)
 	rts
@@ -7227,19 +8913,67 @@ dat_00A902:
 	.incbin "baserom.md",0xA902,0x12
 sub_00A914:
 	lea.l (dat_00A938,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x87,(0x24,a6)
 	bset.b #0x6,(a6)
 	move.b #0x20,(0xa,a6)
 	move.b #0x1,(0xe,a6)
 	clr.b (0xb,a6)
 	rts
-| data 0x00A938-0x00AA3E
+| data 0x00A938-0x00A94A
 dat_00A938:
-	.incbin "baserom.md",0xA938,0x106
+	.incbin "baserom.md",0xA938,0x12
+sub_00A94A:
+	lea.l (dat_00AA08,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x0,(0xa,a6)
+	lea.l (dat_00AA1A,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x4,(0xa,a6)
+	lea.l (dat_00AA2C,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x8,(0xa,a6)
+	lea.l (dat_00AA08,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x1,(0xa,a6)
+	subi.w #0x18,(0x4,a6)
+	lea.l (dat_00AA1A,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x5,(0xa,a6)
+	subi.w #0x18,(0x4,a6)
+	lea.l (dat_00AA2C,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x9,(0xa,a6)
+	subi.w #0x18,(0x4,a6)
+	lea.l (dat_00AA08,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x2,(0xa,a6)
+	subi.w #0x30,(0x4,a6)
+	lea.l (dat_00AA1A,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x6,(0xa,a6)
+	subi.w #0x30,(0x4,a6)
+	lea.l (dat_00AA2C,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0xa,(0xa,a6)
+	subi.w #0x30,(0x4,a6)
+	lea.l (0xffffae84).l,a1
+	move.l #0xffffff00,d0
+	move.l d0,(a1)+
+	move.l d0,(a1)+
+	move.l d0,(a1)+
+	addi.w #0x9,(0xffff9e0e).l
+	rts
+| data 0x00AA08-0x00AA3E
+dat_00AA08:
+	.incbin "baserom.md",0xAA08,0x12
+dat_00AA1A:
+	.incbin "baserom.md",0xAA1A,0x12
+dat_00AA2C:
+	.incbin "baserom.md",0xAA2C,0x12
 sub_00AA3E:
 	lea.l (dat_00AA58,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
 	move.w (a0)+,(0x2,a6)
 	addq.w #0x1,(0xffff9e12).l
@@ -7249,7 +8983,7 @@ dat_00AA58:
 	.incbin "baserom.md",0xAA58,0x12
 sub_00AA6A:
 	lea.l (dat_00AAC0,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
 	move.w (a0)+,(0x2,a6)
 	move.w (a0)+,(0x4,a6)
@@ -7274,7 +9008,7 @@ dat_00AAC0:
 	.incbin "baserom.md",0xAAC0,0x12
 sub_00AAD2:
 	lea.l (dat_00AB3C,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
 	move.w (a0)+,(0x2,a6)
 	move.w #0xb0,(0x28,a6)
@@ -7321,7 +9055,7 @@ sub_00AB76:
 	bra.w sub_009B14
 sub_00AB8A:
 	lea.l (dat_00ABF4,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
 	move.w (a0)+,(0x2,a6)
 	move.w #0xa8,(0x28,a6)
@@ -7348,12 +9082,53 @@ loc_00ABE8:
 	move.w d0,(0x4,a6)
 	addq.w #0x1,(0xffff9e12).l
 	rts
-| data 0x00ABF4-0x00ACB0
+| data 0x00ABF4-0x00AC06
 dat_00ABF4:
-	.incbin "baserom.md",0xABF4,0xBC
+	.incbin "baserom.md",0xABF4,0x12
+sub_00AC06:
+	lea.l (dat_00AC58,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w d0,(0x2,a6)
+	clr.b (0xb,a6)
+	move.b #0x90,(0xa,a6)
+	move.b #0xc,(0x10,a6)
+	move.b #0x1,(0xe,a6)
+	move.b #0x1,(0xf,a6)
+	move.b #0x0,(0xc,a6)
+	clr.b (0xd,a6)
+	move.b #0xff,(0x12,a6)
+	clr.w (0x14,a6)
+	lea.l (0xffff9ee0).l,a1
+	moveq #0x1f,d0
+loc_00AC4A:
+	clr.l (a1)+
+	dbra d0,loc_00AC4A
+	addq.w #0x1,(0xffff9e14).l
+	rts
+| data 0x00AC58-0x00AC6A
+dat_00AC58:
+	.incbin "baserom.md",0xAC58,0x12
+sub_00AC6A:
+	lea.l (dat_00AC9E,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	clr.w (0x26,a6)
+	move.w (a0)+,(0x2,a6)
+	move.w (a0)+,d0
+	bpl.s loc_00AC86
+	neg.w d0
+	move.w #0xffff,(0x26,a6)
+loc_00AC86:
+	move.w d0,(0x28,a6)
+	move.b #0xc,(0x12,a6)
+	move.b #0x4,(0x10,a6)
+	addq.w #0x1,(0xffff9e10).l
+	rts
+| data 0x00AC9E-0x00ACB0
+dat_00AC9E:
+	.incbin "baserom.md",0xAC9E,0x12
 sub_00ACB0:
 	lea.l (dat_00ACBE,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	rts
 | data 0x00ACBE-0x00ACF2
@@ -7361,7 +9136,7 @@ dat_00ACBE:
 	.incbin "baserom.md",0xACBE,0x34
 sub_00ACF2:
 	lea.l (dat_00AD02,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.l a6,(0xffff9eda).l
 	rts
 | data 0x00AD02-0x00AD14
@@ -7369,19 +9144,38 @@ dat_00AD02:
 	.incbin "baserom.md",0xAD02,0x12
 sub_00AD14:
 	lea.l (dat_00AD36,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	bset.b #0xe,(a6)
 	move.b #0x40,(0xa,a6)
 	move.b #0x1,(0xe,a6)
 	clr.b (0xb,a6)
 	jsr (sub_010408,pc)
 	rts
-| data 0x00AD36-0x00AD9C
+| data 0x00AD36-0x00AD48
 dat_00AD36:
-	.incbin "baserom.md",0xAD36,0x66
+	.incbin "baserom.md",0xAD36,0x12
+sub_00AD48:
+	jsr (sub_00AD9C,pc)
+	bset.b #0xe,(a6)
+	neg.b (0xe,a6)
+	move.l #0xd712,(0x20,a6)
+	move.w #0xa0,(0x2,a6)
+	bclr.b #0xf,(a6)
+	move.w #0x12e,(0x24,a6)
+	rts
+sub_00AD6E:
+	jsr (sub_00AD9C,pc)
+	bset.b #0xe,(a6)
+	move.l #0x1085c,(0x20,a6)
+	move.b #0xc,(0xa,a6)
+	move.w #0x84,(0x4,a6)
+	move.b #0x0,(0x6,a6)
+	bclr.b #0xf,(a6)
+	move.l a6,(0xffff9ed2).l
+	rts
 sub_00AD9C:
 	lea.l (dat_00ADBE,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	bclr.b #0xe,(a6)
 	move.b #0x40,(0xa,a6)
 	move.b #0xff,(0xe,a6)
@@ -7393,7 +9187,7 @@ dat_00ADBE:
 	.incbin "baserom.md",0xADBE,0x12
 sub_00ADD0:
 	lea.l (dat_00AE60,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	move.w (a6),d0
 	bset.b #0xf,d0
@@ -7442,7 +9236,7 @@ dat_00AE60:
 	.incbin "baserom.md",0xAE60,0x12
 sub_00AE72:
 	lea.l (dat_00AEE8,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	move.w #0xb0,(0x28,a6)
 	move.w (a6),d0
@@ -7480,7 +9274,7 @@ dat_00AEE8:
 	.incbin "baserom.md",0xAEE8,0x12
 sub_00AEFA:
 	lea.l (dat_00AF0A,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.l a6,(0xffff9eca).l
 	rts
 | data 0x00AF0A-0x00AF1C
@@ -7495,12 +9289,12 @@ sub_00AF1C:
 	moveq #0x4,d3
 	move.l #0xa000,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w #0x0,d2
 	jsr (sub_009EF8,pc)
 	movea.l (sp)+,a0
 	lea.l (dat_00AF60,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0x190,(0x24,a6)
 	move.l a6,(0xffff9ece).l
 	rts
@@ -7516,12 +9310,12 @@ sub_00AF72:
 	move.l #0xa000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e74).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.w #0x0,d2
 	jsr (sub_009EF8,pc)
 	lea.l (dat_00AFC2,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0xc8,(0x24,a6)
 	move.w #0x1,(0x14,a6)
 	move.w #0x1,(0x1a,a6)
@@ -7543,7 +9337,7 @@ sub_00AFE8:
 	rts
 sub_00AFFC:
 	lea.l (dat_00B018,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0xa,(0x24,a6)
 	move.w #0x28,(0x26,a6)
 	move.l a6,(0xffff9eda).l
@@ -7568,7 +9362,7 @@ sub_00B02A:
 	move.w #0xe9e8,d1
 	bsr.w sub_0112BE
 	lea.l (dat_00B07C,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.w #0xc8,(0x24,a6)
 	clr.w (0x14,a6)
 	move.l a6,(0xffff9ece).l
@@ -7579,7 +9373,7 @@ dat_00B07C:
 	.incbin "baserom.md",0xB07C,0x36
 sub_00B0B2:
 	lea.l (dat_00B116,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	move.b #0x20,(0xa,a6)
 	move.b #0xff,(0xe,a6)
 	clr.b (0xb,a6)
@@ -7597,12 +9391,26 @@ sub_00B0B2:
 	moveq #0x1,d3
 	jsr (sub_0118C0).l
 	rts
-| data 0x00B116-0x00B1CE
+| data 0x00B116-0x00B192
 dat_00B116:
-	.incbin "baserom.md",0xB116,0xB8
+	.incbin "baserom.md",0xB116,0x7C
+sub_00B192:
+	lea.l (dat_00B1BC,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.l (0xffff9e94).l,(0x2,a6)
+	cmpi.w #0x90,(0x4,a6)
+	blt.s loc_00B1B0
+	move.w #0x90,(0x4,a6)
+loc_00B1B0:
+	move.w d0,(0x26,a6)
+	move.w #0x80,(0x24,a6)
+	rts
+| data 0x00B1BC-0x00B1CE
+dat_00B1BC:
+	.incbin "baserom.md",0xB1BC,0x12
 sub_00B1CE:
 	lea.l (dat_00B1EE,pc),a1
-	jsr (sub_0092DC,pc)
+	jsr (ObjSpawnTemplate,pc)
 	lea.l (0xffffae84).l,a1
 	moveq #0x58,d0
 	moveq #0x63,d1
@@ -7611,18 +9419,48 @@ loc_00B1E0:
 	dbra d1,loc_00B1E0
 	move.l a6,(0xffff9eca).l
 	rts
-| data 0x00B1EE-0x00B2E6
+| data 0x00B1EE-0x00B200
 dat_00B1EE:
-	.incbin "baserom.md",0xB1EE,0xF8
-sub_00B2E6:
+	.incbin "baserom.md",0xB1EE,0x12
+sub_00B200:
+	moveq #0x0,d0
+	lea.l (dat_00B272,pc),a3
+loc_00B206:
+	lea.l (dat_00B260,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.l (a3)+,(0x2,a6)
+	move.w d0,(0x26,a6)
+	addq.w #0x1,d0
+	cmpi.w #0x1a,d0
+	bne.s loc_00B206
+loc_00B21E:
+	lea.l (dat_00B260,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.l #0x6f64,(0x1c,a6)
+	move.l (a3)+,(0x2,a6)
+	move.w d0,(0x26,a6)
+	addq.w #0x1,d0
+	cmpi.w #0x1d,d0
+	bne.s loc_00B21E
+	move.l #0x2e2e2e00,(0xffff8032).l
+	move.l #0x2e2e2e00,(0xffff8082).l
+	clr.w (0xffff8036).l
+	clr.w (0xffff8086).l
+	rts
+| data 0x00B260-0x00B2E6
+dat_00B260:
+	.incbin "baserom.md",0xB260,0x12
+dat_00B272:
+	.incbin "baserom.md",0xB272,0x74
+ScrGosub:
 	movea.l (a0)+,a1
 	move.l a0,(0xffff9f62).l
 	movea.l a1,a0
 	rts
-sub_00B2F2:
+ScrReturn:
 	movea.l (0xffff9f62).l,a0
 	rts
-sub_00B2FA:
+ScrSetPlayers:
 	cmpi.b #0x7,(0xffff9df5).l
 	beq.s loc_00B340
 	lea.l (0xffff8000).l,a4
@@ -7643,11 +9481,11 @@ sub_00B342:
 	move.w #0xe214,d1
 	moveq #0x1e,d2
 	moveq #0x6,d3
-	jmp (sub_012212).l
+	jmp (VdpQueueFillRows).l
 sub_00B350:
 	move.w #0x28,d0
 	jmp (sub_0FBB6C).l
-sub_00B35A:
+ScrDemoSkip:
 	move.w (a0)+,d0
 	cmpi.b #0x7,(0xffff9df5).l
 	bne.s loc_00B36A
@@ -7655,9 +9493,9 @@ sub_00B35A:
 loc_00B36A:
 	rts
 | data 0x00B36C-0x00B398
-dat_00B36C:
+LevelScripts:
 	.incbin "baserom.md",0xB36C,0x2C
-sub_00B398:
+ObjRunAll:
 	clr.w (0xffff9eba).l
 	lea.l (0xffff87b2).l,a6
 	move.w (0xffff80da).l,d7
@@ -7671,14 +9509,14 @@ sub_00B3AE:
 loc_00B3B8:
 	lea.l (0x2c,a6),a6
 	bra.s sub_00B3AE
-sub_00B3BE:
+ObjNext:
 	lea.l (0x2c,a6),a6
 	dbra d7,sub_00B3AE
 sub_00B3C6:
 	rts
 sub_00B3C8:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -7687,34 +9525,34 @@ sub_00B3C8:
 	beq.w loc_00B3FE
 	move.w d5,d1
 	addq.w #0x6,d1
-	jsr (sub_013228).l
+	jsr (ObjQueueSprite).l
 	move.w d5,d1
 	addi.w #0x64,d1
-	jsr (sub_013228).l
+	jsr (ObjQueueSprite).l
 	bra.s loc_00B412
 loc_00B3FE:
 	move.w d5,d1
 	addi.w #0xe,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w d5,d1
 	addi.w #0x74,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00B412:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B438
 	move.l #0xb43c,(0x20,a6)
 	bset.b #0xd,(a6)
 	move.w #0x64,(0x24,a6)
 loc_00B438:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B43C:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B450
 	jsr (sub_00B488,pc)
@@ -7730,20 +9568,20 @@ loc_00B450:
 	jsr (sub_013D04).l
 	bsr.w sub_009054
 	move.w #0x169,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00B47C:
 	move.w #0x168,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00B488:
 	bclr.b #0xd,(a6)
 	move.l #0xb3c8,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x40,d0
 	move.w d0,(0x24,a6)
 	rts
-sub_00B4A6:
+ObjMoveX:
 	move.b (0xe,a6),d0
 	ext.w d0
 	move.b (0xa,a6),d1
@@ -7762,19 +9600,19 @@ sub_00B4C2:
 sub_00B4D2:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B4DE:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x14,d1
 	move.w (0x2,a6),d2
 	move.w (0x4,a6),d3
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B500
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00B500:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B504:
 	move.w (0x2,a6),d0
 	move.w (0x4,a6),d1
@@ -7786,6 +9624,7 @@ loc_00B51A:
 	jsr (sub_01277C).l
 	move.l #0xb52e,(0x20,a6)
 	move.w #0x20,(0x24,a6)
+sub_00B52E:
 	moveq #0x2,d5
 	btst.b #0x1,(0x25,a6)
 	beq.s loc_00B53A
@@ -7811,16 +9650,16 @@ loc_00B566:
 	jsr (QueueSprite,pc)
 loc_00B56C:
 	move.w #0xffe0,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B582
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00B582:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B586:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	btst.b #0x6,(a6)
 	beq.s loc_00B598
 	moveq #0x34,d1
@@ -7829,15 +9668,15 @@ loc_00B598:
 	moveq #0x3c,d1
 loc_00B59A:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	andi.w #0x38,d0
 	lsr.w #0x3,d0
 	eori.w #0x7,d0
 	add.w d0,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s sub_00B5E8
 sub_00B5C2:
@@ -7850,9 +9689,9 @@ loc_00B5DA:
 	move.l #0xb5ec,(0x20,a6)
 	move.w #0x64,(0x24,a6)
 sub_00B5E8:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B5EC:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B614
 	jsr (sub_00C652,pc)
@@ -7864,9 +9703,9 @@ sub_00B5EC:
 	neg.b (0xe,a6)
 loc_00B614:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	cmpi.w #0x50,d0
 	bgt.s loc_00B64E
@@ -7878,13 +9717,13 @@ loc_00B614:
 	jsr (sub_013D04).l
 	bsr.w sub_009054
 	move.w #0x16b,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00B64E:
 	move.w #0x16a,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00B65A:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B668
 	jsr (sub_00C652,pc)
@@ -7893,12 +9732,12 @@ loc_00B668:
 	asr.w #0x1,d1
 	andi.w #0xe,d1
 	move.w (sub_00B68A,pc,d1.w),d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	cmpi.w #0xf,(0x24,a6)
 	bne.s loc_00B686
 	jsr (sub_01237A,pc)
 loc_00B686:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B68A:
 	bchg.b d0,-(sp)
 	bchg.b d0,-(sp)
@@ -7908,6 +9747,7 @@ sub_00B68A:
 	bchg.b d0,-(a5)
 	bchg.b d0,-(a4)
 	bchg.b d0,-(a3)
+sub_00B69A:
 	moveq #0x3,d5
 loc_00B69C:
 	move.w (0x2,a6),d0
@@ -7922,10 +9762,10 @@ loc_00B69C:
 	jsr (sub_01254E,pc)
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B6D0:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	btst.b #0x6,(a6)
 	beq.s loc_00B6E2
 	moveq #0x44,d1
@@ -7934,31 +9774,31 @@ loc_00B6E2:
 	moveq #0x4c,d1
 loc_00B6E4:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	andi.w #0x38,d0
 	lsr.w #0x3,d0
 	eori.w #0x7,d0
 	add.w d0,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B71A
 	move.l #0xb71e,(0x20,a6)
 	move.w #0x64,(0x24,a6)
 loc_00B71A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B71E:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B72C
 	jsr (sub_00B772,pc)
 loc_00B72C:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	cmpi.w #0x50,d0
 	bgt.s loc_00B766
@@ -7970,14 +9810,14 @@ loc_00B72C:
 	jsr (sub_013D04).l
 	bsr.w sub_009054
 	move.w #0x16d,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00B766:
 	move.w #0x16c,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00B772:
 	move.l #0xb6d0,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x96,d0
 	move.w d0,(0x24,a6)
@@ -7986,8 +9826,8 @@ sub_00B78C:
 	move.w #0x5,(0x14,a6)
 	bra.w sub_00C66C
 sub_00B796:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	btst.b #0x6,(a6)
 	beq.s loc_00B7A8
 	moveq #0x54,d1
@@ -7996,23 +9836,23 @@ loc_00B7A8:
 	moveq #0x5c,d1
 loc_00B7AA:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	andi.w #0x38,d0
 	lsr.w #0x3,d0
 	eori.w #0x7,d0
 	add.w d0,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B7E0
 	move.l #0xb7e4,(0x20,a6)
 	move.w #0x64,(0x24,a6)
 loc_00B7E0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B7E4:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00B800
 	jsr (sub_00B846,pc)
@@ -8021,9 +9861,9 @@ sub_00B7E4:
 	move.w #0x2710,(0x24,a6)
 loc_00B800:
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	cmpi.w #0x50,d0
 	bgt.s loc_00B83A
@@ -8035,14 +9875,14 @@ loc_00B800:
 	jsr (sub_013D04).l
 	bsr.w sub_009054
 	move.w #0x16f,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00B83A:
 	move.w #0x16e,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00B846:
 	move.l #0xb796,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x80,d0
 	move.w d0,(0x24,a6)
@@ -8061,7 +9901,7 @@ sub_00B86A:
 	jsr (sub_01227A,pc)
 	move.w (sp)+,d7
 	move.l #0xb8c2,(0x20,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B896:
 	moveq #0x0,d1
 	jsr (sub_00BABC,pc)
@@ -8075,6 +9915,7 @@ sub_00B896:
 	addi.w #0x1a,d2
 	subi.w #0x9,d3
 	jsr (QueueSprite,pc)
+sub_00B8C2:
 	bsr.w sub_009078
 	move.w (0x24,a6),d0
 	andi.w #0x8,d0
@@ -8089,7 +9930,7 @@ sub_00B896:
 	move.w (0xffff9e34).l,d7
 	jsr (sub_01227A,pc)
 	move.w (sp)+,d7
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	lea.l (0xffffab9e).l,a0
 	move.w (0x2,a6),d0
@@ -8103,9 +9944,10 @@ loc_00B91C:
 	move.w d0,(a0)
 	move.w d0,(0x20,a0)
 	move.w d0,(0x40,a0)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B92E:
 	bsr.w sub_00BCC6
+sub_00B932:
 	clr.w (a6)
 	jsr (sub_0098FC,pc)
 	move.w d7,-(sp)
@@ -8115,10 +9957,10 @@ sub_00B92E:
 	moveq #0x3,d3
 	move.w #0x0,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B962:
 	move.w d7,-(sp)
 	move.w #0xc570,d1
@@ -8127,10 +9969,10 @@ sub_00B962:
 	moveq #0x3,d3
 	move.w #0x0,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.l #0xb9ba,(0x20,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00B98E:
 	moveq #0x0,d1
 	jsr (sub_00BABC,pc)
@@ -8144,6 +9986,7 @@ sub_00B98E:
 	subi.w #0x1a,d2
 	subi.w #0x9,d3
 	jsr (QueueSprite,pc)
+sub_00B9BA:
 	bsr.w sub_009078
 	move.w (0x24,a6),d0
 	andi.w #0x8,d0
@@ -8156,10 +9999,10 @@ sub_00B98E:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0x24,a6)
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	lea.l (0xffffab9e).l,a0
 	move.w (0x2,a6),d0
 	addq.w #0x1,d0
@@ -8172,9 +10015,10 @@ loc_00BA14:
 	move.w d0,(a0)
 	move.w d0,(0x20,a0)
 	move.w d0,(0x40,a0)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BA26:
 	bsr.w sub_00BCC6
+sub_00BA2A:
 	clr.w (a6)
 	jsr (sub_0098FC,pc)
 	move.w d7,-(sp)
@@ -8184,15 +10028,40 @@ sub_00BA26:
 	moveq #0x3,d3
 	move.w #0x0,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
-| data 0x00BA5A-0x00BABC
+	bra.w ObjNext
+| data 0x00BA5A-0x00BA62
 dat_00BA5A:
 	dc.l dat_0A0FC2
 	dc.l dat_0A0FD2
-	.incbin "baserom.md",0xBA62,0x5A
+sub_00BA62:
+	move.w d7,-(sp)
+	move.w #0xc1d0,d1
+	lea.l (dat_0A0EB2).l,a0
+	moveq #0x10,d2
+	moveq #0x6,d3
+	move.w #0x0,d6
+	move.w (0xffff9e34).l,d7
+	jsr (sub_01227A,pc)
+	move.w (sp)+,d7
+	move.l #0xbad6,(0x20,a6)
+	bra.w ObjNext
+sub_00BA8E:
+	moveq #0x0,d1
+	jsr (sub_00BABC,pc)
+	addi.w #0x11b,d1
+	subi.w #0x8,d2
+	subi.w #0x10,d3
+	jsr (QueueSprite,pc)
+	moveq #0x3,d1
+	jsr (sub_00BABC,pc)
+	addi.w #0x11b,d1
+	addi.w #0x34,d2
+	subi.w #0x12,d3
+	jsr (QueueSprite,pc)
+	bra.s sub_00BAD6
 sub_00BABC:
 	add.w (0x24,a6),d1
 	divu.w #0x18,d1
@@ -8217,7 +10086,7 @@ sub_00BAD6:
 	move.w (0xffff9e34).l,d7
 	jsr (sub_01227A,pc)
 	move.w (sp)+,d7
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	lea.l (0xffffaabe).l,a0
 	move.w (0x2,a6),d0
@@ -8234,9 +10103,10 @@ loc_00BB30:
 	move.w d0,(0x60,a0)
 	move.w d0,(0x80,a0)
 	move.w d0,(0xa0,a0)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BB4E:
 	bsr.w sub_00BCC6
+sub_00BB52:
 	clr.w (a6)
 	jsr (sub_00998A,pc)
 	move.w d7,-(sp)
@@ -8246,10 +10116,10 @@ sub_00BB4E:
 	moveq #0x6,d3
 	move.w #0x0,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BB82:
 	move.w d7,-(sp)
 	move.w #0xc1e0,d1
@@ -8258,10 +10128,10 @@ sub_00BB82:
 	moveq #0x6,d3
 	move.w #0x0,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.l #0xbbda,(0x20,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BBAE:
 	moveq #0x0,d1
 	jsr (sub_00BABC,pc)
@@ -8275,6 +10145,7 @@ sub_00BBAE:
 	subi.w #0x34,d2
 	subi.w #0x12,d3
 	jsr (QueueSprite,pc)
+sub_00BBDA:
 	bsr.w sub_009078
 	move.w (0x24,a6),d0
 	andi.w #0x78,d0
@@ -8287,9 +10158,9 @@ sub_00BBAE:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	lea.l (0xffffaabe).l,a0
 	move.w (0x2,a6),d0
@@ -8306,9 +10177,10 @@ loc_00BC34:
 	move.w d0,(0x60,a0)
 	move.w d0,(0x80,a0)
 	move.w d0,(0xa0,a0)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BC52:
 	bsr.w sub_00BCC6
+sub_00BC56:
 	clr.w (a6)
 	jsr (sub_00998A,pc)
 	move.w d7,-(sp)
@@ -8318,10 +10190,10 @@ sub_00BC52:
 	moveq #0x6,d3
 	move.w #0x0,d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00BC86-0x00BCC6
 dat_00BC86:
 	dc.l dat_0A0E82
@@ -8363,10 +10235,10 @@ sub_00BCF6:
 	moveq #0x8,d3
 	move.w #0x0,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.l #0xbd54,(0x20,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BD22:
 	moveq #0x0,d1
 	jsr (sub_00BABC,pc)
@@ -8396,7 +10268,7 @@ sub_00BD6C:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.w #0x6,d2
 	move.w #0x2,d3
@@ -8404,11 +10276,11 @@ sub_00BD6C:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0x24,a6)
 	lea.l (0xffffaa9e).l,a0
-	jsr (sub_00B4A6,pc)
+	jsr (ObjMoveX,pc)
 	move.w (0x2,a6),d0
 	cmpi.w #0x1a0,d0
 	blt.s loc_00BDC8
@@ -8423,7 +10295,7 @@ loc_00BDC8:
 	move.w d0,(0xa0,a0)
 	move.w d0,(0xc0,a0)
 	move.w d0,(0xe0,a0)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00BDEE-0x00BE2E
 dat_00BDEE:
 	dc.l dat_0BC93A
@@ -8448,7 +10320,7 @@ sub_00BE2E:
 	jsr (sub_009866,pc)
 	jsr (sub_00BE42,pc)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BE42:
 	move.w d7,-(sp)
 	movea.l (0xffff80bc).l,a5
@@ -8458,14 +10330,14 @@ sub_00BE42:
 	moveq #0xb,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.w #0xc140,d1
 	lea.l (dat_046C44).l,a0
 	moveq #0x20,d2
 	moveq #0xb,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234).l
+	jsr (VdpQueueTileRect).l
 	move.l a5,(0xffff80bc).l
 	move.w (sp)+,d7
 	rts
@@ -8530,7 +10402,7 @@ sub_00BF60:
 	jsr (sub_01227A,pc)
 	move.w (sp)+,d7
 	move.l #0xbfc0,(0x20,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00BF8E:
 	moveq #0x0,d1
 	jsr (sub_00BABC,pc)
@@ -8572,7 +10444,7 @@ sub_00BFD8:
 	move.w (sp)+,d7
 	subq.w #0x1,(0x24,a6)
 	lea.l (0xffffaa9e).l,a0
-	jsr (sub_00B4A6,pc)
+	jsr (ObjMoveX,pc)
 	move.w (0x2,a6),d0
 	cmpi.w #0xffa0,d0
 	bgt.s loc_00C034
@@ -8587,7 +10459,7 @@ loc_00C034:
 	move.w d0,(0xa0,a0)
 	move.w d0,(0xc0,a0)
 	move.w d0,(0xe0,a0)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C05A:
 	movea.l (0xffff80bc).l,a5
 	move.w #0x1,(a5)+
@@ -8621,12 +10493,12 @@ loc_00C0C6:
 	lsr.w #0x2,d1
 	andi.w #0x3,d1
 	addi.w #0x191,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	btst.b #0x0,(0x25,a6)
 	beq.s loc_00C0E4
 	subq.w #0x1,(0x4,a6)
 loc_00C0E4:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C0E8:
 	bsr.w sub_009078
 	subq.w #0x1,(0x24,a6)
@@ -8663,7 +10535,7 @@ loc_00C118:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e36).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	movea.l (sp)+,a1
 	move.w (a1)+,d0
@@ -8679,7 +10551,7 @@ loc_00C118:
 	move.w (0xffff9e36).l,d7
 	jsr (sub_01227A,pc)
 	move.w (sp)+,d7
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00C196-0x00C1E6
 dat_00C196:
 	.incbin "baserom.md",0xC196,0x50
@@ -8692,7 +10564,7 @@ sub_00C1E6:
 	moveq #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	rts
 sub_00C20A:
@@ -8715,7 +10587,7 @@ sub_00C242:
 	clr.w (a6)
 	jsr (sub_00C1E6,pc)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C252:
 	move.w (0x24,a6),d0
 	subq.w #0x1,d0
@@ -8734,10 +10606,10 @@ sub_00C278:
 	move.w d0,(0x24,a6)
 	btst.b #0x0,d0
 	beq.s loc_00C2AE
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x1f,d0
 	move.w d0,d1
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x1f,d0
 	add.w (0x2,a6),d0
 	subi.w #0x10,d0
@@ -8747,17 +10619,17 @@ sub_00C278:
 	subq.b #0x1,d2
 	jsr (sub_01253C,pc)
 loc_00C2AE:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00C2B2-0x00C332
 dat_00C2B2:
 	.incbin "baserom.md",0xC2B2,0x80
 sub_00C332:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x18f,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00C348:
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
@@ -8772,27 +10644,27 @@ sub_00C348:
 	eori.w #0xf,d1
 	move.b (dat_00C39C,pc,d1.w),d1
 	addi.w #0x325,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 loc_00C37E:
 	bsr.w sub_00908A
 	move.w #0x7e,d0
 	jsr (sub_013D04).l
 	move.w #0x14,(0x24,a6)
 	move.l #0xc3ac,(0x20,a6)
-	bra.s loc_00C3AC
+	bra.s sub_00C3AC
 | data 0x00C39C-0x00C3AC
 dat_00C39C:
 	.incbin "baserom.md",0xC39C,0x10
-loc_00C3AC:
+sub_00C3AC:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00C3BA
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00C3BA:
 	move.w #0x331,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00C3C6:
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
@@ -8807,15 +10679,15 @@ sub_00C3C6:
 	eori.w #0x1f,d1
 	move.b (dat_00C41C,pc,d1.w),d1
 	addi.w #0x14d,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 loc_00C3FC:
 	move.w #0x20,(0x24,a6)
 	move.l #0xc4e4,(0x20,a6)
 	bsr.w sub_00908A
 	move.w #0x6b,d0
 	jsr (sub_013CC4).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00C41C-0x00C442
 dat_00C41C:
 	.incbin "baserom.md",0xC41C,0x26
@@ -8831,16 +10703,16 @@ sub_00C442:
 	move.b d2,(0x7,a6)
 	asr.w #0x4,d1
 	addi.w #0xb8,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00C46A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00C46E:
 	move.w #0x14,(0x24,a6)
 	move.l #0xc4ea,(0x20,a6)
 	move.w #0x6a,d0
 	jsr (sub_013CC4).l
 	bsr.w sub_00908A
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C48E:
 	move.b (0xe,a6),d0
 	ext.w d0
@@ -8886,15 +10758,15 @@ sub_00C4F4:
 	move.w (0x24,a6),d0
 	btst.b #0x2,d0
 	bne.s loc_00C502
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00C502:
 	move.w (0x24,a6),d0
 	andi.w #0x7,d0
 	bne.s loc_00C538
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	move.w d0,d1
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	add.w (0x2,a6),d0
 	subi.w #0x20,d0
@@ -8909,20 +10781,20 @@ loc_00C538:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00C546:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C54A:
 	movem.w (0x2,a6),d0-d1
 	subi.w #0x10,d1
 	jsr (sub_01254E,pc)
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C564:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	jsr (sub_00C48E,pc)
 	tst.b d4
 	beq.w loc_00C5AE
@@ -8937,10 +10809,10 @@ loc_00C584:
 	asr.w #0x4,d1
 	move.b (dat_00C5C0,pc,d1.w),d1
 	addi.w #0x84,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00C5A6:
 	subq.w #0x1,(0x24,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00C5AE:
 	move.w #0x64,(0x24,a6)
 	move.l #0xc5e2,(0x20,a6)
@@ -8955,7 +10827,7 @@ sub_00C5E2:
 	asr.w #0x4,d1
 	move.b (dat_00C5C0,pc,d1.w),d1
 	addi.w #0x84,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	move.b #0x14,(0x6,a6)
 	move.b #0x11,(0x7,a6)
 	move.l #0x5a48,(0x1c,a6)
@@ -8975,16 +10847,16 @@ loc_00C634:
 	beq.s loc_00C64E
 	bra.w sub_00B5C2
 loc_00C64E:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C652:
 	move.l #0xb586,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x40,d0
 	move.w d0,(0x24,a6)
 	rts
 sub_00C66C:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.b #0xff,(0xf,a6)
 	move.w (0x4,a6),(0x28,a6)
 	move.w (0x14,a6),d0
@@ -8999,13 +10871,14 @@ sub_00C66C:
 	move.l a5,(0x16,a6)
 	move.w #0x20,(0x24,a6)
 	move.l #0xc6b0,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00C6B0:
+	jsr (ObjScrollX,pc)
 	cmpi.w #0xffe2,(0x2,a6)
 	bgt.s loc_00C6CE
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	clr.b (0xffff9ec0).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00C6CE:
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
@@ -9015,13 +10888,13 @@ loc_00C6CE:
 	cmp.w (0x28,a6),d0
 	bgt.w loc_00C7BA
 	clr.w (0x12,a6)
-	bra.s loc_00C6FA
+	bra.s sub_00C6FA
 loc_00C6EC:
 	move.w (0x24,a6),d1
 	asr.w #0x1,d1
 	eori.w #0xf,d1
 	move.b (dat_00C748,pc,d1.w),d1
-loc_00C6FA:
+sub_00C6FA:
 	move.w (0x14,a6),d0
 	add.b (dat_00C758,pc,d0.w),d1
 	movea.l (0xffff80bc).l,a5
@@ -9041,8 +10914,8 @@ loc_00C6FA:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x96,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 | data 0x00C748-0x00C7BA
 dat_00C748:
 	.incbin "baserom.md",0xC748,0x10
@@ -9053,13 +10926,14 @@ dat_00C76A:
 loc_00C7BA:
 	move.w #0x40,(0x24,a6)
 	move.l #0xc7c8,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00C7C8:
+	jsr (ObjScrollX,pc)
 	cmpi.w #0xffe2,(0x2,a6)
 	bgt.s loc_00C7E6
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	clr.b (0xffff9ec0).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00C7E6:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00C7FA
@@ -9068,7 +10942,7 @@ loc_00C7E6:
 	clr.b (0xffff9ec0).l
 loc_00C7FA:
 	move.w #0x4,d1
-	bra.w loc_00C6FA
+	bra.w sub_00C6FA
 sub_00C802:
 	move.w (0x4,a6),d0
 	addi.w #0x10,d0
@@ -9121,11 +10995,11 @@ loc_00C894:
 	bne.s sub_00C8A8
 	moveq #0x1a,d1
 sub_00C8A8:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0xc,d0
-	jsr (sub_012332,pc)
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00C8BA:
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_00C8DC
@@ -9159,7 +11033,7 @@ loc_00C90A:
 sub_00C91E:
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_00C94E
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x1,d0
 	addq.w #0x1,d0
 	move.w d0,(0x2a,a6)
@@ -9181,7 +11055,7 @@ sub_00C95E:
 	subq.w #0x1,(0xffff80da).l
 	bra.s sub_00C99A
 sub_00C968:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_00C97E
 	move.l #0xc9a2,(0x20,a6)
@@ -9200,7 +11074,7 @@ sub_00C99A:
 	move.w #0x2e0,d1
 	bra.w sub_00C9C2
 sub_00C9A2:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d0
 	subq.w #0x1,d0
 	move.w d0,(0x24,a6)
@@ -9220,10 +11094,10 @@ sub_00C9C2:
 	moveq #0x7,d3
 	move.w #0xa000,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 sub_00C9E6:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00C9EA:
 	bchg.b d2,(a0)
 	bchg.b d2,(a4)+
@@ -9235,8 +11109,9 @@ sub_00C9EA:
 	movep.w d2,(0x580,a4)
 	movep.w d2,(0x568,a4)
 	dc.w 0x0574,0x0568,0x0574	| bchg.b d2, $574(a4, invalid.w)
-	jsr (sub_012316,pc)
-	bra.w sub_00B3BE
+sub_00CA0A:
+	jsr (ObjScrollX,pc)
+	bra.w ObjNext
 sub_00CA12:
 	move.w (0x2a,a6),d3
 	asl.w #0x3,d3
@@ -9275,14 +11150,503 @@ loc_00CA3A:
 	moveq #0x8,d3
 	move.w #0xa000,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
-| data 0x00CA9A-0x00D0F8
+	bra.w ObjNext
+| data 0x00CA9A-0x00CABA
 dat_00CA9A:
-	.incbin "baserom.md",0xCA9A,0x65E
+	.incbin "baserom.md",0xCA9A,0x20
+sub_00CABA:
+	jsr (ObjScrollX,pc)
+	moveq #-0x20,d0
+	jsr (ObjKillIfLeftOf,pc)
+	btst.b #0x0,(0x25,a6)
+	bne.s loc_00CAD0
+	subq.w #0x1,(0x2,a6)
+loc_00CAD0:
+	move.w #0xcd,d1
+	jsr (ObjQueueSprite,pc)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00CAF8
+	move.w #0x46,(0x24,a6)
+	move.l a6,-(sp)
+	move.w (0x4,a6),d1
+	subi.w #0x24,d1
+	move.w (0x2,a6),d5
+	jsr (sub_009A02,pc)
+	movea.l (sp)+,a6
+loc_00CAF8:
+	bra.w ObjNext
+sub_00CAFC:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	moveq #0x14,d0
+	add.w (0x2,a6),d0
+	moveq #-0x14,d1
+	add.w (0x4,a6),d1
+	move.w (0x6,a6),d2
+	subq.b #0x1,d2
+	jsr (sub_01253C,pc)
+	moveq #-0x14,d0
+	add.w (0x2,a6),d0
+	moveq #-0x14,d1
+	add.w (0x4,a6),d1
+	move.w (0x6,a6),d2
+	subq.b #0x1,d2
+	jsr (sub_01253C,pc)
+	bra.w ObjNext
+sub_00CB34:
+	btst.b #0x2,(0xffff9ebc).l
+	beq.s loc_00CB42
+	jsr (sub_00CD66,pc)
+loc_00CB42:
+	move.w (0x2,a6),d0
+	subq.w #0x1,d0
+	move.w #0xffff,(0xffff9eba).l
+	move.w d0,(0x2,a6)
+	cmpi.w #0x5a,d0
+	beq.s loc_00CB7C
+	move.w (0x24,a6),d4
+	cmpi.w #0xa0,d4
+	ble.s loc_00CB78
+	moveq #0x0,d1
+	btst.b #0x2,d4
+	beq.s loc_00CB6E
+	moveq #-0x2,d1
+loc_00CB6E:
+	move.w d0,-(sp)
+	moveq #0x0,d0
+	jsr (sub_0081B6,pc)
+	move.w (sp)+,d0
+loc_00CB78:
+	subq.w #0x1,d4
+	bne.s loc_00CB96
+loc_00CB7C:
+	move.w d0,d5
+	bsr.w Random
+	andi.w #0x7f,d0
+	addi.w #0x14,d0
+	move.w d0,d4
+	move.w d5,d0
+	move.l #0xcb9e,(0x20,a6)
+loc_00CB96:
+	move.w d4,(0x24,a6)
+	bra.w sub_00CBE8
+sub_00CB9E:
+	btst.b #0x2,(0xffff9ebc).l
+	beq.s loc_00CBAC
+	jsr (sub_00CD66,pc)
+loc_00CBAC:
+	move.w (0x2,a6),d0
+	addq.w #0x1,d0
+	move.w #0x1,(0xffff9eba).l
+	move.w d0,(0x2,a6)
+	cmpi.w #0xe6,d0
+	beq.s loc_00CBCA
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00CBE4
+loc_00CBCA:
+	move.w d0,d5
+	bsr.w Random
+	andi.w #0x7f,d0
+	addi.w #0x14,d0
+	move.w d0,d4
+	move.w d5,d0
+	move.l #0xcb34,(0x20,a6)
+loc_00CBE4:
+	bra.w sub_00CBE8
+sub_00CBE8:
+	lea.l (0xffffaadc).l,a0
+	subi.w #0x68,d0
+	moveq #0xf,d1
+loc_00CBF4:
+	move.w d0,(a0)
+	lea.l (0x20,a0),a0
+	dbra d1,loc_00CBF4
+	move.w d0,d4
+	andi.w #0x3,d0
+	bne.s loc_00CC38
+	andi.w #0xc,d4
+	lsr.w #0x1,d4
+	move.w d7,-(sp)
+	cmpi.w #0x140,(0x2,a6)
+	bgt.s loc_00CC1E
+	move.w #0xe8ac,d1
+	jsr (sub_00CC3C,pc)
+loc_00CC1E:
+	move.w #0xe892,d1
+	jsr (sub_00CC3C,pc)
+	move.w #0xe89a,d1
+	jsr (sub_00CC6A,pc)
+	move.w #0xe880,d1
+	jsr (sub_00CC6A,pc)
+	move.w (sp)+,d7
+loc_00CC38:
+	bra.w ObjNext
+sub_00CC3C:
+	move.w d4,-(sp)
+	move.w (dat_00CC62,pc,d4.w),d2
+	lea.l (dat_04E26A).l,a0
+	lea.l (0x0,a0,d2.w),a0
+	moveq #0x4,d2
+	moveq #0x3,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d4
+	rts
+| data 0x00CC62-0x00CC6A
+dat_00CC62:
+	.incbin "baserom.md",0xCC62,0x8
+sub_00CC6A:
+	move.w d4,-(sp)
+	move.w (dat_00CC90,pc,d4.w),d2
+	lea.l (dat_04E26A).l,a0
+	lea.l (0x0,a0,d2.w),a0
+	moveq #0x4,d2
+	moveq #0x3,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	jsr (sub_01227A,pc)
+	move.w (sp)+,d4
+	rts
+| data 0x00CC90-0x00CC98
+dat_00CC90:
+	.incbin "baserom.md",0xCC90,0x8
+sub_00CC98:
+	move.w d7,-(sp)
+	lea.l (dat_04E696).l,a0
+	moveq #0xd,d2
+	moveq #0x8,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	move.w #0xe600,d1
+	jsr (sub_01227A,pc)
+	lea.l (dat_04E696).l,a0
+	moveq #0xd,d2
+	moveq #0x8,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	move.w #0xe61a,d1
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d7
+	bclr.b #0x7,(a6)
+	move.l #0xcd1c,(0x20,a6)
+	move.w #0x64,(0x24,a6)
+sub_00CCE6:
+	moveq #0x5,d4
+loc_00CCE8:
+	move.w (0x4,a6),d1
+	jsr (Random,pc)
+	andi.w #0x10,d0
+	add.w d0,d1
+	jsr (Random,pc)
+	andi.w #0x10,d0
+	add.w (0x2,a6),d0
+	move.w (0x6,a6),d2
+	subi.w #0x10,d1
+	jsr (sub_012494,pc)
+	dbra d4,loc_00CCE8
+	st.b (0xffff9ebc).l
+	bra.w ObjNext
+sub_00CD1C:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00CD52
+	btst.b #0x3,(a6)
+	bne.s loc_00CD3C
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	lea.l (dat_01F2E2).l,a0
+	jsr (ScriptNext,pc)
+	bra.s loc_00CD52
+loc_00CD3C:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	movea.l #0x1fea0,a0
+	jsr (ScriptNext,pc)
+	bra.w sub_00CCE6
+loc_00CD52:
+	move.w #0x1,(0xffff8044).l
+	move.w #0x1,(0xffff8094).l
+	bra.w ObjNext
+sub_00CD66:
+	subq.w #0x1,(0x2a,a6)
+	move.w (0x2a,a6),d0
+	cmpi.w #0x60,d0
+	bge.w sub_00CDFC
+	cmpi.w #0x40,d0
+	blt.w sub_00CDC2
+	andi.w #0x18,d0
+	lsr.w #0x2,d0
+	move.w (loc_00CDB6+2,pc,d0.w),d1
+sub_00CD88:
+	move.w d7,-(sp)
+	lea.l (dat_04E26A).l,a0
+	lea.l (0x0,a0,d1.w),a0
+	move.w #0xe698,d1
+	moveq #0x2,d2
+	moveq #0x2,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d7
+	bra.w sub_00CDFC
+sub_00CDB0:
+	dc.w 0x062a,0x062e,0x0632	| addi.b #$2e, $632(a2)
+loc_00CDB6:
+	dc.w 0x0636,0x0636,0x0632	| addi.b #$36, $32(a6, d0.w)
+	dc.w 0x062e,0x062a,0x4e71	| addi.b #$2a, $4e71(a6)
+sub_00CDC2:
+	cmpi.w #0x20,d0
+	bge.w loc_00CDE2
+	tst.w d0
+	bne.s loc_00CDD4
+	move.w #0x100,(0x2a,a6)
+loc_00CDD4:
+	andi.w #0x18,d0
+	lsr.w #0x2,d0
+	move.w (sub_00CDB0,pc,d0.w),d1
+	bra.w sub_00CD88
+loc_00CDE2:
+	andi.w #0x7,d0
+	bne.s sub_00CDFC
+	move.l a6,-(sp)
+	move.w (0x4,a6),d1
+	subi.w #0x30,d1
+	move.w (0x2,a6),d5
+	jsr (sub_009A02,pc)
+	movea.l (sp)+,a6
+sub_00CDFC:
+	rts
+sub_00CDFE:
+	move.w (0xffff9eba).l,d0
+	add.w d0,(0x2,a6)
+	bra.w ObjNext
+sub_00CE0C:
+	move.w #0x32,(0x24,a6)
+	move.w d7,-(sp)
+	lea.l (dat_04E686).l,a0
+	moveq #0x8,d2
+	moveq #0x5,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	move.w #0xe40c,d1
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d7
+	bclr.b #0x7,(a6)
+	move.l #0xcefa,(0x20,a6)
+	bra.w ObjNext
+sub_00CE42:
+	bra.w ObjNext
+sub_00CE46:
+	jsr (sub_00CF58,pc)
+	move.w (0xffff9eba).l,d0
+	add.w d0,(0x2,a6)
+	move.w (0x24,a6),d0
+	subq.w #0x1,d0
+	move.w d0,(0x24,a6)
+	move.w d0,d4
+	andi.w #0xf,d0
+	bne.s loc_00CEA0
+	andi.w #0xf0,d4
+	lsr.w #0x3,d4
+	move.w (dat_00CEA4,pc,d4.w),d1
+	move.w d7,-(sp)
+	lea.l (dat_04E26A).l,a0
+	lea.l (0x0,a0,d1.w),a0
+	move.w #0xe20a,d1
+	moveq #0xa,d2
+	moveq #0x4,d3
+	move.w #0x8000,d6
+	move.w (0xffff9e48).l,d7
+	cmpi.w #0x10,d4
+	bge.s loc_00CE9A
+	jsr (VdpQueueTileRect,pc)
+	bra.s loc_00CE9E
+loc_00CE9A:
+	jsr (sub_01227A,pc)
+loc_00CE9E:
+	move.w (sp)+,d7
+loc_00CEA0:
+	bra.w ObjNext
+| data 0x00CEA4-0x00CEC4
+dat_00CEA4:
+	.incbin "baserom.md",0xCEA4,0x20
+sub_00CEC4:
+	move.w d7,-(sp)
+	lea.l (dat_04E664).l,a0
+	moveq #0xa,d2
+	moveq #0x4,d3
+	move.w #0x8000,d6
+	move.w (0xffff9e48).l,d7
+	move.w #0xe20a,d1
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d7
+	bclr.b #0x7,(a6)
+	move.w #0x32,(0x24,a6)
+	move.l #0xcefa,(0x20,a6)
+	bra.w ObjNext
+sub_00CEFA:
+	move.w (0xffff9eba).l,d0
+	add.w d0,(0x2,a6)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00CF1C
+	cmpi.b #0x17,(0x1,a6)
+	beq.w loc_00CF40
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+loc_00CF1C:
+	move.w (0x24,a6),d0
+	andi.w #0x7,d0
+	bne.s loc_00CF3C
+	moveq #0x3,d4
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	move.w (0x6,a6),d2
+	subi.w #0x10,d1
+	jsr (sub_012494,pc)
+loc_00CF3C:
+	bra.w ObjNext
+loc_00CF40:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	moveq #0x14,d2
+	moveq #0x8,d3
+	move.w #0xe200,d1
+	jsr (VdpQueueFillRows,pc)
+	bra.w ObjNext
+sub_00CF58:
+	subq.w #0x1,(0x2a,a6)
+	move.w (0x2a,a6),d0
+	cmpi.w #0x30,d0
+	bge.w loc_00CF9C
+	tst.w d0
+	bne.s loc_00CF72
+	move.w #0x100,(0x2a,a6)
+loc_00CF72:
+	andi.w #0xf,d0
+	bne.s loc_00CF9C
+	move.l a6,-(sp)
+	move.w (0x4,a6),d1
+	subi.w #0x10,d1
+	move.w (0x2,a6),d5
+	addi.w #0x18,d5
+	jsr (Random,pc)
+	tst.w d0
+	bmi.s loc_00CF96
+	subi.w #0x30,d5
+loc_00CF96:
+	jsr (sub_0099D4,pc)
+	movea.l (sp)+,a6
+loc_00CF9C:
+	rts
+sub_00CF9E:
+	movea.l (0xffff9eca).l,a1
+	move.w (0x2,a1),d0
+	btst.b #0x6,(a6)
+	beq.s loc_00CFB4
+	addi.w #0x26,d0
+	bra.s loc_00CFB8
+loc_00CFB4:
+	subi.w #0x56,d0
+loc_00CFB8:
+	move.w d0,(0x2,a6)
+	subq.w #0x1,(0x24,a6)
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (dat_00CFD6,pc,d1.w),d1
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
+| data 0x00CFD6-0x00CFDE
+dat_00CFD6:
+	.incbin "baserom.md",0xCFD6,0x8
+sub_00CFDE:
+	move.w d7,-(sp)
+	lea.l (dat_04E67A).l,a0
+	moveq #0x6,d2
+	moveq #0x6,d3
+	move.w #0x0,d6
+	move.w (0xffff9e48).l,d7
+	btst.b #0x6,(a6)
+	bne.s loc_00D004
+	move.w #0xe300,d1
+	jsr (sub_01227A,pc)
+	bra.s loc_00D00C
+loc_00D004:
+	move.w #0xe31c,d1
+	jsr (VdpQueueTileRect,pc)
+loc_00D00C:
+	move.w (sp)+,d7
+	bclr.b #0x7,(a6)
+	move.l #0xcefa,(0x20,a6)
+	move.w #0x32,(0x24,a6)
+	bra.w ObjNext
+sub_00D024:
+	bra.w ObjNext
+sub_00D028:
+	jsr (sub_00C48E,pc)
+	tst.b d4
+	beq.w loc_00D05A
+	bpl.s loc_00D056
+	move.w (0x14,a6),d1
+	move.w d1,d2
+	asr.w #0x4,d2
+	addi.w #0xd,d2
+	move.b d2,(0x7,a6)
+	asr.w #0x3,d1
+	eori.w #0x1f,d1
+	move.b (dat_00D06C,pc,d1.w),d1
+	addi.w #0xf4,d1
+	jsr (ObjQueueSprite,pc)
+loc_00D056:
+	bra.w ObjNext
+loc_00D05A:
+	move.w #0x19,(0x24,a6)
+	move.l #0xd08c,(0x20,a6)
+	bra.w ObjNext
+| data 0x00D06C-0x00D08C
+dat_00D06C:
+	.incbin "baserom.md",0xD06C,0x20
+sub_00D08C:
+	tst.w (0x26,a6)
+	bne.s loc_00D0BC
+	subq.w #0x1,(0x24,a6)
+	beq.s loc_00D0AC
+	move.w (0x24,a6),d1
+	andi.w #0x2,d1
+	asr.w #0x1,d1
+	addi.w #0xfe,d1
+	jsr (ObjQueueSprite,pc)
+	bra.s loc_00D0B8
+loc_00D0AC:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bsr.w sub_00908A
+loc_00D0B8:
+	bra.w ObjNext
+loc_00D0BC:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bra.w ObjNext
+sub_00D0C8:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bra.w ObjNext
+sub_00D0D4:
+	jsr (sub_00D0F8,pc)
+	cmpi.w #0x2b,(0x24,a6)
+	bne.s loc_00D0E6
+	jsr (sub_00902E).l
+loc_00D0E6:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00D0F4
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+loc_00D0F4:
+	bra.w ObjNext
 sub_00D0F8:
 	movea.l (0xffff80bc).l,a5
 	move.w #0x2,(a5)+
@@ -9332,7 +11696,7 @@ loc_00D196:
 	blt.s loc_00D1CA
 	clr.b (0xd,a6)
 	move.b #0x2,(0x12,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	cmpi.w #0x37,d0
 	blt.s loc_00D1BC
@@ -9352,7 +11716,7 @@ sub_00D1D2:
 	move.w #0xb0,d0
 	sub.w (0x4,a6),d0
 	moveq #0x0,d1
-	jsr (sub_011F58,pc)
+	jsr (VdpQueueVScroll,pc)
 	move.w (0x24,a6),d0
 	move.w d0,d1
 	andi.w #0x180,d0
@@ -9370,7 +11734,7 @@ loc_00D214:
 	subi.w #0x4,d3
 	cmpi.w #0xa6,d3
 	blt.s loc_00D230
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x7,d0
 	move.w #0xab,d3
 	sub.w d0,d3
@@ -9420,7 +11784,7 @@ loc_00D29C:
 	subi.w #0xa,d3
 	bra.w sub_00D2B8
 sub_00D2AC:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x4,a6),d3
 	subi.w #0xa,d3
 sub_00D2B8:
@@ -9449,9 +11813,9 @@ loc_00D2F8:
 	tst.w (0xffff9ea6).l
 	beq.s loc_00D306
 	moveq #0x5,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00D306:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D30A:
 	clr.w (0xffff9e92).l
 	lea.l (0xffffae84).l,a1
@@ -9465,7 +11829,7 @@ sub_00D322:
 	lea.l (0xffffae84).l,a1
 	moveq #0xf,d2
 loc_00D32A:
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0xf,d0
 	tst.b (0x0,a1,d0.w)
 	bne.s loc_00D358
@@ -9473,7 +11837,7 @@ loc_00D32A:
 	jsr (sub_00D46E,pc)
 	movea.l #0x1f7da,a0
 	clr.w (0xffff80d2).l
-	jsr (sub_00933E,pc)
+	jsr (ScriptNext,pc)
 	bset.b #0x4,(a6)
 	bra.w loc_00D3E2
 loc_00D358:
@@ -9504,9 +11868,9 @@ loc_00D358:
 	move.w #0xe000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e4a).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x7,d0
 	bne.s loc_00D3C2
 	bset.b #0x3,(a6)
@@ -9556,7 +11920,7 @@ sub_00D46E:
 	move.l a6,-(sp)
 	moveq #0xf,d4
 loc_00D472:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x1c,(a6)
 	move.w d4,d0
 	add.w d0,d0
@@ -9617,10 +11981,10 @@ loc_00D50A:
 	move.w #0xe000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e4a).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 loc_00D560:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00D564:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
@@ -9638,7 +12002,7 @@ loc_00D584:
 	move.w #0xe382,d1
 	moveq #0x9,d2
 	moveq #0x8,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	cmpi.b #0x1b,d5
@@ -9649,7 +12013,7 @@ loc_00D5B0:
 	move.w #0xe382,d1
 	moveq #0x9,d2
 	moveq #0x8,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	subq.w #0x1,(0x24,a6)
 	movea.l (0xffff9ece).l,a1
 	move.b (0x1,a1),d0
@@ -9687,36 +12051,36 @@ loc_00D60A:
 	move.w (0xffff9e4a).l,d7
 	move.w (a1)+,d3
 	bmi.s loc_00D630
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	bra.w loc_00D636
 loc_00D630:
 	neg.w d3
 	jsr (sub_01227A,pc)
 loc_00D636:
 	move.w (sp)+,d7
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00D63C-0x00D674
 dat_00D63C:
 	.incbin "baserom.md",0xD63C,0x30
 dat_00D66C:
 	.incbin "baserom.md",0xD66C,0x8
 sub_00D674:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d5
 	andi.w #0xe,d5
 	lsr.w #0x1,d5
 	eori.w #0x7,d5
 	move.w d5,d1
 	addq.w #0x6,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w d5,d1
 	addi.w #0x64,d1
-	bsr.w sub_013228
-	jsr (sub_00B4A6,pc)
+	bsr.w ObjQueueSprite
+	jsr (ObjMoveX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D6C6
 	move.w #0x64,(0x24,a6)
@@ -9724,27 +12088,27 @@ sub_00D674:
 	move.w #0x61,d0
 	bsr.w sub_013D04
 loc_00D6C6:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D6CA:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d1
 	andi.w #0xe,d1
 	lsr.w #0x1,d1
 	eori.w #0x7,d1
 	addi.w #0x100,d1
-	bsr.w sub_013228
-	jsr (sub_00B4A6,pc)
+	bsr.w ObjQueueSprite
+	jsr (ObjMoveX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D70A
 	move.w #0x64,(0x24,a6)
 	move.l #0xd674,(0x20,a6)
 loc_00D70A:
 	bsr.w sub_009054
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D712:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D726
@@ -9758,9 +12122,9 @@ loc_00D726:
 	bra.s loc_00D742
 loc_00D73A:
 	move.w #0x14a,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00D742:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D746:
 	move.w (0x24,a6),d0
 	cmpi.w #0x5f,d0
@@ -9816,9 +12180,9 @@ loc_00D7EA:
 	beq.s loc_00D7F8
 	addq.w #0x1,d1
 loc_00D7F8:
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00D7FC:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D800:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D82E
@@ -9827,11 +12191,11 @@ sub_00D800:
 	move.w #0xe200,d1
 	moveq #0x27,d2
 	moveq #0xa,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	move.w #0xe82c,d1
 	moveq #0x12,d2
 	moveq #0x6,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	bra.s loc_00D86E
 loc_00D82E:
 	btst.b #0x3,(0x25,a6)
@@ -9851,7 +12215,7 @@ loc_00D862:
 	move.w #0xe494,d1
 	moveq #0x1d,d2
 	moveq #0x3,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 loc_00D86E:
 	cmpi.w #0x5,(0xffff80cc).l
 	bne.w loc_00D892
@@ -9864,9 +12228,9 @@ loc_00D88A:
 	bra.s loc_00D89A
 loc_00D892:
 	move.w #0x14b,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00D89A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D89E:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D8B6
@@ -9878,80 +12242,81 @@ loc_00D8B6:
 	asr.w #0x3,d0
 	andi.w #0xe,d0
 	move.w (sub_00D8CC,pc,d0.w),d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00D8CC:
 	bchg.b d0,d7
 	movep.l (0x148,a4),d0
 	movep.l (0x149,a1),d0
 	movep.l (0x14c,a0),d0
 	bchg.b d0,d7
-	jsr (sub_012316,pc)
+sub_00D8DC:
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x1c,d5
 	lsr.w #0x2,d5
 	eori.w #0x7,d5
 	move.w d5,d1
 	addi.w #0x13f,d1
-	bsr.w sub_013228
-	jsr (sub_00B4A6,pc)
+	bsr.w ObjQueueSprite
+	jsr (ObjMoveX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D90A
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00D90A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D90E:
 	move.w #0x18a,d1
 	cmpi.w #0x20,(0x24,a6)
 	bgt.s loc_00D91C
 	addq.w #0x1,d1
 loc_00D91C:
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D93A
 	jsr (sub_013DD6).l
 	move.l #0xd93e,(0x20,a6)
 	move.w #0x1f,(0x24,a6)
 loc_00D93A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D93E:
 	move.w (0x24,a6),d1
 	lsr.w #0x3,d1
 	eori.w #0x3,d1
 	addi.w #0x18b,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D95E
 	move.l #0xd962,(0x20,a6)
 loc_00D95E:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D962:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x18e,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00D978:
 	subi.w #0x8,(0x4,a6)
 	move.w #0x10d,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x109,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x108,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00D9AE
 	move.l #0xd9b2,(0x20,a6)
 	bset.b #0xf,(a6)
 	move.w #0x12c,(0x24,a6)
 loc_00D9AE:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00D9B2:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x10d,d1
 	move.w (0x24,a6),d0
 	move.w d0,d2
@@ -9967,11 +12332,11 @@ sub_00D9B2:
 loc_00D9E6:
 	add.w d2,d1
 loc_00D9E8:
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x109,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x108,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 sub_00D9FC:
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_00DA14
@@ -9979,23 +12344,23 @@ sub_00D9FC:
 	bclr.b #0x7,(a6)
 	move.w #0x10,(0x24,a6)
 loc_00DA14:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00DA18:
 	addi.w #0x8,(0x4,a6)
 	move.w #0x10d,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x109,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x108,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00DA44
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00DA44:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00DA48:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	bclr.b #0xf,(a6)
 	move.w #0x10a,d1
 	move.w (0x14,a6),d0
@@ -10005,12 +12370,12 @@ sub_00DA48:
 	bset.b #0x7,(a6)
 loc_00DA66:
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
-	bsr.w sub_013228
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
 	move.w #0x10c,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x108,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_00DA8E
 	move.l #0xd9b2,(0x20,a6)
@@ -10028,7 +12393,7 @@ loc_00DA9C:
 	subi.w #0x64,d1
 	jsr (sub_01275A).l
 	dbra d5,loc_00DA9C
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00DAC4:
 	move.w (0x14,a6),d0
 	beq.s loc_00DADE
@@ -10039,19 +12404,19 @@ sub_00DAC4:
 loc_00DADA:
 	move.w d0,(0x14,a6)
 loc_00DADE:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x17f,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00DAEE:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00DAFC
 	move.l #0xdac4,(0x20,a6)
 loc_00DAFC:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x180,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00DB0C:
 	movem.w (0x2,a6),d0-d1
 	move.w (0x6,a6),d2
@@ -10061,19 +12426,19 @@ sub_00DB0C:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	movea.l #0x1f9b0,a0
-	jsr (sub_00933E,pc)
-	bra.w sub_00B3BE
+	jsr (ScriptNext,pc)
+	bra.w ObjNext
 sub_00DB36:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	move.w (0x24,a6),d1
 	lsr.w #0x2,d1
 	andi.w #0x3,d1
 	addi.w #0x170,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00DB5A:
 	movem.w (0x2,a6),d0-d1
 	move.w (0x6,a6),d2
@@ -10081,29 +12446,444 @@ sub_00DB5A:
 	addi.w #0x20,d1
 	jsr (sub_01253C,pc)
 	move.l #0xdb76,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00DB76:
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x174,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00DB8C:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	move.w (0x24,a6),d1
 	lsr.w #0x2,d1
 	andi.w #0xf,d1
 	move.b (dat_00DBB4,pc,d1.w),d1
 	addi.w #0x175,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
-| data 0x00DBB4-0x00E10C
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
+| data 0x00DBB4-0x00DBC4
 dat_00DBB4:
-	.incbin "baserom.md",0xDBB4,0x558
+	.incbin "baserom.md",0xDBB4,0x10
+sub_00DBC4:
+	movem.w (0x2,a6),d0-d1
+	move.w (0x6,a6),d2
+	addi.w #0x20,d1
+	subq.w #0x1,d2
+	jsr (sub_01253C,pc)
+	move.l #0xdbe0,(0x20,a6)
+sub_00DBE0:
+	jsr (ObjScrollX,pc)
+	moveq #-0x28,d0
+	jsr (ObjKillIfLeftOf,pc)
+	move.w #0x17e,d1
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
+sub_00DBF6:
+	subq.w #0x1,(0x24,a6)
+	bgt.s loc_00DC02
+	move.w #0x10,(0x24,a6)
+loc_00DC02:
+	bra.w ObjNext
+sub_00DC06:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00DC1E
+	move.w #0x10,(0x24,a6)
+	bclr.b #0x7,(a6)
+	move.l #0xdc5e,(0x20,a6)
+loc_00DC1E:
+	cmpi.w #0xc8,(0x24,a6)
+	bne.s loc_00DC5A
+	cmpi.w #0x68,(0x4,a6)
+	blt.s loc_00DC3C
+	move.w (0x2,a6),d0
+	move.l a6,-(sp)
+	jsr (sub_00AC06,pc)
+	movea.l (sp)+,a6
+	bra.s loc_00DC5A
+loc_00DC3C:
+	cmpi.w #0x12,(0xffff80da).l
+	bgt.s loc_00DC5A
+	move.w (0x2,a6),d5
+	move.w (0x4,a6),d1
+	subi.w #0xa,d1
+	move.l a6,-(sp)
+	jsr (sub_00A5FA,pc)
+	movea.l (sp)+,a6
+loc_00DC5A:
+	bra.w ObjNext
+sub_00DC5E:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00DC76
+	move.w #0x100,(0x24,a6)
+	bset.b #0x7,(a6)
+	move.l #0xdbf6,(0x20,a6)
+loc_00DC76:
+	move.w (0x24,a6),d0
+	bra.w sub_00DC9E
+sub_00DC7E:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00DC96
+	move.w #0x100,(0x24,a6)
+	bclr.b #0x7,(a6)
+	move.l #0xdc06,(0x20,a6)
+loc_00DC96:
+	move.w (0x24,a6),d0
+	eori.w #0xf,d0
+sub_00DC9E:
+	andi.w #0xc,d0
+	lea.l (dat_05FA92).l,a0
+	move.w d0,d2
+	add.w d0,d0
+	add.w d2,d0
+	lea.l (0x0,a0,d0.w),a0
+sub_00DCB2:
+	move.w (0xa,a6),d1
+	cmpi.w #0x70,(0x4,a6)
+	blt.s loc_00DCC2
+	lea.l (0x190,a0),a0
+loc_00DCC2:
+	moveq #0x6,d2
+	moveq #0x5,d3
+	move.w #0x0,d6
+	move.w d7,-(sp)
+	move.w (0xffff9e4a).l,d7
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d7
+	bra.w ObjNext
+sub_00DCDC:
+	lea.l (0xffffaf24).l,a1
+	bra.s sub_00DCEA
+sub_00DCE4:
+	lea.l (0xffffaf04).l,a1
+sub_00DCEA:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00DD2C
+	moveq #0x12,d1
+loc_00DCF2:
+	jsr (Random,pc)
+	andi.w #0x7,d0
+	asl.w #0x2,d0
+	move.l (0x0,a1,d0.w),d2
+	bpl.s loc_00DD0C
+	movea.l d2,a2
+	move.w (a2),d2
+	cmpi.b #0x22,d2
+	beq.s loc_00DD14
+loc_00DD0C:
+	dbra d1,loc_00DCF2
+	bra.w loc_00DD26
+loc_00DD14:
+	move.w #0x10,(0x24,a2)
+	bclr.b #0x7,(a2)
+	move.l #0xdc7e,(0x20,a2)
+loc_00DD26:
+	move.w #0x186,(0x24,a6)
+loc_00DD2C:
+	tst.w (0xffffaf18).l
+	bne.s loc_00DD60
+	movea.l #0x1fcba,a0
+	jsr (ScriptNext,pc)
+	lea.l (0xffff87b2).l,a1
+	moveq #0x4f,d3
+loc_00DD46:
+	move.w (a1),d4
+	cmpi.b #0x22,d4
+	bne.s loc_00DD56
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+loc_00DD56:
+	lea.l (0x2c,a1),a1
+	dbra d3,loc_00DD46
+	clr.w d7
+loc_00DD60:
+	bra.w ObjNext
+sub_00DD64:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	lea.l (0xffffaf18).l,a1
+	cmpi.w #0x70,(0x4,a6)
+	blt.s loc_00DD7E
+	lea.l (0x2,a1),a1
+loc_00DD7E:
+	subq.w #0x1,(a1)
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	subi.w #0x14,d1
+	move.w #0x6,d2
+	jsr (sub_01253C).l
+	lea.l (dat_05FAC2).l,a0
+	bra.w sub_00DCB2
+sub_00DDA0:
+	lea.l (0xffff87b2).l,a1
+	moveq #0x4f,d3
+loc_00DDA8:
+	clr.w (a1)
+	lea.l (0x2c,a1),a1
+	dbra d3,loc_00DDA8
+	clr.w (0xffff80da).l
+	rts
+sub_00DDBA:
+	jsr (sub_00C48E,pc)
+	tst.b d4
+	beq.w loc_00DDE6
+	bpl.w loc_00DDE2
+loc_00DDC8:
+	move.w (0x14,a6),d1
+	move.w d1,d2
+	asr.w #0x4,d2
+	addi.w #0x1e,d2
+	move.b d2,(0x7,a6)
+	asr.w #0x5,d1
+	addi.w #0x182,d1
+	jsr (sub_00E0E8,pc)
+loc_00DDE2:
+	bra.w sub_00E146
+loc_00DDE6:
+	move.w #0xfa,(0x24,a6)
+	move.l #0xdeba,(0x20,a6)
+	bset.b #0x7,(a6)
+	move.b #0xc,(0x12,a6)
+	move.b #0x4,(0x10,a6)
+	bra.w loc_00DDC8
+sub_00DE08:
+	jsr (ObjScrollX,pc)
+	moveq #-0x28,d0
+	jsr (ObjKillIfLeftOf,pc)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00DE26
+	move.w #0xff,(0x14,a6)
+	move.l #0xdf9c,(0x20,a6)
+loc_00DE26:
+	jsr (sub_00D236,pc)
+	moveq #0x0,d0
+	move.b (0xc,a6),d0
+	cmpi.w #0x64,d0
+	ble.s loc_00DE40
+	neg.b (0x12,a6)
+	move.b #0x64,(0xc,a6)
+loc_00DE40:
+	jsr (sub_00E108,pc)
+	moveq #0x0,d0
+	move.b (0xa,a6),d0
+	cmpi.w #0x96,d0
+	ble.s loc_00DE5A
+	neg.b (0x10,a6)
+	move.b #0x96,(0xa,a6)
+loc_00DE5A:
+	move.w #0x189,d1
+	jsr (sub_00E0E8,pc)
+	movea.l #0xe026,a2
+	bra.w sub_00E146
+sub_00DE6C:
+	jsr (Random,pc)
+	andi.b #0xff,d0
+	bne.s loc_00DEB8
+	move.w (0x2,a6),d5
+	move.w (0x4,a6),d1
+	subq.w #0x1,(0x28,a6)
+	bne.s loc_00DE9C
+	moveq #-0x28,d3
+	cmpi.w #0xa0,(0x2,a6)
+	blt.s loc_00DE92
+	move.w #0x168,d3
+loc_00DE92:
+	move.w #0x64,d4
+	jsr (sub_009A7A,pc)
+	bra.s loc_00DEA0
+loc_00DE9C:
+	jsr (sub_009A5E,pc)
+loc_00DEA0:
+	movea.l #0x12ee6,a5
+	move.w (a5)+,(0x1a,a6)
+	move.l a5,(0x16,a6)
+	move.w #0x100,(0x14,a6)
+	move.l a2,(0x20,a6)
+loc_00DEB8:
+	rts
+sub_00DEBA:
+	jsr (ObjScrollX,pc)
+	moveq #-0x28,d0
+	jsr (ObjKillIfLeftOf,pc)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00DED8
+	move.w #0x0,(0x14,a6)
+	move.l #0xdf46,(0x20,a6)
+loc_00DED8:
+	jsr (sub_00D236,pc)
+	moveq #0x0,d0
+	move.b (0xc,a6),d0
+	cmpi.w #0x78,d0
+	ble.s loc_00DEF2
+	neg.b (0x12,a6)
+	move.b #0x78,(0xc,a6)
+loc_00DEF2:
+	jsr (sub_00E108,pc)
+	moveq #0x0,d0
+	move.b (0xa,a6),d0
+	cmpi.w #0xc8,d0
+	ble.s loc_00DF0C
+	neg.b (0x10,a6)
+	move.b #0xc8,(0xa,a6)
+loc_00DF0C:
+	move.w #0x182,d1
+	move.w (0x24,a6),d0
+	move.w d0,d2
+	andi.w #0x180,d0
+	bne.s loc_00DF34
+	andi.w #0x4,d2
+	beq.s loc_00DF34
+	move.w #0x60,d0
+	jsr (sub_013D04).l
+	bsr.w sub_009054
+	move.w #0x181,d1
+loc_00DF34:
+	jsr (sub_00E0E8,pc)
+	movea.l #0xdff0,a2
+	bsr.w sub_00DE6C
+	bra.w sub_00E146
+sub_00DF46:
+	jsr (ObjScrollX,pc)
+	moveq #-0x28,d0
+	jsr (ObjKillIfLeftOf,pc)
+	move.w (0x14,a6),d1
+	move.w d1,d2
+	asr.w #0x4,d2
+	addi.w #0x1e,d2
+	move.b d2,(0x7,a6)
+	asr.w #0x5,d1
+	addi.w #0x182,d1
+	jsr (sub_00E0E8,pc)
+	addi.w #0x8,(0x14,a6)
+	cmpi.w #0x100,(0x14,a6)
+	beq.w loc_00DF7E
+	bra.w sub_00E146
+loc_00DF7E:
+	move.w #0xfa,(0x24,a6)
+	move.l #0xde08,(0x20,a6)
+	move.b #0x9,(0x12,a6)
+	move.b #0x3,(0x10,a6)
+	bra.w sub_00E146
+sub_00DF9C:
+	jsr (ObjScrollX,pc)
+	moveq #-0x28,d0
+	jsr (ObjKillIfLeftOf,pc)
+	move.w (0x14,a6),d1
+	move.w d1,d2
+	asr.w #0x4,d2
+	addi.w #0x1e,d2
+	move.b d2,(0x7,a6)
+	asr.w #0x5,d1
+	addi.w #0x182,d1
+	jsr (sub_00E0E8,pc)
+	subi.w #0x8,(0x14,a6)
+	bmi.w loc_00DFCE
+	bra.w sub_00E146
+loc_00DFCE:
+	move.w #0xfa,(0x24,a6)
+	move.l #0xdeba,(0x20,a6)
+	move.b #0xc,(0x12,a6)
+	move.b #0x4,(0x10,a6)
+	bset.b #0x7,(a6)
+	bra.w sub_00E146
+sub_00DFF0:
+	jsr (sub_00C48E,pc)
+	tst.b d4
+	beq.w loc_00E00A
+	bpl.w loc_00E006
+loc_00DFFE:
+	move.w #0x182,d1
+	jsr (sub_00E0E8,pc)
+loc_00E006:
+	bra.w sub_00E146
+loc_00E00A:
+	move.l #0xdeba,(0x20,a6)
+	bset.b #0x7,(a6)
+	move.b #0xc,(0x12,a6)
+	move.b #0x4,(0x10,a6)
+	bra.w loc_00DFFE
+sub_00E026:
+	jsr (sub_00C48E,pc)
+	tst.b d4
+	beq.w loc_00E040
+	bpl.w loc_00E03C
+loc_00E034:
+	move.w #0x189,d1
+	jsr (sub_00E0E8,pc)
+loc_00E03C:
+	bra.w sub_00E146
+loc_00E040:
+	move.l #0xde08,(0x20,a6)
+	bset.b #0x7,(a6)
+	move.b #0xc,(0x12,a6)
+	move.b #0x4,(0x10,a6)
+	bra.w loc_00E034
+sub_00E05C:
+	jsr (ObjScrollX,pc)
+	moveq #-0x28,d0
+	jsr (ObjKillIfLeftOf,pc)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00E07E
+	move.w #0x64,(0x24,a6)
+	move.l #0xdeba,(0x20,a6)
+	bset.b #0x7,(a6)
+loc_00E07E:
+	move.w #0x182,d1
+	movem.w (0x2,a6),d2-d3
+	moveq #0x0,d5
+	move.b (0x7,a6),d5
+	addq.w #0x3,d2
+	move.w (0x24,a6),d0
+	andi.w #0x2,d0
+	beq.s loc_00E09C
+	subq.w #0x6,d2
+loc_00E09C:
+	jsr (sub_00E0F8,pc)
+	bra.w sub_00E146
+sub_00E0A4:
+	moveq #0x3,d5
+loc_00E0A6:
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	subi.w #0x20,d1
+	lea.l (dat_01287E,pc),a2
+	tst.w (0x26,a6)
+	bpl.s loc_00E0C0
+	lea.l (dat_012876,pc),a2
+loc_00E0C0:
+	bsr.w sub_01277C
+	dbra d5,loc_00E0A6
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	move.w (0x6,a6),d2
+	subi.w #0x18,d1
+	jsr (sub_01253C,pc)
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bra.w sub_00E146
+sub_00E0E8:
+	tst.w (0x26,a6)
+	bpl.s loc_00E0F2
+	addi.w #0xbf,d1
+loc_00E0F2:
+	jsr (ObjQueueSprite,pc)
+	rts
+sub_00E0F8:
+	tst.w (0x26,a6)
+	bpl.s loc_00E102
+	addi.w #0xbf,d1
+loc_00E102:
+	jsr (QueueSprite,pc)
+	rts
+sub_00E108:
+	moveq #0x0,d4
+	bra.s sub_00E10E
 sub_00E10C:
 	moveq #0x3,d4
+sub_00E10E:
 	move.b (0xe,a6),d2
 	ext.w d2
 	move.b (0xa,a6),d3
@@ -10135,14 +12915,14 @@ sub_00E146:
 	addq.w #0x1,d0
 	move.w d0,(0x8,a6)
 loc_00E162:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E166:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
-	bra.w sub_00B3BE
+	jsr (ObjKillIfLeftOf,pc)
+	bra.w ObjNext
 sub_00E174:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #0x5,d5
 	lea.l (dat_00E1B2,pc),a1
 loc_00E17E:
@@ -10158,44 +12938,82 @@ loc_00E17E:
 	move.w (0xa,a6),d1
 	move.w #0x10,d2
 	move.w #0xd,d3
-	jsr (sub_012212,pc)
-	bra.w sub_00B3BE
-| data 0x00E1B2-0x00E254
+	jsr (VdpQueueFillRows,pc)
+	bra.w ObjNext
+| data 0x00E1B2-0x00E1CA
 dat_00E1B2:
-	.incbin "baserom.md",0xE1B2,0xA2
+	.incbin "baserom.md",0xE1B2,0x18
+sub_00E1CA:
+	jsr (ObjScrollX,pc)
+	moveq #0x5,d5
+	lea.l (dat_00E228,pc),a1
+loc_00E1D4:
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	add.w (a1)+,d0
+	add.w (a1)+,d1
+	move.w #0x6,d2
+	jsr (sub_01253C,pc)
+	dbra d5,loc_00E1D4
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	lea.l (dat_0666A4).l,a0
+	tst.w (0x2a,a6)
+	bmi.s loc_00E206
+	bne.s loc_00E240
+	lea.l (0x3c0,a0),a0
+loc_00E206:
+	move.w (0xa,a6),d1
+	move.w #0x8,d2
+	move.w #0xc,d3
+	move.w #0x8000,d6
+	move.w d7,-(sp)
+	move.w (0xffff9e38).l,d7
+	jsr (VdpQueueTileRect,pc)
+	move.w (sp)+,d7
+	bra.w ObjNext
+| data 0x00E228-0x00E240
+dat_00E228:
+	.incbin "baserom.md",0xE228,0x18
+loc_00E240:
+	move.w (0xa,a6),d1
+	move.w #0x10,d2
+	move.w #0xc,d3
+	jsr (VdpQueueFillRows,pc)
+	bra.w ObjNext
 sub_00E254:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x190,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00E27A
 	move.l #0xe27e,(0x20,a6)
 	move.w #0x5a,(0x24,a6)
 loc_00E27A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E27E:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	jsr (sub_00D236,pc)
 	move.w #0x190,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	tst.b (0xf,a6)
 	bmi.s loc_00E2A8
 	move.l #0xe2ac,(0x20,a6)
 	move.w #0x5a,(0x24,a6)
 loc_00E2A8:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E2AC:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
-	jsr (sub_00B4A6,pc)
+	jsr (ObjKillIfLeftOf,pc)
+	jsr (ObjMoveX,pc)
 	move.w #0x190,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00E2C6:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
@@ -10204,7 +13022,7 @@ sub_00E2C6:
 	subi.w #0xc,d1
 	move.w #0x28,d2
 	jsr (sub_01253C,pc)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E2E6:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00E310
@@ -10214,12 +13032,12 @@ sub_00E2E6:
 	move.w (0x2,a6),d5
 	jsr (sub_009A02,pc)
 	movea.l (sp)+,a6
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	move.w d0,(0x24,a6)
 loc_00E310:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E314:
 	move.w (0x2,a6),d0
 	move.w (0x4,a6),d1
@@ -10231,13 +13049,13 @@ sub_00E314:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0xffffaf84).l
 	beq.s loc_00E358
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00E358:
 	lea.l (0xffffaa9c).l,a4
 	moveq #0xf,d1
@@ -10272,7 +13090,7 @@ loc_00E366:
 	jsr (sub_01254E,pc)
 	move.l #0xe3e2,(0x20,a6)
 	move.w #0x46,(0x24,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E3E2:
 	move.w (0x24,a6),d0
 	subq.w #0x1,d0
@@ -10287,7 +13105,7 @@ sub_00E3E2:
 	move.w #0x4,d3
 	move.w #0x0,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	bra.w loc_00E4A0
 loc_00E41E:
@@ -10313,7 +13131,7 @@ loc_00E44A:
 	move.w #0xf,d3
 	move.w #0x8000,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	bra.s loc_00E4A0
 loc_00E476:
@@ -10329,13 +13147,13 @@ loc_00E476:
 	jsr (sub_01227A,pc)
 	move.w (sp)+,d7
 loc_00E4A0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00E4A4:
 	lea.l (0xffffa1b4).l,a1
 	lea.l (dat_0084DA).l,a0
-	jsr (sub_008A7C).l
+	jsr (Copy32).l
 	lea.l (0xffffa1b4).l,a0
-	jsr (sub_0080FE).l
+	jsr (CramUpload).l
 	move.l #0xe546,(0x20,a6)
 	move.w #0x60,(0x24,a6)
 	move.w #0x71,d0
@@ -10347,7 +13165,7 @@ loc_00E4A4:
 	move.w #0xe,d3
 	move.w #0x0,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	lea.l (dat_06D90E).l,a0
 	move.w #0xc198,d1
 	move.w #0xc,d2
@@ -10361,9 +13179,10 @@ loc_00E4A4:
 	move.w #0x2,d3
 	move.w #0x0,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.b #0xff,(0xffffa0a4).l
+sub_00E546:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00E578
 	move.l #0xe5a6,(0x20,a6)
@@ -10389,7 +13208,7 @@ loc_00E578:
 	move.w #0x196,d1
 	jsr (QueueSprite,pc)
 loc_00E5A2:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00E5A6:
 	move.l a6,-(sp)
 	move.l #0xe72e,(0x20,a6)
@@ -10397,7 +13216,7 @@ sub_00E5A6:
 	lea.l (dat_00E62E,pc),a1
 	moveq #0xf,d1
 loc_00E5BC:
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	move.w #0x25,d0
 	bset.b #0xf,d0
 	move.w d0,(a6)
@@ -10421,11 +13240,217 @@ loc_00E60E:
 	movea.l (sp)+,a6
 	move.w #0x8,(0xffffaf84).l
 	move.w #0x8,(0xffffaf86).l
-	bra.w sub_00B3BE
-| data 0x00E62E-0x00E9FA
+	bra.w ObjNext
+| data 0x00E62E-0x00E72E
 dat_00E62E:
-	.incbin "baserom.md",0xE62E,0x3CC
-sub_00E9FA:
+	.incbin "baserom.md",0xE62E,0x100
+sub_00E72E:
+	move.w (0x24,a6),d0
+	subq.w #0x1,d0
+	move.w d0,(0x24,a6)
+	andi.w #0x3f,d0
+	bne.s loc_00E742
+	jsr (sub_013DD4,pc)
+loc_00E742:
+	bra.w ObjNext
+sub_00E746:
+	bra.w ObjNext
+sub_00E74A:
+	tst.w (0x28,a6)
+	bpl.s loc_00E758
+	move.w (0xffffaf86).l,d0
+	bra.s loc_00E75E
+loc_00E758:
+	move.w (0xffffaf84).l,d0
+loc_00E75E:
+	cmpi.w #0x1,d0
+	beq.w loc_00E76C
+	move.w #0xc8,(0x8,a6)
+loc_00E76C:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00E79A
+	move.l a6,-(sp)
+	move.w (0x4,a6),d1
+	addi.w #0x8,d1
+	move.w (0x2,a6),d5
+	addi.w #0x10,d5
+	jsr (sub_009A02,pc)
+	movea.l (sp)+,a6
+	jsr (Random,pc)
+	andi.w #0x1f,d0
+	addi.w #0x46,d0
+	move.w d0,(0x24,a6)
+loc_00E79A:
+	bra.w ObjNext
+sub_00E79E:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00E7BC
+	jsr (Random,pc)
+	andi.w #0x1f,d0
+	addi.w #0x12c,d0
+	move.w d0,(0x24,a6)
+	move.w (0x2,a6),d0
+	move.l a6,-(sp)
+	movea.l (sp)+,a6
+loc_00E7BC:
+	bra.w ObjNext
+sub_00E7C0:
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	addi.w #0xe,d0
+	addi.w #0xe,d1
+	move.w #0x28,d2
+	jsr (sub_01253C,pc)
+	move.w d7,-(sp)
+	lea.l (dat_06D926).l,a0
+	move.w (0x2a,a6),d1
+	lea.l (0x0,a0,d1.w),a0
+	move.w (0xa,a6),d1
+	move.w #0x0,d6
+	move.w (0xffff9e46).l,d7
+	move.w (0x26,a6),d2
+	move.w (0x28,a6),d3
+	bpl.s loc_00E808
+	neg.w d3
+	jsr (sub_01227A,pc)
+	bra.s loc_00E80C
+loc_00E808:
+	jsr (VdpQueueTileRect,pc)
+loc_00E80C:
+	move.w (sp)+,d7
+	tst.w (0x28,a6)
+	bpl.s loc_00E81C
+	subq.w #0x1,(0xffffaf86).l
+	bra.s loc_00E822
+loc_00E81C:
+	subq.w #0x1,(0xffffaf84).l
+loc_00E822:
+	move.w (0xffffaf84).l,d0
+	add.w (0xffffaf86).l,d0
+	bne.s loc_00E858
+	movea.l (0xffff9ece).l,a1
+	move.w #0x79,(0xffff9ea4).l
+	move.l #0xe864,(0x20,a1)
+	move.w #0xfa,(0x24,a1)
+	bclr.b #0x7,(a1)
+	move.l #0x597a,(0x1c,a1)
+loc_00E858:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bra.w ObjNext
+sub_00E864:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00E890
+	move.l #0xe8c8,(0x20,a6)
+	lea.l (dat_00E62E).l,a0
+	moveq #0xf,d5
+loc_00E87A:
+	move.w (a0),d0
+	move.w (0x2,a0),d1
+	move.w #0x14,d2
+	jsr (sub_01254E,pc)
+	lea.l (0x10,a0),a0
+	dbra d5,loc_00E87A
+loc_00E890:
+	move.w (0x24,a6),d0
+	andi.w #0xf,d0
+	bne.s loc_00E8AE
+	move.w #0xa0,d0
+	move.w #0x48,d1
+	move.w #0x14,d2
+	jsr (sub_0124D2,pc)
+	bra.w ObjNext
+loc_00E8AE:
+	cmpi.w #0x8,d0
+	bne.s loc_00E8C4
+	move.w #0xa0,d0
+	move.w #0x48,d1
+	move.w #0x14,d2
+	jsr (sub_0124B8,pc)
+loc_00E8C4:
+	bra.w ObjNext
+sub_00E8C8:
+	move.w d7,-(sp)
+	lea.l (dat_06D93E).l,a0
+	move.w #0xc180,d1
+	move.w #0xc,d2
+	move.w #0xe,d3
+	move.w #0x0,d6
+	move.w (0xffff9e46).l,d7
+	jsr (VdpQueueTileRect,pc)
+	lea.l (dat_06D93E).l,a0
+	move.w #0xc198,d1
+	move.w #0xc,d2
+	move.w #0xe,d3
+	move.w #0x0,d6
+	move.w (0xffff9e46).l,d7
+	jsr (sub_01227A,pc)
+	move.l #0xe91e,(0x20,a6)
+	move.w #0x1f4,(0x24,a6)
+	move.w (sp)+,d7
+	bra.w ObjNext
+sub_00E91E:
+	move.w (0x24,a6),d0
+	subq.w #0x1,d0
+	bne.s loc_00E968
+	move.l #0xe9c4,(0x20,a6)
+	st.b (0xffffa246).l
+	lea.l (0xffffa134).l,a1
+	lea.l (dat_0082BA).l,a0
+	jsr (Copy32,pc)
+	lea.l (dat_0081DA).l,a0
+	jsr (Copy32,pc)
+	lea.l (dat_0081DA).l,a0
+	jsr (Copy32,pc)
+	lea.l (dat_0081DA).l,a0
+	jsr (Copy32,pc)
+	clr.b (0xffffa0a4).l
+loc_00E968:
+	move.w d0,(0x24,a6)
+	cmpi.w #0x190,d0
+	bne.s loc_00E984
+	move.w (0xffff9e50).l,d1
+	lea.l (dat_054ED2).l,a1
+	move.w (a1)+,d2
+	bsr.w sub_009B14
+loc_00E984:
+	bgt.s loc_00E9C0
+	move.w #0x3f,d1
+	cmpi.w #0x12c,d0
+	bgt.s loc_00E9A8
+	move.w #0x1f,d1
+	cmpi.w #0xc8,d0
+	bgt.s loc_00E9A8
+	move.w #0xf,d1
+	cmpi.w #0x64,d0
+	bgt.s loc_00E9A8
+	move.w #0x7,d1
+loc_00E9A8:
+	and.w d1,d0
+	bne.s loc_00E9C0
+	move.l a6,-(sp)
+	move.w #0x53,d1
+	move.w #0xa0,d5
+	jsr (sub_0099C8,pc)
+	bclr.b #0xf,(a6)
+	movea.l (sp)+,a6
+loc_00E9C0:
+	bra.w ObjNext
+sub_00E9C4:
+	move.w (0xffffa0ee).l,d0
+	andi.w #0x7,d0
+	bne.s loc_00E9F6
+	move.w d7,-(sp)
+	jsr (PalFadeStep).l
+	lea.l (0xffffa1b4).l,a0
+	jsr (CramUpload).l
+	move.w (sp)+,d7
+	tst.b (0xffffa246).l
+	bne.s loc_00E9F6
+	move.b #0x1,(0xffffa234).l
+loc_00E9F6:
+	bra.w ObjNext
+PalCycle:
 	move.w (0xffffa0ee).l,d0
 	andi.w #0x18,d0
 	lea.l (dat_0084FA).l,a0
@@ -10434,7 +13459,7 @@ sub_00E9FA:
 	move.l (a0)+,(a1)+
 	move.l (a0)+,(a1)+
 	lea.l (0xffffa1b4).l,a0
-	jsr (sub_0080FE).l
+	jsr (CramUpload).l
 	rts
 sub_00EA26:
 	move.w #0x197,d1
@@ -10450,12 +13475,13 @@ sub_00EA2E:
 	jsr (sub_012A9C,pc)
 loc_00EA4C:
 	move.l #0xea54,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00EA54:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x198,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EA6A:
 	move.w #0x199,d1
 	bra.w sub_00EC16
@@ -10467,55 +13493,56 @@ sub_00EA72:
 	jsr (sub_01253C,pc)
 	jsr (sub_012A78,pc)
 	move.l #0xea92,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00EA92:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x19a,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EAA8:
 	subq.w #0x1,(0x24,a6)
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x32,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x380,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	move.w #0x1a1,d1
 	move.w (0x24,a6),d0
 	andi.w #0x1c,d0
 	bne.s loc_00EACE
 	addq.w #0x1,d1
 loc_00EACE:
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EAD6:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x32,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x380,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EAEC:
 	move.w #0x19f,d1
 	bra.w sub_00EC16
 sub_00EAF4:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x32,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EB10
 	move.l #0xeaa8,(0x20,a6)
 	bset.b #0xf,(a6)
 loc_00EB10:
 	move.w #0x380,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	move.w (0x24,a6),d0
 	btst.b #0x2,d0
 	bne.s loc_00EB2A
 	move.w #0x1a1,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00EB2A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EB2E:
 	move.w #0x19b,d1
 	bra.w sub_00EC16
@@ -10525,19 +13552,20 @@ sub_00EB36:
 	moveq #0x1,d2
 	jsr (sub_012A16,pc)
 	move.l #0xeb4c,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00EB4C:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x19c,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EB62:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x19d,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EB78:
 	movem.w (0x2,a6),d0-d1
 	subq.w #0x4,d1
@@ -10547,30 +13575,31 @@ sub_00EB78:
 	jsr (sub_012A46,pc)
 	movea.l (sp)+,a6
 	move.l #0xeb96,(0x20,a6)
+sub_00EB96:
 	move.w #0x19e,d1
 	bra.w sub_00EC16
 sub_00EB9E:
-	jsr (sub_00B4A6,pc)
+	jsr (ObjMoveX,pc)
 	move.w #0x1a0,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EBB8
 	move.l #0xebbc,(0x20,a6)
 loc_00EBB8:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EBBC:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x1a0,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EBD2:
 	movem.w (0x2,a6),d0-d1
 	moveq #0x6,d2
 	jsr (sub_012A16,pc)
 	move.l #0xebbc,(0x20,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EBEA:
 	move.w #0x1a3,d1
 	bra.w sub_00EBFE
@@ -10587,11 +13616,11 @@ sub_00EBFE:
 	bne.s sub_00EC16
 	bset.b #0x7,(a6)
 sub_00EC16:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjKillIfLeftOf,pc)
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EC28:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
@@ -10605,22 +13634,22 @@ loc_00EC40:
 	subi.w #0x10,d1
 	jsr (sub_01274E,pc)
 	dbra d5,loc_00EC40
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EC58:
 	subi.w #0x8,(0x4,a6)
 	move.w #0x1b2,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EC7E
 	move.l #0xec82,(0x20,a6)
 	bset.b #0x7,(a6)
 	move.w #0x12c,(0x24,a6)
 loc_00EC7E:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EC82:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x24,a6),d0
 	move.w d0,d1
 	andi.w #0x40,d0
@@ -10634,7 +13663,7 @@ sub_00EC82:
 	bsr.w sub_009054
 	addi.w #0x1b4,d1
 	addq.w #0x1,(0x4,a6)
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bsr.w sub_00ED04
 	subq.w #0x1,(0x4,a6)
 	bra.s loc_00ECCC
@@ -10647,7 +13676,7 @@ loc_00ECCC:
 	bclr.b #0x7,(a6)
 	move.w #0x10,(0x24,a6)
 loc_00ECE4:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00ECE8:
 	addi.w #0x8,(0x4,a6)
 	bsr.w sub_00ED04
@@ -10656,34 +13685,34 @@ sub_00ECE8:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00ED00:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00ED04:
 	cmpi.w #0xf,(0x8,a6)
 	bgt.s loc_00ED14
 	move.w #0x1b3,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00ED14:
 	cmpi.w #0xa,(0x8,a6)
 	bgt.s loc_00ED24
 	move.w #0x1b4,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00ED24:
 	move.w #0x1b2,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	rts
 sub_00ED2E:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w #0x1b3,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x1b4,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x1b2,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00ED58
 	move.l #0xed5c,(0x20,a6)
 loc_00ED58:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00ED5C:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
@@ -10713,10 +13742,10 @@ loc_00ED74:
 	subi.w #0x3c,d1
 	addi.w #0x8,d0
 	jsr (sub_01253C).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EDD4:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -10725,25 +13754,25 @@ sub_00EDD4:
 	beq.w loc_00EDFE
 	move.w d5,d1
 	addi.w #0x1b8,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_00EE08
 loc_00EDFE:
 	move.w d5,d1
 	addi.w #0x1d7,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00EE08:
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EE2A
 	move.l #0xee2e,(0x20,a6)
 	move.w #0x4b,(0x24,a6)
 loc_00EE2A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EE2E:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EE3C
 	jsr (sub_00EE88,pc)
@@ -10763,18 +13792,18 @@ loc_00EE3C:
 	bne.s loc_00EE6E
 	move.w #0x1e1,d1
 loc_00EE6E:
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00EE72:
 	move.w #0x1c1,d1
 	btst.b #0x6,(a6)
 	bne.s loc_00EE80
 	move.w #0x1e0,d1
 loc_00EE80:
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EE88:
 	move.l #0xedd4,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	move.w d0,(0x24,a6)
@@ -10782,7 +13811,8 @@ sub_00EE88:
 loc_00EEA2:
 	move.w #0x40,(0x24,a6)
 	move.l #0xeeb0,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00EEB0:
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EEC8
 	clr.w (a6)
@@ -10790,8 +13820,8 @@ loc_00EEA2:
 	clr.b (0xffff9ebe).l
 loc_00EEC8:
 	move.w #0x1fa,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00EED4:
 	clr.b (0xd,a6)
 	move.b #0x8,(0x12,a6)
@@ -10803,7 +13833,8 @@ sub_00EED4:
 	move.l a5,(0x16,a6)
 	move.w #0x20,(0x24,a6)
 	move.l #0xef0a,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00EF0A:
+	jsr (ObjScrollX,pc)
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_00EF2C
@@ -10836,16 +13867,16 @@ loc_00EF3A:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x1f6,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 | data 0x00EF80-0x00EFA4
 dat_00EF80:
 	.incbin "baserom.md",0xEF80,0x10
 dat_00EF90:
 	.incbin "baserom.md",0xEF90,0x14
 sub_00EFA4:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -10854,25 +13885,25 @@ sub_00EFA4:
 	beq.w loc_00EFCE
 	move.w d5,d1
 	addi.w #0x1c3,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_00EFD8
 loc_00EFCE:
 	move.w d5,d1
 	addi.w #0x1e2,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00EFD8:
 	move.w #0x15e,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00EFFA
 	move.l #0xeffe,(0x20,a6)
 	move.w #0x4b,(0x24,a6)
 loc_00EFFA:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00EFFE:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F00C
 	jsr (sub_00F170,pc)
@@ -10892,19 +13923,20 @@ loc_00F00C:
 	bne.s loc_00F03E
 	move.w #0x1eb,d1
 loc_00F03E:
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00F042:
 	move.w #0x1cb,d1
 	btst.b #0x6,(a6)
 	bne.s loc_00F050
 	move.w #0x1ea,d1
 loc_00F050:
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 loc_00F058:
 	move.w #0x40,(0x24,a6)
 	move.l #0xf066,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00F066:
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F07E
 	clr.w (a6)
@@ -10916,7 +13948,7 @@ loc_00F07E:
 	andi.w #0x3,d1
 	eori.w #0x3,d1
 	addi.w #0x4,d1
-	bra.w loc_00F0FA
+	bra.w sub_00F0FA
 sub_00F094:
 	clr.b (0xd,a6)
 	move.b #0x6,(0x12,a6)
@@ -10928,7 +13960,8 @@ sub_00F094:
 	move.l a5,(0x16,a6)
 	move.w #0x20,(0x24,a6)
 	move.l #0xf0ca,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00F0CA:
+	jsr (ObjScrollX,pc)
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_00F0EC
@@ -10937,13 +13970,13 @@ sub_00F094:
 	cmp.w (0x28,a6),d0
 	bgt.w loc_00F058
 	clr.w (0x12,a6)
-	bra.s loc_00F0FA
+	bra.s sub_00F0FA
 loc_00F0EC:
 	move.w (0x24,a6),d1
 	asr.w #0x1,d1
 	eori.w #0xf,d1
 	move.b (dat_00F140,pc,d1.w),d1
-loc_00F0FA:
+sub_00F0FA:
 	movea.l (0xffff80bc).l,a5
 	move.w #0x1,(a5)+
 	move.w d1,d0
@@ -10961,8 +13994,8 @@ loc_00F0FA:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x21c,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 | data 0x00F140-0x00F170
 dat_00F140:
 	.incbin "baserom.md",0xF140,0x10
@@ -10970,14 +14003,14 @@ dat_00F150:
 	.incbin "baserom.md",0xF150,0x20
 sub_00F170:
 	move.l #0xefa4,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	move.w d0,(0x24,a6)
 	rts
 sub_00F18A:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -10986,25 +14019,25 @@ sub_00F18A:
 	beq.w loc_00F1B4
 	move.w d5,d1
 	addi.w #0x1cd,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_00F1BE
 loc_00F1B4:
 	move.w d5,d1
 	addi.w #0x1ec,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00F1BE:
 	move.w #0x15e,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F1E0
 	move.l #0xf1e4,(0x20,a6)
 	move.w #0x4b,(0x24,a6)
 loc_00F1E0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F1E4:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F1F2
 	jsr (sub_00F356,pc)
@@ -11024,19 +14057,20 @@ loc_00F1F2:
 	bne.s loc_00F224
 	move.w #0x1f5,d1
 loc_00F224:
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00F228:
 	move.w #0x1d5,d1
 	btst.b #0x6,(a6)
 	bne.s loc_00F236
 	move.w #0x1f4,d1
 loc_00F236:
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 loc_00F23E:
 	move.w #0x40,(0x24,a6)
 	move.l #0xf24c,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00F24C:
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F264
 	clr.w (a6)
@@ -11048,7 +14082,7 @@ loc_00F264:
 	andi.w #0x3,d1
 	eori.w #0x3,d1
 	addi.w #0x4,d1
-	bra.w loc_00F2E0
+	bra.w sub_00F2E0
 sub_00F27A:
 	clr.b (0xd,a6)
 	move.b #0x6,(0x12,a6)
@@ -11060,7 +14094,8 @@ sub_00F27A:
 	move.l a5,(0x16,a6)
 	move.w #0x20,(0x24,a6)
 	move.l #0xf2b0,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00F2B0:
+	jsr (ObjScrollX,pc)
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_00F2D2
@@ -11069,13 +14104,13 @@ sub_00F27A:
 	cmp.w (0x28,a6),d0
 	bgt.w loc_00F23E
 	clr.w (0x12,a6)
-	bra.s loc_00F2E0
+	bra.s sub_00F2E0
 loc_00F2D2:
 	move.w (0x24,a6),d1
 	asr.w #0x1,d1
 	eori.w #0xf,d1
 	move.b (dat_00F326,pc,d1.w),d1
-loc_00F2E0:
+sub_00F2E0:
 	movea.l (0xffff80bc).l,a5
 	move.w #0x1,(a5)+
 	move.w d1,d0
@@ -11093,8 +14128,8 @@ loc_00F2E0:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x224,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 | data 0x00F326-0x00F356
 dat_00F326:
 	.incbin "baserom.md",0xF326,0x10
@@ -11102,7 +14137,7 @@ dat_00F336:
 	.incbin "baserom.md",0xF336,0x20
 sub_00F356:
 	move.l #0xf18a,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	move.w d0,(0x24,a6)
@@ -11123,7 +14158,7 @@ loc_00F38E:
 	bgt.w loc_00F3A8
 loc_00F3A0:
 	subq.w #0x1,(0x24,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00F3A8:
 	move.w #0x1f,(0x24,a6)
 	move.l #0xf3c0,(0x20,a6)
@@ -11137,7 +14172,7 @@ sub_00F3C0:
 loc_00F3D4:
 	subi.w #0x5,(0x4,a6)
 	jsr (sub_00F452,pc)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F3E2:
 	move.w (0x24,a6),d0
 	andi.w #0x7,d0
@@ -11160,7 +14195,7 @@ loc_00F3FC:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_00F432:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F436:
 	movem.w (0x2,a6),d0-d1
 	move.w (0x6,a6),d2
@@ -11168,7 +14203,7 @@ sub_00F436:
 	jsr (sub_0124D2,pc)
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F452:
 	move.w (0xffff9ede).l,d0
 	lea.l (0xffff9ee0).l,a1
@@ -11197,7 +14232,7 @@ loc_00F49E:
 	bmi.s loc_00F4AC
 	addi.w #0x6,d1
 loc_00F4AC:
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 sub_00F4B0:
 	move.w (0xffff9ede).l,d0
 	lea.l (0xffff9ee0).l,a1
@@ -11229,9 +14264,110 @@ loc_00F4EC:
 loc_00F4FC:
 	dbra d4,loc_00F4C2
 	rts
-| data 0x00F502-0x00F69C
+| data 0x00F502-0x00F540
 dat_00F502:
-	.incbin "baserom.md",0xF502,0x19A
+	.incbin "baserom.md",0xF502,0x3E
+sub_00F540:
+	move.w (0x4,a6),d0
+	addq.w #0x8,d0
+	cmp.w (0x28,a6),d0
+	blt.s loc_00F558
+	move.l #0xf560,(0x20,a6)
+	move.w (0x28,a6),d0
+loc_00F558:
+	move.w d0,(0x4,a6)
+	bra.w sub_00F5C0
+sub_00F560:
+	move.w (0x4,a6),d0
+	move.w (0x28,a6),d1
+	subi.w #0xc,d1
+	subi.w #0x2,d0
+	cmp.w d1,d0
+	bgt.s loc_00F57C
+	move.l #0xf584,(0x20,a6)
+loc_00F57C:
+	move.w d0,(0x4,a6)
+	bra.w sub_00F5C0
+sub_00F584:
+	move.w (0x4,a6),d0
+	addi.w #0x2,d0
+	cmp.w (0x28,a6),d0
+	blt.s loc_00F5A4
+	move.l #0xf5ac,(0x20,a6)
+	move.w #0x64,(0x24,a6)
+	move.w (0x28,a6),d0
+loc_00F5A4:
+	move.w d0,(0x4,a6)
+	bra.w sub_00F5C0
+sub_00F5AC:
+	subq.w #0x1,(0x24,a6)
+	bne.s sub_00F5C0
+	move.w #0x3f,(0x24,a6)
+	move.l #0xf5d2,(0x20,a6)
+sub_00F5C0:
+	move.w #0x215,d1
+	tst.w (0x26,a6)
+	beq.s loc_00F5CE
+	move.w #0x249,d1
+loc_00F5CE:
+	bra.w sub_00F648
+sub_00F5D2:
+	move.w (0x24,a6),d1
+	asr.w #0x2,d1
+	move.b (dat_00F638,pc,d1.w),d1
+	addi.w #0x216,d1
+	tst.w (0x26,a6)
+	beq.s loc_00F5EA
+	addi.w #0x34,d1
+loc_00F5EA:
+	move.w d1,-(sp)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_00F634
+	move.w (0x2,a6),d5
+	move.w (0x4,a6),d1
+	bsr.w sub_009A5E
+	move.l #0xddba,(0x20,a6)
+	move.l #0x6900,(0x1c,a6)
+	move.w #0xa,(0x8,a6)
+	movea.l #0x12eb2,a5
+	move.w (a5)+,(0x1a,a6)
+	move.l a5,(0x16,a6)
+	move.w #0x80,(0x14,a6)
+	subi.w #0x10,(0x4,a6)
+	move.w (sp)+,d1
+	bra.w sub_00DDBA
+loc_00F634:
+	move.w (sp)+,d1
+	bra.s sub_00F648
+| data 0x00F638-0x00F648
+dat_00F638:
+	.incbin "baserom.md",0xF638,0x10
+sub_00F648:
+	jsr (ObjScrollX,pc)
+	moveq #-0xc,d0
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
+sub_00F65A:
+	moveq #0x3,d5
+loc_00F65C:
+	movem.w (0x2,a6),d0-d1
+	subi.w #0x18,d1
+	lea.l (dat_01287E,pc),a2
+	tst.w (0x26,a6)
+	bpl.s loc_00F674
+	lea.l (dat_012876,pc),a2
+loc_00F674:
+	bsr.w sub_01277C
+	dbra d5,loc_00F65C
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	move.w (0x6,a6),d2
+	subi.w #0x18,d1
+	jsr (sub_01253C,pc)
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	bra.w ObjNext
 sub_00F69C:
 	move.w (0x4,a6),d0
 	addq.w #0x8,d0
@@ -11243,20 +14379,20 @@ sub_00F69C:
 loc_00F6BA:
 	move.w d0,(0x4,a6)
 	move.w #0x22c,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00F6CA:
 	move.w (0x24,a6),d1
 	lsr.w #0x3,d1
 	addi.w #0x22c,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F6F0
 	move.l #0xeffe,(0x20,a6)
 	move.w #0x4b,(0x24,a6)
 	bset.b #0x7,(a6)
 loc_00F6F0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F6F4:
 	move.w (0x4,a6),d0
 	addq.w #0x8,d0
@@ -11268,20 +14404,20 @@ sub_00F6F4:
 loc_00F712:
 	move.w d0,(0x4,a6)
 	move.w #0x22e,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00F722:
 	move.w (0x24,a6),d1
 	lsr.w #0x3,d1
 	addi.w #0x22e,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F748
 	move.l #0xf1e4,(0x20,a6)
 	move.w #0x4b,(0x24,a6)
 	bset.b #0x7,(a6)
 loc_00F748:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_00F74C:
 	move.l #0xf778,(0x20,a6)
 	move.w #0x18,(0x24,a6)
@@ -11290,9 +14426,9 @@ loc_00F74C:
 	clr.b (0xd,a6)
 	move.b #0x4,(0x12,a6)
 	clr.w (0x14,a6)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F778:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F78A
 	move.l #0xf7a4,(0x20,a6)
@@ -11301,10 +14437,11 @@ loc_00F78A:
 	asr.w #0x3,d1
 	move.b (sub_00F7A0,pc,d1.w),d1
 	addi.w #0x230,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00F7A0:
 	ori.b #0x0,d1
+sub_00F7A4:
 	jsr (sub_00D236,pc)
 	addq.w #0x1,(0x14,a6)
 	move.w (0x14,a6),d1
@@ -11315,24 +14452,25 @@ loc_00F7BC:
 	asr.w #0x3,d1
 	move.b (sub_00F7E4,pc,d1.w),d1
 	addi.w #0x230,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	cmpi.w #0xb4,(0x4,a6)
 	blt.s loc_00F7E0
 	move.w #0xf,(0x24,a6)
 	move.l #0xf7f0,(0x20,a6)
 loc_00F7E0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F7E4:
 	dc.w 0x0202,0x0202	| andi.b #$2, d2
 	btst.l d1,d3
 	btst.l d1,d3
 	dc.w 0x0404,0x0404	| subi.b #$4, d4
-	jsr (sub_012316,pc)
+sub_00F7F0:
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d1
 	asr.w #0x3,d1
 	move.b (sub_00F83C,pc,d1.w),d1
 	addi.w #0x230,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F838
 	move.b #0x40,(0xa,a6)
@@ -11343,7 +14481,7 @@ sub_00F7E4:
 	move.l #0xb43c,(0x20,a6)
 	move.w #0x64,(0x24,a6)
 loc_00F838:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F83C:
 	dc.w 0x0405,0x302e	| subi.b #$2e, d5
 	dc.w 0x0004,0x5040	| ori.b #$40, d4
@@ -11355,31 +14493,32 @@ sub_00F83C:
 loc_00F85C:
 	move.w d0,(0x4,a6)
 	move.w #0x232,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00F86C:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d1
 	lsr.w #0x3,d1
 	move.b (sub_00F89E,pc,d1.w),d1
 	addi.w #0x230,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00F89A
 	move.l #0xb5ec,(0x20,a6)
 	move.w #0x64,(0x24,a6)
 	bset.b #0x7,(a6)
 loc_00F89A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F89E:
 	ori.b #0x0,d1
-	jsr (sub_012316,pc)
+sub_00F8A2:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
 	tst.w (0x1a,a6)
 	bne.s loc_00F8B0
 	moveq #-0x78,d0
 loc_00F8B0:
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w (0x26,a6),d0
 	cmpi.w #0xfffe,d0
 	bne.s loc_00F8DE
@@ -11391,13 +14530,14 @@ loc_00F8B0:
 	asr.w #0x3,d1
 	move.b (sub_00F8E2,pc,d1.w),d1
 	addi.w #0x23c,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00F8DE:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00F8E2:
 	dc.w 0x0001,0x0203	| ori.b #$3, d1
 	btst.l d1,d2
 	btst.l d0,d0
+sub_00F8EA:
 	move.w (0x1a,a6),d0
 	cmpi.w #0x17,d0
 	blt.s loc_00F908
@@ -11426,13 +14566,13 @@ loc_00F908:
 loc_00F948:
 	lea.l (-0x230,a0),a0
 loc_00F94C:
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 loc_00F952:
 	move.w (0x26,a6),d0
 	cmpi.w #0x7,d0
 	bne.s loc_00F96A
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3,d0
 	beq.s loc_00F970
 	bra.w loc_00FA86
@@ -11457,7 +14597,7 @@ loc_00F970:
 loc_00F9AA:
 	cmpi.w #0xfffe,d0
 	bne.s loc_00F9F2
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	tst.w d0
 	bpl.s loc_00F9F2
 	movem.w (0x2,a6),d0-d1
@@ -11550,36 +14690,43 @@ loc_00FAD0:
 	dbra d4,loc_00FAD0
 loc_00FAE6:
 	clr.w (0x28,a6)
-	bra.w sub_00B3BE
-| data 0x00FAEE-0x00FB60
+	bra.w ObjNext
+| data 0x00FAEE-0x00FB52
 dat_00FAEE:
-	.incbin "baserom.md",0xFAEE,0x72
+	.incbin "baserom.md",0xFAEE,0x64
+sub_00FB52:
+	move.l #0xfb5a,(0x20,a6)
+sub_00FB5A:
+	move.w #0x23b,d1
+	bra.s sub_00FB64
 sub_00FB60:
 	move.w #0x23a,d1
-	jsr (sub_012316,pc)
+sub_00FB64:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00FB76:
 	move.l #0xfb8e,(0x20,a6)
 	movem.w (0x2,a6),d0-d1
 	move.w (0x6,a6),d2
 	subq.w #0x1,d2
 	jsr (sub_01253C,pc)
+sub_00FB8E:
 	move.w #0x287,d1
 	bra.s sub_00FB98
 sub_00FB94:
 	move.w #0x286,d1
 sub_00FB98:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00FBAA:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -11588,25 +14735,25 @@ sub_00FBAA:
 	beq.w loc_00FBD4
 	move.w d5,d1
 	addi.w #0x259,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_00FBDE
 loc_00FBD4:
 	move.w d5,d1
 	addi.w #0x261,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00FBDE:
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FBFA
 	move.l #0xfe8e,(0x20,a6)
 loc_00FBFA:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00FBFE:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -11620,8 +14767,9 @@ sub_00FC1E:
 	btst.l d0,d2
 	btst.l d1,d4
 	btst.l d2,d6
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+sub_00FC24:
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -11631,24 +14779,24 @@ sub_00FC3A:
 	beq.w loc_00FC4E
 	move.w d5,d1
 	addi.w #0x33a,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_00FC58
 loc_00FC4E:
 	move.w d5,d1
 	addi.w #0x332,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00FC58:
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FC74
 	move.l #0xfe8e,(0x20,a6)
 loc_00FC74:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00FC78:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FC8A
 	move.l #0xfe8e,(0x20,a6)
@@ -11664,13 +14812,13 @@ loc_00FC8A:
 	jsr (sub_013D04).l
 	bsr.w sub_009054
 	move.w #0x34b,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00FCB6:
 	move.w #0x348,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00FCC2:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FCD4
 	move.l #0xfe8e,(0x20,a6)
@@ -11686,14 +14834,14 @@ loc_00FCD4:
 	jsr (sub_013D04).l
 	bsr.w sub_009054
 	move.w #0x34c,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_00FD00:
 	move.w #0x34a,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00FD0C:
 	move.l #0xfbaa,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	move.w d0,(0x24,a6)
@@ -11705,7 +14853,8 @@ loc_00FD26:
 	move.w #0x1,(0x24,a6)
 loc_00FD38:
 	move.l #0xfd40,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00FD40:
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FD58
 	clr.w (a6)
@@ -11713,8 +14862,8 @@ loc_00FD38:
 	clr.b (0xffff9ebe).l
 loc_00FD58:
 	move.w #0x301,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_00FD64:
 	clr.b (0xd,a6)
 	move.b #0x8,(0x12,a6)
@@ -11725,7 +14874,8 @@ sub_00FD64:
 	addi.b #0xa,(0x7,a6)
 	move.w #0x30,(0x24,a6)
 	move.l #0xfd98,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00FD98:
+	jsr (ObjScrollX,pc)
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_00FDB6
@@ -11758,8 +14908,8 @@ loc_00FDC6:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x2fc,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 | data 0x00FE0C-0x00FE3C
 dat_00FE0C:
 	.incbin "baserom.md",0xFE0C,0x18
@@ -11776,23 +14926,23 @@ sub_00FE3C:
 loc_00FE5A:
 	move.w d0,(0x4,a6)
 	move.w #0x346,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_00FE6A:
 	move.w #0x347,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FE8A
 	move.l #0xfc78,(0x20,a6)
 	move.w #0x4b,(0x24,a6)
 	bset.b #0x7,(a6)
 loc_00FE8A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00FE8E:
 	bset.b #0xf,(a6)
 	btst.b #0x9,(a6)
 	bne.s loc_00FEE0
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0xff,d0
 	cmpi.w #0x55,d0
 	bgt.s loc_00FEB0
@@ -11812,7 +14962,7 @@ loc_00FEDA:
 	movea.l (0x20,a6),a1
 	jmp (a1)
 loc_00FEE0:
-	jsr (sub_00881C).l
+	jsr (Random).l
 	tst.w d0
 	bmi.s loc_00FF00
 	move.w #0x1d,(0x24,a6)
@@ -11824,8 +14974,8 @@ loc_00FF00:
 	move.l #0xfcc2,(0x20,a6)
 	bra.w loc_00FEDA
 sub_00FF12:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -11834,25 +14984,25 @@ sub_00FF12:
 	beq.w loc_00FF3C
 	move.w d5,d1
 	addi.w #0x2e3,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_00FF46
 loc_00FF3C:
 	move.w d5,d1
 	addi.w #0x2eb,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_00FF46:
 	moveq #-0x28,d0
-	jsr (sub_012332,pc)
+	jsr (ObjKillIfLeftOf,pc)
 	move.w #0x168,d0
-	jsr (sub_012342,pc)
+	jsr (ObjKillIfRightOf,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FF68
 	move.l #0xff6c,(0x20,a6)
 	move.w #0x40,(0x24,a6)
 loc_00FF68:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_00FF6C:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00FF7A
 	jsr (sub_00FFC0,pc)
@@ -11862,18 +15012,18 @@ loc_00FF7A:
 	andi.w #0x1e,d1
 	eori.w #0x1e,d1
 	move.w (dat_00FFA0,pc,d1.w),d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	cmpi.w #0x14,(0x24,a6)
 	bne.s loc_00FF9C
 	jsr (sub_012352,pc)
 loc_00FF9C:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x00FFA0-0x00FFC0
 dat_00FFA0:
 	.incbin "baserom.md",0xFFA0,0x20
 sub_00FFC0:
 	move.l #0xff12,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	move.w d0,(0x24,a6)
@@ -11881,7 +15031,8 @@ sub_00FFC0:
 loc_00FFDA:
 	move.w #0x40,(0x24,a6)
 	move.l #0xffe8,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_00FFE8:
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_010000
 	clr.w (a6)
@@ -11889,8 +15040,8 @@ loc_00FFDA:
 	clr.b (0xffff9ebe).l
 loc_010000:
 	move.w #0x2fb,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_01000C:
 	clr.b (0xd,a6)
 	move.b #0xa,(0x12,a6)
@@ -11900,7 +15051,8 @@ sub_01000C:
 	addi.b #0xa,(0x7,a6)
 	move.w #0x20,(0x24,a6)
 	move.l #0x1003a,(0x20,a6)
-	jsr (sub_012316,pc)
+sub_01003A:
+	jsr (ObjScrollX,pc)
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_010058
@@ -11932,8 +15084,8 @@ loc_010066:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x2f7,d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 | data 0x0100AC-0x0100D0
 dat_0100AC:
 	.incbin "baserom.md",0x100AC,0x10
@@ -11950,23 +15102,23 @@ sub_0100D0:
 loc_0100EE:
 	move.w d0,(0x4,a6)
 	move.w #0x324,d1
-	bsr.w sub_013228
-	bra.w sub_00B3BE
+	bsr.w ObjQueueSprite
+	bra.w ObjNext
 sub_0100FE:
 	move.w #0x2f6,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_01011E
 	move.l #0xff6c,(0x20,a6)
 	move.w #0x40,(0x24,a6)
 	bset.b #0x7,(a6)
 loc_01011E:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_010122:
 	move.w #0x7c,d1
 sub_010126:
-	jsr (sub_013228,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjQueueSprite,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x2,a6),d0
 	cmpi.w #0xffec,d0
 	bgt.s loc_010146
@@ -11974,18 +15126,76 @@ sub_010126:
 	subq.w #0x1,(0xffff80da).l
 	clr.l (0xffff9eda).l
 loc_010146:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_01014A:
 	move.w (0xffffa0ee).l,d1
 	andi.w #0xe,d1
 	move.w (dat_01015C,pc,d1.w),d1
 	bra.w sub_010126
-| data 0x01015C-0x010238
+| data 0x01015C-0x01016C
 dat_01015C:
-	.incbin "baserom.md",0x1015C,0xDC
+	.incbin "baserom.md",0x1015C,0x10
+sub_01016C:
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	clr.l (0xffff9eda).l
+	move.w (0x2,a6),d0
+	move.w (0x4,a6),d1
+	move.w (0x6,a6),d2
+	subi.w #0x10,d1
+	jsr (sub_01253C,pc)
+	jsr (sub_006870).l
+	sf.b (0xffff9ebe).l
+	lea.l (0xffff87b2).l,a1
+	moveq #0x4f,d3
+loc_0101A2:
+	move.w (a1),d5
+	cmpi.b #0x28,d5
+	bne.s loc_0101D0
+	move.w (0x2,a6),d0
+	sub.w (0x2,a1),d0
+	bpl.s loc_0101B6
+	neg.w d0
+loc_0101B6:
+	cmpi.w #0x28,d0
+	bgt.s loc_0101D0
+	move.l #0x103c6,(0x20,a1)
+	move.w #0x64,(0x24,a1)
+	jsr (sub_013DBE).l
+loc_0101D0:
+	cmpi.b #0x27,d5
+	bne.s loc_01020A
+	move.w (0x2,a6),d0
+	sub.w (0x2,a1),d0
+	bpl.s loc_0101E2
+	neg.w d0
+loc_0101E2:
+	cmpi.w #0x64,d0
+	bgt.s loc_01020A
+	move.b #0x2,(0xffff9ebe).l
+	jsr (AddScore250).l
+	move.l #0xfd64,(0x20,a1)
+	bset.b #0xb,(a1)
+	bclr.b #0xf,(a1)
+	addq.w #0x1,(0x36,a4)
+loc_01020A:
+	lea.l (0x2c,a1),a1
+	dbra d3,loc_0101A2
+	rts
+sub_010214:
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
+	move.w (0x24,a6),d5
+	andi.w #0x38,d5
+	lsr.w #0x3,d5
+	eori.w #0x7,d5
+	move.w d5,d1
+	jsr (sub_01042C,pc)
+	jsr (sub_0102A6,pc)
+	bra.w ObjNext
 sub_010238:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -12017,7 +15227,7 @@ loc_01028A:
 	move.l #0x1031e,(0x20,a6)
 	move.w #0x50,(0x14,a6)
 loc_0102A2:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0102A6:
 	cmpi.w #0xffe2,(0x2,a6)
 	blt.s loc_0102B6
@@ -12025,14 +15235,14 @@ sub_0102A6:
 	ble.s loc_0102CE
 loc_0102B6:
 	move.l #0x1036e,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x64,d0
 	move.w d0,(0x24,a6)
 loc_0102CE:
 	rts
 sub_0102D0:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	jsr (sub_0102A6,pc)
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_0102E6
@@ -12048,12 +15258,12 @@ sub_010302:
 	asr.w #0x3,d1
 	move.b (dat_010314,pc,d1.w),d1
 	jsr (sub_01042C,pc)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x010314-0x01031E
 dat_010314:
 	.incbin "baserom.md",0x10314,0xA
 sub_01031E:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	jsr (sub_0102A6,pc)
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_010330
@@ -12097,7 +15307,7 @@ loc_010396:
 loc_01039C:
 	bsr.w sub_010408
 loc_0103A0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0103A4:
 	moveq #0xa,d1
 	cmpi.w #0x6,(0x24,a6)
@@ -12110,9 +15320,9 @@ loc_0103B0:
 	bsr.w sub_010408
 	bset.b #0xf,(a6)
 loc_0103C2:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0103C6:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	jsr (sub_0102A6,pc)
 	moveq #0xc,d1
 	cmpi.w #0x50,(0x24,a6)
@@ -12130,10 +15340,10 @@ loc_0103E4:
 	move.l #0x1031e,(0x20,a6)
 	bset.b #0xf,(a6)
 loc_010404:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_010408:
 	move.l #0x10238,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	btst.b #0xe,(a6)
@@ -12164,14 +15374,14 @@ loc_010438:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x288,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	rts
 | data 0x01047A-0x0104B6
 dat_01047A:
 	.incbin "baserom.md",0x1047A,0x3C
 sub_0104B6:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
 	andi.w #0x38,d5
 	lsr.w #0x3,d5
@@ -12184,7 +15394,7 @@ sub_0104B6:
 	move.l #0x10532,(0x20,a6)
 	move.w #0x40,(0x14,a6)
 loc_0104EA:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0104EE:
 	cmpi.w #0xffe2,(0x2,a6)
 	blt.s loc_0104FE
@@ -12192,7 +15402,7 @@ sub_0104EE:
 	ble.s loc_010516
 loc_0104FE:
 	move.l #0x10582,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x64,d0
 	move.w d0,(0x24,a6)
@@ -12203,12 +15413,12 @@ loc_010518:
 	asr.w #0x3,d1
 	move.b (dat_01052A,pc,d1.w),d1
 	jsr (sub_010666,pc)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 | data 0x01052A-0x010532
 dat_01052A:
 	.incbin "baserom.md",0x1052A,0x8
 sub_010532:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	jsr (sub_0104EE,pc)
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_010544
@@ -12259,7 +15469,7 @@ loc_0105C6:
 loc_0105CC:
 	bsr.w sub_010642
 loc_0105D0:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0105D4:
 	moveq #0x9,d1
 	cmpi.w #0x6,(0x24,a6)
@@ -12272,9 +15482,9 @@ loc_0105E0:
 	bsr.w sub_010642
 	bset.b #0xf,(a6)
 loc_0105F2:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0105F6:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	jsr (sub_0104EE,pc)
 	moveq #0xc,d1
 	cmpi.w #0x46,(0x24,a6)
@@ -12295,10 +15505,10 @@ loc_01061E:
 	move.l #0x10532,(0x20,a6)
 	bset.b #0xf,(a6)
 loc_01063E:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_010642:
 	move.l #0x104b6,(0x20,a6)
-	jsr (sub_00881C,pc)
+	jsr (Random,pc)
 	andi.w #0x3f,d0
 	addi.w #0x50,d0
 	btst.b #0xe,(a6)
@@ -12335,11 +15545,156 @@ loc_010682:
 	move.w d0,(a5)+
 	move.l a5,(0xffff80bc).l
 	addi.w #0x2c1,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	rts
-| data 0x0106C4-0x0108E8
+| data 0x0106C4-0x01070C
 dat_0106C4:
-	.incbin "baserom.md",0x106C4,0x224
+	.incbin "baserom.md",0x106C4,0x48
+sub_01070C:
+	cmpi.w #0x58,(0x2,a6)
+	blt.s loc_010726
+	bclr.b #0xf,(a6)
+	move.l #0x1072e,(0x20,a6)
+	move.w #0x7f,(0x24,a6)
+loc_010726:
+	jsr (sub_010812,pc)
+	bra.w ObjNext
+sub_01072E:
+	move.w (0x24,a6),d0
+	subq.w #0x1,d0
+	bne.s loc_01073E
+	move.l #0x10748,(0x20,a6)
+loc_01073E:
+	moveq #0x78,d2
+	bsr.w sub_0107F4
+	bra.w ObjNext
+sub_010748:
+	cmpi.w #0xe0,(0x2,a6)
+	blt.s loc_01075E
+	move.l #0x10766,(0x20,a6)
+	move.w #0x7f,(0x24,a6)
+loc_01075E:
+	jsr (sub_010812,pc)
+	bra.w ObjNext
+sub_010766:
+	move.w (0x24,a6),d0
+	subq.w #0x1,d0
+	bne.s loc_01077E
+	move.l #0x1078a,(0x20,a6)
+	neg.b (0xe,a6)
+	bchg.b #0xe,(a6)
+loc_01077E:
+	move.w #0x12c,d2
+	bsr.w sub_0107F4
+	bra.w ObjNext
+sub_01078A:
+	cmpi.w #0xffec,(0x2,a6)
+	bgt.s loc_0107A4
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+	lea.l (dat_020AD8).l,a0
+	bsr.w ScriptNext
+loc_0107A4:
+	jsr (sub_010812,pc)
+	bra.w ObjNext
+sub_0107AC:
+	jsr (sub_010812,pc)
+	cmpi.w #0xa0,(0x2,a6)
+	bne.s loc_0107C6
+	move.w #0x96,(0x24,a6)
+	move.l #0x107da,(0x20,a6)
+loc_0107C6:
+	cmpi.w #0x154,(0x2,a6)
+	bne.s loc_0107D6
+	clr.w (a6)
+	subq.w #0x1,(0xffff80da).l
+loc_0107D6:
+	bra.w ObjNext
+sub_0107DA:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_0107E8
+	move.l #0x107ac,(0x20,a6)
+loc_0107E8:
+	move.w #0x0,d1
+	bsr.w sub_010666
+	bra.w ObjNext
+sub_0107F4:
+	moveq #0xd,d1
+	cmpi.w #0x50,d0
+	bne.s loc_010800
+	bsr.w sub_010830
+loc_010800:
+	bgt.s loc_01080A
+	cmpi.w #0x1e,d0
+	blt.s loc_01080A
+	moveq #0xe,d1
+loc_01080A:
+	move.w d0,(0x24,a6)
+	bra.w sub_010666
+sub_010812:
+	subq.w #0x1,(0x24,a6)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	eori.w #0x7,d1
+	bra.w sub_010666
+sub_010830:
+	lea.l (0xffff87b2).l,a1
+	moveq #0x4f,d3
+loc_010838:
+	move.w (a1),d4
+	cmpi.b #0xf,d4
+	bne.s loc_010852
+	cmp.w (0x2,a1),d2
+	blt.s loc_010852
+	move.l #0xf8ea,(0x20,a1)
+	clr.w (0x28,a1)
+loc_010852:
+	lea.l (0x2c,a1),a1
+	dbra d3,loc_010838
+	rts
+sub_01085C:
+	subq.w #0x1,(0x24,a6)
+	jsr (sub_010812,pc)
+	cmpi.w #0xffec,(0x2,a6)
+	bne.s loc_01087A
+	move.w #0xc8,(0x24,a6)
+	move.l #0x1087e,(0x20,a6)
+loc_01087A:
+	bra.w ObjNext
+sub_01087E:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_01089C
+	neg.b (0xe,a6)
+	move.b #0x3c,(0xa,a6)
+	move.w #0xd0,(0x4,a6)
+	move.l #0x108a0,(0x20,a6)
+loc_01089C:
+	bra.w ObjNext
+sub_0108A0:
+	jsr (sub_010812,pc)
+	cmpi.w #0xe9,(0x2,a6)
+	blt.s loc_0108B8
+	move.l #0x108ca,(0x20,a6)
+	bchg.b #0xe,(a6)
+loc_0108B8:
+	move.w (0x24,a6),d0
+	andi.w #0x3,d0
+	bne.s loc_0108C6
+	subq.w #0x1,(0x4,a6)
+loc_0108C6:
+	bra.w ObjNext
+sub_0108CA:
+	moveq #0x8,d1
+	bsr.w sub_010666
+	move.l #0x108dc,(0x20,a6)
+	bra.w ObjNext
+sub_0108DC:
+	move.w #0x2c9,d1
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 sub_0108E8:
 	move.w (0x2,a6),d0
 	addq.w #0x2,d0
@@ -12353,11 +15708,11 @@ sub_010906:
 	bra.s sub_010912
 sub_010908:
 	move.w #0x26b,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	bra.s sub_01091A
 sub_010912:
 	move.w #0x26a,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 sub_01091A:
 	subq.w #0x1,(0x24,a6)
 	move.w (0x24,a6),d1
@@ -12383,7 +15738,7 @@ sub_01091A:
 	addi.w #0x2d,d2
 	jsr (QueueSprite,pc)
 	move.w #0x269,d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	move.w (0x24,a6),d1
 	bsr.w sub_0109AC
 	subi.w #0x50,d2
@@ -12401,7 +15756,7 @@ loc_010986:
 	move.w #0x37f,d1
 loc_0109A4:
 	jsr (QueueSprite,pc)
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0109AC:
 	andi.w #0x18,d1
 	lsr.w #0x3,d1
@@ -12418,7 +15773,7 @@ sub_0109C8:
 	move.l a6,-(sp)
 	move.w #0xa0,d5
 	move.w #0x58,d1
-	jsr (sub_00930E,pc)
+	jsr (ObjAlloc,pc)
 	jsr (sub_009A5E,pc)
 	movea.l #0x12ee6,a5
 	move.w (a5)+,(0x1a,a6)
@@ -12427,10 +15782,10 @@ sub_0109C8:
 	move.w #0x9,(a6)
 	move.l #0x10a92,(0x20,a6)
 	move.l #0x597a,(0x1c,a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.b #0x5f,d0
 	move.b d0,(0xa,a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	move.w d0,d3
 	andi.b #0x5f,d3
 	move.b d3,(0xc,a6)
@@ -12454,10 +15809,10 @@ loc_010A6E:
 	cmpi.w #0x2c,d0
 	bgt.w sub_010908
 	cmpi.w #0x16,d0
-	blt.w sub_00B3BE
+	blt.w ObjNext
 	andi.w #0x1,d0
 	beq.w sub_010908
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_010A8A:
 	andi.w #0x26d,(0x26e,a4)
 | data 0x010A90-0x010A92
@@ -12467,12 +15822,12 @@ sub_010A92:
 	tst.b d4
 	beq.w loc_010AA8
 	move.w (0x26,a6),d1
-	jsr (sub_013228,pc)
-	bra.w sub_00B3BE
+	jsr (ObjQueueSprite,pc)
+	bra.w ObjNext
 loc_010AA8:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_010AB4:
 	jsr (sub_00E10C,pc)
 	tst.b (0xe,a6)
@@ -12508,7 +15863,7 @@ sub_010AF8:
 	clr.b (0x12,a6)
 	move.b #0x0,(0xf,a6)
 	clr.b (0xd,a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	tst.w d0
 	bmi.s loc_010B5C
 	move.w #0x0,(0x2,a6)
@@ -12562,6 +15917,7 @@ sub_010BE4:
 	clr.b (0xb,a6)
 	move.l #0x10c1c,(0x20,a6)
 	bclr.b #0xf,(a6)
+sub_010C1C:
 	move.w #0x73,(0xffff9ea4).l
 	jsr (sub_00E10C,pc)
 	jsr (sub_00D236,pc)
@@ -12597,7 +15953,7 @@ sub_010C96:
 	moveq #0x18,d2
 	moveq #0x5,d3
 	move.w #0xebd0,d1
-	jsr (sub_012212).l
+	jsr (VdpQueueFillRows).l
 	subq.w #0x1,(0x24,a6)
 	move.w (0x24,a6),d1
 	andi.w #0xc,d1
@@ -12624,7 +15980,7 @@ loc_010CE2:
 	move.w #0x2000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	bra.w sub_010D20
 | data 0x010CFC-0x010D0C
@@ -12651,8 +16007,8 @@ loc_010D2C:
 	andi.w #0xff,d0
 	eori.w #0xff,d0
 	moveq #0x0,d1
-	jsr (sub_011F58,pc)
-	bra.w sub_00B3BE
+	jsr (VdpQueueVScroll,pc)
+	bra.w ObjNext
 sub_010D46:
 	move.w (0x2,a6),d0
 	move.w (0x4,a6),d1
@@ -12677,7 +16033,7 @@ sub_010D46:
 	move.w #0xebda,d1
 	moveq #0x4,d2
 	moveq #0x2,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	lea.l (dat_0CB0F4).l,a0
 	move.w #0xebe2,d1
 	moveq #0x9,d3
@@ -12685,11 +16041,12 @@ sub_010D46:
 	move.w #0x2000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	move.l #0x10dd6,(0x20,a6)
 	move.w #0x76,d0
 	jsr (sub_013D04).l
+sub_010DD6:
 	jsr (sub_00D236,pc)
 	cmpi.w #0xb0,(0x4,a6)
 	blt.s loc_010DEA
@@ -12697,14 +16054,14 @@ sub_010D46:
 loc_010DEA:
 	bra.w sub_010D20
 sub_010DEE:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	tst.w (0x2,a6)
 	bpl.s loc_010E14
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	clr.w (0x2,a6)
 	movea.l #0x20cfe,a0
-	jsr (sub_00933E,pc)
+	jsr (ScriptNext,pc)
 	clr.w (0xffffa23c).l
 loc_010E14:
 	bra.w sub_010D20
@@ -12717,8 +16074,8 @@ loc_010E18:
 	clr.w (0xffffa244).l
 	bsr.w sub_00AF72
 	lea.l (dat_020CBE).l,a0
-	jsr (sub_00933E,pc)
-	bra.w sub_00B3BE
+	jsr (ScriptNext,pc)
+	bra.w ObjNext
 sub_010E4A:
 	tst.w (0x24,a6)
 	bne.s loc_010E7E
@@ -12765,7 +16122,7 @@ sub_010EF6:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	movea.l #0x20cfe,a0
-	jsr (sub_00933E,pc)
+	jsr (ScriptNext,pc)
 	bra.w loc_010F82
 loc_010F22:
 	move.l #0x10e4a,(0x20,a6)
@@ -12798,7 +16155,7 @@ sub_010F86:
 	move.b #0x1,(0xe,a6)
 	clr.b (0xb,a6)
 loc_010FAC:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_010FB0:
 	jsr (sub_00E10C,pc)
 	move.w (0x2,a6),d2
@@ -12820,7 +16177,7 @@ sub_010FB0:
 	move.w (0xffff9e74).l,d7
 	cmpi.w #0x160,d0
 	bgt.s loc_010FFA
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	bra.s loc_011010
 loc_010FFA:
 	cmpi.w #0xe9b6,d1
@@ -12829,7 +16186,7 @@ loc_010FFA:
 loc_011004:
 	subi.w #0x200,d1
 	addi.w #0x5,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 loc_011010:
 	move.w (sp)+,d7
 loc_011012:
@@ -12839,7 +16196,7 @@ loc_011012:
 	subq.w #0x1,(0xffff80da).l
 	jsr (sub_010D0C).l
 	move.b #0xff,(0xffffa234).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 loc_011032:
 	move.w (0x2,a6),d2
 	cmpi.w #0x50,d2
@@ -12935,14 +16292,14 @@ sub_011150:
 	move.l #0xa000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e74).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	rts
 sub_01116A:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_0111C6
 	move.w (0x26,a6),(0x24,a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	move.w d0,d3
 	andi.w #0xff,d0
 	addi.w #0x20,d0
@@ -12970,9 +16327,9 @@ loc_0111AE:
 	bset.b #0x5,(a6)
 	movea.l (sp)+,a6
 loc_0111C6:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0111CA:
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x2,a6),d0
 	cmpi.w #0x140,d0
 	bne.s loc_011210
@@ -13002,7 +16359,7 @@ loc_011210:
 	move.w #0xe2d4,d1
 	moveq #0x6,d2
 	moveq #0x12,d3
-	jsr (sub_012212).l
+	jsr (VdpQueueFillRows).l
 	move.w #0xe53e,d1
 	lea.l (dat_0A10FC).l,a0
 	moveq #0x3,d2
@@ -13018,11 +16375,11 @@ loc_01125A:
 	move.w #0xe2e0,d1
 	moveq #0x10,d2
 	moveq #0x12,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	move.w #0xe280,d1
 	moveq #0x8,d2
 	moveq #0x12,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	move.w #0xebdc,d1
 	bsr.w sub_0112DE
 	bra.w loc_0112A4
@@ -13032,19 +16389,19 @@ loc_011284:
 	move.w #0xe290,d1
 	moveq #0x18,d2
 	moveq #0x12,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	move.w #0xeb9a,d1
 	bsr.w sub_0112DE
 	bra.w loc_0112A4
 loc_0112A2:
 	nop
 loc_0112A4:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_0112A8:
 	move.l #0xa000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e74).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	rts
 sub_0112BE:
@@ -13065,12 +16422,12 @@ sub_0112DE:
 	move.l #0x2000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	rts
 sub_0112FE:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d1
 	andi.w #0x38,d1
 	lsr.w #0x3,d1
@@ -13090,15 +16447,15 @@ sub_011334:
 	ble.s loc_01135E
 loc_011344:
 	move.l #0x114c0,(0x20,a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0xf,d0
 	addi.w #0x1e,d0
 	move.w d0,(0x24,a6)
 loc_01135E:
 	rts
 sub_011360:
-	jsr (sub_00B4A6,pc)
-	jsr (sub_012316,pc)
+	jsr (ObjMoveX,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d1
 	andi.w #0x38,d1
 	lsr.w #0x3,d1
@@ -13134,6 +16491,7 @@ sub_0113D0:
 	move.b (a3),-(a1)
 	move.b (a3),-(a1)
 	move.b (a0),d1
+sub_0113D8:
 	move.w (0x24,a6),d1
 	andi.w #0x3c,d1
 	lsr.w #0x2,d1
@@ -13169,7 +16527,7 @@ sub_011438:
 	move.l -(a2),d1
 sub_011448:
 	bset.b #0xf,(a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	cmpi.w #0x12c,(0x2,a6)
 	bgt.s loc_011462
 	cmpi.w #0x14,(0x2,a6)
@@ -13212,7 +16570,7 @@ sub_0114C0:
 loc_0114D8:
 	move.w #0x14a,(0x2,a6)
 loc_0114DE:
-	jsr (sub_00881C).l
+	jsr (Random).l
 	tst.w d0
 	bpl.s loc_0114EE
 	bsr.w sub_0115FA
@@ -13244,11 +16602,11 @@ loc_011536:
 	move.w #0x30,(0x24,a6)
 	move.l #0x11558,(0x20,a6)
 	btst.b #0xd,(a6)
-	beq.s loc_011558
+	beq.s sub_011558
 	bclr.b #0xd,(a6)
 	bra.w sub_011448
-loc_011558:
-	jsr (sub_012316,pc)
+sub_011558:
+	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_011574
 	bset.b #0xd,(a6)
@@ -13267,7 +16625,8 @@ sub_011580:
 	move.w #0x20,(0x24,a6)
 	move.l #0x115ac,(0x20,a6)
 	jsr (sub_013DA8,pc)
-	jsr (sub_012316,pc)
+sub_0115AC:
+	jsr (ObjScrollX,pc)
 	jsr (sub_00D236,pc)
 	subq.w #0x1,(0x24,a6)
 	bpl.s loc_0115CA
@@ -13299,7 +16658,7 @@ sub_0115EE:
 	btst.l d1,d4
 sub_0115FA:
 	move.l #0x112fe,(0x20,a6)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0x1f,d0
 	addi.w #0x1e,d0
 	move.w d0,(0x24,a6)
@@ -13319,7 +16678,7 @@ sub_011616:
 	addi.w #0x8,d1
 loc_01163C:
 	addi.w #0x274,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_011644:
 	cmpi.w #0x10,d0
 	bne.s loc_011668
@@ -13328,16 +16687,16 @@ loc_011644:
 	move.w #0x1,d3
 	bsr.w sub_0118DC
 	move.w #0x303,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x302,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_011668:
 	cmpi.w #0x11,d0
 	bne.s loc_01167C
 	moveq #0x9,d3
 	bsr.w sub_0118EA
 	move.w #0x30c,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_01167C:
 	cmpi.w #0x13,d0
 	bgt.s loc_01169C
@@ -13347,7 +16706,7 @@ loc_01167C:
 	move.w #0x4,d3
 	bsr.w sub_0118DC
 	move.w #0x30d,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_01169C:
 	cmpi.w #0x1c,d0
 	bgt.s loc_0116D0
@@ -13361,12 +16720,12 @@ loc_01169C:
 	addi.w #0xd,d1
 loc_0116BA:
 	addi.w #0x2fb,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_0116C2:
 	moveq #0xc,d3
 	bsr.w sub_0118EA
 	move.w #0x30e,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_0116D0:
 	cmpi.w #0x21,d0
 	bgt.s loc_0116EA
@@ -13375,7 +16734,7 @@ loc_0116D0:
 	bsr.w sub_0118EA
 	move.w d0,d1
 	addi.w #0x2fa,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_0116EA:
 	cmpi.w #0x22,d0
 	bne.s loc_01170E
@@ -13385,9 +16744,9 @@ loc_0116F0:
 	move.w #0x3,d3
 	bsr.w sub_0118DC
 	move.w #0x305,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x302,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_01170E:
 	cmpi.w #0x23,d0
 	bne.s loc_011732
@@ -13396,9 +16755,9 @@ loc_01170E:
 	move.w #0x2,d3
 	bsr.w sub_0118DC
 	move.w #0x304,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x302,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_011732:
 	cmpi.w #0x29,d0
 	bgt.w loc_0117E6
@@ -13408,34 +16767,34 @@ loc_011732:
 	moveq #0x0,d3
 	bsr.w sub_0118C0
 	move.w #0x306,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_0116F0
 loc_011758:
 	cmpi.w #0x25,d0
 	bne.s loc_011770
 	move.w #0x430,(0xffff9e58).l
 	move.w #0x309,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.s loc_0116F0
 loc_011770:
 	cmpi.w #0x26,d0
 	bne.s loc_01179A
 	move.w #0x3e8,(0xffff9e1a).l
 	move.w #0x307,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x430,(0xffff9e58).l
 	move.w #0x309,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.w loc_0116F0
 loc_01179A:
 	cmpi.w #0x27,d0
 	bne.s loc_0117C4
 	move.w #0x3fc,(0xffff9e1a).l
 	move.w #0x308,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x430,(0xffff9e58).l
 	move.w #0x309,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.w loc_0116F0
 loc_0117C4:
 	cmpi.w #0x28,d0
@@ -13443,7 +16802,7 @@ loc_0117C4:
 	move.w #0x3fc,(0xffff9e1a).l
 	move.w #0x430,(0xffff9e58).l
 	move.w #0x30a,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	bra.w loc_0116F0
 loc_0117E6:
 	cmpi.w #0x32,d0
@@ -13453,7 +16812,7 @@ loc_0117E6:
 	bsr.w sub_0118EA
 	move.w d0,d1
 	addi.w #0x2f2,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_011800:
 	cmpi.w #0x37,d0
 	bgt.s loc_01181A
@@ -13462,7 +16821,7 @@ loc_011800:
 	bsr.w sub_0118EA
 	move.w d0,d1
 	addi.w #0x31b,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_01181A:
 	cmpi.w #0x3d,d0
 	bgt.s loc_011834
@@ -13471,7 +16830,7 @@ loc_01181A:
 	bsr.w sub_0118EA
 	move.w d0,d1
 	addi.w #0x327,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_011834:
 	cmpi.w #0x43,d0
 	bgt.s loc_011856
@@ -13482,7 +16841,7 @@ loc_011834:
 	bsr.w sub_0118DC
 	move.w d0,d1
 	addi.w #0x315,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_011856:
 	cmpi.w #0x49,d0
 	bgt.s loc_01186E
@@ -13490,30 +16849,30 @@ loc_011856:
 	subi.w #0x18,d3
 	bsr.w sub_0118EA
 	addi.w #0x315,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_01186E:
 	cmpi.w #0x4b,d0
 	bgt.s loc_01189E
 	bne.s loc_01187E
 	move.w #0x36e,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_01187E:
 	move.w #0x1f4,(0xffff9e76).l
 	move.w #0x6,d3
 	bsr.w sub_0118DC
 	move.w #0x365,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x366,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 loc_01189E:
 	move.w #0x220,(0xffff9e76).l
 	move.w d0,d3
 	subi.w #0x45,d3
 	bsr.w sub_0118DC
 	addi.w #0x31b,d1
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 	move.w #0x365,d1
-	bra.w sub_013228
+	bra.w ObjQueueSprite
 sub_0118C0:
 	lea.l (dat_011A30,pc),a1
 	move.w (0xffff9e58).l,d6
@@ -13589,7 +16948,7 @@ sub_011A90:
 	move.l #0x11af8,(0x20,a6)
 	move.w #0x5a,(0x24,a6)
 	movea.l #0x20db2,a0
-	jsr (sub_00933E).l
+	jsr (ScriptNext).l
 	move.w #0x13,d4
 loc_011AD0:
 	movem.w (0x2,a6),d0-d1
@@ -13599,17 +16958,18 @@ loc_011AD0:
 	dbra d4,loc_011AD0
 	jsr (sub_013E02).l
 loc_011AEC:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_011AF0:
 	dc.w 0x3737,0x3635	| move.w $35(a7, d3.w), -(a3)
 	dc.w 0x3433,0x3232	| move.w $32(a3, d3.w), d2
+sub_011AF8:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_011B0C
 	jsr (sub_013D90).l
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_011B0C:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_011B10:
 	tst.b (0xffff9ec2).l
 	beq.w loc_011B4A
@@ -13621,7 +16981,7 @@ sub_011B10:
 	clr.b (0xffff9ec2).l
 	bclr.b #0xf,(a6)
 loc_011B4A:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_011B4E:
 	clr.w (0xffffab1c).l
 	lea.l (dat_0A63B6).l,a0
@@ -13631,7 +16991,7 @@ sub_011B4E:
 	move.l #0xa000,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e38).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	lea.l (dat_0A6396).l,a0
 	move.w #0xe318,d1
@@ -13649,7 +17009,7 @@ loc_011B9A:
 	rol.w #0x4,d2
 	andi.w #0xf,d2
 	beq.s loc_011BD2
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	moveq #0x0,d2
 	move.b (0xffff9f60).l,d2
@@ -13662,7 +17022,7 @@ loc_011B9A:
 	rts
 loc_011BD2:
 	moveq #0x1,d2
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	move.w (sp)+,d7
 	moveq #0x0,d2
 	move.b (0xffff9f60).l,d2
@@ -13687,15 +17047,15 @@ loc_011C08:
 	move.l a5,(0xffff80bc).l
 	sf.b (0xffff9ec3).l
 	bsr.w sub_011B4E
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_011C2C:
 	move.w #0xe310,d1
 	moveq #0x18,d2
 	moveq #0x1,d3
-	jsr (sub_012212,pc)
+	jsr (VdpQueueFillRows,pc)
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_011C44:
 	subq.w #0x1,(0x24,a6)
 	bne.w loc_011C5A
@@ -13721,7 +17081,7 @@ loc_011C5A:
 	blt.s loc_011C8E
 	addq.w #0x4,d1
 loc_011C8E:
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	move.w (sp)+,d1
 	addi.w #0x2bc,d1
 	move.w (0x2,a6),d2
@@ -13742,7 +17102,7 @@ loc_011CB8:
 loc_011CCE:
 	st.b (0xffff9ec3).l
 loc_011CD4:
-	bra.w sub_00B3BE
+	bra.w ObjNext
 sub_011CD8:
 	subq.w #0x1,(0x24,a6)
 	bne.w loc_011CF8
@@ -13757,22 +17117,22 @@ loc_011CF8:
 	move.w (0x6,a6),d5
 	addq.w #0x1,d5
 	jsr (QueueSprite).l
-	bra.w sub_00B3BE
-sub_011D12:
+	bra.w ObjNext
+VdpListReset:
 	move.l #0xffffb252,(0xffff80bc).l
 	move.l #0xffffb452,(0xffff80b8).l
 	rts
-sub_011D28:
+VdpListEnd:
 	movea.l (0xffff80bc).l,a5
 	clr.w (a5)
 	rts
-sub_011D32:
+VdpListRun:
 	lea.l (0xffffb252).l,a6
-sub_011D38:
+VdpListNext:
 	move.w (a6)+,d0
 	asl.w #0x2,d0
-	jmp (sub_011D40,pc,d0.w)
-sub_011D40:
+	jmp (VdpListJump,pc,d0.w)
+VdpListJump:
 	bra.w loc_011D64
 sub_011D44:
 	bra.w loc_012068
@@ -13797,19 +17157,19 @@ loc_011D70:
 	move.w (a6)+,d1
 	move.w (a6)+,d2
 	moveq #0x0,d6
-	jsr (sub_008782).l
-	bra.w sub_011D38
+	jsr (VramFillWords).l
+	bra.w VdpListNext
 loc_011D80:
 	move.w (a6)+,d1
 	move.w (a6)+,d2
 	move.w (a6)+,d6
-	jsr (sub_008782).l
-	bra.w sub_011D38
+	jsr (VramFillWords).l
+	bra.w VdpListNext
 loc_011D90:
 	move.w (a6)+,d0
 	move.w (a6)+,d2
-	jsr (sub_0087C4).l
-	bra.w sub_011D38
+	jsr (VramWriteWord).l
+	bra.w VdpListNext
 loc_011D9E:
 	move.l #0xc000,d1
 	or.w (a6)+,d1
@@ -13833,7 +17193,7 @@ loc_011DD8:
 	dbra d0,loc_011DD8
 	bclr.b #0x4,(0xffffa0dd).l
 	move.w (0xffffa0dc).l,(0xc00004).l
-	bra.w sub_011D38
+	bra.w VdpListNext
 sub_011DFE:
 	lea.l (0xc00000).l,a5
 loc_011E04:
@@ -13896,8 +17256,8 @@ loc_011EB4:
 	move.w d2,(a5)
 	lea.l (0x20,a2),a2
 	dbra d1,loc_011EB4
-	bra.w sub_011D38
-sub_011EC4:
+	bra.w VdpListNext
+VramFillDma:
 	lea.l (0xc00000).l,a5
 loc_011ECA:
 	move.w (0x4,a5),d0
@@ -13934,7 +17294,7 @@ loc_011F3A:
 	bclr.b #0x4,(0xffffa0dd).l
 	move.w (0xffffa0dc).l,(0xc00004).l
 	rts
-sub_011F58:
+VdpQueueVScroll:
 	movea.l (0xffff80bc).l,a5
 	move.w #0x8,(a5)+
 	move.w d0,(a5)+
@@ -13951,13 +17311,13 @@ loc_011F82:
 	bne.s loc_011F82
 	move.w (a6)+,(a5)
 	move.w (a6)+,(a5)
-	bra.w sub_011D38
-sub_011F94:
+	bra.w VdpListNext
+DmaToVramSave:
 	movem.l d0-d2/a0-a5,-(sp)
-	jsr (sub_011FA2,pc)
+	jsr (DmaToVram,pc)
 	movem.l (sp)+,d0-d2/a0-a5
 	rts
-sub_011FA2:
+DmaToVram:
 	lea.l (0xc00000).l,a5
 	lea.l (0xffffa0e0).l,a0
 loc_011FAE:
@@ -14031,7 +17391,7 @@ loc_012074:
 loc_0120B0:
 	move.w (a1)+,(a5)
 	dbra d4,loc_0120B0
-	bra.w sub_011D38
+	bra.w VdpListNext
 loc_0120BA:
 	move.w (a6)+,d4
 	movea.l (a6)+,a1
@@ -14059,7 +17419,7 @@ loc_0120F6:
 	dbra d5,loc_0120F6
 	addi.w #0x80,d3
 	dbra d6,loc_0120DA
-	bra.w sub_011D38
+	bra.w VdpListNext
 sub_012108:
 	lea.l (0xc00000).l,a5
 loc_01210E:
@@ -14118,24 +17478,24 @@ loc_0121AA:
 	dbra d0,loc_01216A
 	bclr.b #0x4,(0xffffa0dd).l
 	move.w (0xffffa0dc).l,(0xc00004).l
-	bra.w sub_011D38
-sub_0121D6:
+	bra.w VdpListNext
+HScrollClear:
 	move.w #0xff,d1
 	lea.l (0xffffaa5c).l,a0
 loc_0121E0:
 	clr.l (a0)+
 	dbra d1,loc_0121E0
-	bsr.w sub_011D12
+	bsr.w VdpListReset
 	movea.l (0xffff80bc).l,a5
 	move.w #0x7,(a5)+
 	move.w #0x400,(a5)+
 	move.l #0xffffaa5c,(a5)+
 	move.w #0xf000,(a5)+
 	move.l a5,(0xffff80bc).l
-	bsr.w sub_011D28
-	bsr.w sub_011D32
+	bsr.w VdpListEnd
+	bsr.w VdpListRun
 	rts
-sub_012212:
+VdpQueueFillRows:
 	movea.l (0xffff80bc).l,a5
 	subq.w #0x1,d3
 	add.w d2,d2
@@ -14147,7 +17507,7 @@ loc_01221C:
 	dbra d3,loc_01221C
 	move.l a5,(0xffff80bc).l
 	rts
-sub_012234:
+VdpQueueTileRect:
 	subq.w #0x1,d3
 	movea.l (0xffff80b8).l,a1
 	movea.l (0xffff80bc).l,a5
@@ -14229,7 +17589,7 @@ loc_0122FE:
 	move.l a5,(0xffff80bc).l
 	move.l a1,(0xffff80b8).l
 	rts
-sub_012316:
+ObjScrollX:
 	move.b (0x6,a6),d0
 	ext.w d0
 	addi.w #0x1c,d0
@@ -14238,14 +17598,14 @@ sub_012316:
 	move.w (0x0,a1,d0.w),d0
 	sub.w d0,(0x2,a6)
 	rts
-sub_012332:
+ObjKillIfLeftOf:
 	cmp.w (0x2,a6),d0
 	blt.s loc_012340
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 loc_012340:
 	rts
-sub_012342:
+ObjKillIfRightOf:
 	cmp.w (0x2,a6),d0
 	bgt.s loc_012350
 	clr.w (a6)
@@ -14262,7 +17622,7 @@ sub_012352:
 	rts
 sub_01237A:
 	movea.l a6,a4
-	jsr (sub_00930E).l
+	jsr (ObjAlloc).l
 	tst.w d2
 	bmi.w loc_0123EC
 	move.w (0x2,a4),d0
@@ -14287,7 +17647,7 @@ sub_01237A:
 loc_0123EC:
 	dc.w 0xc94e	| exg.l a4, a6
 	rts
-sub_0123F0:
+MissilesRun:
 	lea.l (0xffff80f2).l,a6
 	move.w (0xffff80d6).l,d7
 	subq.w #0x1,d7
@@ -14321,7 +17681,7 @@ sub_012432:
 	dbra d7,sub_012402
 sub_01243A:
 	rts
-sub_01243C:
+EffectsRun:
 	lea.l (0xffff8632).l,a6
 	move.w (0xffff80d8).l,d7
 	subq.w #0x1,d7
@@ -14333,7 +17693,7 @@ loc_01244C:
 	move.w (a5)+,d1
 	beq.w loc_012482
 	move.l a5,(0x8,a6)
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	move.w (0x2,a6),d2
 	move.w (0x4,a6),d3
 	move.w #0x5,d5
@@ -14385,7 +17745,7 @@ sub_0124EC:
 	jmp (sub_013CC4).l
 sub_012502:
 	move.b #0x1,(0x10,a5)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	bmi.s loc_012514
 	neg.b (0x10,a5)
 loc_012514:
@@ -14393,7 +17753,7 @@ loc_012514:
 	move.b d0,(0xc,a5)
 	clr.b (0xd,a5)
 	move.b #0x1,(0x11,a5)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	bmi.s loc_012532
 	neg.b (0x11,a5)
 loc_012532:
@@ -14445,7 +17805,7 @@ dat_01265C:
 	.incbin "baserom.md",0x1265C,0x3E
 dat_01269A:
 	.incbin "baserom.md",0x1269A,0x1A
-sub_0126B4:
+SparksRun:
 	lea.l (0xffff9572).l,a6
 	move.w (0xffff80dc).l,d7
 	subq.w #0x1,d7
@@ -14476,7 +17836,7 @@ loc_0126F6:
 	move.l a5,(0x8,a6)
 	move.w (0x2,a6),d2
 	move.w (0x4,a6),d3
-	bsr.w sub_013228
+	bsr.w ObjQueueSprite
 loc_012710:
 	lea.l (0x12,a6),a6
 	dbra d7,loc_0126C4
@@ -14534,10 +17894,10 @@ sub_012780:
 	move.w d2,(0x6,a5)
 	clr.w (0x10,a5)
 	clr.w (0x14,a5)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0x3,d0
 	move.w d0,(0xc,a5)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	move.w d0,d1
 	andi.w #0xff,d0
 	tst.w d1
@@ -14545,12 +17905,12 @@ sub_012780:
 	neg.w d0
 loc_0127C0:
 	move.w d0,(0xe,a5)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0xf0,d0
 	ori.w #0x100,d0
 	neg.w d0
 	move.w d0,(0x12,a5)
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0x7,d0
 	ori.w #0x18,d0
 	move.w d0,(0x16,a5)
@@ -14588,8 +17948,12 @@ dat_012856:
 dat_012866:
 	.incbin "baserom.md",0x12866,0x8
 dat_01286E:
-	.incbin "baserom.md",0x1286E,0x18
-sub_012886:
+	.incbin "baserom.md",0x1286E,0x8
+dat_012876:
+	.incbin "baserom.md",0x12876,0x8
+dat_01287E:
+	.incbin "baserom.md",0x1287E,0x8
+DebrisRun:
 	lea.l (0xffff97b2).l,a6
 	move.w (0xffff80de).l,d7
 	subq.w #0x1,d7
@@ -14877,7 +18241,7 @@ loc_012B96:
 	clr.b (0xd,a6)
 	move.w #0x100,(0x14,a6)
 	rts
-sub_012BB0:
+PickupsRun:
 	move.w (0xffff80e0).l,d7
 	subq.w #0x1,d7
 	bmi.w loc_012C9E
@@ -14903,7 +18267,7 @@ loc_012BEE:
 loc_012BF8:
 	tst.w d0
 	beq.s loc_012C08
-	jsr (sub_012316,pc)
+	jsr (ObjScrollX,pc)
 	cmpi.w #0xfff0,(0x2,a6)
 	bgt.s loc_012C14
 loc_012C08:
@@ -14958,7 +18322,7 @@ loc_012C78:
 	bne.s loc_012C92
 	addq.w #0x1,d1
 loc_012C92:
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 loc_012C96:
 	lea.l (0x1a,a6),a6
 	dbra d7,loc_012BC2
@@ -15041,7 +18405,7 @@ loc_012D60:
 	movea.l (0x0,a0,d2.w),a0
 	cmpi.w #0xc,d2
 	bgt.s loc_012DA2
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0x30,d0
 	move.w d0,d3
 	bra.s loc_012DA8
@@ -15057,7 +18421,7 @@ loc_012DA8:
 	move.w #0x5,(0x6,a6)
 	cmpi.b #0x4,(0x20,a6)
 	bne.s loc_012DD4
-	jsr (sub_0073A0).l
+	jsr (MissileFindTarget).l
 loc_012DD4:
 	addq.w #0x1,(0xffff80d6).l
 loc_012DDA:
@@ -15084,7 +18448,7 @@ loc_012FF8:
 	lsr.w #0x4,d1
 	andi.w #0xe,d1
 	move.w (sub_013042,pc,d1.w),d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	subq.b #0x1,(0x21,a6)
 	bne.s sub_01303E
 	move.b (0x20,a6),(0x21,a6)
@@ -15134,7 +18498,7 @@ loc_0130A2:
 	beq.s loc_0130B8
 	lea.l (0xffff8050).l,a4
 loc_0130B8:
-	jsr (sub_00881C).l
+	jsr (Random).l
 	move.w d0,d1
 	andi.w #0x1f,d0
 	tst.b d1
@@ -15170,7 +18534,7 @@ loc_013110:
 	beq.s loc_013128
 	lea.l (0xffff8050).l,a4
 loc_013128:
-	jsr (sub_00881C).l
+	jsr (Random).l
 	move.w d0,d1
 	andi.w #0xf,d0
 	tst.b d1
@@ -15214,7 +18578,7 @@ loc_013192:
 	lsr.w #0x4,d1
 	andi.w #0xe,d1
 	move.w (0x0,a5,d1.w),d1
-	jsr (sub_013228,pc)
+	jsr (ObjQueueSprite,pc)
 	bra.w sub_012432
 loc_0131A8:
 	clr.w (a6)
@@ -15242,7 +18606,7 @@ sub_0131F2:
 	clr.w (0xffff8030).l
 	clr.w (0xffff8080).l
 	rts
-sub_01320A:
+LoadTiles:
 	move.w (a0)+,d0
 sub_01320C:
 	asr.w #0x1,d0
@@ -15250,9 +18614,9 @@ sub_01320C:
 	move.l a0,(0xffffa0e2).l
 	asl.w #0x5,d1
 	move.w d1,(0xffffa0e6).l
-	jsr (sub_011FA2,pc)
+	jsr (DmaToVram,pc)
 	rts
-sub_013228:
+ObjQueueSprite:
 	move.l d5,-(sp)
 	move.w (0x2,a6),d2
 	move.w (0x4,a6),d3
@@ -15317,7 +18681,7 @@ loc_0132C4:
 	lea.l (0x0,a1,d0.w),a3
 	movem.w (a3)+,d1-d3/d5
 	asl.w #0x1,d1
-	lea.l (dat_0152A8,pc),a4
+	lea.l (SpriteMappings,pc),a4
 	move.w (0x0,a4,d1.w),d1
 	andi.l #0xffff,d1
 	lea.l (0x0,a4,d1.l),a4
@@ -15370,7 +18734,7 @@ loc_013364:
 	lea.l (0x8,a2),a2
 	moveq #0x1,d6
 	bra.w loc_013340
-sub_013376:
+SpriteQueueReset:
 	move.l #0xffffa250,(0xffff9df6).l
 	move.l #0xffffa318,(0xffff9dfa).l
 	move.b #0x0,(0xffff9df2).l
@@ -15443,7 +18807,7 @@ sub_013866:
 loc_01387A:
 	cmpi.w #0xffff,(a4)
 	beq.w loc_013908
-	jsr (sub_00930E).l
+	jsr (ObjAlloc).l
 	move.w (a4)+,d6
 	add.w (0xffffa238).l,d6
 	move.w d6,(0x2,a6)
@@ -15489,20 +18853,20 @@ sub_013C74:
 	move.w #0xf8,d0
 loc_013C7A:
 	move.w d0,-(sp)
-	jsr (sub_011D12,pc)
-	jsr (sub_004752).l
+	jsr (VdpListReset,pc)
+	jsr (ScrollRows).l
 	cmpi.w #0x5,(0xffff80cc).l
 	bne.s loc_013C96
-	jsr (sub_004820).l
+	jsr (BgStreamL5).l
 loc_013C96:
 	cmpi.w #0x6,(0xffff80cc).l
 	bne.s loc_013CA6
-	jsr (sub_0047CE).l
+	jsr (BgStreamL6).l
 loc_013CA6:
-	jsr (sub_013376).l
-	jsr (sub_00B398).l
-	jsr (sub_011D28,pc)
-	jsr (sub_011D32,pc)
+	jsr (SpriteQueueReset).l
+	jsr (ObjRunAll).l
+	jsr (VdpListEnd,pc)
+	jsr (VdpListRun,pc)
 	move.w (sp)+,d0
 	dbra d0,loc_013C7A
 	movea.l (sp)+,a0
@@ -15680,7 +19044,7 @@ loc_013F22:
 	cmpi.w #0x5,d0
 	bne.s loc_013F42
 loc_013F28:
-	jsr (sub_00881C).l
+	jsr (Random).l
 	andi.w #0x7,d0
 	cmpi.w #0x7,d0
 	beq.s loc_013F28
@@ -15759,7 +19123,7 @@ loc_01401A:
 	move.w (0xffff9e42).l,d7
 	cmpi.w #0xb,(a6)
 	bne.s loc_014048
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	bra.s loc_01404C
 loc_014048:
 	jsr (sub_0122CA,pc)
@@ -15916,7 +19280,7 @@ loc_014220:
 	move.w (0xe,a6),d3
 	move.w #0xc000,d6
 	move.w (0xffff9e42).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	bra.w loc_0140A2
 loc_014242:
 	move.w #0x2a7,d1
@@ -15991,9 +19355,9 @@ loc_014582:
 loc_01458A:
 	move.w #0x7,d0
 	jsr (sub_013E30).l
-	jmp (loc_00719A).l
+	jmp (sub_00719A).l
 loc_01459A:
-	jmp (loc_007138).l
+	jmp (PickupSmartBomb).l
 sub_0145A0:
 	move.w d7,-(sp)
 	move.w (0x24,a6),d0
@@ -16006,13 +19370,13 @@ sub_0145A0:
 	andi.w #0xff,d0
 	eori.w #0xff,d0
 	moveq #0x0,d1
-	jsr (sub_011F58,pc)
+	jsr (VdpQueueVScroll,pc)
 	bra.w loc_0145F4
 loc_0145CC:
 	bne.s loc_0145E0
 	move.w #0x0,d0
 	moveq #0x0,d1
-	jsr (sub_011F58,pc)
+	jsr (VdpQueueVScroll,pc)
 	bsr.w sub_00D0F8
 	bra.w loc_0145F4
 loc_0145E0:
@@ -16021,7 +19385,7 @@ loc_0145E0:
 	move.w #0x0,(0x24,a6)
 loc_0145F4:
 	move.w (sp)+,d7
-	jmp (sub_00B3BE).l
+	jmp (ObjNext).l
 sub_0145FC:
 	move.w d7,-(sp)
 	move.w (0x24,a6),d0
@@ -16035,7 +19399,7 @@ sub_0145FC:
 	moveq #0x18,d3
 	move.l #0xe000,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	bra.w loc_014732
 loc_014630:
 	cmpi.w #0xff40,d0
@@ -16106,34 +19470,34 @@ loc_014716:
 	bra.w loc_014732
 loc_014732:
 	move.w (sp)+,d7
-	jmp (sub_00B3BE).l
+	jmp (ObjNext).l
 sub_01473A:
 	move.w (0xffff9e38).l,d7
 	moveq #0x10,d2
 	moveq #0x18,d3
 	move.l #0x8000,d6
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	rts
 sub_014750:
 	move.w (0xffff9e34).l,d7
 	moveq #0x10,d2
 	moveq #0x18,d3
 	move.l #0xe000,d6
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	rts
 sub_014766:
 	move.w (0xffff9e38).l,d7
 	moveq #0x8,d2
 	moveq #0x18,d3
 	move.l #0x8000,d6
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	rts
 sub_01477C:
 	move.w (0xffff9e34).l,d7
 	moveq #0x8,d2
 	moveq #0x18,d3
 	move.l #0xe000,d6
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	rts
 sub_014792:
 	move.w d7,-(sp)
@@ -16159,10 +19523,10 @@ sub_014792:
 	moveq #0xa,d3
 	move.w (0xffff9e38).l,d7
 	move.w #0x8000,d6
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 loc_0147E2:
 	move.w (sp)+,d7
-	jmp (sub_00B3BE).l
+	jmp (ObjNext).l
 | data 0x0147EA-0x01480A
 dat_0147EA:
 	dc.l dat_0A64D6
@@ -16187,7 +19551,7 @@ sub_01480A:
 	move.w (0xffff9e38).l,d7
 	tst.w d6
 	bne.s loc_014838
-	jsr (sub_012234,pc)
+	jsr (VdpQueueTileRect,pc)
 	bra.s loc_014844
 loc_014838:
 	move.w #0x8000,d6
@@ -16195,7 +19559,7 @@ loc_014838:
 	jsr (sub_01227A,pc)
 loc_014844:
 	rts
-| data 0x014846-0x0151F0
+| data 0x014846-0x0151CC
 dat_014846:
 	dc.l dat_0A67F6
 	dc.l dat_0A6804
@@ -16205,27 +19569,38 @@ dat_014846:
 	dc.l dat_0A6FF4
 	dc.l dat_0A6FF4
 	dc.l dat_0A6FF4
-	.incbin "baserom.md",0x14866,0x98A
+	.incbin "baserom.md",0x14866,0x966
+sub_0151CC:
+	movem.w (0x2,a6),d0-d1
+	move.w (0x6,a6),d2
+	subq.w #0x1,d2
+	subi.w #0x14,d1
+	jsr (sub_01253C).l
+	move.l #0x151ea,(0x20,a6)
+sub_0151EA:
+	move.w #0x375,d1
+	bra.s sub_0151F4
 sub_0151F0:
 	move.w #0x374,d1
-	jsr (sub_012316,pc)
+sub_0151F4:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
-	bsr.w sub_013228
-	jmp (sub_00B3BE).l
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
+	jmp (ObjNext).l
 sub_015208:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	bra.s sub_015224
-loc_015212:
+sub_015212:
 	move.w #0x376,d1
-loc_015216:
-	jsr (sub_012316,pc)
+sub_015216:
+	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
-	jsr (sub_012332,pc)
-	bsr.w sub_013228
+	jsr (ObjKillIfLeftOf,pc)
+	bsr.w ObjQueueSprite
 sub_015224:
-	jmp (sub_00B3BE).l
+	jmp (ObjNext).l
 sub_01522A:
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_01523C
@@ -16234,9 +19609,9 @@ sub_01522A:
 loc_01523C:
 	move.w (0x24,a6),d0
 	btst.b #0x2,d0
-	beq.s loc_015212
+	beq.s sub_015212
 	moveq #0x0,d1
-	bra.s loc_015216
+	bra.s sub_015216
 sub_01524A:
 	tst.w (0x26,a6)
 	bne.s loc_01526C
@@ -16247,7 +19622,7 @@ sub_01524A:
 	move.w #0xe238,d3
 	bsr.w sub_015272
 loc_01526C:
-	jmp (sub_00B3BE).l
+	jmp (ObjNext).l
 sub_015272:
 	tst.w (0x24,a4)
 	bmi.s loc_015288
@@ -16259,15 +19634,15 @@ sub_015272:
 loc_015288:
 	rts
 sub_01528A:
-	jsr (sub_011D12).l
+	jsr (VdpListReset).l
 	jsr (sub_007F00).l
-	jsr (sub_011D28).l
-	jsr (sub_011D32).l
+	jsr (VdpListEnd).l
+	jsr (VdpListRun).l
 	tst.b (a0)
 	bne.s sub_01528A
 	rts
 | data 0x0152A8-0x01DB36
-dat_0152A8:
+SpriteMappings:
 	.incbin "baserom.md",0x152A8,0x888E
 sub_01DB36:
 	lea.l (0xc00004).l,a6
@@ -16540,7 +19915,11 @@ loc_01E4F2:
 loc_01E502:
 	rts
 | data 0x01E504-0x0FBAD2
-	.incbin "baserom.md",0x1E504,0x27BA
+	.incbin "baserom.md",0x1E504,0xDDE
+dat_01F2E2:
+	.incbin "baserom.md",0x1F2E2,0x17F6
+dat_020AD8:
+	.incbin "baserom.md",0x20AD8,0x1E6
 dat_020CBE:
 	.incbin "baserom.md",0x20CBE,0x3B58
 dat_024816:
@@ -16630,7 +20009,15 @@ dat_04A818:
 dat_04E26A:
 	.incbin "baserom.md",0x4E26A,0x1A
 dat_04E284:
-	.incbin "baserom.md",0x4E284,0x296A
+	.incbin "baserom.md",0x4E284,0x3E0
+dat_04E664:
+	.incbin "baserom.md",0x4E664,0x16
+dat_04E67A:
+	.incbin "baserom.md",0x4E67A,0xC
+dat_04E686:
+	.incbin "baserom.md",0x4E686,0x10
+dat_04E696:
+	.incbin "baserom.md",0x4E696,0x2558
 dat_050BEE:
 	.incbin "baserom.md",0x50BEE,0x2DE2
 dat_0539D0:
@@ -16640,7 +20027,9 @@ dat_0539EE:
 dat_053D40:
 	.incbin "baserom.md",0x53D40,0x370
 dat_0540B0:
-	.incbin "baserom.md",0x540B0,0x17A4
+	.incbin "baserom.md",0x540B0,0xE22
+dat_054ED2:
+	.incbin "baserom.md",0x54ED2,0x982
 dat_055854:
 	.incbin "baserom.md",0x55854,0x1F24
 dat_057778:
@@ -16658,11 +20047,17 @@ dat_059EEC:
 dat_059F68:
 	.incbin "baserom.md",0x59F68,0x2964
 dat_05C8CC:
-	.incbin "baserom.md",0x5C8CC,0x5356
+	.incbin "baserom.md",0x5C8CC,0x31C6
+dat_05FA92:
+	.incbin "baserom.md",0x5FA92,0x30
+dat_05FAC2:
+	.incbin "baserom.md",0x5FAC2,0x2160
 dat_061C22:
 	.incbin "baserom.md",0x61C22,0x3642
 dat_065264:
-	.incbin "baserom.md",0x65264,0x33E4
+	.incbin "baserom.md",0x65264,0x1440
+dat_0666A4:
+	.incbin "baserom.md",0x666A4,0x1FA4
 dat_068648:
 	.incbin "baserom.md",0x68648,0x4DF6
 dat_06D43E:
@@ -16670,7 +20065,11 @@ dat_06D43E:
 dat_06D582:
 	.incbin "baserom.md",0x6D582,0x38C
 dat_06D90E:
-	.incbin "baserom.md",0x6D90E,0x3CE
+	.incbin "baserom.md",0x6D90E,0x18
+dat_06D926:
+	.incbin "baserom.md",0x6D926,0x18
+dat_06D93E:
+	.incbin "baserom.md",0x6D93E,0x39E
 dat_06DCDC:
 	.incbin "baserom.md",0x6DCDC,0x17F4
 dat_06F4D0:

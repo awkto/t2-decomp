@@ -1,0 +1,17 @@
+# Indirect jmp/jsr sites resolved by hand: site  reason.  The targets are seeds in tools/py/seeds.txt;
+# tools/py/disasm.py marks these sites SEEDED in data/indirect.txt.  Details: docs/subsystems/objects.md, levels.md.
+001430  OPTIONS item action: options_values record +$A, copied from ROM $0014F2 (5 records)
+001566  sound-test item: table $001568 of 7 longs
+0057fc  object hit test +$1C (HitAllShootable): every move.l of an immediate to +$1C and every spawn template
+005832  on-hit/kill routine from hit_list (HitBox a2, then the a0 it returns)
+005834  kill routine returned in a0 by the on-hit routine
+0058b4  object hit test +$1C (ShotHitTest)
+005920  on-hit routine from hit_list (lea X(pc),a2 before jsr/jmp HitBox)
+00592e  kill routine returned in a0 by the on-hit routine (lea X(pc),a0; rts)
+00703a  PickupHitTable $007048[type], entries 1..13
+0073d6  object hit test +$1C (MissileFindTarget)
+009384  ScriptOps $00938A[opcode], entries 1..62
+00a142  ScrNative: routine address from the level script (tools/py/levelscript.py lists them)
+00b3b6  object AI +$20 (ObjRunAll): every move.l of an immediate to +$20 and every spawn template
+00fede  object AI +$20 just stored (jump to the new state)
+0114be  object AI +$20 just stored (jump to the new state)
