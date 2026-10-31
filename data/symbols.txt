@@ -1,13 +1,54 @@
 # ROM symbols: addr name   # note.  Overrides the generated sub_/loc_/dat_ names in src/t2.s,
-# data/functions.txt, data/callgraph.txt.  Names must be valid assembler identifiers and unique.
-# "?" = guess.
+# data/functions.txt, data/callgraph.txt.  Names must be valid assembler identifiers and unique. "?" = guess.
+# Evidence for the input/gun routines: docs/gun.md.
 
-# ---- boot / interrupts
-000200 Reset             # entry point (vector 1)
-000306 unused_vector     # every unused exception vector points here (rte)
-000308 VBlank            # vector 30 (level 6)
-00039E ExtInt            # vector 26 (level 2, external interrupt)
+000200 Reset                  # reset vector
+000306 IntNull                # rte; all unused vectors
+000308 VBlankInt              # level 6: Menacer button read on port 2 (TR/TL handshake), latch count copy, vblank_count++, sound
+00039E ExtInt                 # level 2 (TH): first latch per frame -> HV counter $C00008 into gun_ring
+0003DE ReadInput              # per control_mode: pads ($0088A0/$008908) and/or Menacer buttons ($01E442) -> $FF8000/$FF8050
+0004B6 ReadInputAim           # ReadInput + crosshair: pad accel ($0005FC) or Menacer X/Y, Y clamp 24..200, queue crosshair
+0005FC PadMoveCrosshair       # d-pad -> X/Y with acceleration table $000738, X 8..312, Y 24..200
+00071C QueueCrosshair         # QueueSprite(id = player index + 1, X, Y)
+000738 PadAccelTable          # data, 10 words: 1,1,1,2,2,3,4,5,6,8 px/frame
+00074C PlayersButtons         # PlayerButtons + PlayerShoot for P1 then P2
+00076A PlayerButtons          # A/trigger: gunpower drain, fire on edge, autofire; B: missile (Menacer: 2-frame debounce)
+00086C PlayerShoot            # if fire_flag: reload autofire, hit test ($005892) with damage 2*gun type, impact sprite
+000900 ColdStart              # after reset: attract / title / menu / demo loop
+000C78 CheatCodeCheck         # called from PressStartLoop: pad-1 sequence U D L R U D L R -> cheat_levelskip
+000CBA CheatCodeTable         # data, 8 bytes: 01 02 04 08 01 02 04 08
+000E22 WaitStartWindow        # pad 1 Start accepted between vblank_count 180 and 300 (intro logo screen)
+000F84 MainMenuLoop           #
+000FF0 MenuModeTable          # data: menu row -> control_mode (4, 5, 0, 1)
+001164 MainMenuInput          # pad 1 only: U/D move, Start selects
+0013A2 OptionsInput           # pad 1 only: U/D row, L/R value, A/B/C run item, Start exit
+001A30 TitleScreen            #
+001B72 PressStartLoop         # "PRESS START": pad 1 Start, cheat check, 600-frame timeout
+001BD4 ReadPort1Id            # peripheral id of port 1 ($D = 3-button pad)
+001BE8 ReadPort2Id            # peripheral id of port 2 (0 = Menacer)
+003EFE SortHiScores           # sorts hiscore_table
+003F3C DefaultHiScores        # data
+005892 ShotHitTest            # walks obj_table, collects hits at shot_xy, damages the front-most object
+005940 HitBox                 # object bbox test: (a3) = x-off, y-off, w, h
+00745C GameStart              # game init (Menacer init / port 2 pad init by mode), level loop
+007676 GameLoopPauseCheck     # Start edge on a playing player's device -> pause; in pause cheat B+C ends level
+007A92 BcdAdd                 #
+0086E2 WaitVBlank             # waits for vblank_count to change
+0088A0 ReadPad1               # 3-button pad on port 1 -> $FF8050 (word, b7 Start b6 A b5 C b4 B b3 R b2 L b1 D b0 U)
+008908 ReadPad2               # 3-button pad on port 2 -> $FF8000
+00884C InitPort1              #
+008876 InitPort2              #
+008D68 PlayerDied             # credits? continue (1P countdown / 2P wait) : out
+008DFE ContinueCountdown      # 1P: $17F frames, polls the player's own device (ReadInput) for Start
+009104 EnergyHud              # energy bars, ENERGY LOW
+009186 GunpowerHud            #
+0091C4 GunpowerFirePeriod     # p?_fire_period from gunpower, powerup timers
+013240 QueueSprite            # d1 id, d2 X, d3 Y, d5 priority
+013272 BuildSpriteTable       #
+01E346 MenacerInit            # offsets, H table, TH interrupt on port 2 ctrl ($A1000B = $B0), VDP reg0 = $06 (reg0 reads $04 again in gameplay: latch bit off)
+01E3B0 MenacerBuildHTable     # args (stack): Y offset add, H offset add, 16.16 step ($12000 = 1.125)
+01E442 MenacerReadXY          # buttons gun_btn; average 8 (moving) or 16 (still) ring latches -> gun_x / gun_y
 
 # ---- sound (Z80)
-0FC312 z80_boot_stub     # 28 bytes of Z80 code/data copied to Z80 RAM $0000 by z80_load (sub_0FC350)
-0FC5CC z80_driver        # Z80 sound driver blob, $1400 bytes ($0FC5CC-$0FD9CB), copied to Z80 RAM $0C00 (full Z80 disassembly: later)
+0FC312 z80_boot_stub          # 28 bytes of Z80 code/data copied to Z80 RAM $0000 by z80_load (sub_0FC350)
+0FC5CC z80_driver             # Z80 sound driver blob, $1400 bytes ($0FC5CC-$0FD9CB), copied to Z80 RAM $0C00

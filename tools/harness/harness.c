@@ -32,9 +32,33 @@
  *
  *   gun X Y BTN N         Menacer on port 2 (only with env GUN=1): aim at game pixel X,Y, hold BTN for N
  *                         frames (BTN bits: 1 trigger, 2 Menacer A, 4 Menacer B, 8 Start), then release.
- *                         The GPGX libretro core asks for RETRO_DEVICE_POINTER (pointer gun mode); both
- *                         POINTER and LIGHTGUN queries are answered.
+ *                         Bit 2 = libretro LIGHTGUN_AUX_A = GPGX INPUT_B = Menacer data bit D0,
+ *                         bit 4 = LIGHTGUN_AUX_B = INPUT_C = D2, 8 = LIGHTGUN_START = D3, 1 = trigger D1.
+ *                         By default (no core option) GPGX reads the gun as RETRO_DEVICE_POINTER
+ *                         ("touchscreen" gun mode), where ONLY the trigger is passed through (the
+ *                         non-bitmask input path ignores POINTER_COUNT). Run with env GUNMODE=lightgun
+ *                         to get A/B/Start too. Both POINTER and LIGHTGUN queries are answered.
+ *
+ * Env: GUN=1 plugs the Menacer into port 2; GUNMODE=lightgun|touchscreen sets the core option
+ *   genesis_plus_gx_gun_input; CORE_OPTS="key=value,key=value" answers other core options.
  *   gunoff 0|1            report the gun as off screen
+ *   gunhold X Y BTN       set the Menacer position/buttons and keep them (no frames run); later
+ *                         run/press/gun commands see this state ("gun" resets buttons to 0 after it)
+ *
+ *   Debug helpers (generic, use the cpu hook):
+ *   watch ADDR LEN        log every 68k write that touches [ADDR, ADDR+LEN) (any bus address, hex) to
+ *                         outdir/watch.log: "<frame> <pc> W<width> <addr> <value>"; up to 16 ranges
+ *   unwatch               remove all watch ranges
+ *   bp ADDR               log every execution of the instruction at ADDR (hex) to outdir/bp.log:
+ *                         "<frame> <addr>"; up to 32 addresses; bpclear removes them.
+ *                         Both logs stop after 200000 lines.
+ *   peekeach LABEL ADDR [W]   like peek, but checked after every frame and logged when the value
+ *                         changes (up to 32); "peekeach off" clears the list
+ *   waitfor ADDR W VAL MAX    run frames until the RAM value at ADDR (W bytes) equals VAL (hex), at
+ *                         most MAX frames; logs "<frame> waitfor ADDR ok|timeout" to peek.log
+ *   sprites NAME          write outdir/NAME.spr: the VDP sprite table walked in link order, one line
+ *                         per sprite "idx x y w h tile pal pri hf vf link" with x/y in screen pixels
+ *                         (raw - 128)  [needs vdptrace core exports vram/reg]
  *   (roomsave is a scooby-decomp leftover: it watches Scooby's room variables)
  *
  * At exit writes outdir/cov.bin: one byte per ROM byte,
@@ -125,6 +149,22 @@ static void roomwatch(void)
 	}
 }
 
+static struct { char lab[64]; unsigned a; int w; uint32_t last; int init; } peeks[32];
+static int npeek;
+static uint32_t rd_ram(unsigned a, int w)
+{
+	const uint8_t *wram = p_retro_get_memory_data(RETRO_MEMORY_SYSTEM_RAM);
+	uint32_t v = 0;
+	for (int i = 0; i < w; i++)
+		v = (v << 8) | wram[((a & 0xFFFF) + i) ^ 1];
+	return v;
+}
+static FILE *peeklog(void)
+{
+	if (!peekf) { char pp[1024]; snprintf(pp, sizeof pp, "%s/peek.log", outdir); peekf = fopen(pp, "a"); }
+	return peekf;
+}
+
 static void step(void)
 {
 	if (recf) {
@@ -135,11 +175,55 @@ static void step(void)
 	}
 	p_retro_run();
 	frame++;
+	for (int i = 0; i < npeek; i++) {
+		uint32_t v = rd_ram(peeks[i].a, peeks[i].w);
+		if (!peeks[i].init || v != peeks[i].last) {
+			fprintf(peeklog(), "%ld %s %0*x\n", frame, peeks[i].lab, peeks[i].w * 2, v);
+			peeks[i].last = v; peeks[i].init = 1;
+		}
+	}
 	if (rs_on)
 		roomwatch();
 }
 static unsigned cur_pc;
 static long last_rom = -1;
+
+static struct { unsigned a, n; } watches[16];
+static int nwatch;
+static unsigned bps[32];
+static int nbp;
+static FILE *watchf, *bpf;
+static long watch_lines, bp_lines;
+
+static FILE *open_log(FILE **f, const char *name)
+{
+	if (!*f) {
+		char pp[1024];
+		snprintf(pp, sizeof pp, "%s/%s", outdir, name);
+		*f = fopen(pp, "a");
+	}
+	return *f;
+}
+
+static void dbg_hook(int type, int width, unsigned addr, unsigned value)
+{
+	if (type == HOOK_M68K_W) {
+		for (int i = 0; i < nwatch; i++)
+			if (addr + width > watches[i].a && addr < watches[i].a + watches[i].n) {
+				if (watch_lines++ < 200000 && open_log(&watchf, "watch.log"))
+					fprintf(watchf, "%ld %06x W%d %06x %0*x\n", frame, cur_pc, width, addr, width * 2,
+					        value & (width == 4 ? 0xFFFFFFFFu : (1u << (8 * width)) - 1));
+				break;
+			}
+	} else if (type == HOOK_M68K_E) {
+		for (int i = 0; i < nbp; i++)
+			if (bps[i] == addr) {
+				if (bp_lines++ < 200000 && open_log(&bpf, "bp.log"))
+					fprintf(bpf, "%ld %06x\n", frame, addr);
+				break;
+			}
+	}
+}
 
 static void hook(int type, int width, unsigned int addr, unsigned int value)
 {
@@ -155,6 +239,8 @@ static void hook(int type, int width, unsigned int addr, unsigned int value)
 		return;
 	}
 	addr &= 0xFFFFFF;
+	if (nwatch || nbp)
+		dbg_hook(type, width, addr, value);
 	if (type == HOOK_M68K_E)
 		cur_pc = addr;
 	if (type == HOOK_M68K_E && addr >= 0xFF0000) {
@@ -200,6 +286,34 @@ static bool env_cb(unsigned cmd, void *data)
 	case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
 		*(const char **)data = outdir;
 		return true;
+	case RETRO_ENVIRONMENT_GET_VARIABLE: {
+		/* core options from env CORE_OPTS="key=value,key=value"; GUNMODE=lightgun|touchscreen
+		   is a shortcut for genesis_plus_gx_gun_input */
+		struct retro_variable *v = data;
+		static char val[16][128];
+		static int vi;
+		const char *gm = getenv("GUNMODE");
+		if (gm && !strcmp(v->key, "genesis_plus_gx_gun_input")) {
+			v->value = gm;
+			return true;
+		}
+		const char *o = getenv("CORE_OPTS");
+		size_t kl = strlen(v->key);
+		while (o && *o) {
+			if (!strncmp(o, v->key, kl) && o[kl] == '=') {
+				const char *e = strchr(o + kl + 1, ',');
+				size_t n = e ? (size_t)(e - (o + kl + 1)) : strlen(o + kl + 1);
+				char *b = val[vi++ & 15];
+				snprintf(b, 128, "%.*s", (int)n, o + kl + 1);
+				v->value = b;
+				return true;
+			}
+			o = strchr(o, ',');
+			if (o) o++;
+		}
+		v->value = NULL;
+		return false;
+	}
 	case RETRO_ENVIRONMENT_GET_CAN_DUPE:
 		*(bool *)data = true;
 		return true;
@@ -363,6 +477,60 @@ int main(int argc, char **argv)
 		int gx, gy, gb;
 		if (!strcmp(cmd, "gun") && sscanf(line, "%*s %d %d %d %d", &gx, &gy, &gb, &n) == 4) {
 			gun_x = gx; gun_y = gy; gun_btn = gb; while (n--) step(); gun_btn = 0;
+		} else if (!strcmp(cmd, "gunhold") && sscanf(line, "%*s %d %d %d", &gx, &gy, &gb) == 3) {
+			gun_x = gx; gun_y = gy; gun_btn = gb;
+		} else if (!strcmp(cmd, "watch")) {
+			unsigned a, len = 1;
+			if (sscanf(line, "%*s %x %x", &a, &len) >= 1 && nwatch < 16) {
+				watches[nwatch].a = a & 0xFFFFFF; watches[nwatch].n = len; nwatch++;
+			}
+		} else if (!strcmp(cmd, "unwatch")) {
+			nwatch = 0;
+			if (watchf) fflush(watchf);
+		} else if (!strcmp(cmd, "bp")) {
+			unsigned a;
+			if (sscanf(line, "%*s %x", &a) == 1 && nbp < 32) bps[nbp++] = a & 0xFFFFFF;
+		} else if (!strcmp(cmd, "bpclear")) {
+			nbp = 0;
+			if (bpf) fflush(bpf);
+		} else if (!strcmp(cmd, "peekeach")) {
+			char lab[64]; unsigned a; int w = 2;
+			if (sscanf(line, "%*s %63s", lab) == 1 && !strcmp(lab, "off"))
+				npeek = 0;
+			else if (sscanf(line, "%*s %63s %x %d", lab, &a, &w) >= 2 && npeek < 32) {
+				snprintf(peeks[npeek].lab, sizeof peeks[npeek].lab, "%s", lab);
+				peeks[npeek].a = a; peeks[npeek].w = w; peeks[npeek].init = 0; npeek++;
+			}
+		} else if (!strcmp(cmd, "waitfor")) {
+			unsigned a, v; int w, max;
+			if (sscanf(line, "%*s %x %d %x %d", &a, &w, &v, &max) == 4) {
+				int ok = 0;
+				while (max-- > 0) {
+					if (rd_ram(a, w) == v) { ok = 1; break; }
+					step();
+				}
+				if (!ok) ok = rd_ram(a, w) == v;
+				fprintf(peeklog(), "%ld waitfor %06x %s\n", frame, a, ok ? "ok" : "timeout");
+				fflush(peekf);
+			}
+		} else if (!strcmp(cmd, "sprites") && sscanf(line, "%*s %255s", arg) == 1) {
+			if (!p_vram || !p_reg) { fprintf(stderr, "sprites: core lacks vram/reg exports\n"); continue; }
+			char path[1024];
+			snprintf(path, sizeof path, "%s/%s.spr", outdir, arg);
+			FILE *f = fopen(path, "w");
+			unsigned base = (p_reg[5] & ((p_reg[12] & 1) ? 0x7E : 0x7F)) << 9;
+			int max = (p_reg[12] & 1) ? 80 : 64, idx = 0;
+			fprintf(f, "# SAT base %04x\n# idx x y w h tile pal pri hf vf link\n", base);
+			for (int n = 0; n < max; n++) {
+				const uint16_t *e = (const uint16_t *)(p_vram + ((base + idx * 8) & 0xFFFF));
+				unsigned y = e[0] & 0x3FF, sz = (e[1] >> 8) & 15, link = e[1] & 0x7F, at = e[2], x = e[3] & 0x1FF;
+				fprintf(f, "%d %d %d %d %d %03x %u %u %u %u %u\n", idx, (int)x - 128, (int)y - 128,
+				        ((sz >> 2) & 3) + 1, (sz & 3) + 1, at & 0x7FF, (at >> 13) & 3, at >> 15,
+				        (at >> 11) & 1, (at >> 12) & 1, link);
+				if (!link || link >= (unsigned)max) break;
+				idx = link;
+			}
+			fclose(f);
 		} else if (!strcmp(cmd, "gunoff") && sscanf(line, "%*s %d", &gun_off) == 1) {
 		} else if (!strcmp(cmd, "run") && sscanf(line, "%*s %d", &n) == 1) {
 			while (n--) step();
@@ -491,6 +659,8 @@ int main(int argc, char **argv)
 	}
 	rec_flush();
 	if (recf) fclose(recf);
+	if (watchf) fclose(watchf);
+	if (bpf) fclose(bpf);
 	char path[1024];
 	snprintf(path, sizeof path, "%s/cov.bin", outdir);
 	FILE *cf = fopen(path, "wb");

@@ -3,44 +3,44 @@
 # size = contiguous bytes from the entry; every traced instruction belongs to exactly one function.
 # Entry = bsr/jsr target, vector/table/indirect target, stored code pointer, or promoted shared tail/orphan.
 000200   142 Reset  # 105 insns +0002fa:12 +000900:158 +007406:86
-000306     2 unused_vector  # 1 insns
-000308   150 VBlank  # 32 insns
+000306     2 IntNull  # 1 insns
+000308   150 VBlankInt  # 32 insns
 00039e    64 ExtInt  # 15 insns
-0003de   216 sub_0003DE  # 52 insns
-0004b6   326 sub_0004B6  # 76 insns
-0005fc   288 sub_0005FC  # 76 insns
-00071c    28 sub_00071C  # 8 insns
-00074c    30 sub_00074C  # 7 insns
-00076a   258 sub_00076A  # 63 insns
-00086c   148 sub_00086C  # 32 insns
+0003de   216 ReadInput  # 52 insns
+0004b6   326 ReadInputAim  # 76 insns
+0005fc   288 PadMoveCrosshair  # 76 insns
+00071c    28 QueueCrosshair  # 8 insns
+00074c    30 PlayersButtons  # 7 insns
+00076a   258 PlayerButtons  # 63 insns
+00086c   148 PlayerShoot  # 32 insns
 00099e   150 sub_00099E  # 31 insns
-000c78    66 sub_000C78  # 15 insns
+000c78    66 CheatCodeCheck  # 15 insns
 000cc6   124 sub_000CC6  # 28 insns
 000d42    52 sub_000D42  # 11 insns
 000d76   172 sub_000D76  # 37 insns
-000e22    62 sub_000E22  # 16 insns
+000e22    62 WaitStartWindow  # 16 insns
 000e60    84 sub_000E60  # 21 insns
 000ed4   284 sub_000ED4  # 84 insns +001344:94
-000ff0     4 sub_000FF0  # 1 insns
+000ff0     4 MenuModeTable  # 1 insns
 000ff6    52 sub_000FF6  # 11 insns
 00102a    78 sub_00102A  # 23 insns
 00107e    58 sub_00107E  # 15 insns
 0010b8   120 sub_0010B8  # 29 insns
 001130    52 sub_001130  # 11 insns
-001164   106 sub_001164  # 31 insns
+001164   106 MainMenuInput  # 31 insns
 0011ce    16 sub_0011CE  # 8 insns
-0013a2   258 sub_0013A2  # 80 insns
+0013a2   258 OptionsInput  # 80 insns
 0014a4    36 sub_0014A4  # 10 insns
 0014c8    22 sub_0014C8  # 5 insns
 0014de    20 sub_0014DE  # 6 insns
 0015a2    74 sub_0015A2  # 18 insns
 0015ec   316 sub_0015EC  # 67 insns
 001a1e    18 sub_001A1E  # 5 insns
-001a30     8 sub_001A30  # 26 insns +001b72:98
+001a30     8 TitleScreen  # 26 insns +001b72:98
 001a38   164 sub_001A38  # 34 insns
 001adc   150 sub_001ADC  # 40 insns
-001bd4    20 sub_001BD4  # 4 insns
-001be8    18 sub_001BE8  # 3 insns
+001bd4    20 ReadPort1Id  # 4 insns
+001be8    18 ReadPort2Id  # 3 insns
 001bfa    80 sub_001BFA  # 31 insns
 001c4a   140 sub_001C4A  # 28 insns
 001d3a   122 sub_001D3A  # 35 insns
@@ -91,7 +91,7 @@
 003bf2    20 sub_003BF2  # 6 insns
 003c06    48 sub_003C06  # 12 insns
 003ec8    54 sub_003EC8  # 10 insns
-003efe    62 sub_003EFE  # 18 insns
+003efe    62 SortHiScores  # 18 insns
 003f98   236 sub_003F98  # 59 insns
 0041e6    44 sub_0041E6  # 11 insns
 004212    60 sub_004212  # 13 insns
@@ -112,7 +112,7 @@
 0056fa    14 sub_0056FA  # 3 insns
 005708    18 sub_005708  # 5 insns
 0057ba   216 sub_0057BA  # 61 insns
-005892   174 sub_005892  # 52 insns
+005892   174 ShotHitTest  # 52 insns
 00597a     2 sub_00597A  # 1 insns
 00597c    12 sub_00597C  # 23 insns +005940:58
 005988     6 sub_005988  # 2 insns
@@ -121,9 +121,9 @@
 007086    68 sub_007086  # 21 insns
 0070ca    28 sub_0070CA  # 8 insns
 0073a0   102 sub_0073A0  # 28 insns
-00745c  1554 sub_00745C  # 316 insns
+00745c  1554 GameStart  # 316 insns
 007a6e    36 sub_007A6E  # 14 insns
-007a92    66 sub_007A92  # 23 insns
+007a92    66 BcdAdd  # 23 insns
 007ad4    22 sub_007AD4  # 8 insns
 007aea    20 sub_007AEA  # 5 insns
 007afe    22 sub_007AFE  # 5 insns
@@ -172,7 +172,7 @@
 00867a    34 sub_00867A  # 13 insns
 0086c4    20 sub_0086C4  # 6 insns
 0086d8    10 sub_0086D8  # 3 insns
-0086e2    20 sub_0086E2  # 6 insns
+0086e2    20 WaitVBlank  # 6 insns
 0086f6    36 sub_0086F6  # 7 insns
 00871a    32 sub_00871A  # 6 insns
 00873a    20 sub_00873A  # 6 insns
@@ -183,10 +183,10 @@
 0087e6    34 sub_0087E6  # 10 insns
 008808    20 sub_008808  # 5 insns
 00881c    48 sub_00881C  # 16 insns
-00884c    42 sub_00884C  # 7 insns
-008876    42 sub_008876  # 7 insns
-0088a0   104 sub_0088A0  # 20 insns
-008908   104 sub_008908  # 20 insns
+00884c    42 InitPort1  # 7 insns
+008876    42 InitPort2  # 7 insns
+0088a0   104 ReadPad1  # 20 insns
+008908   104 ReadPad2  # 20 insns
 008970   150 sub_008970  # 54 insns
 008a06    18 sub_008A06  # 6 insns
 008a18    52 sub_008A18  # 10 insns
@@ -216,9 +216,9 @@
 00908a    18 sub_00908A  # 5 insns
 00909c    22 sub_00909C  # 5 insns
 0090b2    82 sub_0090B2  # 24 insns
-009104   130 sub_009104  # 36 insns
-009186    62 sub_009186  # 17 insns
-0091c4    72 sub_0091C4  # 23 insns
+009104   130 EnergyHud  # 36 insns
+009186    62 GunpowerHud  # 17 insns
+0091c4    72 GunpowerFirePeriod  # 23 insns
 00920c    54 sub_00920C  # 19 insns
 009242    56 sub_009242  # 19 insns
 00927a    22 sub_00927A  # 4 insns
@@ -752,8 +752,8 @@
 01320a     2 sub_01320A  # 1 insns
 01320c    28 sub_01320C  # 7 insns
 013228    24 sub_013228  # 8 insns
-013240    50 sub_013240  # 13 insns
-013272   260 sub_013272  # 83 insns
+013240    50 QueueSprite  # 13 insns
+013272   260 BuildSpriteTable  # 83 insns
 013376    30 sub_013376  # 4 insns
 013394    68 sub_013394  # 24 insns
 013470    16 sub_013470  # 4 insns
@@ -805,9 +805,9 @@
 01db36   260 sub_01DB36  # 84 insns
 01dc3a    20 sub_01DC3A  # 7 insns
 01dc4e    26 sub_01DC4E  # 7 insns
-01e346   106 sub_01E346  # 17 insns
-01e3b0   146 sub_01E3B0  # 40 insns
-01e442   194 sub_01E442  # 58 insns
+01e346   106 MenacerInit  # 17 insns
+01e3b0   146 MenacerBuildHTable  # 40 insns
+01e442   194 MenacerReadXY  # 58 insns
 0fbad2    16 sub_0FBAD2  # 3 insns
 0fbae2    30 sub_0FBAE2  # 6 insns
 0fbb00   108 sub_0FBB00  # 26 insns

@@ -1,0 +1,21 @@
+# Power-on -> title -> main menu -> "START 1 PLAYER USE MENACER" -> level 1 gameplay.
+# Run with GUN=1 GUNMODE=lightgun (lightgun mode is needed for Menacer A/B/C/Start; see harness header).
+# Saves states used by the other gun_*.txt scripts (run them with the same outdir):
+#   title  = "PRESS START" screen (cheat code input window, pad 1 only)
+#   menu   = main menu, cursor on START 1 PLAYER USE MENACER
+#   l1     = level 1, crosshair live, mode $FF9DF5 = 4
+run 1300
+press S 5
+run 480
+save title
+shot title
+press S 5
+run 180
+save menu
+shot menu
+press S 3
+run 1800
+peek mode FF9DF5 1
+peek level FF80CC 2
+save l1
+shot l1

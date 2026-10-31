@@ -1,0 +1,72 @@
+# T2: The Arcade Game (Genesis) - 68k work RAM map. Format: ADDR SIZE NAME # comment ("size?" = size not yet known, 1 assumed)
+# Addresses are full 24-bit ($FFxxxx). Evidence: docs/gun.md and tools/harness/scripts/gun_*.txt.
+#
+# --- player structs: P1 = $FF8000, P2 = $FF8050 (stride $50); fields relative to the struct
+FF8000 2 p1_buttons           # word, current buttons, pad layout b0 U b1 D b2 L b3 R b4 B b5 C b6 A b7 Start (1 = pressed)
+FF8002 2 p1_buttons_prev      # word, previous frame's buttons (edge detection)
+FF8004 2 p1_x                 # word, crosshair X (screen px, centre of the 16x16 crosshair sprite)
+FF8006 2 p1_y                 # word, crosshair Y (screen px); clamped 24..200 except in mode 2
+FF8008 2 p1_accel_up          # word x4 ($8008/$800A/$800C/$800E = U/D/L/R): pad crosshair accel index into $000738
+FF8010 2 p1_fire_timer        # word, autofire countdown while A/trigger held; fires at 0
+FF8012 2 p1_fire_period       # word, autofire reload = 2 + (7 - gunpower>>13) (+1 if gun type 3); 2..9 frames
+FF8014 2 p1_gun_type          # word, 1 = standard; set back to 1 when the powerup timer +$2C runs out; shot damage = 2*type
+FF8016 2 p1_missile_type      # word, 4 at start; 5/6 = special missiles (6 reverts to 5 when +$18 hits 0)
+FF8018 2 p1_missiles          # word, BCD missile count shown top left of the HUD (0025 at start, 0050 after continue)
+FF801A 2 p1_missiles_save     # word, BCD (copy of the count)
+FF801C 2 p1_gunpower          # word, $FFFF full; -$C0 per frame trigger held, +$60 per frame always (net -$60 held)
+FF801E 2 p1_energy            # word, $FFFF full; < $2000 plays ENERGY LOW; 0 = TERMINATED
+FF8020 2 p1_timer             # word, state timer (continue countdown $17F frames, etc.)
+FF8022 2 p1_state             # word, 0 playing, 2/3 dying, 4 out (game over), 7 waiting to continue (2P)
+FF8024 2 p1_index             # word, 0 = P1, 1 = P2, $FFFF = not playing; crosshair sprite id = index+1
+FF802A 2 p1_coolant_timer     # word, negative while gunpower does not drain (counts up to 0)
+FF802C 2 p1_powerup_timer     # word, counts up; gun type reset to 1 when it wraps to 0
+FF8050 1 p2_buttons           # size? P2 struct, same layout as P1 ($FF8050..$FF809F)
+FF8054 1 p2_x                 # size?
+FF8056 1 p2_y                 # size?
+FF8068 1 p2_missiles          # size?
+FF806C 1 p2_gunpower          # size?
+FF806E 1 p2_energy            # size?
+FF8074 1 p2_index             # size?
+#
+# --- game state
+FF80CA 1 credits              # byte, credits left (starts at OPTIONS value, default 4); continue costs 1
+FF80CC 2 level                # word, 1.. stage number; 0 = attract/none, $0A = high-score initials screen
+FF80DA 2 obj_count            # word, number of live object slots in obj_table (empty slots are skipped, not counted)
+FF87B2 1 obj_table            # size? object slots, stride $2C: +0 flags (b15 shootable), +2 X, +4 Y (screen px, feet),
+#   +8 hit points (word, signed; <0 = destroyed), +$1C long hit-test handler, +$20 long AI routine
+FF9DF2 1 spr_queue_n          # byte, sprite queue counter
+FF9DF5 1 control_mode         # byte: 4 = 1P Menacer, 5 = 1P pad 1, 0 = 2P Menacer + pad 1, 1 = 2P pad 1 + pad 2,
+#   2 = Menacer only (no menu entry), 7 = attract demo, 8 = demo interrupted.
+#   bit0 set = two pads, bit2 set = one player (a 2nd player joining clears bit 2)
+FF9DF6 4 spr_queue_ptr        # long
+FF9DFA 4 spr_queue_data       # long
+FF9E94 1 shot_xy              # size? 2 words, X,Y of the shot being resolved (copied from p?_x/p?_y)
+FF9EA4 2 sfx_request          # word
+FF9EA8 4 p1_score             # long, BCD, 8 digits
+FF9EB0 4 p2_score             # long, BCD
+FF9F60 2 menu_cursor          # word, main menu / options cursor row
+FF9F66 2 btn_prev2            # word, Menacer player's buttons two frames back (missile debounce)
+FF9F6D 1 players_alive        # byte, players still in the game (2 or 1)
+FF9F6E 2 gun_x                # word, Menacer X from MenacerReadXY (2*table[H]), 2..320, even values only
+FF9F70 2 gun_y                # word, Menacer Y = averaged V counter + gun_y_offset (not clamped)
+FF9F72 1 gun_btn              # byte, Menacer buttons this frame, inverted (1 = released): b0 D0(AUX_A) b1 trigger b2 D2(AUX_B) b3 Start
+FF9F73 1 gun_btn_prev         # byte
+FF9F74 1 gun_latch_count      # byte, TH latches seen during the last frame (0 = gun off screen, position kept)
+FF9F76 1 gun_latch_cur        # byte, latches this frame (L2 handler stores only the first)
+FF9F77 1 gun_btn_raw          # byte, buttons read in VBlank (inverted port 2 byte)
+FF9F78 2 gun_y_offset         # word, 8
+FF9F7A 2 gun_h_offset         # word, $108 after init (H counter $84 = X 0)
+FF9F7C 2 gun_9f7c             # word, 8 (set by MenacerInit, use unknown)
+FF9F7E 256 gun_htable           # 256 bytes, H counter -> X/2 (step 1.125 per H unit), built by MenacerBuildHTable
+FFA07E 1 gun_ring             # size? 16 words, ring of per-frame HV latches (V<<8 | H)
+FFA09E 4 gun_ring_ptr         # long, next write slot in gun_ring
+FFA0A2 1 fire_flag            # byte, $FF = a shot is due this frame (set on trigger edge or autofire)
+FFA0A6 1 cheat_levelskip      # byte, $FF after U D L R U D L R on pad 1 at "PRESS START"; then pause + B+C ends the level
+FFA0A7 1 p1_out_2p            # byte, set when P1 is out in a 2P game
+FFA0AC 2 cheat_index          # word, position in the cheat sequence
+FFA0CA 2 shot_damage          # word, damage of the shot being resolved (2 * gun type)
+FFA0EE 2 vblank_count         # word, incremented every VBlank
+FFA234 1 level_exit           # byte, nonzero = leave the current level/screen ($FF done, $FE game over)
+FFA238 2 saved_vblank         # word, vblank_count saved while paused
+FFAE84 14 options_values       # OPTIONS items, 14 bytes each (+0 value, +2 min, +4 max, +6 step): credits 3..5
+FFFF9E 4 hiscore_table        # 10 x 8 bytes: 3 ASCII initials + 0, BCD score long. Default STU 100000 .. BOB 10000
