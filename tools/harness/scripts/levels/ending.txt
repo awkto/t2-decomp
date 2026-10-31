@@ -1,0 +1,31 @@
+# The ending (CHEAT): the bot cannot win the steel mill yet, so this forces what its last object
+# does ($00E9EE: level_exit = 1 on level 8). The game then runs the ending (sub_0015EC: MISSION
+# COMPLETE, credits), twice: with $FFA0A8 (Cyberdyne equipment left, 287 at the start of level 5)
+# = 0 ("Cyberdyne has been destroyed") and = 287 ("research at Cyberdyne will continue"). Needs state lv08
+# (chain_skip_gun.txt), GUN=1 GUNMODE=lightgun. Saves ending_a / ending_b.
+load lv08
+peekeach level FF80CC 2
+peekeach exit FFA234 1
+bot 2000
+poke FFA0A8 2 0000
+poke FFA234 1 01
+run 300
+save ending_a
+run 2700
+shot ending_a1
+run 6000
+shot ending_a2
+bot until 0 30000
+shot ending_a_after
+load lv08
+bot 2000
+poke FFA0A8 2 011F
+poke FFA234 1 01
+run 300
+save ending_b
+run 2700
+shot ending_b1
+run 6000
+shot ending_b2
+bot until 0 30000
+shot ending_b_after
