@@ -232,9 +232,14 @@ def write_indirect(sites, insns, tables):
            "# Tables: start kind entries   (l = code pointers, w = word offsets from base, d = data-pointer table in a code-area gap)"]
     for t, (kind, base, n) in sorted(tables.items()):
         out.append(f"#   table {t:06x} {kind} x{n}" + (f" base {base:06x}" if kind == "w" else ""))
+    manual = load_indirect_notes()
+    out.append("# SEEDED = dynamic dispatch the slice cannot follow; its targets are listed in tools/py/seeds.txt"
+               " (reason from data/indirect_notes.txt)")
     for a, (tg, notes) in sorted(sites.items()):
         i = insns[a]
         status = "UNRESOLVED" if not tg else ("PARTIAL" if notes else "RESOLVED")
+        if not tg and a in manual:
+            status, notes = "SEEDED", [manual[a]]
         hows = sorted({h for _, h in tg})
         bad = [t for t, _ in tg if t not in insns]
         line = f"{a:06x}  {i.mnemonic} {i.op_str:<10}  {status}"
@@ -246,6 +251,18 @@ def write_indirect(sites, insns, tables):
             line += "  ; " + "; ".join(dict.fromkeys(notes))
         out.append(line)
     open(os.path.join(ROOT, "data", "indirect.txt"), "w").write("\n".join(out) + "\n")
+
+
+def load_indirect_notes():
+    """data/indirect_notes.txt: `site  note` for indirect sites whose targets come from seeds.txt."""
+    notes = {}
+    p = os.path.join(ROOT, "data", "indirect_notes.txt")
+    if os.path.exists(p):
+        for line in open(p):
+            body = line.split("#", 1)[0].split(None, 1)
+            if len(body) == 2:
+                notes[int(body[0], 16)] = body[1].strip()
+    return notes
 
 
 def load_gap_notes():
