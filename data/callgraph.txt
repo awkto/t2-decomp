@@ -32,6 +32,11 @@
 0014a4 sub_0014A4 -> BcdAdd sub_007E08
 0014c8 sub_0014C8 -> -
 0014de sub_0014DE -> -
+001538 sub_001538 -> sub_0FBB96^ sub_0FBBAE^
+00155e sub_00155E -> -
+001568 sub_001568 -> -
+001584 sub_001584 -> sub_0FBB6C^
+001598 sub_001598 -> -
 0015a2 sub_0015A2 -> sub_004212 sub_007F00 sub_0086D8 WaitVBlank sub_00871A sub_008A4C sub_011D12 sub_011D28 sub_011D32
 0015ec sub_0015EC -> sub_001A1E sub_004212 sub_007DEE sub_007F00 sub_0086D8 WaitVBlank sub_00874E sub_008A4C sub_008A7C sub_011D12 sub_011D28 sub_011D32 sub_011F58 sub_0122CA sub_01320A
 001a1e sub_001A1E -> sub_007DF6^
@@ -112,13 +117,253 @@
 005708 sub_005708 -> -
 0057ba sub_0057BA -> sub_01253C sub_01254E
 005892 ShotHitTest -> -
+005940 HitBox -> -
 00597a sub_00597A -> -
-00597c sub_00597C -> -
+00597c sub_00597C -> HitBox^
 005988 sub_005988 -> -
 00598e sub_00598E -> -
+0059ac sub_0059AC -> HitBox
+0059e6 sub_0059E6 -> sub_0072F8
+005a00 sub_005A00 -> -
+005a02 sub_005A02 -> -
+005a08 sub_005A08 -> sub_0072F8
+005a24 sub_005A24 -> -
+005a48 sub_005A48 -> HitBox^
+005a54 sub_005A54 -> -
+005a5a sub_005A5A -> sub_0072F8
+005a80 sub_005A80 -> HitBox^
+005a8c sub_005A8C -> -
+005a92 sub_005A92 -> sub_005A24 sub_0072F8
+005abc sub_005ABC -> HitBox^
+005ac8 sub_005AC8 -> -
+005ace sub_005ACE -> sub_005A24 sub_0072F8
+005af8 sub_005AF8 -> HitBox HitBox^
+005b10 sub_005B10 -> sub_0072C0
+005b2e sub_005B2E -> sub_01275A
+005b56 sub_005B56 -> sub_005BBE sub_012A46
+005bbe sub_005BBE -> sub_007322
+005bdc sub_005BDC -> -
+005bec sub_005BEC -> HitBox^
+005c0a sub_005C0A -> -
+005c10 sub_005C10 -> sub_005A24 sub_0072F8
+005cc6 sub_005CC6 -> HitBox^
+005cd2 sub_005CD2 -> -
+005cd8 sub_005CD8 -> sub_005DA2
+005ce6 sub_005CE6 -> -
+005cee sub_005CEE -> HitBox^
+005d10 sub_005D10 -> -
+005da2 sub_005DA2 -> sub_00735A
+005dc0 sub_005DC0 -> HitBox^
+005dcc sub_005DCC -> -
+005dd2 sub_005DD2 -> sub_00735A
+005dea sub_005DEA -> HitBox^
+005df6 sub_005DF6 -> -
+005dfc sub_005DFC -> sub_00735A
+005e14 sub_005E14 -> HitBox^
+005e28 sub_005E28 -> -
+005e36 sub_005E36 -> sub_00735A
+005e4e sub_005E4E -> -
+005e56 sub_005E56 -> HitBox^
+005e62 sub_005E62 -> -
+005e70 sub_005E70 -> sub_00735A
+005e88 sub_005E88 -> -
+005e90 sub_005E90 -> HitBox^
+005e9c sub_005E9C -> -
+005eaa sub_005EAA -> sub_00735A
+005ec2 sub_005EC2 -> HitBox^
+005ed6 sub_005ED6 -> -
+005ee4 sub_005EE4 -> sub_00735A
+005f04 sub_005F04 -> HitBox^ sub_005F32^
+005f1a sub_005F1A -> sub_013DA8
+005f32 sub_005F32 -> -
+005f34 sub_005F34 -> sub_008FA8
+005f4e sub_005F4E -> HitBox HitBox^
+005f7a sub_005F7A -> -
+005f80 sub_005F80 -> -
+005fde sub_005FDE -> -
+006004 sub_006004 -> HitBox^
+006022 sub_006022 -> -
+006028 sub_006028 -> sub_0072CE
+006042 sub_006042 -> HitBox^
+006060 sub_006060 -> -
+006066 sub_006066 -> sub_0072CE
+0060f4 sub_0060F4 -> HitBox^
+006100 sub_006100 -> -
+006106 sub_006106 -> sub_00733E
+00611e sub_00611E -> HitBox^
+006146 sub_006146 -> sub_006252 sub_0072B2
+006154 sub_006154 -> sub_007368
+00616c sub_00616C -> -
+006174 sub_006174 -> HitBox^
+006194 sub_006194 -> sub_006252 sub_0072B2
+0061a2 sub_0061A2 -> sub_00735A
+0061ca sub_0061CA -> HitBox^
+0061d6 sub_0061D6 -> sub_006252 sub_0072B2
+0061e4 sub_0061E4 -> sub_00735A
+006208 sub_006208 -> HitBox^
+006214 sub_006214 -> sub_006252
+00621e sub_00621E -> sub_00735A
+006252 sub_006252 -> sub_0124EC
+00627a sub_00627A -> HitBox HitBox^
+00628e sub_00628E -> sub_013D04
+00629e sub_00629E -> -
+0062b0 sub_0062B0 -> HitBox HitBox^
+0062d4 sub_0062D4 -> sub_0062E2^ sub_006304^
+0062dc sub_0062DC -> sub_006304^
+0062e2 sub_0062E2 -> sub_0072F8 sub_01253C
+0062fa sub_0062FA -> sub_013D04
+006304 sub_006304 -> -
+00630a sub_00630A -> -
+006326 sub_006326 -> HitBox^
+006332 sub_006332 -> -
+006346 sub_006346 -> sub_00735A
+00635c sub_00635C -> HitBox^
+006368 sub_006368 -> -
+00636e sub_00636E -> sub_0072CE
+00638e sub_00638E -> HitBox^
+00639a sub_00639A -> -
+0063a0 sub_0063A0 -> sub_0072EA
+0063c0 sub_0063C0 -> HitBox^
+0063cc sub_0063CC -> -
+0063d2 sub_0063D2 -> sub_0072CE
+006456 sub_006456 -> HitBox^
+006462 sub_006462 -> -
+006468 sub_006468 -> sub_00734C
+006480 sub_006480 -> HitBox^
+0064a0 sub_0064A0 -> -
+0064a6 sub_0064A6 -> sub_007322
+0064d0 sub_0064D0 -> HitBox^
+0064ec sub_0064EC -> -
+0064f2 sub_0064F2 -> sub_00735A
+00650a sub_00650A -> -
+006512 sub_006512 -> HitBox^
+00651e sub_00651E -> -
+006524 sub_006524 -> sub_0072F8
+00653c sub_00653C -> HitBox^
+006550 sub_006550 -> -
+006556 sub_006556 -> sub_0072DC
+006576 sub_006576 -> HitBox^
+006582 sub_006582 -> -
+006588 sub_006588 -> -
+0065a4 sub_0065A4 -> HitBox^
+0065b0 sub_0065B0 -> -
+0065b6 sub_0065B6 -> -
+0065d2 sub_0065D2 -> HitBox^
+0065de sub_0065DE -> -
+0065e4 sub_0065E4 -> -
+0065fc sub_0065FC -> HitBox^ sub_00662E^
+006612 sub_006612 -> sub_013DA8
+00662e sub_00662E -> -
+006630 sub_006630 -> sub_008FA8
+006652 sub_006652 -> HitBox^ sub_006684^
+006668 sub_006668 -> sub_013DA8
+006684 sub_006684 -> -
+006686 sub_006686 -> sub_008FA8
+0066a8 sub_0066A8 -> HitBox^
+0066b4 sub_0066B4 -> -
+0066ba sub_0066BA -> sub_00735A
+00675e sub_00675E -> HitBox^
+006770 sub_006770 -> sub_006252 sub_0072B2
+00677e sub_00677E -> sub_00735A
+0067c6 sub_0067C6 -> HitBox^
+0067d2 sub_0067D2 -> -
+0067d8 sub_0067D8 -> sub_007314
+0067f2 sub_0067F2 -> HitBox HitBox^
+006806 sub_006806 -> -
+00680c sub_00680C -> sub_007322
+00683a sub_00683A -> HitBox^
+006846 sub_006846 -> -
+00684c sub_00684C -> sub_006870 sub_0072F8
+006868 sub_006868 -> -
+006870 sub_006870 -> -
+006894 sub_006894 -> HitBox^
+0068a0 sub_0068A0 -> -
+0068a6 sub_0068A6 -> sub_006870 sub_0072F8
+0068c2 sub_0068C2 -> -
+0068ca sub_0068CA -> HitBox^
+0068d6 sub_0068D6 -> -
+0068dc sub_0068DC -> sub_006870 sub_0072F8
+006900 sub_006900 -> HitBox^
+00690c sub_00690C -> sub_009A5E sub_013D04
+0069a2 sub_0069A2 -> sub_007314
+0069b4 sub_0069B4 -> -
+0069bc sub_0069BC -> HitBox^
+0069c8 sub_0069C8 -> -
+0069ce sub_0069CE -> sub_007330
+0069e6 sub_0069E6 -> -
+0069ee sub_0069EE -> HitBox^
+006a00 sub_006A00 -> -
+006a06 sub_006A06 -> sub_0072CE
+006ae0 sub_006AE0 -> HitBox^
+006aec sub_006AEC -> -
+006af2 sub_006AF2 -> sub_006870 sub_0072F8
+006b2a sub_006B2A -> -
+006b32 sub_006B32 -> HitBox^
+006b3e sub_006B3E -> -
+006b44 sub_006B44 -> sub_006870 sub_0072F8
+006b60 sub_006B60 -> -
+006b68 sub_006B68 -> HitBox^
+006b74 sub_006B74 -> -
+006b7a sub_006B7A -> sub_007314 sub_01016C
+006b96 sub_006B96 -> HitBox^
+006ba2 sub_006BA2 -> sub_013DBE
+006bd8 sub_006BD8 -> -
+006bda sub_006BDA -> -
+006be2 sub_006BE2 -> HitBox^
+006bee sub_006BEE -> sub_013DBE
+006c24 sub_006C24 -> -
+006c2e sub_006C2E -> HitBox^
+006c42 sub_006C42 -> sub_006E32
+006c5e sub_006C5E -> sub_00733E
+006e32 sub_006E32 -> sub_01253C
+006e52 sub_006E52 -> HitBox HitBox^
+006e66 sub_006E66 -> sub_007322
+006e7e sub_006E7E -> -
+006e80 sub_006E80 -> -
+006e90 sub_006E90 -> HitBox HitBox^
+006ea8 sub_006EA8 -> sub_0072CE
+006eca sub_006ECA -> sub_0072CE
+006ee6 sub_006EE6 -> -
+006ee8 sub_006EE8 -> -
+006f04 sub_006F04 -> sub_007314 sub_00B192 sub_013D04
+006f5a sub_006F5A -> -
 00700c sub_00700C -> -
 007086 sub_007086 -> sub_012AF4 sub_013E30
 0070ca sub_0070CA -> sub_007086
+0070ee sub_0070EE -> sub_007086
+00710c sub_00710C -> sub_007086 sub_007120^
+00711a sub_00711A -> sub_007C7C
+007120 sub_007120 -> -
+00712a sub_00712A -> sub_007086 sub_007164^
+007138 sub_007138 -> sub_0057BA sub_007BEC sub_008FA8
+007164 sub_007164 -> -
+00716e sub_00716E -> sub_007086
+00718c sub_00718C -> sub_007086 sub_0071AA^
+00719a sub_00719A -> -
+0071aa sub_0071AA -> -
+0071b4 sub_0071B4 -> sub_007086
+0071c8 sub_0071C8 -> sub_007086
+0071f8 sub_0071F8 -> sub_007086
+00720c sub_00720C -> sub_007086 sub_00711A^
+007230 sub_007230 -> sub_007086
+007258 sub_007258 -> sub_007086
+00728a sub_00728A -> -
+007292 sub_007292 -> sub_007086 sub_007C40 sub_007C54
+0072b2 sub_0072B2 -> sub_007376^
+0072c0 sub_0072C0 -> sub_007376^
+0072ce sub_0072CE -> sub_007376^
+0072dc sub_0072DC -> sub_007376^
+0072ea sub_0072EA -> sub_007376^
+0072f8 sub_0072F8 -> sub_007376^
+007306 sub_007306 -> sub_007376^
+007314 sub_007314 -> sub_007376^
+007322 sub_007322 -> sub_007376^
+007330 sub_007330 -> sub_007376^
+00733e sub_00733E -> sub_007376^
+00734c sub_00734C -> sub_007376^
+00735a sub_00735A -> sub_007376^
+007368 sub_007368 -> sub_007376^
+007376 sub_007376 -> -
 0073a0 sub_0073A0 -> sub_013D04
 00745c GameStart -> ReadInput ReadInputAim PlayersButtons sub_0015A2 sub_0015EC sub_001C4A sub_001D3A sub_002B5C sub_003360 SortHiScores sub_004752 sub_0047CE sub_004820 sub_004872 sub_0048C4 sub_004916 sub_007AFE sub_007C9A sub_007CD8 sub_0086D8 WaitVBlank InitPort2 sub_008A4C sub_008B1A sub_008B3C sub_008C52 sub_008C68 sub_008FA8 EnergyHud GunpowerHud sub_009326 sub_009358 sub_00B398 sub_00E9FA sub_011D12 sub_011D28 sub_011D32 sub_0123F0 sub_01243C sub_0126B4 sub_012886 sub_012BB0 sub_0131F2 BuildSpriteTable sub_013376 sub_013D04 sub_013E1A sub_013F7E MenacerInit sub_0FBAD2 sub_0FBAE2 sub_0FBB6C
 007a6e sub_007A6E -> -
@@ -139,6 +384,7 @@
 007c18 sub_007C18 -> -
 007c1e sub_007C1E -> -
 007c2c sub_007C2C -> -
+007c40 sub_007C40 -> -
 007c54 sub_007C54 -> sub_007D0E^
 007c68 sub_007C68 -> -
 007c7c sub_007C7C -> sub_007C90^
@@ -258,6 +504,7 @@
 0099fe sub_0099FE -> -
 009a02 sub_009A02 -> sub_00930E sub_009A5E
 009a5e sub_009A5E -> sub_00881C
+009a7a sub_009A7A -> -
 009acc sub_009ACC -> sub_009866 sub_00998A sub_009B16^
 009ae8 sub_009AE8 -> sub_009B16^
 009b00 sub_009B00 -> -
@@ -319,7 +566,11 @@
 00a4d2 sub_00A4D2 -> sub_0092DC
 00a4f4 sub_00A4F4 -> sub_0092DC
 00a510 sub_00A510 -> sub_0092DC
+00a5f6 sub_00A5F6 -> -
+00a5fa sub_00A5FA -> sub_00881C sub_009A02
 00a644 sub_00A644 -> sub_0092DC
+00a666 sub_00A666 -> sub_0092DC
+00a692 sub_00A692 -> sub_0092DC
 00a712 sub_00A712 -> sub_0092DC
 00a7e8 sub_00A7E8 -> sub_0092DC
 00a80c sub_00A80C -> sub_0092DC
@@ -336,6 +587,8 @@
 00ab62 sub_00AB62 -> sub_009B14^
 00ab76 sub_00AB76 -> sub_009B14^
 00ab8a sub_00AB8A -> sub_0092DC sub_00F356
+00ac06 sub_00AC06 -> sub_0092DC
+00ac6a sub_00AC6A -> sub_0092DC
 00acb0 sub_00ACB0 -> sub_0092DC
 00acf2 sub_00ACF2 -> sub_0092DC
 00ad14 sub_00AD14 -> sub_0092DC sub_010408
@@ -350,6 +603,7 @@
 00affc sub_00AFFC -> sub_0092DC
 00b02a sub_00B02A -> sub_0092DC sub_0112A8 sub_0112BE
 00b0b2 sub_00B0B2 -> sub_0092DC sub_0115FA sub_0118C0 sub_0118CE
+00b192 sub_00B192 -> sub_0092DC
 00b1ce sub_00B1CE -> sub_0092DC
 00b2e6 sub_00B2E6 -> -
 00b2f2 sub_00B2F2 -> -
@@ -368,13 +622,15 @@
 00b4c2 sub_00B4C2 -> sub_00C66C^
 00b4d2 sub_00B4D2 -> sub_00B3BE^
 00b4de sub_00B4DE -> sub_00B3BE^ sub_012316 sub_013228
-00b504 sub_00B504 -> sub_00B3BE^ sub_012332 sub_01277C QueueSprite
+00b504 sub_00B504 -> sub_01277C
+00b52e sub_00B52E -> sub_00B3BE^ sub_012332 QueueSprite
 00b586 sub_00B586 -> sub_00B4A6 sub_00B5E8^ sub_012316 sub_012332 sub_012342 sub_013228
 00b5c2 sub_00B5C2 -> sub_00B5E8^
 00b5e8 sub_00B5E8 -> sub_00B3BE^
 00b5ec sub_00B5EC -> sub_009054 sub_00B3BE^ sub_00C652 sub_012316 sub_012332 sub_012342 sub_013228 sub_013D04
 00b65a sub_00B65A -> sub_00B3BE^ sub_00C652 sub_012316 sub_01237A sub_013228
-00b68a sub_00B68A -> sub_00B3BE^ sub_01254E sub_012778
+00b68a sub_00B68A -> -
+00b69a sub_00B69A -> sub_00B3BE^ sub_01254E sub_012778
 00b6d0 sub_00B6D0 -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_012342 sub_013228
 00b71e sub_00B71E -> sub_009054 sub_00B3BE^ sub_00B772 sub_012316 sub_012332 sub_012342 sub_013228 sub_013D04
 00b772 sub_00B772 -> sub_00881C
@@ -384,17 +640,26 @@
 00b846 sub_00B846 -> sub_00881C
 00b860 sub_00B860 -> sub_00C66C^
 00b86a sub_00B86A -> sub_00B3BE^ sub_01227A
-00b896 sub_00B896 -> sub_009078 sub_00B3BE^ sub_00BABC sub_01227A sub_012316 QueueSprite
-00b92e sub_00B92E -> sub_0098FC sub_00B3BE^ sub_00BCC6 sub_012234
+00b896 sub_00B896 -> sub_00BABC QueueSprite
+00b8c2 sub_00B8C2 -> sub_009078 sub_00B3BE^ sub_01227A sub_012316
+00b92e sub_00B92E -> sub_00BCC6
+00b932 sub_00B932 -> sub_0098FC sub_00B3BE^ sub_012234
 00b962 sub_00B962 -> sub_00B3BE^ sub_012234
-00b98e sub_00B98E -> sub_009078 sub_00B3BE^ sub_00BABC sub_012234 sub_012316 QueueSprite
-00ba26 sub_00BA26 -> sub_0098FC sub_00B3BE^ sub_00BCC6 sub_012234
+00b98e sub_00B98E -> sub_00BABC QueueSprite
+00b9ba sub_00B9BA -> sub_009078 sub_00B3BE^ sub_012234 sub_012316
+00ba26 sub_00BA26 -> sub_00BCC6
+00ba2a sub_00BA2A -> sub_0098FC sub_00B3BE^ sub_012234
+00ba62 sub_00BA62 -> sub_00B3BE^ sub_01227A
+00ba8e sub_00BA8E -> sub_00BABC sub_00BAD6^ QueueSprite
 00babc sub_00BABC -> -
 00bad6 sub_00BAD6 -> sub_009078 sub_00B3BE^ sub_01227A sub_012316
-00bb4e sub_00BB4E -> sub_00998A sub_00B3BE^ sub_00BCC6 sub_012234
+00bb4e sub_00BB4E -> sub_00BCC6
+00bb52 sub_00BB52 -> sub_00998A sub_00B3BE^ sub_012234
 00bb82 sub_00BB82 -> sub_00B3BE^ sub_012234
-00bbae sub_00BBAE -> sub_009078 sub_00B3BE^ sub_00BABC sub_012234 sub_012316 QueueSprite
-00bc52 sub_00BC52 -> sub_00998A sub_00B3BE^ sub_00BCC6 sub_012234
+00bbae sub_00BBAE -> sub_00BABC QueueSprite
+00bbda sub_00BBDA -> sub_009078 sub_00B3BE^ sub_012234 sub_012316
+00bc52 sub_00BC52 -> sub_00BCC6
+00bc56 sub_00BC56 -> sub_00998A sub_00B3BE^ sub_012234
 00bcc6 sub_00BCC6 -> sub_01254E sub_01277C
 00bcf6 sub_00BCF6 -> sub_00B3BE^ sub_012234
 00bd22 sub_00BD22 -> sub_00BABC sub_00BD6C^ QueueSprite
@@ -420,7 +685,8 @@
 00c264 sub_00C264 -> sub_00C1E6 sub_00C278^
 00c278 sub_00C278 -> sub_00881C sub_00B3BE^ sub_01253C
 00c332 sub_00C332 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
-00c348 sub_00C348 -> sub_00908A sub_00B3BE^ sub_00D236 sub_013228 sub_013D04
+00c348 sub_00C348 -> sub_00908A sub_00B3BE^ sub_00C3AC^ sub_00D236 sub_013228 sub_013D04
+00c3ac sub_00C3AC -> sub_00B3BE^ sub_013228
 00c3c6 sub_00C3C6 -> sub_00908A sub_00B3BE^ sub_00D236 sub_013228 sub_013CC4
 00c442 sub_00C442 -> sub_00908A sub_00B3BE^ sub_00C48E sub_013228 sub_013CC4
 00c48e sub_00C48E -> -
@@ -431,7 +697,10 @@
 00c564 sub_00C564 -> sub_00B3BE^ sub_00C48E sub_012316 sub_012332 sub_012342 sub_013228
 00c5e2 sub_00C5E2 -> sub_00B3BE^ sub_00B5C2^ sub_00C652 sub_013228
 00c652 sub_00C652 -> sub_00881C
-00c66c sub_00C66C -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
+00c66c sub_00C66C -> sub_012316
+00c6b0 sub_00C6B0 -> sub_00B3BE^ sub_00C6FA^ sub_00D236 sub_012316
+00c6fa sub_00C6FA -> sub_00B3BE^ sub_013228
+00c7c8 sub_00C7C8 -> sub_00B3BE^ sub_00C6FA^ sub_012316
 00c802 sub_00C802 -> sub_00C8A8^
 00c826 sub_00C826 -> sub_00C8A8^
 00c846 sub_00C846 -> sub_00C8A8^
@@ -447,8 +716,38 @@
 00c9b8 sub_00C9B8 -> -
 00c9c2 sub_00C9C2 -> sub_012234
 00c9e6 sub_00C9E6 -> sub_00B3BE^
-00c9ea sub_00C9EA -> sub_00B3BE^ sub_012316
+00c9ea sub_00C9EA -> -
+00ca0a sub_00CA0A -> sub_00B3BE^ sub_012316
 00ca12 sub_00CA12 -> sub_00B3BE^ sub_012234 sub_01254E sub_01276C sub_012772
+00caba sub_00CABA -> sub_009A02 sub_00B3BE^ sub_012316 sub_012332 sub_013228
+00cafc sub_00CAFC -> sub_00B3BE^ sub_01253C
+00cb34 sub_00CB34 -> sub_0081B6 sub_00881C sub_00CBE8^ sub_00CD66
+00cb9e sub_00CB9E -> sub_00881C sub_00CBE8^ sub_00CD66
+00cbe8 sub_00CBE8 -> sub_00B3BE^ sub_00CC3C sub_00CC6A
+00cc3c sub_00CC3C -> sub_012234
+00cc6a sub_00CC6A -> sub_01227A
+00cc98 sub_00CC98 -> sub_012234 sub_01227A
+00cce6 sub_00CCE6 -> sub_00881C sub_00B3BE^ sub_012494
+00cd1c sub_00CD1C -> sub_00933E sub_00B3BE^ sub_00CCE6^
+00cd66 sub_00CD66 -> sub_00CDC2^ sub_00CDFC^
+00cd88 sub_00CD88 -> sub_00CDFC^ sub_012234
+00cdb0 sub_00CDB0 -> -
+00cdc2 sub_00CDC2 -> sub_009A02 sub_00CD88^ sub_00CDFC^
+00cdfc sub_00CDFC -> -
+00cdfe sub_00CDFE -> sub_00B3BE^
+00ce0c sub_00CE0C -> sub_00B3BE^ sub_012234
+00ce42 sub_00CE42 -> sub_00B3BE^
+00ce46 sub_00CE46 -> sub_00B3BE^ sub_00CF58 sub_012234 sub_01227A
+00cec4 sub_00CEC4 -> sub_00B3BE^ sub_012234
+00cefa sub_00CEFA -> sub_00B3BE^ sub_012212 sub_012494
+00cf58 sub_00CF58 -> sub_00881C sub_0099D4
+00cf9e sub_00CF9E -> sub_00B3BE^ sub_013228
+00cfde sub_00CFDE -> sub_00B3BE^ sub_012234 sub_01227A
+00d024 sub_00D024 -> sub_00B3BE^
+00d028 sub_00D028 -> sub_00B3BE^ sub_00C48E sub_013228
+00d08c sub_00D08C -> sub_00908A sub_00B3BE^ sub_013228
+00d0c8 sub_00D0C8 -> sub_00B3BE^
+00d0d4 sub_00D0D4 -> sub_00902E sub_00B3BE^ sub_00D0F8
 00d0f8 sub_00D0F8 -> -
 00d112 sub_00D112 -> sub_00881C sub_00D1D2 sub_00D2B8^ sub_00D322 QueueSprite
 00d1d2 sub_00D1D2 -> sub_00881C sub_00D236 sub_011F58 QueueSprite
@@ -470,7 +769,8 @@
 00d746 sub_00D746 -> sub_007DEE sub_00B3BE^ sub_010666 sub_013228
 00d800 sub_00D800 -> sub_007DEE sub_00B3BE^ sub_010666 sub_012212 sub_013228 sub_013D04
 00d89e sub_00D89E -> sub_00B3BE^ sub_013228 sub_013DD6
-00d8cc sub_00D8CC -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_013228
+00d8cc sub_00D8CC -> -
+00d8dc sub_00D8DC -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_013228
 00d90e sub_00D90E -> sub_00B3BE^ sub_013228 sub_013DD6
 00d93e sub_00D93E -> sub_00B3BE^ sub_013228
 00d962 sub_00D962 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
@@ -484,33 +784,76 @@
 00daee sub_00DAEE -> sub_00B3BE^ sub_012316 sub_013228
 00db0c sub_00DB0C -> sub_00933E sub_00B3BE^ sub_01253C
 00db36 sub_00DB36 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
-00db5a sub_00DB5A -> sub_00B3BE^ sub_012316 sub_012332 sub_01253C sub_013228
+00db5a sub_00DB5A -> sub_01253C
+00db76 sub_00DB76 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00db8c sub_00DB8C -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
+00dbc4 sub_00DBC4 -> sub_01253C
+00dbe0 sub_00DBE0 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
+00dbf6 sub_00DBF6 -> sub_00B3BE^
+00dc06 sub_00DC06 -> sub_00A5FA sub_00AC06 sub_00B3BE^
+00dc5e sub_00DC5E -> sub_00DC9E^
+00dc7e sub_00DC7E -> -
+00dc9e sub_00DC9E -> -
+00dcb2 sub_00DCB2 -> sub_00B3BE^ sub_012234
+00dcdc sub_00DCDC -> sub_00DCEA^
+00dce4 sub_00DCE4 -> -
+00dcea sub_00DCEA -> sub_00881C sub_00933E sub_00B3BE^
+00dd64 sub_00DD64 -> sub_00DCB2^ sub_01253C
+00dda0 sub_00DDA0 -> -
+00ddba sub_00DDBA -> sub_00C48E sub_00E0E8 sub_00E146^
+00de08 sub_00DE08 -> sub_00D236 sub_00E0E8 sub_00E108 sub_00E146^ sub_012316 sub_012332
+00de6c sub_00DE6C -> sub_00881C sub_009A5E sub_009A7A
+00deba sub_00DEBA -> sub_009054 sub_00D236 sub_00DE6C sub_00E0E8 sub_00E108 sub_00E146^ sub_012316 sub_012332 sub_013D04
+00df46 sub_00DF46 -> sub_00E0E8 sub_00E146^ sub_012316 sub_012332
+00df9c sub_00DF9C -> sub_00E0E8 sub_00E146^ sub_012316 sub_012332
+00dff0 sub_00DFF0 -> sub_00C48E sub_00E0E8 sub_00E146^
+00e026 sub_00E026 -> sub_00C48E sub_00E0E8 sub_00E146^
+00e05c sub_00E05C -> sub_00E0F8 sub_00E146^ sub_012316 sub_012332
+00e0a4 sub_00E0A4 -> sub_00E146^ sub_01253C sub_01277C
+00e0e8 sub_00E0E8 -> sub_013228
+00e0f8 sub_00E0F8 -> QueueSprite
+00e108 sub_00E108 -> sub_00E10E^
 00e10c sub_00E10C -> -
+00e10e sub_00E10E -> -
 00e146 sub_00E146 -> sub_00B3BE^
 00e166 sub_00E166 -> sub_00B3BE^ sub_012316 sub_012332
 00e174 sub_00E174 -> sub_00B3BE^ sub_012212 sub_012316 sub_01253C
+00e1ca sub_00E1CA -> sub_00B3BE^ sub_012212 sub_012234 sub_012316 sub_01253C
 00e254 sub_00E254 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00e27e sub_00E27E -> sub_00B3BE^ sub_00D236 sub_012316 sub_012332 sub_013228
 00e2ac sub_00E2AC -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_013228
 00e2c6 sub_00E2C6 -> sub_00B3BE^ sub_01253C
 00e2e6 sub_00E2E6 -> sub_00881C sub_009A02 sub_00B3BE^
 00e314 sub_00E314 -> sub_00B3BE^ sub_012234 sub_01253C sub_01254E
-00e3e2 sub_00E3E2 -> sub_0080FE sub_008A7C sub_00B3BE^ sub_012234 sub_01227A QueueSprite sub_013D04
+00e3e2 sub_00E3E2 -> sub_0080FE sub_008A7C sub_00B3BE^ sub_012234 sub_01227A sub_013D04
+00e546 sub_00E546 -> sub_00B3BE^ QueueSprite sub_013D04
 00e5a6 sub_00E5A6 -> sub_00930E sub_00B3BE^
+00e72e sub_00E72E -> sub_00B3BE^ sub_013DD4
+00e746 sub_00E746 -> sub_00B3BE^
+00e74a sub_00E74A -> sub_00881C sub_009A02 sub_00B3BE^
+00e79e sub_00E79E -> sub_00881C sub_00B3BE^
+00e7c0 sub_00E7C0 -> sub_00B3BE^ sub_012234 sub_01227A sub_01253C
+00e864 sub_00E864 -> sub_00B3BE^ sub_0124B8 sub_0124D2 sub_01254E
+00e8c8 sub_00E8C8 -> sub_00B3BE^ sub_012234 sub_01227A
+00e91e sub_00E91E -> sub_008A7C sub_0099C8 sub_009B14 sub_00B3BE^
+00e9c4 sub_00E9C4 -> sub_0080FE sub_008970 sub_00B3BE^
 00e9fa sub_00E9FA -> sub_0080FE
 00ea26 sub_00EA26 -> sub_00EC16^
-00ea2e sub_00EA2E -> sub_00B3BE^ sub_012316 sub_012332 sub_01253C sub_012A9C sub_013228
+00ea2e sub_00EA2E -> sub_01253C sub_012A9C
+00ea54 sub_00EA54 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00ea6a sub_00EA6A -> sub_00EC16^
-00ea72 sub_00EA72 -> sub_00B3BE^ sub_012316 sub_012332 sub_01253C sub_012A78 sub_013228
+00ea72 sub_00EA72 -> sub_01253C sub_012A78
+00ea92 sub_00EA92 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00eaa8 sub_00EAA8 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00ead6 sub_00EAD6 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00eaec sub_00EAEC -> sub_00EC16^
 00eaf4 sub_00EAF4 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00eb2e sub_00EB2E -> sub_00EC16^
-00eb36 sub_00EB36 -> sub_00B3BE^ sub_012316 sub_012332 sub_012A16 sub_013228
+00eb36 sub_00EB36 -> sub_012A16
+00eb4c sub_00EB4C -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00eb62 sub_00EB62 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
-00eb78 sub_00EB78 -> sub_00EC16^ sub_012A46
+00eb78 sub_00EB78 -> sub_012A46
+00eb96 sub_00EB96 -> sub_00EC16^
 00eb9e sub_00EB9E -> sub_00B3BE^ sub_00B4A6 sub_013228
 00ebbc sub_00EBBC -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00ebd2 sub_00EBD2 -> sub_00B3BE^ sub_012A16
@@ -529,14 +872,22 @@
 00edd4 sub_00EDD4 -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_012342 sub_013228
 00ee2e sub_00EE2E -> sub_009054 sub_00B3BE^ sub_00EE88 sub_012316 sub_013228 sub_013D04
 00ee88 sub_00EE88 -> sub_00881C
-00eed4 sub_00EED4 -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
+00eeb0 sub_00EEB0 -> sub_00B3BE^ sub_012316 sub_013228
+00eed4 sub_00EED4 -> -
+00ef0a sub_00EF0A -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
 00efa4 sub_00EFA4 -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_012342 sub_013228
 00effe sub_00EFFE -> sub_009054 sub_00B3BE^ sub_00F170 sub_012316 sub_013228 sub_013D04
-00f094 sub_00F094 -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
+00f066 sub_00F066 -> sub_00F0FA^ sub_012316
+00f094 sub_00F094 -> -
+00f0ca sub_00F0CA -> sub_00D236 sub_00F0FA^ sub_012316
+00f0fa sub_00F0FA -> sub_00B3BE^ sub_013228
 00f170 sub_00F170 -> sub_00881C
 00f18a sub_00F18A -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_012342 sub_013228
 00f1e4 sub_00F1E4 -> sub_009054 sub_00B3BE^ sub_00F356 sub_012316 sub_013228 sub_013D04
-00f27a sub_00F27A -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
+00f24c sub_00F24C -> sub_00F2E0^ sub_012316
+00f27a sub_00F27A -> -
+00f2b0 sub_00F2B0 -> sub_00D236 sub_00F2E0^ sub_012316
+00f2e0 sub_00F2E0 -> sub_00B3BE^ sub_013228
 00f356 sub_00F356 -> sub_00881C
 00f370 sub_00F370 -> sub_00B3BE^ sub_00D232 sub_00E10C sub_00F452
 00f3c0 sub_00F3C0 -> sub_00B3BE^ sub_00F452
@@ -544,41 +895,64 @@
 00f436 sub_00F436 -> sub_00B3BE^ sub_0124D2
 00f452 sub_00F452 -> sub_013228
 00f4b0 sub_00F4B0 -> QueueSprite
+00f540 sub_00F540 -> sub_00F5C0^
+00f560 sub_00F560 -> sub_00F5C0^
+00f584 sub_00F584 -> sub_00F5C0^
+00f5ac sub_00F5AC -> sub_00F5C0^
+00f5c0 sub_00F5C0 -> sub_00F648^
+00f5d2 sub_00F5D2 -> sub_009A5E sub_00DDBA^ sub_00F648^
+00f648 sub_00F648 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
+00f65a sub_00F65A -> sub_00B3BE^ sub_01253C sub_01277C
 00f69c sub_00F69C -> sub_00B3BE^ sub_013228
 00f6ca sub_00F6CA -> sub_00B3BE^ sub_013228
 00f6f4 sub_00F6F4 -> sub_00B3BE^ sub_013228
 00f722 sub_00F722 -> sub_00B3BE^ sub_013228
 00f778 sub_00F778 -> sub_00B3BE^ sub_012316 sub_013228
-00f7a0 sub_00F7A0 -> sub_00B3BE^ sub_00D236 sub_013228
-00f7e4 sub_00F7E4 -> sub_00B3BE^ sub_012316 sub_013228
+00f7a0 sub_00F7A0 -> -
+00f7a4 sub_00F7A4 -> sub_00B3BE^ sub_00D236 sub_013228
+00f7e4 sub_00F7E4 -> -
+00f7f0 sub_00F7F0 -> sub_00B3BE^ sub_012316 sub_013228
 00f83c sub_00F83C -> sub_00B3BE^ sub_013228
 00f86c sub_00F86C -> sub_00B3BE^ sub_012316 sub_013228
-00f89e sub_00F89E -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
-00f8e2 sub_00F8E2 -> sub_00881C sub_0092A8 sub_00B3BE^ sub_012234 sub_0124EC sub_01277C sub_012A46
-00fb60 sub_00FB60 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
-00fb76 sub_00FB76 -> sub_00FB98^ sub_01253C
+00f89e sub_00F89E -> -
+00f8a2 sub_00F8A2 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
+00f8e2 sub_00F8E2 -> -
+00f8ea sub_00F8EA -> sub_00881C sub_0092A8 sub_00B3BE^ sub_012234 sub_0124EC sub_01277C sub_012A46
+00fb52 sub_00FB52 -> -
+00fb5a sub_00FB5A -> sub_00FB64^
+00fb60 sub_00FB60 -> -
+00fb64 sub_00FB64 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
+00fb76 sub_00FB76 -> sub_01253C
+00fb8e sub_00FB8E -> sub_00FB98^
 00fb94 sub_00FB94 -> -
 00fb98 sub_00FB98 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 00fbaa sub_00FBAA -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_012342 sub_013228
 00fbfe sub_00FBFE -> sub_00B4A6 sub_00FC3A^ sub_012316
-00fc1e sub_00FC1E -> sub_00B4A6 sub_012316
+00fc1e sub_00FC1E -> -
+00fc24 sub_00FC24 -> sub_00B4A6 sub_012316
 00fc3a sub_00FC3A -> sub_00B3BE^ sub_012332 sub_012342 sub_013228
 00fc78 sub_00FC78 -> sub_009054 sub_00B3BE^ sub_012316 sub_013228 sub_013D04
 00fcc2 sub_00FCC2 -> sub_009054 sub_00B3BE^ sub_012316 sub_013228 sub_013D04
 00fd0c sub_00FD0C -> sub_00881C
-00fd64 sub_00FD64 -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
+00fd40 sub_00FD40 -> sub_00B3BE^ sub_012316 sub_013228
+00fd64 sub_00FD64 -> -
+00fd98 sub_00FD98 -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
 00fe3c sub_00FE3C -> sub_00B3BE^ sub_013228
 00fe6a sub_00FE6A -> sub_00B3BE^ sub_013228
 00fe8e sub_00FE8E -> sub_00881C sub_00FD0C
 00ff12 sub_00FF12 -> sub_00B3BE^ sub_00B4A6 sub_012316 sub_012332 sub_012342 sub_013228
 00ff6c sub_00FF6C -> sub_00B3BE^ sub_00FFC0 sub_012316 sub_012352 sub_013228
 00ffc0 sub_00FFC0 -> sub_00881C
-01000c sub_01000C -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
+00ffe8 sub_00FFE8 -> sub_00B3BE^ sub_012316 sub_013228
+01000c sub_01000C -> -
+01003a sub_01003A -> sub_00B3BE^ sub_00D236 sub_012316 sub_013228
 0100d0 sub_0100D0 -> sub_00B3BE^ sub_013228
 0100fe sub_0100FE -> sub_00B3BE^ sub_013228
 010122 sub_010122 -> -
 010126 sub_010126 -> sub_00B3BE^ sub_012316 sub_013228
 01014a sub_01014A -> sub_010126^
+01016c sub_01016C -> sub_006870 sub_0072F8 sub_01253C sub_013DBE
+010214 sub_010214 -> sub_00B3BE^ sub_00B4A6 sub_0102A6 sub_01042C sub_012316
 010238 sub_010238 -> sub_00B3BE^ sub_00B4A6 sub_0102A6 sub_01042C sub_012316
 0102a6 sub_0102A6 -> sub_00881C
 0102d0 sub_0102D0 -> sub_0102A6 sub_010302^ sub_012316
@@ -597,6 +971,21 @@
 0105f6 sub_0105F6 -> sub_00B3BE^ sub_0104EE sub_010642 sub_010666 sub_012316
 010642 sub_010642 -> sub_00881C
 010666 sub_010666 -> sub_013228
+01070c sub_01070C -> sub_00B3BE^ sub_010812
+01072e sub_01072E -> sub_00B3BE^ sub_0107F4
+010748 sub_010748 -> sub_00B3BE^ sub_010812
+010766 sub_010766 -> sub_00B3BE^ sub_0107F4
+01078a sub_01078A -> sub_00933E sub_00B3BE^ sub_010812
+0107ac sub_0107AC -> sub_00B3BE^ sub_010812
+0107da sub_0107DA -> sub_00B3BE^ sub_010666
+0107f4 sub_0107F4 -> sub_010666^ sub_010830
+010812 sub_010812 -> sub_00B4A6 sub_010666^ sub_012316
+010830 sub_010830 -> -
+01085c sub_01085C -> sub_00B3BE^ sub_010812
+01087e sub_01087E -> sub_00B3BE^
+0108a0 sub_0108A0 -> sub_00B3BE^ sub_010812
+0108ca sub_0108CA -> sub_00B3BE^ sub_010666
+0108dc sub_0108DC -> sub_00B3BE^ sub_013228
 0108e8 sub_0108E8 -> sub_010912^
 010906 sub_010906 -> sub_010912^
 010908 sub_010908 -> sub_01091A^ sub_013228
@@ -610,11 +999,13 @@
 010ae0 sub_010AE0 -> sub_00E10C sub_010908^
 010af8 sub_010AF8 -> sub_00881C sub_010C96^
 010b84 sub_010B84 -> sub_00D236 sub_00E10C sub_010C96^ sub_013D04
-010be4 sub_010BE4 -> sub_00933E sub_00AF72 sub_00B3BE^ sub_00D236 sub_00E10C sub_010C96^ sub_013D04 sub_013E04
+010be4 sub_010BE4 -> -
+010c1c sub_010C1C -> sub_00933E sub_00AF72 sub_00B3BE^ sub_00D236 sub_00E10C sub_010C96^ sub_013D04 sub_013E04
 010c96 sub_010C96 -> sub_010D20^ sub_012212 sub_012234
 010d0c sub_010D0C -> sub_0081B6^ sub_009EF8 sub_00D0F8
 010d20 sub_010D20 -> sub_009EF8 sub_00B3BE^ sub_011F58
-010d46 sub_010D46 -> sub_00D236 sub_010D20^ sub_012212 sub_012234 sub_01253C sub_013D04
+010d46 sub_010D46 -> sub_012212 sub_012234 sub_01253C sub_013D04
+010dd6 sub_010DD6 -> sub_00D236 sub_010D20^
 010dee sub_010DEE -> sub_00933E sub_010D20^ sub_012316
 010e4a sub_010E4A -> sub_011092^
 010e82 sub_010E82 -> sub_00E10C sub_011092^
@@ -636,12 +1027,15 @@
 011334 sub_011334 -> sub_00881C
 011360 sub_011360 -> sub_00B4A6 sub_011334 sub_011616 sub_011B10^ sub_012316
 011394 sub_011394 -> sub_009066 sub_011334 sub_011616 sub_011B10^ sub_013D04
-0113d0 sub_0113D0 -> sub_00908A sub_011334 sub_011616 sub_011B10^ sub_01277C sub_013D04
+0113d0 sub_0113D0 -> -
+0113d8 sub_0113D8 -> sub_00908A sub_011334 sub_011616 sub_011B10^ sub_01277C sub_013D04
 011438 sub_011438 -> -
 011448 sub_011448 -> sub_00881C sub_0115FA
 0114c0 sub_0114C0 -> sub_00881C sub_0115FA sub_011B10^
 011514 sub_011514 -> sub_011616 sub_011B10^
-011580 sub_011580 -> sub_00D236 sub_011448^ sub_011616 sub_011B10^ sub_012316 sub_013DA8
+011558 sub_011558 -> sub_011616 sub_011B10^ sub_012316
+011580 sub_011580 -> sub_013DA8
+0115ac sub_0115AC -> sub_00D236 sub_011448^ sub_011558^ sub_011616 sub_011B10^ sub_012316
 0115ee sub_0115EE -> -
 0115fa sub_0115FA -> sub_00881C
 011616 sub_011616 -> sub_0118C0 sub_0118DC sub_0118EA sub_013228 sub_013228^
@@ -653,7 +1047,8 @@
 011a44 sub_011A44 -> sub_011616 sub_011B10^
 011a76 sub_011A76 -> sub_011616 sub_011B10^
 011a90 sub_011A90 -> sub_00933E sub_00B3BE^ sub_011334 sub_011616 sub_01277C sub_013E02
-011af0 sub_011AF0 -> sub_00B3BE^ sub_013D90
+011af0 sub_011AF0 -> -
+011af8 sub_011AF8 -> sub_00B3BE^ sub_013D90
 011b10 sub_011B10 -> sub_00B3BE^
 011b4e sub_011B4E -> sub_012234 QueueSprite
 011bf4 sub_011BF4 -> sub_00B3BE^ sub_011B4E
@@ -778,10 +1173,10 @@
 0141e6 sub_0141E6 -> sub_0141B8
 014510 sub_014510 -> sub_014528* sub_01452C* sub_014530* sub_014534* sub_014538* sub_01453C* sub_014540*
 014528 sub_014528 -> -
-01452c sub_01452C -> sub_013E30
+01452c sub_01452C -> sub_00719A^ sub_013E30
 014530 sub_014530 -> sub_007C7C
 014534 sub_014534 -> sub_014554^
-014538 sub_014538 -> sub_0057BA sub_007BEC sub_008FA8
+014538 sub_014538 -> sub_007138^
 01453c sub_01453C -> sub_013E30
 014540 sub_014540 -> -
 014544 sub_014544 -> -
@@ -794,10 +1189,15 @@
 01477c sub_01477C -> sub_012234
 014792 sub_014792 -> sub_00B3BE^ sub_012234 sub_01480A
 01480a sub_01480A -> sub_012234 sub_01227A
-0151f0 sub_0151F0 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
+0151cc sub_0151CC -> sub_01253C
+0151ea sub_0151EA -> sub_0151F4^
+0151f0 sub_0151F0 -> -
+0151f4 sub_0151F4 -> sub_00B3BE^ sub_012316 sub_012332 sub_013228
 015208 sub_015208 -> sub_015224^
+015212 sub_015212 -> -
+015216 sub_015216 -> sub_012316 sub_012332 sub_013228
 015224 sub_015224 -> sub_00B3BE^
-01522a sub_01522A -> sub_012316 sub_012332 sub_013228
+01522a sub_01522A -> sub_015212^ sub_015216^
 01524a sub_01524A -> sub_00B3BE^ sub_015272
 015272 sub_015272 -> sub_01528A
 01528a sub_01528A -> sub_007F00 sub_011D12 sub_011D28 sub_011D32

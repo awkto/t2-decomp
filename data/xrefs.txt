@@ -402,6 +402,12 @@
 0014ce mem ffff9f60 r.w
 0014de mem ffffae84 lea.l
 0014e4 mem 0014f2 lea.l
+00154a jump 0fbbae
+001558 jump 0fbb96
+001562 mem 001568 r.l
+001586 mem 001590 r.b
+00158a jump 0fbb6c
+001598 mem ffffa234 w.b
 0015a2 call 004212
 0015a6 call 00871a
 0015aa mem ffffa246 w.b
@@ -1614,7 +1620,403 @@
 005940 mem ffff9e94 r.w
 00597c mem 005988 lea.l
 005980 mem 0059a4 lea.l
+005984 jump 005940
 005988 mem 00598e lea.l
+0059ac mem 0059e6 lea.l
+0059b0 mem 0059ce lea.l
+0059b4 call 005940
+0059b8 mem 005a02 lea.l
+0059bc mem 0059c6 lea.l
+0059c0 call 005940
+0059e6 call 0072f8
+0059fa mem 005a00 lea.l
+005a02 mem 005a08 lea.l
+005a08 call 0072f8
+005a24 mem ffff9ec0 r.b
+005a2c mem ffff9ed6 r.l
+005a34 mem ffff80da rw.w
+005a3a mem ffff9ec0 w.b
+005a40 mem ffff9ed6 w.l
+005a48 mem 005a54 lea.l
+005a4c mem 005a78 lea.l
+005a50 jump 005940
+005a54 mem 005a5a lea.l
+005a5a call 0072f8
+005a80 mem 005a8c lea.l
+005a84 mem 005ab4 lea.l
+005a88 jump 005940
+005a8c mem 005a92 lea.l
+005a92 call 0072f8
+005aae call 005a24
+005abc mem 005ac8 lea.l
+005ac0 mem 005af0 lea.l
+005ac4 jump 005940
+005ac8 mem 005ace lea.l
+005ace call 0072f8
+005aea call 005a24
+005af8 mem 005b10 lea.l
+005afc mem 005be4 lea.l
+005b00 call 005940
+005b04 mem 005b2e lea.l
+005b08 mem 005bdc lea.l
+005b0c jump 005940
+005b10 call 0072c0
+005b28 mem 005b56 lea.l
+005b46 call 01275a
+005b50 mem 005bbe lea.l
+005b56 call 005bbe
+005b62 mem ffffa0ca r.w
+005b8a call 012a46
+005bbe call 007322
+005bec mem 005c3e lea.l
+005c02 mem 005c0a lea.l
+005c06 jump 005940
+005c0a mem 005c10 lea.l
+005c10 call 0072f8
+005c20 mem 00c5c0 lea.l
+005c38 call 005a24
+005cc6 mem 005cd2 lea.l
+005cca mem 005ce6 lea.l
+005cce jump 005940
+005cd2 mem 005cd8 lea.l
+005cd8 call 005da2
+005cee mem 005d9c lea.l
+005cfa mem 00c196 lea.l
+005d04 mem 005d1c lea.l
+005d08 jump 005940
+005d72 mem 000038 rw.b
+005d86 mem 000038 rw.b
+005da2 call 00735a
+005dc0 mem 005dcc lea.l
+005dc4 mem 005e14 lea.l
+005dc8 jump 005940
+005dcc mem 005dd2 lea.l
+005dd2 call 00735a
+005dea mem 005df6 lea.l
+005dee mem 005e14 lea.l
+005df2 jump 005940
+005df6 mem 005dfc lea.l
+005dfc call 00735a
+005e24 jump 005940
+005e30 mem 005e36 lea.l
+005e36 call 00735a
+005e56 mem 005e88 lea.l
+005e5a mem 005e62 lea.l
+005e5e jump 005940
+005e6a mem 005e70 lea.l
+005e70 call 00735a
+005e90 mem 005ec2 lea.l
+005e94 mem 005e9c lea.l
+005e98 jump 005940
+005ea4 mem 005eaa lea.l
+005eaa call 00735a
+005ed2 jump 005940
+005ede mem 005ee4 lea.l
+005ee4 call 00735a
+005f04 mem 005f4e lea.l
+005f08 mem 005f1a lea.l
+005f0c mem ffffa0ca r.w
+005f14 jump 005f32
+005f16 jump 005940
+005f1a call 013da8
+005f2e mem 005f34 lea.l
+005f48 call 008fa8
+005f64 mem 005f8e lea.l
+005f6c mem 005f7a lea.l
+005f70 call 005940
+005f76 jump 005940
+005f7a mem 005f80 lea.l
+005fd2 mem 005fe4 lea.l
+005fd6 mem 005fde lea.l
+005fda jump 005940
+005fde mem 005fde lea.l
+006004 mem 006074 lea.l
+00601a mem 006022 lea.l
+00601e jump 005940
+006022 mem 006028 lea.l
+006028 call 0072ce
+006042 mem 006074 lea.l
+006058 mem 006060 lea.l
+00605c jump 005940
+006060 mem 006066 lea.l
+00606e call 0072ce
+0060f4 mem 00611e lea.l
+0060f8 mem 006100 lea.l
+0060fc jump 005940
+006100 mem 006106 lea.l
+006106 call 00733e
+00612a mem 006166 lea.l
+00612e mem ffff9ebc r.b
+00613e mem 006146 lea.l
+006142 jump 005940
+006146 call 0072b2
+00614a call 006252
+00614e mem 006154 lea.l
+006154 call 007368
+006166 mem 006154 lea.l
+006174 mem 0061c2 lea.l
+006178 mem 0061bc lea.l
+00617c mem ffff9ebc r.b
+00618c mem 006194 lea.l
+006190 jump 005940
+006194 call 0072b2
+006198 call 006252
+00619c mem 0061a2 lea.l
+0061a2 call 00735a
+0061b4 mem ffff9ebc rw.b
+0061bc mem 0061a2 lea.l
+0061ca mem 006200 lea.l
+0061ce mem 0061d6 lea.l
+0061d2 jump 005940
+0061d6 call 0072b2
+0061da call 006252
+0061de mem 0061e4 lea.l
+0061e4 call 00735a
+0061f6 mem ffff9ebc rw.b
+006208 mem 00624a lea.l
+00620c mem 006214 lea.l
+006210 jump 005940
+006214 call 006252
+006218 mem 00621e lea.l
+00621e call 00735a
+006236 mem ffff9ebc rw.b
+006240 mem ffff9ebc rw.b
+006256 mem ffff80dc r.w
+006260 mem ffff9e94 r.w
+00626e call 0124ec
+00627a mem 0062a0 lea.l
+00627e mem 00628e lea.l
+006282 call 005940
+006286 mem 0062a8 lea.l
+00628a jump 005940
+006292 call 013d04
+006298 mem 00629e lea.l
+0062b0 mem 00630c lea.l
+0062b4 mem 0062fa lea.l
+0062b8 call 005940
+0062bc mem 006314 lea.l
+0062c0 mem 0062dc lea.l
+0062c4 call 005940
+0062c8 mem 00631c lea.l
+0062cc mem 0062d4 lea.l
+0062d0 jump 005940
+0062d8 jump 006304
+0062da jump 0062e2
+0062e0 jump 006304
+0062e2 call 0072f8
+0062e6 mem ffff9e94 r.w
+0062f4 call 01253c
+0062fe call 013d04
+006304 mem 00630a lea.l
+006326 mem 006354 lea.l
+00632a mem 006332 lea.l
+00632e jump 005940
+006340 mem 006346 lea.l
+006346 call 00735a
+00635c mem 006386 lea.l
+006360 mem 006368 lea.l
+006364 jump 005940
+006368 mem 00636e lea.l
+00636e call 0072ce
+00638e mem 0063b8 lea.l
+006392 mem 00639a lea.l
+006396 jump 005940
+00639a mem 0063a0 lea.l
+0063a0 call 0072ea
+0063c0 mem 0063ea lea.l
+0063c4 mem 0063cc lea.l
+0063c8 jump 005940
+0063cc mem 0063d2 lea.l
+0063d2 call 0072ce
+006456 mem 006480 lea.l
+00645a mem 006462 lea.l
+00645e jump 005940
+006462 mem 006468 lea.l
+006468 call 00734c
+006494 mem 0064d8 lea.l
+006498 mem 0064a0 lea.l
+00649c jump 005940
+0064a0 mem 0064a6 lea.l
+0064a6 call 007322
+0064aa mem ffffa23c rw.w
+0064b2 mem ffff9eda r.l
+0064e8 jump 005940
+0064ec mem 0064f2 lea.l
+0064f2 call 00735a
+006512 mem 00653c lea.l
+006516 mem 00651e lea.l
+00651a jump 005940
+00651e mem 006524 lea.l
+006524 call 0072f8
+00654c jump 005940
+006550 mem 006556 lea.l
+006556 call 0072dc
+006576 mem 00659c lea.l
+00657a mem 006582 lea.l
+00657e jump 005940
+006582 mem 006588 lea.l
+0065a4 mem 0065ca lea.l
+0065a8 mem 0065b0 lea.l
+0065ac jump 005940
+0065b0 mem 0065b6 lea.l
+0065d2 mem 0065f4 lea.l
+0065d6 mem 0065de lea.l
+0065da jump 005940
+0065de mem 0065e4 lea.l
+0065fc mem 00664a lea.l
+006600 mem 006612 lea.l
+006604 mem ffffa0ca r.w
+00660c jump 00662e
+00660e jump 005940
+006612 call 013da8
+00662a mem 006630 lea.l
+006644 call 008fa8
+006652 mem 0066a0 lea.l
+006656 mem 006668 lea.l
+00665a mem ffffa0ca r.w
+006662 jump 006684
+006664 jump 005940
+006668 call 013da8
+006680 mem 006686 lea.l
+00669a call 008fa8
+0066a8 mem 0066d2 lea.l
+0066ac mem 0066b4 lea.l
+0066b0 jump 005940
+0066b4 mem 0066ba lea.l
+0066ba call 00735a
+006764 mem 006796 lea.l
+006768 mem 006770 lea.l
+00676c jump 005940
+006770 call 0072b2
+006774 call 006252
+006778 mem 00677e lea.l
+00677e call 00735a
+0067c6 mem 0067ea lea.l
+0067ca mem 0067d2 lea.l
+0067ce jump 005940
+0067d2 mem 0067d8 lea.l
+0067d8 call 007314
+0067f2 mem 006832 lea.l
+0067f6 mem 006806 lea.l
+0067fa call 005940
+0067fe mem 00682a lea.l
+006802 jump 005940
+006806 mem 00680c lea.l
+00680c call 007322
+00683a mem 006868 lea.l
+00683e mem 006846 lea.l
+006842 jump 005940
+006846 mem 00684c lea.l
+00684c call 0072f8
+00685e call 006870
+006870 mem ffff9ebe r.b
+006878 mem ffff9ed2 r.l
+006880 mem ffff80da rw.w
+006886 mem ffff9ebe w.b
+00688c mem ffff9ed2 w.l
+006894 mem 0068c2 lea.l
+006898 mem 0068a0 lea.l
+00689c jump 005940
+0068a0 mem 0068a6 lea.l
+0068a6 call 0072f8
+0068b8 call 006870
+0068ca mem 0068f8 lea.l
+0068ce mem 0068d6 lea.l
+0068d2 jump 005940
+0068d6 mem 0068dc lea.l
+0068dc call 0072f8
+0068ee call 006870
+006900 mem 0069b4 lea.l
+006904 mem 00690c lea.l
+006908 jump 005940
+006936 call 009a5e
+006986 call 013d04
+00699c mem 0069a2 lea.l
+0069a2 call 007314
+0069bc mem 0069e6 lea.l
+0069c0 mem 0069c8 lea.l
+0069c4 jump 005940
+0069c8 mem 0069ce lea.l
+0069ce call 007330
+0069f4 mem 006a18 lea.l
+0069f8 mem 006a00 lea.l
+0069fc jump 005940
+006a00 mem 006a06 lea.l
+006a06 call 0072ce
+006ae0 mem 006b2a lea.l
+006ae4 mem 006aec lea.l
+006ae8 jump 005940
+006aec mem 006af2 lea.l
+006af2 call 0072f8
+006b04 mem ffff9ebe r.b
+006b10 mem ffff80da rw.w
+006b18 mem ffffa0a5 r.b
+006b20 call 006870
+006b32 mem 006b60 lea.l
+006b36 mem 006b3e lea.l
+006b3a jump 005940
+006b3e mem 006b44 lea.l
+006b44 call 0072f8
+006b56 call 006870
+006b68 mem 006b8e lea.l
+006b6c mem 006b74 lea.l
+006b70 jump 005940
+006b74 mem 006b7a lea.l
+006b7a call 007314
+006b7e mem ffff9eda r.l
+006b86 call 01016c
+006b96 mem 006bda lea.l
+006b9a mem 006ba2 lea.l
+006b9e jump 005940
+006bb4 mem ffffa0ca r.w
+006bcc call 013dbe
+006bd2 mem 006bd8 lea.l
+006be2 mem 006c26 lea.l
+006be6 mem 006bee lea.l
+006bea jump 005940
+006c00 mem ffffa0ca r.w
+006c18 call 013dbe
+006c1e mem 006c24 lea.l
+006c36 mem 006c86 lea.l
+006c3a mem 006c42 lea.l
+006c3e jump 005940
+006c54 call 006e32
+006c58 mem 006c5e lea.l
+006c5e mem ffffa0ca r.w
+006c80 call 00733e
+006e32 mem ffffa0ca r.w
+006e3c mem ffff9e94 r.w
+006e4a call 01253c
+006e52 mem 006e80 lea.l
+006e56 mem 006e66 lea.l
+006e5a call 005940
+006e5e mem 006e88 lea.l
+006e62 jump 005940
+006e66 call 007322
+006e72 mem ffffa23c rw.w
+006e78 mem 006e7e lea.l
+006e90 mem 006ee8 lea.l
+006e94 mem 006ea8 lea.l
+006e98 call 005940
+006e9c mem 006ef0 lea.l
+006ea0 mem 006ea8 lea.l
+006ea4 jump 005940
+006ea8 call 0072ce
+006eac mem ffffa23e rw.w
+006eb2 mem ffffa242 rw.w
+006ec4 mem 006ee6 lea.l
+006eca call 0072ce
+006ece mem ffffa240 rw.w
+006ed4 mem ffffa244 rw.w
+006eda mem 006ee6 lea.l
+006f04 mem ffff9e94 r.w
+006f1c mem ffffae84 lea.l
+006f28 mem ffffa0ca r.w
+006f30 call 007314
+006f38 mem ffff80da r.w
+006f42 call 00b192
+006f48 call 013d04
+006f54 mem 006f5a lea.l
 00700c mem ffff9ab2 lea.l
 007012 mem ffff80e0 r.w
 007036 mem 007048 r.l
@@ -1623,10 +2025,56 @@
 0070bc call 013e30
 0070ca mem 0070e6 lea.l
 0070d0 call 007086
+0070ee mem 007104 lea.l
+0070f4 call 007086
+00710c mem 007122 lea.l
+007112 call 007086
+007118 jump 007120
+00711c call 007c7c
+00712a mem 007166 lea.l
+007130 call 007086
+007136 jump 007164
 00713c call 0057ba
 00714c mem ffff80c2 w.l
 007152 call 007bec
 00715c call 008fa8
+00716e mem 007184 lea.l
+007174 call 007086
+00718c mem 0071ac lea.l
+007192 call 007086
+007198 jump 0071aa
+0071b4 mem 0071c0 lea.l
+0071ba call 007086
+0071c8 mem 0071f0 lea.l
+0071ce call 007086
+0071f8 mem 007204 lea.l
+0071fe call 007086
+00720c mem 007228 lea.l
+007212 call 007086
+007222 jump 00711a
+007230 mem 007258 lea.l
+007236 call 007086
+007266 call 007086
+007292 mem 0072aa lea.l
+007298 call 007086
+0072a0 call 007c40
+0072a4 call 007c54
+0072bc jump 007376
+0072ca jump 007376
+0072d8 jump 007376
+0072e6 jump 007376
+0072f4 jump 007376
+007302 jump 007376
+007310 jump 007376
+00731e jump 007376
+00732c jump 007376
+00733a jump 007376
+007348 jump 007376
+007356 jump 007376
+007364 jump 007376
+007372 jump 007376
+007376 mem ffff9eac lea.l
+007384 mem ffff9eb4 lea.l
 0073a0 mem ffff9e94 w.l
 0073ae mem ffff87b2 lea.l
 0073b4 mem ffff80da r.w
@@ -2438,9 +2886,24 @@
 00a4f8 call 0092dc
 00a510 mem 00a51a lea.l
 00a514 call 0092dc
+00a5fa call 009a02
+00a62c call 00881c
+00a63c mem ffff9e10 rw.w
 00a644 mem 00a654 lea.l
 00a648 call 0092dc
 00a64c mem ffff9e08 rw.w
+00a666 mem 00a680 lea.l
+00a66a call 0092dc
+00a678 mem ffff9e0e rw.w
+00a692 mem 00a700 lea.l
+00a696 call 0092dc
+00a6aa mem 00a700 lea.l
+00a6ae call 0092dc
+00a6c8 mem 00a700 lea.l
+00a6cc call 0092dc
+00a6ea mem ffff9eda w.l
+00a6f0 mem ffffa23c w.w
+00a6f8 mem ffff9e0e rw.w
 00a712 mem 00a752 lea.l
 00a716 call 0092dc
 00a74a mem ffff9e08 rw.w
@@ -2489,6 +2952,13 @@
 00ab8e call 0092dc
 00abbe call 00f356
 00abec mem ffff9e12 rw.w
+00ac06 mem 00ac58 lea.l
+00ac0a call 0092dc
+00ac42 mem ffff9ee0 lea.l
+00ac50 mem ffff9e14 rw.w
+00ac6a mem 00ac9e lea.l
+00ac6e call 0092dc
+00ac96 mem ffff9e10 rw.w
 00acb0 mem 00acbe lea.l
 00acb4 call 0092dc
 00acf2 mem 00ad02 lea.l
@@ -2551,6 +3021,9 @@
 00b0fe call 0118ce
 00b104 mem ffff9e58 w.w
 00b10e call 0118c0
+00b192 mem 00b1bc lea.l
+00b196 call 0092dc
+00b19a mem ffff9e94 r.l
 00b1ce mem 00b1ee lea.l
 00b1d2 call 0092dc
 00b1d6 mem ffffae84 lea.l
@@ -2711,6 +3184,15 @@
 00ba4a call 012234
 00ba50 mem ffff80da rw.w
 00ba56 jump 00b3be
+00ba68 mem 0a0eb2 lea.l
+00ba76 mem ffff9e34 r.w
+00ba7c call 01227a
+00ba8a jump 00b3be
+00ba90 call 00babc
+00baa0 call 013240
+00baa6 call 00babc
+00bab6 call 013240
+00baba jump 00bad6
 00bad6 call 009078
 00bae4 mem 00bc86 lea.l
 00bafe mem ffff9e34 r.w
@@ -2867,6 +3349,7 @@
 00c37a jump 00b3be
 00c37e call 00908a
 00c386 call 013d04
+00c39a jump 00c3ac
 00c3b4 mem ffff80da rw.w
 00c3be call 013228
 00c3c2 jump 00b3be
@@ -2912,6 +3395,7 @@
 00c6c4 mem ffff9ec0 w.b
 00c6ca jump 00b3be
 00c6ce call 00d236
+00c6ea jump 00c6fa
 00c6f6 mem 00c748 r.b
 00c6fe mem 00c758 r.b
 00c702 mem ffff80bc r.l
@@ -2927,6 +3411,7 @@
 00c7e2 jump 00b3be
 00c7ee mem ffff80da rw.w
 00c7f4 mem ffff9ec0 w.b
+00c7fe jump 00c6fa
 00c822 jump 00c8a8
 00c842 jump 00c8a8
 00c882 jump 00c8a8
@@ -2969,6 +3454,126 @@
 00ca88 call 012234
 00ca90 mem ffff80da rw.w
 00ca96 jump 00b3be
+00caba call 012316
+00cac0 call 012332
+00cad4 call 013228
+00caf2 call 009a02
+00caf8 jump 00b3be
+00cafe mem ffff80da rw.w
+00cb16 call 01253c
+00cb2c call 01253c
+00cb30 jump 00b3be
+00cb34 mem ffff9ebc r.b
+00cb3e call 00cd66
+00cb48 mem ffff9eba w.w
+00cb72 call 0081b6
+00cb7e call 00881c
+00cb9a jump 00cbe8
+00cb9e mem ffff9ebc r.b
+00cba8 call 00cd66
+00cbb2 mem ffff9eba w.w
+00cbcc call 00881c
+00cbe4 jump 00cbe8
+00cbe8 mem ffffaadc lea.l
+00cc1a call 00cc3c
+00cc22 call 00cc3c
+00cc2a call 00cc6a
+00cc32 call 00cc6a
+00cc38 jump 00b3be
+00cc3e mem 00cc62 r.w
+00cc42 mem 04e26a lea.l
+00cc54 mem ffff9e48 r.w
+00cc5a call 012234
+00cc6c mem 00cc90 r.w
+00cc70 mem 04e26a lea.l
+00cc82 mem ffff9e48 r.w
+00cc88 call 01227a
+00cc9a mem 04e696 lea.l
+00cca8 mem ffff9e48 r.w
+00ccb2 call 01227a
+00ccb6 mem 04e696 lea.l
+00ccc4 mem ffff9e48 r.w
+00ccce call 012234
+00ccec call 00881c
+00ccf6 call 00881c
+00cd0a call 012494
+00cd12 mem ffff9ebc w.b
+00cd18 jump 00b3be
+00cd2a mem ffff80da rw.w
+00cd30 mem 01f2e2 lea.l
+00cd36 call 00933e
+00cd3e mem ffff80da rw.w
+00cd4a call 00933e
+00cd4e jump 00cce6
+00cd52 mem ffff8044 w.w
+00cd5a mem ffff8094 w.w
+00cd62 jump 00b3be
+00cd72 jump 00cdfc
+00cd7a jump 00cdc2
+00cd84 mem 00cdb8 r.w
+00cd8a mem 04e26a lea.l
+00cda0 mem ffff9e48 r.w
+00cda6 call 012234
+00cdac jump 00cdfc
+00cdda mem 00cdb0 r.w
+00cdde jump 00cd88
+00cde6 jump 00cdfc
+00cdf6 call 009a02
+00cdfe mem ffff9eba r.w
+00ce08 jump 00b3be
+00ce14 mem 04e686 lea.l
+00ce22 mem ffff9e48 r.w
+00ce2c call 012234
+00ce3e jump 00b3be
+00ce42 jump 00b3be
+00ce46 call 00cf58
+00ce4a mem ffff9eba r.w
+00ce6c mem 00cea4 r.w
+00ce72 mem 04e26a lea.l
+00ce88 mem ffff9e48 r.w
+00ce94 call 012234
+00ce9a call 01227a
+00cea0 jump 00b3be
+00cec6 mem 04e664 lea.l
+00ced4 mem ffff9e48 r.w
+00cede call 012234
+00cef6 jump 00b3be
+00cefa mem ffff9eba r.w
+00cf16 mem ffff80da rw.w
+00cf38 call 012494
+00cf3c jump 00b3be
+00cf42 mem ffff80da rw.w
+00cf50 call 012212
+00cf54 jump 00b3be
+00cf8a call 00881c
+00cf96 call 0099d4
+00cf9e mem ffff9eca r.l
+00cfca mem 00cfd6 r.b
+00cfce call 013228
+00cfd2 jump 00b3be
+00cfe0 mem 04e67a lea.l
+00cfee mem ffff9e48 r.w
+00cffe call 01227a
+00d008 call 012234
+00d020 jump 00b3be
+00d024 jump 00b3be
+00d028 call 00c48e
+00d04a mem 00d06c r.b
+00d052 call 013228
+00d056 jump 00b3be
+00d068 jump 00b3be
+00d0a6 call 013228
+00d0ae mem ffff80da rw.w
+00d0b4 call 00908a
+00d0b8 jump 00b3be
+00d0be mem ffff80da rw.w
+00d0c4 jump 00b3be
+00d0ca mem ffff80da rw.w
+00d0d0 jump 00b3be
+00d0d4 call 00d0f8
+00d0e0 call 00902e
+00d0ee mem ffff80da rw.w
+00d0f4 jump 00b3be
 00d0f8 mem ffff80bc r.l
 00d10a mem ffff80bc w.l
 00d112 mem ffff9e92 r.w
@@ -3153,6 +3758,87 @@
 00dba4 mem 00dbb4 r.b
 00dbac call 013228
 00dbb0 jump 00b3be
+00dbd4 call 01253c
+00dbe0 call 012316
+00dbe6 call 012332
+00dbee call 013228
+00dbf2 jump 00b3be
+00dc02 jump 00b3be
+00dc34 call 00ac06
+00dc3c mem ffff80da r.w
+00dc54 call 00a5fa
+00dc5a jump 00b3be
+00dc7a jump 00dc9e
+00dca2 mem 05fa92 lea.l
+00dccc mem ffff9e4a r.w
+00dcd2 call 012234
+00dcd8 jump 00b3be
+00dcdc mem ffffaf24 lea.l
+00dce2 jump 00dcea
+00dce4 mem ffffaf04 lea.l
+00dcf2 call 00881c
+00dd2c mem ffffaf18 r.w
+00dd3a call 00933e
+00dd3e mem ffff87b2 lea.l
+00dd50 mem ffff80da rw.w
+00dd60 jump 00b3be
+00dd66 mem ffff80da rw.w
+00dd6c mem ffffaf18 lea.l
+00dd90 call 01253c
+00dd96 mem 05fac2 lea.l
+00dd9c jump 00dcb2
+00dda0 mem ffff87b2 lea.l
+00ddb2 mem ffff80da w.w
+00ddba call 00c48e
+00ddde call 00e0e8
+00dde2 jump 00e146
+00de08 call 012316
+00de0e call 012332
+00de26 call 00d236
+00de40 call 00e108
+00de5e call 00e0e8
+00de68 jump 00e146
+00de6c call 00881c
+00de96 call 009a7a
+00de9c call 009a5e
+00deba call 012316
+00dec0 call 012332
+00ded8 call 00d236
+00def2 call 00e108
+00df26 call 013d04
+00df2c call 009054
+00df34 call 00e0e8
+00df3e call 00de6c
+00df42 jump 00e146
+00df46 call 012316
+00df4c call 012332
+00df66 call 00e0e8
+00df7a jump 00e146
+00df98 jump 00e146
+00df9c call 012316
+00dfa2 call 012332
+00dfbc call 00e0e8
+00dfca jump 00e146
+00dfec jump 00e146
+00dff0 call 00c48e
+00e002 call 00e0e8
+00e006 jump 00e146
+00e026 call 00c48e
+00e038 call 00e0e8
+00e03c jump 00e146
+00e05c call 012316
+00e062 call 012332
+00e09c call 00e0f8
+00e0a0 jump 00e146
+00e0b2 mem 01287e lea.l
+00e0bc mem 012876 lea.l
+00e0c0 call 01277c
+00e0d8 call 01253c
+00e0de mem ffff80da rw.w
+00e0e4 jump 00e146
+00e0f2 call 013228
+00e102 call 013240
+00e10a jump 00e10e
 00e146 mem ffffa0ee r.w
 00e162 jump 00b3be
 00e166 call 012316
@@ -3164,6 +3850,16 @@
 00e198 mem ffff80da rw.w
 00e1aa call 012212
 00e1ae jump 00b3be
+00e1ca call 012316
+00e1d0 mem 00e228 lea.l
+00e1e4 call 01253c
+00e1ee mem ffff80da rw.w
+00e1f4 mem 0666a4 lea.l
+00e218 mem ffff9e38 r.w
+00e21e call 012234
+00e224 jump 00b3be
+00e24c call 012212
+00e250 jump 00b3be
 00e254 call 012316
 00e25a call 012332
 00e262 call 013228
@@ -3241,6 +3937,65 @@
 00e61a mem ffffaf84 w.w
 00e622 mem ffffaf86 w.w
 00e62a jump 00b3be
+00e73e call 013dd4
+00e742 jump 00b3be
+00e746 jump 00b3be
+00e750 mem ffffaf86 r.w
+00e758 mem ffffaf84 r.w
+00e784 call 009a02
+00e78a call 00881c
+00e79a jump 00b3be
+00e7a4 call 00881c
+00e7bc jump 00b3be
+00e7d4 call 01253c
+00e7da mem 06d926 lea.l
+00e7f0 mem ffff9e46 r.w
+00e802 call 01227a
+00e808 call 012234
+00e814 mem ffffaf86 rw.w
+00e81c mem ffffaf84 rw.w
+00e822 mem ffffaf84 r.w
+00e828 mem ffffaf86 r.w
+00e830 mem ffff9ece r.l
+00e836 mem ffff9ea4 w.w
+00e85a mem ffff80da rw.w
+00e860 jump 00b3be
+00e872 mem 00e62e lea.l
+00e884 call 01254e
+00e8a6 call 0124d2
+00e8aa jump 00b3be
+00e8c0 call 0124b8
+00e8c4 jump 00b3be
+00e8ca mem 06d93e lea.l
+00e8e0 mem ffff9e46 r.w
+00e8e6 call 012234
+00e8ea mem 06d93e lea.l
+00e900 mem ffff9e46 r.w
+00e906 call 01227a
+00e91a jump 00b3be
+00e92e mem ffffa246 w.b
+00e934 mem ffffa134 lea.l
+00e93a mem 0082ba lea.l
+00e940 call 008a7c
+00e944 mem 0081da lea.l
+00e94a call 008a7c
+00e94e mem 0081da lea.l
+00e954 call 008a7c
+00e958 mem 0081da lea.l
+00e95e call 008a7c
+00e962 mem ffffa0a4 w.b
+00e972 mem ffff9e50 r.w
+00e978 mem 054ed2 lea.l
+00e980 call 009b14
+00e9b6 call 0099c8
+00e9c0 jump 00b3be
+00e9c4 mem ffffa0ee r.w
+00e9d2 call 008970
+00e9d8 mem ffffa1b4 lea.l
+00e9de call 0080fe
+00e9e6 mem ffffa246 r.b
+00e9ee mem ffffa234 w.b
+00e9f6 jump 00b3be
 00e9fa mem ffffa0ee r.w
 00ea04 mem 0084fa lea.l
 00ea0e mem ffffa1cc lea.l
@@ -3385,8 +4140,10 @@
 00f066 call 012316
 00f072 mem ffff80da rw.w
 00f078 mem ffff9ebe w.b
+00f090 jump 00f0fa
 00f0ca call 012316
 00f0ce call 00d236
+00f0ea jump 00f0fa
 00f0f6 mem 00f140 r.b
 00f0fa mem ffff80bc r.l
 00f108 mem 00f150 lea.l
@@ -3413,8 +4170,10 @@
 00f24c call 012316
 00f258 mem ffff80da rw.w
 00f25e mem ffff9ebe w.b
+00f276 jump 00f2e0
 00f2b0 call 012316
 00f2b4 call 00d236
+00f2d0 jump 00f2e0
 00f2dc mem 00f326 r.b
 00f2e0 mem ffff80bc r.l
 00f2ee mem 00f336 lea.l
@@ -3450,6 +4209,25 @@
 00f4b6 mem ffff9ee0 lea.l
 00f4e8 mem 00f502 r.b
 00f4f6 call 013240
+00f55c jump 00f5c0
+00f580 jump 00f5c0
+00f5a8 jump 00f5c0
+00f5b0 jump 00f5c0
+00f5ce jump 00f648
+00f5d8 mem 00f638 r.b
+00f5fa call 009a5e
+00f630 jump 00ddba
+00f636 jump 00f648
+00f648 call 012316
+00f64e call 012332
+00f652 call 013228
+00f656 jump 00b3be
+00f666 mem 01287e lea.l
+00f670 mem 012876 lea.l
+00f674 call 01277c
+00f68c call 01253c
+00f692 mem ffff80da rw.w
+00f698 jump 00b3be
 00f6c2 call 013228
 00f6c6 jump 00b3be
 00f6d4 call 013228
@@ -3505,6 +4283,7 @@
 00fad0 mem ffff9e94 r.w
 00fadc call 0124ec
 00faea jump 00b3be
+00fb5e jump 00fb64
 00fb64 call 012316
 00fb6a call 012332
 00fb6e call 013228
@@ -3609,6 +4388,20 @@
 01014a mem ffffa0ee r.w
 010154 mem 01015c r.w
 010158 jump 010126
+01016e mem ffff80da rw.w
+010174 mem ffff9eda w.l
+01018a call 01253c
+01018e call 006870
+010194 mem ffff9ebe w.b
+01019a mem ffff87b2 lea.l
+0101ca call 013dbe
+0101e8 mem ffff9ebe w.b
+0101f0 call 0072f8
+010214 call 00b4a6
+010218 call 012316
+01022c call 01042c
+010230 call 0102a6
+010234 jump 00b3be
 010238 call 00b4a6
 01023c call 012316
 010250 call 01042c
@@ -3683,6 +4476,39 @@
 0106aa mem ffff9e5e r.w
 0106b4 mem ffff80bc w.l
 0106be call 013228
+010726 call 010812
+01072a jump 00b3be
+010740 call 0107f4
+010744 jump 00b3be
+01075e call 010812
+010762 jump 00b3be
+010782 call 0107f4
+010786 jump 00b3be
+010794 mem ffff80da rw.w
+01079a mem 020ad8 lea.l
+0107a0 call 00933e
+0107a4 call 010812
+0107a8 jump 00b3be
+0107ac call 010812
+0107d0 mem ffff80da rw.w
+0107d6 jump 00b3be
+0107ec call 010666
+0107f0 jump 00b3be
+0107fc call 010830
+01080e jump 010666
+010816 call 00b4a6
+01081a call 012316
+01082c jump 010666
+010830 mem ffff87b2 lea.l
+010860 call 010812
+01087a jump 00b3be
+01089c jump 00b3be
+0108a0 call 010812
+0108c6 jump 00b3be
+0108cc call 010666
+0108d8 jump 00b3be
+0108e0 call 013228
+0108e4 jump 00b3be
 010902 jump 010912
 010906 jump 010912
 01090c call 013228
@@ -3890,6 +4716,7 @@
 011510 jump 011b10
 011520 call 011616
 011532 jump 011b10
+01154e jump 011558
 011554 jump 011448
 011558 call 012316
 011578 call 011616
@@ -4422,6 +5249,8 @@
 014568 call 007c7c
 014574 call 013e30
 01458e call 013e30
+014594 jump 00719a
+01459a jump 007138
 0145c4 call 011f58
 0145d4 call 011f58
 0145d8 call 00d0f8
@@ -4473,6 +5302,8 @@
 014828 mem ffff9e38 r.w
 014832 call 012234
 014840 call 01227a
+0151dc call 01253c
+0151ee jump 0151f4
 0151f4 call 012316
 0151fa call 012332
 0151fe call 013228
@@ -4483,6 +5314,8 @@
 01521c call 012332
 015220 call 013228
 015224 jump 00b3be
+015244 jump 015212
+015248 jump 015216
 015250 mem ffff8000 lea.l
 01525a call 015272
 01525e mem ffff8050 lea.l

@@ -9,7 +9,8 @@
 000ff4  000ff6      2  unknown  
 001078  00107e      6  data     refs 001078; used by 001084
 0011de  001344    358  string   refs 0011de,0012ba,0012bc,0012ca,0012d8,0012e9; used by 000df2,001030,00110e,001124...; 267 bytes read at runtime
-0014f2  0015a2    176  data     refs 0014f2; used by 0014e4
+0014f2  001538     70  data     refs 0014f2; used by 0014e4
+001590  001598      8  data     refs 001590; used by 001586
 001728  001a1e    758  string   refs 001728,001739,0017a6,0017e7,0019fa; used by 00164a,00166c,001682,0016aa...
 001cd6  001d3a    100  string   refs 001cd6; used by 001c58
 002bc8  0032ac   1764  string   refs 002bc8,002bd8,002be8,002c11,002c16,002c2b...; used by 0015b8,002b08,002b18,002b24...; 591 bytes read at runtime
@@ -19,11 +20,54 @@
 00460c  004650     68  string   68 bytes read at runtime
 004a64  0056fa   3222  data     refs 004da4,004ee8,004f08,004f48,004fdc,005026...; used by 0047da,0047de,0047e2,004802...; 1299 bytes read at runtime
 00571a  0057ba    160  data     refs 00571a,00576a; used by 000912,0009b0,000cd8,000d88...; 80 bytes read at runtime
-0059a4  00700c   5736  data     refs 0059a4; used by 005980
+0059a4  0059ac      8  data     refs 0059a4; used by 005980
+0059c6  0059e6     32  data     refs 0059c6,0059ce; used by 0059b0,0059bc
+005a78  005a80      8  data     refs 005a78; used by 005a4c
+005ab4  005abc      8  data     refs 005ab4; used by 005a84
+005af0  005af8      8  data     refs 005af0; used by 005ac0
+005c3e  005cc6    136  data     refs 005c3e; used by 005bec
+005d0c  005d10      4  padding  
+005efc  005f04      8  unknown  
+005f8e  005fce     64  data     refs 005f8e; used by 005f64
+005fe4  006004     32  data     refs 005fe4; used by 005fd2
+006074  0060f4    128  data     refs 006074; used by 006004,006042
+0061c2  0061ca      8  data     refs 0061c2; used by 006174
+006200  006208      8  data     refs 006200; used by 0061ca
+00624a  006252      8  data     refs 00624a; used by 006208
+0062a0  0062b0     16  data     refs 0062a0,0062a8; used by 00627a,006286
+00630c  006326     26  data     refs 00630c,006314,00631c; used by 0062b0,0062bc,0062c8
+006354  00635c      8  data     refs 006354; used by 006326
+006386  00638e      8  data     refs 006386; used by 00635c
+0063b8  0063c0      8  data     refs 0063b8; used by 00638e
+0063ea  006456    108  data     refs 0063ea; used by 0063c0
+00656e  006576      8  unknown  
+00659c  0065a4      8  data     refs 00659c; used by 006576
+0065ca  0065d2      8  data     refs 0065ca; used by 0065a4
+0065f4  0065fc      8  data     refs 0065f4; used by 0065d2
+00664a  006652      8  data     refs 00664a; used by 0065fc
+0066a0  0066a8      8  data     refs 0066a0; used by 006652
+0066d2  00675e    140  data     refs 0066d2; used by 0066a8
+006796  0067c6     48  data     refs 006796; used by 006764
+0067ea  0067f2      8  data     refs 0067ea; used by 0067c6
+00682a  00683a     16  data     refs 00682a,006832; used by 0067f2,0067fe
+0068f8  006900      8  data     refs 0068f8; used by 0068ca
+006a18  006ae0    200  data     refs 006a18; used by 0069f4
+006b8e  006b96      8  data     refs 006b8e; used by 006b68
+006c26  006c2e      8  data     refs 006c26; used by 006be2
+006c86  006e32    428  data     refs 006c86; used by 006c36
+006f5c  00700c    176  unknown  
 007048  007080     56  data     refs 007048; used by 007036
-0070e6  007138     82  data     refs 0070e6; used by 0070ca
-007166  00719a     52  unknown  
-0071ac  0073a0    500  unknown  
+0070e6  0070ee      8  data     refs 0070e6; used by 0070ca
+007104  00710c      8  data     refs 007104; used by 0070ee
+007122  00712a      8  data     refs 007122; used by 00710c
+007166  00716e      8  data     refs 007166; used by 00712a
+007184  00718c      8  data     refs 007184; used by 00716e
+0071ac  0071b4      8  data     refs 0071ac; used by 00718c
+0071c0  0071c8      8  data     refs 0071c0; used by 0071b4
+0071f0  0071f8      8  data     refs 0071f0; used by 0071c8
+007204  00720c      8  data     refs 007204; used by 0071f8
+007228  007230      8  data     refs 007228; used by 00720c
+0072aa  0072b2      8  data     refs 0072aa; used by 007292
 007e7a  007e9a     32  data     refs 007e7a,007e8a; used by 007e6a,007e74
 0081da  00867a   1184  data     refs 0081da,00823a,00825a,00827a,00829a,0082ba...; used by 0009e0,0009f0,0009fa,000cf8...; 768 bytes read at runtime
 00869c  0086c4     40  data     refs 00869c; used by 007422; 40 bytes read at runtime
@@ -32,8 +76,10 @@
 009e02  009e22     32  data     refs 009e02; used by 009d44; 32 bytes read at runtime
 00a4e2  00a4f4     18  data     refs 00a4e2; used by 00a4d2; 18 bytes read at runtime
 00a4fe  00a510     18  data     refs 00a4fe; used by 00a4f4; 18 bytes read at runtime
-00a51a  00a644    298  data     refs 00a51a; used by 00a510; 18 bytes read at runtime
-00a654  00a712    190  data     refs 00a654; used by 00a644; 18 bytes read at runtime
+00a51a  00a5f6    220  data     refs 00a51a; used by 00a510; 18 bytes read at runtime
+00a654  00a666     18  data     refs 00a654; used by 00a644; 18 bytes read at runtime
+00a680  00a692     18  data     refs 00a680; used by 00a666
+00a700  00a712     18  data     refs 00a700; used by 00a692,00a6aa,00a6c8
 00a752  00a7e8    150  data     refs 00a752; used by 00a712; 18 bytes read at runtime
 00a7fa  00a80c     18  data     refs 00a7fa; used by 00a7e8; 18 bytes read at runtime
 00a81a  00a82c     18  data     refs 00a81a; used by 00a80c; 18 bytes read at runtime
@@ -46,7 +92,9 @@
 00aa58  00aa6a     18  data     refs 00aa58; used by 00aa3e; 18 bytes read at runtime
 00aac0  00aad2     18  data     refs 00aac0; used by 00aa6a; 18 bytes read at runtime
 00ab3c  00ab4e     18  data     refs 00ab3c; used by 00aad2; 18 bytes read at runtime
-00abf4  00acb0    188  data     refs 00abf4; used by 00ab8a; 18 bytes read at runtime
+00abf4  00ac06     18  data     refs 00abf4; used by 00ab8a; 18 bytes read at runtime
+00ac58  00ac6a     18  data     refs 00ac58; used by 00ac06
+00ac9e  00acb0     18  data     refs 00ac9e; used by 00ac6a
 00acbe  00acf2     52  data     refs 00acbe; used by 00acb0; 18 bytes read at runtime
 00ad02  00ad14     18  data     refs 00ad02; used by 00acf2; 18 bytes read at runtime
 00ad36  00ad9c    102  data     refs 00ad36; used by 00ad14; 18 bytes read at runtime
@@ -58,44 +106,52 @@
 00afc2  00afd4     18  data     refs 00afc2; used by 00af9e
 00b018  00b02a     18  data     refs 00b018; used by 00affc; 18 bytes read at runtime
 00b07c  00b0b2     54  data     refs 00b07c; used by 00b060; 18 bytes read at runtime
-00b116  00b1ce    184  data     refs 00b116; used by 00b0b2; 18 bytes read at runtime
+00b116  00b192    124  data     refs 00b116; used by 00b0b2; 18 bytes read at runtime
+00b1bc  00b1ce     18  data     refs 00b1bc; used by 00b192
 00b1ee  00b2e6    248  data     refs 00b1ee; used by 00b1ce; 18 bytes read at runtime
 00b36c  00b398     44  data     refs 00b36c; used by 00932e; 32 bytes read at runtime
-00ba5a  00babc     98  data     refs 00ba5a; used by 00b8d0,00b9c8; 8 bytes symbolic pointer table (data)
+00ba5a  00ba62      8  table    refs 00ba5a; used by 00b8d0,00b9c8; 8 bytes symbolic pointer table (data)
 00bc86  00bcc6     64  table    refs 00bc86; used by 00bae4,00bbe8; 64 bytes symbolic pointer table (data)
 00bdee  00be2e     64  table    refs 00bdee,00bdfa; used by 00bd4e,00bd64,00bfba,00bfd0; 64 bytes read at runtime; 64 bytes symbolic pointer table (data)
-00c196  00c1e6     80  data     refs 00c196; used by 00c120; 80 bytes read at runtime
+00c196  00c1e6     80  data     refs 00c196; used by 005cfa,00c120; 80 bytes read at runtime
 00c2b2  00c332    128  data     refs 00c2b2; used by 00c12a; 128 bytes read at runtime
 00c39c  00c3ac     16  data     refs 00c39c; used by 00c36e
 00c41c  00c442     38  data     refs 00c41c; used by 00c3ec
-00c5c0  00c5e2     34  data     refs 00c5c0; used by 00c59a,00c5f2
+00c5c0  00c5e2     34  data     refs 00c5c0; used by 005c20,00c59a,00c5f2
 00c748  00c7ba    114  data     refs 00c748,00c758,00c76a; used by 00c6f6,00c6fe,00c710
-00ca9a  00d0f8   1630  data     refs 00ca9a; used by 00ca18
+00ca9a  00caba     32  data     refs 00ca9a; used by 00ca18
+00cc62  00cc6a      8  data     refs 00cc62; used by 00cc3e
+00cc90  00cc98      8  data     refs 00cc90; used by 00cc6c
+00cea4  00cec4     32  data     refs 00cea4; used by 00ce6c
+00cfd6  00cfde      8  data     refs 00cfd6; used by 00cfca
+00d06c  00d08c     32  data     refs 00d06c; used by 00d04a
 00d3e4  00d444     96  data     refs 00d3e4,00d3e5,00d3e6,00d3e7,00d424,00d425; used by 00d36c,00d370,00d39a,00d39e...
 00d63c  00d674     56  data     refs 00d63c,00d66c; used by 00d5a6,00d602; 56 bytes read at runtime
-00dbb4  00e10c   1368  data     refs 00dbb4; used by 00dba4
-00e1b2  00e254    162  data     refs 00e1b2; used by 00e17a
-00e62e  00e9fa    972  data     refs 00e62e; used by 00e5b6
+00dbb4  00dbc4     16  data     refs 00dbb4; used by 00dba4
+00e1b2  00e1ca     24  data     refs 00e1b2; used by 00e17a
+00e228  00e240     24  data     refs 00e228; used by 00e1d0
+00e62e  00e72e    256  data     refs 00e62e; used by 00e5b6,00e872
 00ef80  00efa4     36  data     refs 00ef80,00ef90; used by 00ef36,00ef48
 00f140  00f170     48  data     refs 00f140,00f150; used by 00f0f6,00f108
 00f326  00f356     48  data     refs 00f326,00f336; used by 00f2dc,00f2ee
-00f502  00f69c    410  data     refs 00f502; used by 00f486,00f4e8
-00faee  00fb60    114  data     refs 00faee; used by 00f912
+00f502  00f540     62  data     refs 00f502; used by 00f486,00f4e8
+00f638  00f648     16  data     refs 00f638; used by 00f5d8
+00faee  00fb52    100  data     refs 00faee; used by 00f912
 00fc1c  00fc1e      2  padding  refs 00fc1c; used by 00fc14
 00fe0c  00fe3c     48  data     refs 00fe0c,00fe24; used by 00fdc2,00fdd4
 00ffa0  00ffc0     32  data     refs 00ffa0; used by 00ff88
 0100ac  0100d0     36  data     refs 0100ac,0100bc; used by 010062,010074
-01015c  010238    220  data     refs 01015c; used by 010154
+01015c  01016c     16  data     refs 01015c; used by 010154
 010314  01031e     10  data     refs 010314; used by 010308
 01047a  0104b6     60  data     refs 01047a; used by 010444; 48 bytes read at runtime
 01052a  010532      8  data     refs 01052a; used by 01051e
-0106c4  0108e8    548  data     refs 0106c4; used by 01068e; 44 bytes read at runtime
+0106c4  01070c     72  data     refs 0106c4; used by 01068e; 44 bytes read at runtime
 010a90  010a92      2  unknown  
 010cfc  010d0c     16  table    refs 010cfc; used by 010cb0; 16 bytes read at runtime; 16 bytes symbolic pointer table (data)
 0115ea  0115ee      4  padding  refs 0115ea; used by 0115da
 011928  011a44    284  data     refs 011928,0119f8,011a30,011a3c; used by 0118c0,0118ce,0118dc,0118ea; 120 bytes read at runtime
 0125b6  0126b4    254  data     refs 0125b6,012618,01265c,01269a; used by 01248c,012494,0124b8,0124d2...; 122 bytes read at runtime
-0127f6  012886    144  data     refs 0127f6,0127fe,012806,01280e,012816,01281e...; used by 00b50c,00b516,00bcd4,00ed7e...; 8 bytes read at runtime
+0127f6  012886    144  data     refs 0127f6,0127fe,012806,01280e,012816,01281e...; used by 00b50c,00b516,00bcd4,00e0b2...; 8 bytes read at runtime
 012c70  012c78      8  data     refs 012c70; used by 012c6a
 012ca0  012ca2      2  padding  refs 012ca0; used by 012c7a
 012cba  012cbc      2  unknown  
@@ -107,9 +163,9 @@
 013d84  013d90     12  data     refs 013d84; used by 013d68,013d6c
 014272  014510    670  data     refs 014272,014400,014490; used by 013ee2,0141b8,0141c6
 0147ea  01480a     32  table    refs 0147ea; used by 0147c8; 32 bytes symbolic pointer table (data)
-014846  0151f0   2474  data     refs 014846; used by 01481c; 32 bytes symbolic pointer table (data)
+014846  0151cc   2438  data     refs 014846; used by 01481c; 32 bytes symbolic pointer table (data)
 0152a8  01db36  34958  data     refs 0152a8; used by 0132d6; 18108 bytes read at runtime
 01dc68  01e346   1758  data     refs 01dc68,01dc84,01dcb6,01dcc6,01e2e6,01e316; used by 01db5c,01db88,01db96,01dba6...; 1710 bytes read at runtime
-01e504  020000   6908  data     1598 bytes read at runtime
+01e504  020000   6908  data     refs 01f2e2; used by 00cd30; 1598 bytes read at runtime
 0fc312  0fc32e     28  data*    Z80 boot stub (28 bytes) copied to Z80 RAM $0000 by sub_0FC350; refs 0fc312; used by 0fc358; 27 bytes read at runtime
-# totals: data=70462  padding=8  string=4074  table=176  unknown=558
+# totals: data=60918  padding=12  string=4074  table=184  unknown=198
