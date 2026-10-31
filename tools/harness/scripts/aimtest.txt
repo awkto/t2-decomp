@@ -1,0 +1,13 @@
+load play2
+gun 40 60 0 10
+shot e1
+gun 280 180 0 10
+shot e2
+gun 80 160 0 10
+shot e3
+gun 240 60 1 30
+shot e4
+gun 110 130 1 60
+shot e5
+gun 225 130 1 60
+shot e6

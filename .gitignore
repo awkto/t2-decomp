@@ -1,0 +1,12 @@
+rom/
+*.zip
+*.smd
+proto/*.png
+build/
+runs/
+.venv/
+/ext
+.vm/
+.claude/
+__pycache__/
+states/*.state
