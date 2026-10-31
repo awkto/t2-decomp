@@ -1,0 +1,38 @@
+# Level-skip cheat. Pad 1 at the "PRESS START" title: U D L R U D L R sets $FFA0A6 = $FF.
+# In game: pause (Start) and press B+C on the pausing player's device; the level ends ($FFA234 = $FF).
+# With the Menacer: gun Start pauses, gun AUX_A+AUX_B (BTN 2|4) skips. GUN=1 GUNMODE=lightgun.
+# Needs the "title" state from gun_boot.txt.
+load title
+peekeach cheat FFA0A6 1
+peekeach level FF80CC 2
+peekeach exit FFA234 1
+run 2
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 3
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 23
+press S 3
+run 60
+press S 3
+run 1800
+gun 160 100 8 3
+run 20
+shot skip_paused
+gun 160 100 6 4
+run 900
+shot skip_stats
+run 1500
+shot skip_next
+save l2

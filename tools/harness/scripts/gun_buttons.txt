@@ -1,0 +1,28 @@
+# Which Menacer button does what in game (needs states from gun_boot.txt, GUN=1 GUNMODE=lightgun).
+# peek.log shows the P1 button word $FF8000 (pad format: b4=B b5=C b6=A b7=Start),
+# the missile count $FF8018 (BCD) and the raw inverted Menacer byte $FF9F72.
+# Expected: BTN 2 (AUX_A, Menacer D0) -> b4 set and missiles 0025 -> 0024;
+#           BTN 4 (AUX_B, D2) -> b5, no effect in game; BTN 8 (Start, D3) -> b7, pause/unpause;
+#           BTN 1 (trigger, D1) -> b6, gun fires.
+load l1
+peekeach btn FF8000 2
+peekeach msl FF8018 2
+peekeach raw FF9F72 1
+peekeach gunpower FF801C 2
+echo BTN2-missile
+gun 160 100 2 6
+run 20
+echo BTN4-C
+gun 160 100 4 6
+run 20
+echo BTN8-start-pause
+gun 160 100 8 6
+run 30
+shot paused
+echo BTN8-start-unpause
+gun 160 100 8 6
+run 20
+echo BTN1-trigger
+gun 160 100 1 6
+run 20
+peekeach off

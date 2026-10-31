@@ -1,0 +1,54 @@
+# Which device each screen accepts (needs states from gun_boot.txt, GUN=1 GUNMODE=lightgun).
+# 1. Title "PRESS START": gun trigger / gun Start do nothing, pad 1 Start opens the menu.
+load title
+gun 160 112 1 5
+gun 160 112 8 5
+run 60
+shot title_after_gun
+press S 5
+run 60
+shot title_after_pad
+# 2. Continue: energy forced low, score forced high; at "CONTINUE n" only the dead player's
+#    own Start works (gun Start for the Menacer player). Trigger and pad 1 Start are ignored.
+load l1
+poke FF9EA8 4 00500000
+poke FF801E 2 0200
+gun 160 100 0 260
+save cont
+peekeach credits FF80CA 1
+peekeach energy FF801E 2
+echo cont-trigger
+gun 160 100 1 5
+gun 160 100 0 60
+echo cont-padstart
+press S 5
+run 60
+echo cont-gunstart
+gun 160 100 8 5
+gun 160 100 0 60
+shot cont_after_gunstart
+peekeach off
+# 3. Let the countdown run out -> GAME OVER -> high-score initials (level $FF80CC = $0A).
+#    The letter grid is driven by the crosshair: aim + trigger picks A, B, C, then ENTER.
+load cont
+gun 160 100 0 1100
+peek level FF80CC 2
+save hsentry
+shot hs_grid
+gun 35 62 0 20
+gun 35 62 1 4
+gun 35 62 0 20
+gun 67 62 0 20
+gun 67 62 1 4
+gun 67 62 0 20
+gun 98 62 0 20
+gun 98 62 1 4
+gun 98 62 0 20
+shot hs_abc
+gun 274 158 0 20
+gun 274 158 1 4
+gun 274 158 0 260
+shot hs_table
+# hi-score table at $FFFF9E: 10 x (3 ASCII initials, 0, BCD score long); entry 1 = "ABC" 00500000
+peek hs1_initials FFFF9E 4
+peek hs1_score FFFFA2 4
