@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>T2: The Arcade Game - mouse control, in the browser</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>T2: The Arcade Game</h1>
+  <span id="status">Loading...</span>
+  <span class="spacer"></span>
+  <label title="Menacer button on the right mouse button">Right click:
+    <select id="sel-right"><option>A</option><option selected>B</option><option>C</option></select></label>
+  <button id="btn-sound" hidden title="Browsers start sound only after a click or key press">Enable sound</button>
+  <button id="btn-fullscreen" title="Fullscreen (F11)">Fullscreen</button>
+  <button id="btn-forget" hidden title="Remove the ROM stored in this browser">Forget ROM</button>
+</header>
+
+<main id="stage">
+  <canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+
+  <section id="rom-panel" class="panel" hidden>
+    <h2>You need your own ROM</h2>
+    <p>This page runs <em>T2: The Arcade Game</em> (Sega Genesis, 1992) in your browser, with the mouse as the
+      Menacer light gun. It contains <strong>no game data</strong>: it runs on the ROM of the original cartridge, which
+      you have to provide yourself (a dump of a cartridge you own, the JUE release, sha1 <code id="rom-sha1"></code>;
+      a raw <code>.md</code>/<code>.bin</code> or an interleaved <code>.smd</code> file).</p>
+    <p>The file stays in this browser: it is checked and kept in the page's IndexedDB so that later
+      visits start straight away. It is never uploaded anywhere.</p>
+    <label class="drop" id="drop">
+      <input type="file" id="rom-file" accept=".md,.bin,.gen,.smd,application/octet-stream">
+      <span>Choose the ROM file, or drop it here</span>
+    </label>
+    <p id="rom-error" class="error" hidden></p>
+  </section>
+
+  <section id="play-panel" class="panel" hidden>
+    <h2>T2: The Arcade Game</h2>
+    <p>The ROM is ready. Browsers only allow sound after a click, so the game starts when you press play.</p>
+    <p>At the title menu pick <strong>1 PLAYER - USE MENACER</strong> (the default): the mouse is the gun.</p>
+    <p><button id="btn-play" class="big">&#9654; Click to play</button></p>
+  </section>
+
+  <section id="error-panel" class="panel" hidden>
+    <h2 id="error-title">The game stopped</h2>
+    <p id="error-text"></p>
+    <pre id="error-log"></pre>
+    <p><button id="btn-reload">Reload</button></p>
+  </section>
+</main>
+
+<details id="help">
+  <summary>Controls</summary>
+  <div class="cols">
+    <table>
+      <tr><th colspan="2">Mouse (the Menacer on port 2)</th></tr>
+      <tr><td>Move</td><td>aim (the game draws the crosshair)</td></tr>
+      <tr><td>Left button / tap</td><td>trigger</td></tr>
+      <tr><td>Right button</td><td>Menacer A, B or C (the box above; default B)</td></tr>
+      <tr><td>Middle button</td><td>Start (skips the intro text, pauses)</td></tr>
+      <tr><td>Pointer off the picture</td><td>the gun points off screen</td></tr>
+    </table>
+    <table>
+      <tr><th colspan="2">Keyboard (pad on port 1)</th></tr>
+      <tr><td>Arrows</td><td>D-pad</td></tr>
+      <tr><td>Z or A</td><td>A</td></tr>
+      <tr><td>X or S</td><td>B</td></tr>
+      <tr><td>C or D</td><td>C</td></tr>
+      <tr><td>Enter</td><td>Start</td></tr>
+      <tr><td>P / N</td><td>pause / one frame</td></tr>
+      <tr><td>Tab (hold)</td><td>fast forward</td></tr>
+      <tr><td>F1</td><td>debug overlay</td></tr>
+      <tr><td>F5 / F9</td><td>save / load state; F6 / F7 pick the slot</td></tr>
+      <tr><td>F11</td><td>fullscreen</td></tr>
+    </table>
+  </div>
+  <p>The ROM, settings and savestates stay in this browser (IndexedDB).</p>
+</details>
+
+<script src="app.js"></script>
+<script src="t2.js" async></script>
+</body>
+</html>
