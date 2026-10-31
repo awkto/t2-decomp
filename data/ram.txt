@@ -70,3 +70,11 @@ FFA234 1 level_exit           # byte, nonzero = leave the current level/screen (
 FFA238 2 saved_vblank         # word, vblank_count saved while paused
 FFAE84 14 options_values       # OPTIONS items, 14 bytes each (+0 value, +2 min, +4 max, +6 step): credits 3..5
 FFFF9E 4 hiscore_table        # 10 x 8 bytes: 3 ASCII initials + 0, BCD score long. Default STU 100000 .. BOB 10000
+
+
+# --- host/mouse (issue #10)
+# Screen detection has no RAM variable: between frames the 68k waits in WaitVBlank ($0086E2..$0086F4) and the word
+# above its return address (sp+2, d0 is pushed first) names the loop: $000E28 WaitStartWindow (logos), $0045E0 StoryIntro,
+# $001B9E PressStartLoop, $00116A MainMenuInput, $0013A8 OptionsInput, $008DFE..$008E66 ContinueCountdown (1P). See docs/gun.md.
+# FF8050 = pad 1 state (same address as p2_buttons):         # word, ReadPad1 result (pad 1, b7 Start b6 A b5 C b4 B b3 R b2 L b1 D b0 U); the host checks its injected presses here
+# FFAE84 = OPTIONS credits value (options_values+0):        # word, OPTIONS row 0 value (credits 3..5); rows are 14 bytes apart (options_values)

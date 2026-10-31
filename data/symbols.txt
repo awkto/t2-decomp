@@ -52,3 +52,6 @@
 # ---- sound (Z80)
 0FC312 z80_boot_stub          # 28 bytes of Z80 code/data copied to Z80 RAM $0000 by z80_load (sub_0FC350)
 0FC5CC z80_driver             # Z80 sound driver blob, $1400 bytes ($0FC5CC-$0FD9CB), copied to Z80 RAM $0C00
+
+# --- host/mouse (issue #10): the host tells the screen from the return address of WaitVBlank ($0086E2, d0 pushed first)
+0042CE StoryIntro             # story text before the title, 550 frames, pad 1 Start (held) ends it (WaitVBlank caller $0045E0)
