@@ -1,0 +1,9 @@
+# Every level in 2P mode 1 (P1 pad 1, P2 pad 2; state q01 from boot_2p_pad.txt, PAD2=1): both
+# players driven by the bot, 900 frames per level, then skipped. Saves q<level>.state.
+load q01
+peekeach level FF80CC 2
+botcfg p1 pad1
+botcfg p2 pad2
+botcfg skip 900
+botcfg savelevels q
+bot until 0 120000

@@ -19,6 +19,10 @@
 	.equ p1_index, 0xff8024
 	.equ p1_coolant_timer, 0xff802a
 	.equ p1_powerup_timer, 0xff802c
+	.equ p1_invuln, 0xff802e
+	.equ p1_hk_kills, 0xff8034
+	.equ p1_humans_shot, 0xff8038
+	.equ p1_kills_3a, 0xff803a
 	.equ p2_buttons, 0xff8050
 	.equ p2_x, 0xff8054
 	.equ p2_y, 0xff8056
@@ -56,6 +60,10 @@
 	.equ p2_score, 0xff9eb0
 	.equ sprite_prio_depth, 0xff9eb8
 	.equ obj_9eba, 0xff9eba
+	.equ t1000_frozen, 0xff9ec2
+	.equ escort_obj, 0xff9eca
+	.equ van_ok, 0xff9ece
+	.equ t1000_obj, 0xff9ed6
 	.equ menu_cursor, 0xff9f60
 	.equ script_ret, 0xff9f62
 	.equ btn_prev2, 0xff9f66
@@ -77,6 +85,7 @@
 	.equ pal_cycle_on, 0xffa0a4
 	.equ cheat_levelskip, 0xffa0a6
 	.equ p1_out_2p, 0xffa0a7
+	.equ cyberdyne_equipment, 0xffa0a8
 	.equ cheat_index, 0xffa0ac
 	.equ frame_target, 0xffa0ae
 	.equ shot_damage, 0xffa0ca
@@ -89,6 +98,8 @@
 	.equ pal_cur, 0xffa1b4
 	.equ level_exit, 0xffa234
 	.equ saved_vblank, 0xffa238
+	.equ heli_passes, 0xffa23c
+	.equ heli_hits, 0xffa23e
 	.equ pal_fading, 0xffa246
 	.equ spr_queue, 0xffa250
 	.equ spr_queue_args, 0xffa318
@@ -1243,7 +1254,7 @@ loc_0015C0:
 	move.w #0xc8,d1
 	jsr (WaitFrames,pc)
 	rts
-sub_0015EC:
+Ending:
 	bsr.w sub_004212
 	lea.l (dat_038E6E).l,a0
 	move.w #0x1,d1
@@ -4033,10 +4044,10 @@ dat_005AF0:
 	.incbin "baserom.md",0x5AF0,0x8
 sub_005AF8:
 	lea.l (sub_005B10,pc),a2
-	lea.l (loc_005BE2+2,pc),a3
+	lea.l (dat_005BE4,pc),a3
 	jsr (HitBox,pc)
 	lea.l (sub_005B2E,pc),a2
-	lea.l (sub_005BDC,pc),a3
+	lea.l (dat_005BDC,pc),a3
 	jmp (HitBox,pc)
 sub_005B10:
 	jsr (sub_0072C0,pc)
@@ -4091,11 +4102,11 @@ sub_005BBE:
 	move.l #0xda92,(0x20,a6)
 	addq.w #0x1,(0x32,a4)
 	rts
-sub_005BDC:
-	ori.b #0x58,(0x60,a0,d0.w)
-loc_005BE2:
-	ori.w #0xd,(a0)+
-	ori.l #0x1a0028,d0
+| data 0x005BDC-0x005BEC
+dat_005BDC:
+	.incbin "baserom.md",0x5BDC,0x8
+dat_005BE4:
+	.incbin "baserom.md",0x5BE4,0x8
 sub_005BEC:
 	lea.l (dat_005C3E,pc),a3
 	move.w (0x14,a6),d0
@@ -4126,7 +4137,7 @@ dat_005C3E:
 	.incbin "baserom.md",0x5C3E,0x88
 sub_005CC6:
 	lea.l (sub_005CD2,pc),a2
-	lea.l (sub_005CE6,pc),a3
+	lea.l (dat_005CE6,pc),a3
 	jmp (HitBox,pc)
 sub_005CD2:
 	lea.l (sub_005CD8,pc),a0
@@ -4135,56 +4146,25 @@ sub_005CD8:
 	bsr.w sub_005DA2
 	move.l #0xc252,(0x20,a6)
 	rts
-sub_005CE6:
-	ori.b #0x18,(a0)
-	ori.b #0x18,-(a0)
+| data 0x005CE6-0x005CEE
+dat_005CE6:
+	.incbin "baserom.md",0x5CE6,0x8
 sub_005CEE:
-	lea.l (loc_005D9A+2,pc),a2
+	lea.l (sub_005D9C,pc),a2
 	move.w #0x4f,d0
 	sub.w (0x24,a6),d0
 	lea.l (dat_00C196,pc),a1
 	move.b (0x0,a1,d0.w),d0
 	asl.w #0x3,d0
-	lea.l (loc_005D1C,pc,d0.w),a3
+	lea.l (dat_005D1C,pc,d0.w),a3
 	jmp (HitBox,pc)
-| data 0x005D0C-0x005D10
-	.incbin "baserom.md",0x5D0C,0x4
-sub_005D10:
-	dc.w 0x0002,0x0203	| ori.b #$3, d2
-	btst.l d1,d3
-	btst.l d1,d3
-	btst.l d1,d4
-	btst.l d2,d7
-loc_005D1C:
-	ori.b #0x10,(a0)
-	ori.b #0x10,-(a0)
-	ori.b #0x18,(a0)
-	ori.b #0x18,-(a0)
-	ori.b #0x20,(a0)
-	ori.b #0x20,-(a0)
-	ori.b #0x28,(a0)+
-	ori.b #0x28,(0x18,a0,d0.w)
-	ori.b #0x30,(0x28,a0)
-	ori.b #0x28,(a0)+
-	ori.b #0x28,(0x20,a0,d0.w)
-	ori.b #0x40,(0x28,a0)
-	ori.b #0x28,-(a0)
-	ori.w #0x28,d0
-	ori.b #0x28,(0x50,a0)
-	ori.b #0x30,(0x30,a0)
-	ori.w #0x30,-(a0)
-	ori.b #0x38,(0x60,a0,d0.w)
-	ori.b #0x38,(0x38).w
-	ori.w #0x38,(0x40,a0,d0.w)
-	ori.w #0x80,d0
-	ori.w #0x40,d0
-	ori.b #0x80,(0x38).w
-	ori.w #0x30,d0
-	ori.l #0x300028,d0
-	ori.b #0x50,(a0)+
-loc_005D9A:
-	dc.w 0x0018,0x41fa	| ori.b #$fa, (a0)+
-	dc.w 0x0004,0x4e75	| ori.b #$75, d4
+| data 0x005D0C-0x005D9C
+	.incbin "baserom.md",0x5D0C,0x10
+dat_005D1C:
+	.incbin "baserom.md",0x5D1C,0x80
+sub_005D9C:
+	lea.l (sub_005DA2,pc),a0
+	rts
 sub_005DA2:
 	jsr (sub_00735A,pc)
 	bclr.b #0xf,d5
@@ -4195,7 +4175,7 @@ sub_005DA2:
 	rts
 sub_005DC0:
 	lea.l (sub_005DCC,pc),a2
-	lea.l (sub_005E14,pc),a3
+	lea.l (dat_005E14,pc),a3
 	jmp (HitBox,pc)
 sub_005DCC:
 	lea.l (sub_005DD2,pc),a0
@@ -4209,7 +4189,7 @@ sub_005DD2:
 	rts
 sub_005DEA:
 	lea.l (sub_005DF6,pc),a2
-	lea.l (sub_005E14,pc),a3
+	lea.l (dat_005E14,pc),a3
 	jmp (HitBox,pc)
 sub_005DF6:
 	lea.l (sub_005DFC,pc),a0
@@ -4221,10 +4201,12 @@ sub_005DFC:
 	move.l #0xbf8e,(0x20,a6)
 	addq.w #0x1,(0x34,a4)
 	rts
-sub_005E14:
-	ori.w #0x40,d0
-	ori.l #0x4047fa,d0
-	dc.w 0x0030,0x45fa,0x0006	| ori.b #$fa, $6(a0, d0.w)
+| data 0x005E14-0x005E1C
+dat_005E14:
+	.incbin "baserom.md",0x5E14,0x8
+sub_005E1C:
+	lea.l (dat_005E4E,pc),a3
+	lea.l (sub_005E28,pc),a2
 	jmp (HitBox,pc)
 sub_005E28:
 	move.l #0xb896,(0x20,a6)
@@ -4237,11 +4219,11 @@ sub_005E36:
 	addq.w #0x1,(0x34,a4)
 	move.l #0xb92e,(0x20,a6)
 	rts
-sub_005E4E:
-	ori.b #0x18,-(a0)
-	ori.w #0x18,d0
+| data 0x005E4E-0x005E56
+dat_005E4E:
+	.incbin "baserom.md",0x5E4E,0x8
 sub_005E56:
-	lea.l (sub_005E88,pc),a3
+	lea.l (dat_005E88,pc),a3
 	lea.l (sub_005E62,pc),a2
 	jmp (HitBox,pc)
 sub_005E62:
@@ -4255,11 +4237,11 @@ sub_005E70:
 	addq.w #0x1,(0x34,a4)
 	move.l #0xba26,(0x20,a6)
 	rts
-sub_005E88:
-	ori.b #0x18,-(a0)
-	ori.w #0x18,d0
+| data 0x005E88-0x005E90
+dat_005E88:
+	.incbin "baserom.md",0x5E88,0x8
 sub_005E90:
-	lea.l (sub_005EC2,pc),a3
+	lea.l (dat_005EC2,pc),a3
 	lea.l (sub_005E9C,pc),a2
 	jmp (HitBox,pc)
 sub_005E9C:
@@ -4273,10 +4255,12 @@ sub_005EAA:
 	addq.w #0x1,(0x34,a4)
 	move.l #0xbb4e,(0x20,a6)
 	rts
-sub_005EC2:
-	ori.w #0x30,d0
-	ori.l #0x3047fa,d0
-	dc.w 0x0030,0x45fa,0x0006	| ori.b #$fa, $6(a0, d0.w)
+| data 0x005EC2-0x005ECA
+dat_005EC2:
+	.incbin "baserom.md",0x5EC2,0x8
+sub_005ECA:
+	lea.l (dat_005EFC,pc),a3
+	lea.l (sub_005ED6,pc),a2
 	jmp (HitBox,pc)
 sub_005ED6:
 	move.l #0xbbae,(0x20,a6)
@@ -4290,9 +4274,10 @@ sub_005EE4:
 	move.l #0xbc52,(0x20,a6)
 	rts
 | data 0x005EFC-0x005F04
+dat_005EFC:
 	.incbin "baserom.md",0x5EFC,0x8
-sub_005F04:
-	lea.l (sub_005F4E,pc),a3
+HitHumanSoldier:
+	lea.l (dat_005F4E,pc),a3
 	lea.l (sub_005F1A,pc),a2
 	cmpi.w #0x6,(0xffffa0ca).l
 	bge.s sub_005F32
@@ -4312,10 +4297,12 @@ sub_005F34:
 	moveq #0x6,d0
 	jsr (SetPlayerState,pc)
 	rts
-sub_005F4E:
-	ori.b #0x30,(a0)+
-	ori.b #0x30,(0x2e,a0,d3.w)
-	dc.w 0x002a,0x0c40,0x0003	| ori.b #$40, $3(a2)
+| data 0x005F4E-0x005F56
+dat_005F4E:
+	.incbin "baserom.md",0x5F4E,0x8
+sub_005F56:
+	move.w (0x2a,a6),d0
+	cmpi.w #0x3,d0
 	bgt.w loc_005FCE
 	asl.w #0x4,d0
 	lea.l (dat_005F8E,pc,d0.w),a3
@@ -4385,7 +4372,7 @@ sub_006066:
 dat_006074:
 	.incbin "baserom.md",0x6074,0x80
 sub_0060F4:
-	lea.l (sub_00611E,pc),a3
+	lea.l (dat_00611E,pc),a3
 	lea.l (sub_006100,pc),a2
 	jmp (HitBox,pc)
 sub_006100:
@@ -4398,9 +4385,11 @@ sub_006106:
 	move.l #0xcafc,(0x20,a6)
 	addq.w #0x1,(0x36,a4)
 	rts
-sub_00611E:
-	ori.b #0x30,(0x50,a0)
-	dc.w 0x0030,0x47fa,0x0044	| ori.b #$fa, $44(a0, d0.w)
+| data 0x00611E-0x006126
+dat_00611E:
+	.incbin "baserom.md",0x611E,0x8
+sub_006126:
+	lea.l (dat_00616C,pc),a3
 	lea.l (loc_006166,pc),a2
 	move.b (0xffff9ebc).l,d0
 	cmpi.b #0xf,d0
@@ -4422,9 +4411,9 @@ sub_006154:
 loc_006166:
 	lea.l (sub_006154,pc),a0
 	rts
-sub_00616C:
-	ori.b #0x40,-(a0)
-	ori.w #0x20,d0
+| data 0x00616C-0x006174
+dat_00616C:
+	.incbin "baserom.md",0x616C,0x8
 sub_006174:
 	lea.l (dat_0061C2,pc),a3
 	lea.l (loc_0061BC,pc),a2
@@ -4505,7 +4494,7 @@ sub_006252:
 loc_006274:
 	movem.l (sp)+,d0-d7/a0-a6
 	rts
-sub_00627A:
+HitTruck:
 	lea.l (dat_0062A0,pc),a3
 	lea.l (sub_00628E,pc),a2
 	jsr (HitBox,pc)
@@ -4523,7 +4512,7 @@ dat_0062A0:
 	.incbin "baserom.md",0x62A0,0x8
 dat_0062A8:
 	.incbin "baserom.md",0x62A8,0x8
-sub_0062B0:
+HitSwatVan:
 	lea.l (dat_00630C,pc),a3
 	lea.l (sub_0062FA,pc),a2
 	jsr (HitBox,pc)
@@ -4625,11 +4614,45 @@ sub_0063D2:
 	move.l #0xfb52,(0x20,a6)
 	addq.w #0x1,(0x3a,a4)
 	rts
-| data 0x0063EA-0x006456
+| data 0x0063EA-0x0063F2
 dat_0063EA:
-	.incbin "baserom.md",0x63EA,0x6C
+	.incbin "baserom.md",0x63EA,0x8
+sub_0063F2:
+	lea.l (dat_00641C,pc),a3
+	lea.l (sub_0063FE,pc),a2
+	jmp (HitBox,pc)
+sub_0063FE:
+	lea.l (sub_006404,pc),a0
+	rts
+sub_006404:
+	jsr (sub_007322,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xfb76,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x00641C-0x006424
+dat_00641C:
+	.incbin "baserom.md",0x641C,0x8
+sub_006424:
+	lea.l (dat_00644E,pc),a3
+	lea.l (sub_006430,pc),a2
+	jmp (HitBox,pc)
+sub_006430:
+	lea.l (sub_006436,pc),a0
+	rts
+sub_006436:
+	jsr (sub_00734C,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xdd64,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x00644E-0x006456
+dat_00644E:
+	.incbin "baserom.md",0x644E,0x8
 sub_006456:
-	lea.l (sub_006480,pc),a3
+	lea.l (dat_006480,pc),a3
 	lea.l (sub_006462,pc),a2
 	jmp (HitBox,pc)
 sub_006462:
@@ -4642,12 +4665,14 @@ sub_006468:
 	move.l #0xe174,(0x20,a6)
 	addq.w #0x1,(0x3a,a4)
 	rts
-sub_006480:
-	ori.b #0x68,(0x50,a0)
-	ori.w #0x47fa,(0x46,a0)
+| data 0x006480-0x006488
+dat_006480:
+	.incbin "baserom.md",0x6480,0x8
+sub_006488:
+	lea.l (dat_0064D0,pc),a3
 	cmpi.w #0x1,(0x2a,a6)
 	bne.s loc_006498
-	lea.l (loc_0064D8,pc),a3
+	lea.l (dat_0064D8,pc),a3
 loc_006498:
 	lea.l (sub_0064A0,pc),a2
 	jmp (HitBox,pc)
@@ -4666,13 +4691,14 @@ loc_0064BC:
 	move.l #0xe1ca,(0x20,a6)
 	addq.w #0x1,(0x3a,a4)
 	rts
-sub_0064D0:
-	ori.b #0x60,-(a0)
-	ori.w #0x60,d0
-loc_0064D8:
-	ori.b #0x60,(0x64,a2,d0.w)
-	ori.w #0x47fa,-(a0)
-	dc.w 0x0028,0x45fa,0x0006	| ori.b #$fa, $6(a0)
+| data 0x0064D0-0x0064E0
+dat_0064D0:
+	.incbin "baserom.md",0x64D0,0x8
+dat_0064D8:
+	.incbin "baserom.md",0x64D8,0x8
+sub_0064E0:
+	lea.l (dat_00650A,pc),a3
+	lea.l (sub_0064EC,pc),a2
 	jmp (HitBox,pc)
 sub_0064EC:
 	lea.l (sub_0064F2,pc),a0
@@ -4684,11 +4710,11 @@ sub_0064F2:
 	move.l #0xe2c6,(0x20,a6)
 	addq.w #0x1,(0x34,a4)
 	rts
-sub_00650A:
-	ori.b #0x18,-(a0)
-	ori.w #0x18,d0
+| data 0x00650A-0x006512
+dat_00650A:
+	.incbin "baserom.md",0x650A,0x8
 sub_006512:
-	lea.l (sub_00653C,pc),a3
+	lea.l (dat_00653C,pc),a3
 	lea.l (sub_00651E,pc),a2
 	jmp (HitBox,pc)
 sub_00651E:
@@ -4701,10 +4727,12 @@ sub_006524:
 	move.l #0xea2e,(0x20,a6)
 	addq.w #0x1,(0x3a,a4)
 	rts
-sub_00653C:
-	ori.b #0x0,(a4)
-	ori.b #0x1a,(0x47fa,a0)
-	dc.w 0x0028,0x45fa,0x0006	| ori.b #$fa, $6(a0)
+| data 0x00653C-0x006544
+dat_00653C:
+	.incbin "baserom.md",0x653C,0x8
+sub_006544:
+	lea.l (dat_00656E,pc),a3
+	lea.l (sub_006550,pc),a2
 	jmp (HitBox,pc)
 sub_006550:
 	lea.l (sub_006556,pc),a0
@@ -4717,6 +4745,7 @@ sub_006556:
 	addq.w #0x1,(0x3a,a4)
 	rts
 | data 0x00656E-0x006576
+dat_00656E:
 	.incbin "baserom.md",0x656E,0x8
 sub_006576:
 	lea.l (dat_00659C,pc),a3
@@ -4765,7 +4794,7 @@ sub_0065E4:
 | data 0x0065F4-0x0065FC
 dat_0065F4:
 	.incbin "baserom.md",0x65F4,0x8
-sub_0065FC:
+HitHumanB:
 	lea.l (dat_00664A,pc),a3
 	lea.l (sub_006612,pc),a2
 	cmpi.w #0x3,(0xffffa0ca).l
@@ -4790,7 +4819,7 @@ sub_006630:
 | data 0x00664A-0x006652
 dat_00664A:
 	.incbin "baserom.md",0x664A,0x8
-sub_006652:
+HitHumanC:
 	lea.l (dat_0066A0,pc),a3
 	lea.l (sub_006668,pc),a2
 	cmpi.w #0x3,(0xffffa0ca).l
@@ -4829,9 +4858,55 @@ sub_0066BA:
 	move.l #0x151cc,(0x20,a6)
 	addq.w #0x1,(0x3a,a4)
 	rts
-| data 0x0066D2-0x00675E
+| data 0x0066D2-0x0066DA
 dat_0066D2:
-	.incbin "baserom.md",0x66D2,0x8C
+	.incbin "baserom.md",0x66D2,0x8
+sub_0066DA:
+	lea.l (dat_00670C,pc),a3
+	bra.s sub_0066EA
+sub_0066E0:
+	lea.l (dat_006714,pc),a3
+	bra.s sub_0066EA
+sub_0066E6:
+	lea.l (dat_00671C,pc),a3
+sub_0066EA:
+	lea.l (sub_0066F2,pc),a2
+	jmp (HitBox,pc)
+sub_0066F2:
+	lea.l (sub_0066F8,pc),a0
+	rts
+sub_0066F8:
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xec28,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x00670C-0x006724
+dat_00670C:
+	.incbin "baserom.md",0x670C,0x8
+dat_006714:
+	.incbin "baserom.md",0x6714,0x8
+dat_00671C:
+	.incbin "baserom.md",0x671C,0x8
+sub_006724:
+	lea.l (dat_006756,pc),a3
+	lea.l (sub_006730,pc),a2
+	jmp (HitBox,pc)
+sub_006730:
+	jsr (sub_0072B2,pc)
+	jsr (sub_006252,pc)
+	lea.l (sub_00673E,pc),a0
+	rts
+sub_00673E:
+	jsr (sub_00735A,pc)
+	bclr.b #0xf,d5
+	move.w d5,(a6)
+	move.l #0xe314,(0x20,a6)
+	addq.w #0x1,(0x3a,a4)
+	rts
+| data 0x006756-0x00675E
+dat_006756:
+	.incbin "baserom.md",0x6756,0x8
 sub_00675E:
 	move.w (0x1a,a6),d0
 	asl.w #0x3,d0
@@ -4891,7 +4966,7 @@ dat_00682A:
 dat_006832:
 	.incbin "baserom.md",0x6832,0x8
 sub_00683A:
-	lea.l (sub_006868,pc),a3
+	lea.l (dat_006868,pc),a3
 	lea.l (sub_006846,pc),a2
 	jmp (HitBox,pc)
 sub_006846:
@@ -4905,9 +4980,9 @@ sub_00684C:
 	jsr (sub_006870,pc)
 	addq.w #0x1,(0x3e,a4)
 	rts
-sub_006868:
-	ori.b #0x64,(a3)
-	ori.b #0x64,-(a6)
+| data 0x006868-0x006870
+dat_006868:
+	.incbin "baserom.md",0x6868,0x8
 sub_006870:
 	tst.b (0xffff9ebe).l
 	beq.s loc_006886
@@ -4919,7 +4994,7 @@ loc_006886:
 	move.l a6,(0xffff9ed2).l
 	rts
 sub_006894:
-	lea.l (sub_0068C2,pc),a3
+	lea.l (dat_0068C2,pc),a3
 	lea.l (sub_0068A0,pc),a2
 	jmp (HitBox,pc)
 sub_0068A0:
@@ -4933,9 +5008,9 @@ sub_0068A6:
 	jsr (sub_006870,pc)
 	addq.w #0x1,(0x3e,a4)
 	rts
-sub_0068C2:
-	ori.b #0x46,(a0)
-	ori.b #0x46,-(a0)
+| data 0x0068C2-0x0068CA
+dat_0068C2:
+	.incbin "baserom.md",0x68C2,0x8
 sub_0068CA:
 	lea.l (dat_0068F8,pc),a3
 	lea.l (sub_0068D6,pc),a2
@@ -4955,7 +5030,7 @@ sub_0068DC:
 dat_0068F8:
 	.incbin "baserom.md",0x68F8,0x8
 sub_006900:
-	lea.l (sub_0069B4,pc),a3
+	lea.l (dat_0069B4,pc),a3
 	lea.l (sub_00690C,pc),a2
 	jmp (HitBox,pc)
 sub_00690C:
@@ -5002,11 +5077,11 @@ sub_0069A2:
 	move.l #0xe0a4,(0x20,a6)
 	addq.w #0x1,(0x3c,a4)
 	rts
-sub_0069B4:
-	ori.b #0x37,(a0)
-	ori.b #0x37,-(a0)
+| data 0x0069B4-0x0069BC
+dat_0069B4:
+	.incbin "baserom.md",0x69B4,0x8
 sub_0069BC:
-	lea.l (sub_0069E6,pc),a3
+	lea.l (dat_0069E6,pc),a3
 	lea.l (sub_0069C8,pc),a2
 	jmp (HitBox,pc)
 sub_0069C8:
@@ -5019,9 +5094,9 @@ sub_0069CE:
 	move.l #0xf436,(0x20,a6)
 	addq.w #0x1,(0x40,a4)
 	rts
-sub_0069E6:
-	ori.b #0x28,(a6)+
-	ori.b #0x28,ccr
+| data 0x0069E6-0x0069EE
+dat_0069E6:
+	.incbin "baserom.md",0x69E6,0x8
 sub_0069EE:
 	move.w (0x1a,a6),d0
 	asl.w #0x3,d0
@@ -5040,7 +5115,7 @@ sub_006A06:
 dat_006A18:
 	.incbin "baserom.md",0x6A18,0xC8
 sub_006AE0:
-	lea.l (sub_006B2A,pc),a3
+	lea.l (dat_006B2A,pc),a3
 	lea.l (sub_006AEC,pc),a2
 	jmp (HitBox,pc)
 sub_006AEC:
@@ -5063,11 +5138,11 @@ loc_006B18:
 loc_006B24:
 	addq.w #0x1,(0x36,a4)
 	rts
-sub_006B2A:
-	ori.b #0x64,(a3)
-	ori.b #0x64,-(a6)
+| data 0x006B2A-0x006B32
+dat_006B2A:
+	.incbin "baserom.md",0x6B2A,0x8
 sub_006B32:
-	lea.l (sub_006B60,pc),a3
+	lea.l (dat_006B60,pc),a3
 	lea.l (sub_006B3E,pc),a2
 	jmp (HitBox,pc)
 sub_006B3E:
@@ -5081,9 +5156,9 @@ sub_006B44:
 	jsr (sub_006870,pc)
 	addq.w #0x1,(0x36,a4)
 	rts
-sub_006B60:
-	ori.b #0x64,(a3)
-	ori.b #0x64,-(a6)
+| data 0x006B60-0x006B68
+dat_006B60:
+	.incbin "baserom.md",0x6B60,0x8
 sub_006B68:
 	lea.l (dat_006B8E,pc),a3
 	lea.l (sub_006B74,pc),a2
@@ -5102,7 +5177,7 @@ loc_006B8C:
 dat_006B8E:
 	.incbin "baserom.md",0x6B8E,0x8
 sub_006B96:
-	lea.l (sub_006BDA,pc),a3
+	lea.l (dat_006BDA,pc),a3
 	lea.l (sub_006BA2,pc),a2
 	jmp (HitBox,pc)
 sub_006BA2:
@@ -5119,9 +5194,9 @@ loc_006BCC:
 	rts
 sub_006BD8:
 	rts
-sub_006BDA:
-	ori.b #0x46,(a0)
-	ori.b #0x46,-(a0)
+| data 0x006BDA-0x006BE2
+dat_006BDA:
+	.incbin "baserom.md",0x6BDA,0x8
 sub_006BE2:
 	lea.l (dat_006C26,pc),a3
 	lea.l (sub_006BEE,pc),a2
@@ -5143,7 +5218,7 @@ sub_006C24:
 | data 0x006C26-0x006C2E
 dat_006C26:
 	.incbin "baserom.md",0x6C26,0x8
-sub_006C2E:
+HitT1000Mill:
 	btst.b #0xf,(a6)
 	bne.s loc_006C36
 	rts
@@ -5168,9 +5243,63 @@ sub_006C5E:
 	jsr (AddScore2000,pc)
 loc_006C84:
 	rts
-| data 0x006C86-0x006E32
+| data 0x006C86-0x006C8E
 dat_006C86:
-	.incbin "baserom.md",0x6C86,0x1AC
+	.incbin "baserom.md",0x6C86,0x8
+sub_006C8E:
+	btst.b #0xf,(a6)
+	bne.s loc_006C96
+	rts
+loc_006C96:
+	lea.l (dat_006D52,pc),a3
+	cmpi.w #0x1e,(0xffffa0ca).l
+	blt.s loc_006CA8
+	lea.l (dat_006D5A,pc),a3
+loc_006CA8:
+	lea.l (sub_006CB0,pc),a2
+	jmp (HitBox,pc)
+sub_006CB0:
+	cmpi.w #0xaa,(0x4,a6)
+	bne.s loc_006CCA
+	bclr.b #0xf,(a6)
+	move.l #0x14d80,(0x20,a6)
+	move.w #0xc,(0x24,a6)
+loc_006CCA:
+	bsr.w sub_006E32
+	lea.l (sub_006CD4,pc),a0
+	rts
+sub_006CD4:
+	cmpi.w #0x5,(0xffffa0ca).l
+	blt.s loc_006D50
+	bclr.b #0xf,(a6)
+	move.w #0x3a,(0x8,a6)
+	move.l #0x14dda,(0x20,a6)
+	jsr (AddScore2000,pc)
+	btst.b #0x9,(a6)
+	beq.s loc_006D50
+	move.l #0x14e90,(0x20,a6)
+	move.w #0xf,(0x24,a6)
+	bclr.b #0xf,(a6)
+	cmpi.w #0x23,(0xffffa0ca).l
+	blt.s loc_006D50
+	move.l #0x14f0c,(0x20,a6)
+	cmpi.w #0x80,(0x4,a6)
+	bne.s loc_006D50
+	move.l #0x14fca,(0x20,a6)
+	movea.l (0xffff9ece).l,a1
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+	movea.l (0xffff9eda).l,a1
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+	move.w #0x40,(0x24,a6)
+loc_006D50:
+	rts
+| data 0x006D52-0x006E32
+dat_006D52:
+	.incbin "baserom.md",0x6D52,0x8
+dat_006D5A:
+	.incbin "baserom.md",0x6D5A,0xD8
 sub_006E32:
 	cmpi.w #0x5,(0xffffa0ca).l
 	blt.s loc_006E50
@@ -5181,10 +5310,10 @@ sub_006E32:
 loc_006E50:
 	rts
 sub_006E52:
-	lea.l (sub_006E80,pc),a3
+	lea.l (dat_006E80,pc),a3
 	lea.l (sub_006E66,pc),a2
 	jsr (HitBox,pc)
-	lea.l (loc_006E88,pc),a3
+	lea.l (dat_006E88,pc),a3
 	jmp (HitBox,pc)
 sub_006E66:
 	jsr (sub_007322,pc)
@@ -5194,17 +5323,16 @@ sub_006E66:
 	rts
 sub_006E7E:
 	rts
-sub_006E80:
-	ori.w #0x14,d0
-	ori.w #0x14,d0
-loc_006E88:
-	ori.w #0x28,(a0)
-	ori.w #0x14,d0
+| data 0x006E80-0x006E90
+dat_006E80:
+	.incbin "baserom.md",0x6E80,0x8
+dat_006E88:
+	.incbin "baserom.md",0x6E88,0x8
 sub_006E90:
-	lea.l (sub_006EE8,pc),a3
+	lea.l (dat_006EE8,pc),a3
 	lea.l (sub_006EA8,pc),a2
 	jsr (HitBox,pc)
-	lea.l (loc_006EF0,pc),a3
+	lea.l (dat_006EF0,pc),a3
 	lea.l (sub_006EA8,pc),a2
 	jmp (HitBox,pc)
 sub_006EA8:
@@ -5224,15 +5352,15 @@ sub_006ECA:
 	rts
 sub_006EE6:
 	rts
-sub_006EE8:
-	ori.w #0x64,(a4)
-	ori.b #0x43,-(a1)
-loc_006EF0:
-	ori.b #0x42,(0x22,a4)
-	dc.w 0x0023,0x47fa	| ori.b #$fa, -(a3)
-	ori.w #0x45fa,-(a2)
-	dc.w 0x0006,0x4efa	| ori.b #$fa, d6
-	ror.b d5,d6
+| data 0x006EE8-0x006EF8
+dat_006EE8:
+	.incbin "baserom.md",0x6EE8,0x8
+dat_006EF0:
+	.incbin "baserom.md",0x6EF0,0x8
+sub_006EF8:
+	lea.l (dat_006F5C,pc),a3
+	lea.l (sub_006F04,pc),a2
+	jmp (HitBox,pc)
 sub_006F04:
 	movem.w (0xffff9e94).l,d0-d1
 	subi.w #0x50,d1
@@ -5261,8 +5389,67 @@ loc_006F54:
 	rts
 sub_006F5A:
 	rts
-| data 0x006F5C-0x00700C
-	.incbin "baserom.md",0x6F5C,0xB0
+| data 0x006F5C-0x006F64
+dat_006F5C:
+	.incbin "baserom.md",0x6F5C,0x8
+sub_006F64:
+	lea.l (dat_006F70,pc),a3
+	lea.l (sub_006F8C,pc),a2
+	jmp (HitBox,pc)
+| data 0x006F70-0x006F78
+dat_006F70:
+	.incbin "baserom.md",0x6F70,0x8
+sub_006F78:
+	lea.l (dat_006F84,pc),a3
+	lea.l (sub_006F8C,pc),a2
+	jmp (HitBox,pc)
+| data 0x006F84-0x006F8C
+dat_006F84:
+	.incbin "baserom.md",0x6F84,0x8
+sub_006F8C:
+	move.w (0x26,a6),d1
+	move.w (0x36,a4),d2
+	cmpi.w #0x1a,d1
+	bne.s loc_006FA0
+	move.w #0xffdf,d1
+	bra.s loc_006FEC
+loc_006FA0:
+	blt.s loc_006FEC
+	cmpi.w #0x1c,d1
+	bne.s loc_006FDC
+	cmpa.l #0xffff8000,a4
+	bne.s loc_006FBC
+	move.l (0xffff9ea8).l,(0xffffa0b0).l
+	bra.s loc_006FC6
+loc_006FBC:
+	move.l (0xffff9eb0).l,(0xffffa0b4).l
+loc_006FC6:
+	move.w #0xffff,(0x24,a4)
+	subq.b #0x1,(0xffff9f6d).l
+	bne.s loc_006FDA
+	st.b (0xffffa234).l
+loc_006FDA:
+	bra.s loc_007004
+loc_006FDC:
+	subq.w #0x1,d2
+	bmi.s loc_007004
+	lea.l (0x32,a4),a1
+	move.b #0x2e,(0x0,a1,d2.w)
+	bra.s loc_007000
+loc_006FEC:
+	cmpi.w #0x3,d2
+	beq.s loc_007004
+	addi.w #0x41,d1
+	lea.l (0x32,a4),a1
+	move.b d1,(0x0,a1,d2.w)
+	addq.w #0x1,d2
+loc_007000:
+	move.w d2,(0x36,a4)
+loc_007004:
+	lea.l (sub_00700A,pc),a0
+	rts
+sub_00700A:
+	rts
 PickupShotTest:
 	lea.l (0xffff9ab2).l,a6
 	move.w (0xffff80e0).l,d7
@@ -5456,7 +5643,7 @@ loc_007226:
 dat_007228:
 	.incbin "baserom.md",0x7228,0x8
 sub_007230:
-	lea.l (sub_007258,pc),a3
+	lea.l (dat_007258,pc),a3
 	moveq #0x9,d6
 	jsr (PickupHitBox,pc)
 	tst.w d6
@@ -5467,9 +5654,12 @@ sub_007230:
 	move.w #0xfc18,(0x2a,a4)
 loc_007256:
 	rts
-sub_007258:
-	ori.b #0x10,(a0)+
-	dc.w 0x0030,0x0010,0x47fa,0x0028,0x7c0b	| ori.b #$10, ([$287c0b], $aaaa)
+| data 0x007258-0x007260
+dat_007258:
+	.incbin "baserom.md",0x7258,0x8
+sub_007260:
+	lea.l (sub_00728A,pc),a3
+	moveq #0xb,d6
 	jsr (PickupHitBox,pc)
 	tst.w d6
 	beq.s loc_007288
@@ -5930,7 +6120,7 @@ loc_00795A:
 	bne.s loc_007994
 	cmpi.b #0x1,(0xffffa234).l
 	bne.s loc_007988
-	jsr (sub_0015EC).l
+	jsr (Ending).l
 loc_007988:
 	cmpi.b #0x2,(0xffffa234).l
 	beq.s loc_0079A2
@@ -7372,43 +7562,43 @@ sub_00902E:
 	movem.w d0-d3,-(sp)
 	move.w #0x8001,d2
 	lea.l (0xffff8000).l,a4
-	bsr.w sub_0090B2
+	bsr.w PlayerDamage
 	move.w #0x8001,d2
 	lea.l (0xffff8050).l,a4
-	bsr.w sub_0090B2
+	bsr.w PlayerDamage
 	movem.w (sp)+,d0-d3
 	rts
 sub_009054:
 	movem.w d0-d3,-(sp)
 	move.w #0x40,d2
-	bsr.w sub_00909C
+	bsr.w PlayerDamageNearest
 	movem.w (sp)+,d0-d3
 	rts
 sub_009066:
 	movem.w d0-d3,-(sp)
 	move.w #0x80,d2
-	bsr.w sub_00909C
+	bsr.w PlayerDamageNearest
 	movem.w (sp)+,d0-d3
 	rts
 sub_009078:
 	movem.w d0-d3,-(sp)
 	move.w #0x4,d2
-	bsr.w sub_00909C
+	bsr.w PlayerDamageNearest
 	movem.w (sp)+,d0-d3
 	rts
 sub_00908A:
 	movem.w d0-d3,-(sp)
 	move.w #0x800,d2
-	bsr.w sub_00909C
+	bsr.w PlayerDamageNearest
 	movem.w (sp)+,d0-d3
 	rts
-sub_00909C:
+PlayerDamageNearest:
 	move.w (0x2,a6),d0
 	lea.l (0xffff8000).l,a4
 	cmpi.w #0xa0,d0
-	ble.s sub_0090B2
+	ble.s PlayerDamage
 	lea.l (0xffff8050).l,a4
-sub_0090B2:
+PlayerDamage:
 	tst.w (0x2e,a4)
 	bmi.s loc_009102
 	tst.w (0x24,a4)
@@ -8513,7 +8703,7 @@ sub_00A144:
 	move.w #0x64,(0x8,a6)
 	move.b #0x0,(0xc,a6)
 	addq.w #0x1,(0xffff80da).l
-	jsr (sub_00D30A,pc)
+	jsr (TruckDamageInit,pc)
 	jsr (ObjAlloc,pc)
 	tst.w d2
 	bmi.w loc_00A1FA
@@ -8750,9 +8940,57 @@ sub_00A510:
 	lea.l (dat_00A51A,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	rts
-| data 0x00A51A-0x00A5F6
+| data 0x00A51A-0x00A52C
 dat_00A51A:
-	.incbin "baserom.md",0xA51A,0xDC
+	.incbin "baserom.md",0xA51A,0x12
+sub_00A52C:
+	move.w #0xc332,d3
+	moveq #0x20,d4
+	move.w #0x58,d5
+	move.w #0x282,d1
+	lea.l (0xffffaf04).l,a1
+	moveq #0x1,d0
+loc_00A542:
+	moveq #0x4,d6
+loc_00A544:
+	jsr (sub_00A5B2,pc)
+	move.l a6,(a1)+
+	subi.w #0x40,d1
+	addi.w #0x10,d3
+	addi.w #0x40,d4
+	dbra d6,loc_00A544
+	move.w #0x5,(a1)+
+	move.w #0x5,(a1)+
+	move.l #0x0,(a1)+
+	move.l #0x0,(a1)+
+	addi.w #0x30,d5
+	move.w #0xc632,d3
+	moveq #0x20,d4
+	dbra d0,loc_00A542
+	jsr (sub_00A5B2,pc)
+	move.l #0xdce4,(0x20,a6)
+	move.l #0x597a,(0x1c,a6)
+	move.w #0x14,(0x24,a6)
+	jsr (sub_00A5B2,pc)
+	move.l #0xdcdc,(0x20,a6)
+	move.l #0x597a,(0x1c,a6)
+	move.w #0x78,(0x24,a6)
+	rts
+sub_00A5B2:
+	jsr (ObjAlloc,pc)
+	move.w #0x22,d2
+	bset.b #0xf,d2
+	move.w d2,(a6)
+	move.w d4,(0x2,a6)
+	move.w d5,(0x4,a6)
+	move.b #0x16,(0x6,a6)
+	move.b #0xa,(0x7,a6)
+	move.l #0x6424,(0x1c,a6)
+	move.l #0xdbf6,(0x20,a6)
+	move.w #0x78,(0x8,a6)
+	move.w d3,(0xa,a6)
+	addq.w #0x1,(0xffff80da).l
+	rts
 sub_00A5F6:
 	move.w (a0)+,d5
 	move.w (a0)+,d1
@@ -8834,9 +9072,35 @@ sub_00A712:
 	bclr.b #0x6,(a6)
 	addq.w #0x1,(0xffff9e08).l
 	rts
-| data 0x00A752-0x00A7E8
+| data 0x00A752-0x00A764
 dat_00A752:
-	.incbin "baserom.md",0xA752,0x96
+	.incbin "baserom.md",0xA752,0x12
+sub_00A764:
+	move.w #0x4,(0xffffaf84).l
+	lea.l (dat_00A7D6,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0xc374,(0xa,a6)
+	move.w #0x140,(0x24,a6)
+	lea.l (dat_00A7D6,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0xc774,(0xa,a6)
+	move.w #0xf0,(0x24,a6)
+	move.w #0x80,(0x4,a6)
+	lea.l (dat_00A7D6,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0xc334,(0xa,a6)
+	move.w #0xa0,(0x24,a6)
+	move.w #0x120,(0x2,a6)
+	lea.l (dat_00A7D6,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0xc734,(0xa,a6)
+	move.w #0x50,(0x24,a6)
+	move.w #0x120,(0x2,a6)
+	move.w #0x80,(0x4,a6)
+	rts
+| data 0x00A7D6-0x00A7E8
+dat_00A7D6:
+	.incbin "baserom.md",0xA7D6,0x12
 sub_00A7E8:
 	lea.l (dat_00A7FA,pc),a1
 	jsr (ObjSpawnTemplate,pc)
@@ -9131,9 +9395,17 @@ sub_00ACB0:
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
 	rts
-| data 0x00ACBE-0x00ACF2
+| data 0x00ACBE-0x00ACD0
 dat_00ACBE:
-	.incbin "baserom.md",0xACBE,0x34
+	.incbin "baserom.md",0xACBE,0x12
+sub_00ACD0:
+	lea.l (dat_00ACE0,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	addq.w #0x1,(0xffff9e0e).l
+	rts
+| data 0x00ACE0-0x00ACF2
+dat_00ACE0:
+	.incbin "baserom.md",0xACE0,0x12
 sub_00ACF2:
 	lea.l (dat_00AD02,pc),a1
 	jsr (ObjSpawnTemplate,pc)
@@ -9368,9 +9640,18 @@ sub_00B02A:
 	move.l a6,(0xffff9ece).l
 	movea.l (sp)+,a0
 	rts
-| data 0x00B07C-0x00B0B2
+| data 0x00B07C-0x00B08E
 dat_00B07C:
-	.incbin "baserom.md",0xB07C,0x36
+	.incbin "baserom.md",0xB07C,0x12
+sub_00B08E:
+	move.l a0,-(sp)
+	movea.l (0xffff9ece).l,a6
+	move.w #0x0,(0x24,a6)
+	move.l #0x145a0,(0x20,a6)
+	move.w #0x280,(0x2,a6)
+	clr.w (0x4,a6)
+	movea.l (sp)+,a0
+	rts
 sub_00B0B2:
 	lea.l (dat_00B116,pc),a1
 	jsr (ObjSpawnTemplate,pc)
@@ -9391,9 +9672,32 @@ sub_00B0B2:
 	moveq #0x1,d3
 	jsr (sub_0118C0).l
 	rts
-| data 0x00B116-0x00B192
+| data 0x00B116-0x00B128
 dat_00B116:
-	.incbin "baserom.md",0xB116,0x7C
+	.incbin "baserom.md",0xB116,0x12
+sub_00B128:
+	lea.l (dat_00B15E,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.b #0x20,(0xa,a6)
+	move.b #0x1,(0xe,a6)
+	bset.b #0xe,(a6)
+	clr.b (0xb,a6)
+	move.l a6,(0xffff9ed6).l
+	move.w #0xaa,(0x28,a6)
+	move.w #0x8c,(0x2,a6)
+	move.w #0x5,(0x1a,a6)
+	rts
+| data 0x00B15E-0x00B170
+dat_00B15E:
+	.incbin "baserom.md",0xB15E,0x12
+sub_00B170:
+	lea.l (dat_00B180,pc),a1
+	jsr (ObjSpawnTemplate,pc)
+	move.w #0x3f,(0x24,a6)
+	rts
+| data 0x00B180-0x00B192
+dat_00B180:
+	.incbin "baserom.md",0xB180,0x12
 sub_00B192:
 	lea.l (dat_00B1BC,pc),a1
 	jsr (ObjSpawnTemplate,pc)
@@ -11658,7 +11962,7 @@ sub_00D112:
 	move.w (0xffff9e92).l,d0
 	cmp.w (0xffff9f6a).l,d0
 	blt.s loc_00D136
-	jsr (sub_00D322,pc)
+	jsr (TruckDamage,pc)
 	move.w (0xffff9e92).l,d0
 	sub.w (0xffff9f6a).l,d0
 	move.w d0,(0xffff9e92).l
@@ -11816,7 +12120,7 @@ loc_00D2F8:
 	jsr (ObjQueueSprite,pc)
 loc_00D306:
 	bra.w ObjNext
-sub_00D30A:
+TruckDamageInit:
 	clr.w (0xffff9e92).l
 	lea.l (0xffffae84).l,a1
 	moveq #0xf,d0
@@ -11825,7 +12129,7 @@ loc_00D31A:
 	move.b d1,(a1)+
 	dbra d0,loc_00D31A
 	rts
-sub_00D322:
+TruckDamage:
 	lea.l (0xffffae84).l,a1
 	moveq #0xf,d2
 loc_00D32A:
@@ -13436,7 +13740,7 @@ loc_00E9A8:
 	movea.l (sp)+,a6
 loc_00E9C0:
 	bra.w ObjNext
-sub_00E9C4:
+MillEndFade:
 	move.w (0xffffa0ee).l,d0
 	andi.w #0x7,d0
 	bne.s loc_00E9F6
@@ -14468,7 +14772,7 @@ sub_00F7F0:
 	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d1
 	asr.w #0x3,d1
-	move.b (sub_00F83C,pc,d1.w),d1
+	move.b (dat_00F83C,pc,d1.w),d1
 	addi.w #0x230,d1
 	bsr.w ObjQueueSprite
 	subq.w #0x1,(0x24,a6)
@@ -14482,9 +14786,12 @@ sub_00F7F0:
 	move.w #0x64,(0x24,a6)
 loc_00F838:
 	bra.w ObjNext
-sub_00F83C:
-	dc.w 0x0405,0x302e	| subi.b #$2e, d5
-	dc.w 0x0004,0x5040	| ori.b #$40, d4
+| data 0x00F83C-0x00F83E
+dat_00F83C:
+	.incbin "baserom.md",0xF83C,0x2
+sub_00F83E:
+	move.w (0x4,a6),d0
+	addq.w #0x8,d0
 	cmp.w (0x28,a6),d0
 	blt.s loc_00F85C
 	move.l #0xf86c,(0x20,a6)
@@ -16089,7 +16396,7 @@ sub_010E4A:
 	clr.b (0xb,a6)
 loc_010E7E:
 	bra.w sub_011092
-sub_010E82:
+HeliPassCheck:
 	jsr (sub_00E10C,pc)
 	cmpi.w #0x88,(0x2,a6)
 	blt.s loc_010EF2
@@ -16439,7 +16746,7 @@ sub_0112FE:
 	move.l #0x11448,(0x20,a6)
 	move.w #0x40,(0x14,a6)
 loc_011330:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011334:
 	cmpi.w #0xffe2,(0x2,a6)
 	blt.s loc_011344
@@ -16467,7 +16774,7 @@ sub_011360:
 	bne.s loc_011390
 	move.l #0x11448,(0x20,a6)
 loc_011390:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011394:
 	move.w (0x24,a6),d1
 	andi.w #0x38,d1
@@ -16485,7 +16792,7 @@ loc_0113B8:
 	bne.s loc_0113CC
 	move.l #0x11448,(0x20,a6)
 loc_0113CC:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_0113D0:
 	move.b (a2),d0
 	move.b (a3),-(a1)
@@ -16517,7 +16824,7 @@ loc_011426:
 	bne.s loc_011434
 	move.l #0x11448,(0x20,a6)
 loc_011434:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011438:
 	move.l -(a2),d1
 	move.l (0x2828,a0),d4
@@ -16584,7 +16891,7 @@ loc_0114EE:
 	move.w (0x4,a6),(0x28,a6)
 	clr.w (0x4,a6)
 loc_011510:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011514:
 	moveq #0x11,d1
 	cmpi.w #0x3,(0x24,a6)
@@ -16596,7 +16903,7 @@ loc_011520:
 	bne.s loc_011532
 	move.l #0x11448,(0x20,a6)
 loc_011532:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 loc_011536:
 	move.w (0x28,a6),(0x4,a6)
 	move.w #0x30,(0x24,a6)
@@ -16615,7 +16922,7 @@ sub_011558:
 loc_011574:
 	move.w #0x21,d1
 	jsr (sub_011616,pc)
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011580:
 	clr.b (0xd,a6)
 	move.b #0xa,(0x12,a6)
@@ -16646,7 +16953,7 @@ loc_0115DA:
 loc_0115DE:
 	addi.w #0x1d,d1
 	jsr (sub_011616,pc)
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 | data 0x0115EA-0x0115EE
 dat_0115EA:
 	.incbin "baserom.md",0x115EA,0x4
@@ -16926,7 +17233,7 @@ loc_011A66:
 	move.w d0,(0x4,a6)
 	move.w #0x1c,d1
 	bsr.w sub_011616
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011A76:
 	move.w #0x1d,d1
 	bsr.w sub_011616
@@ -16934,7 +17241,7 @@ sub_011A76:
 	bne.s loc_011A8C
 	move.l #0x11448,(0x20,a6)
 loc_011A8C:
-	bra.w sub_011B10
+	bra.w T1000FrozenCheck
 sub_011A90:
 	move.w #0xc4,(0x4,a6)
 	move.w (0x24,a6),d1
@@ -16970,7 +17277,7 @@ sub_011AF8:
 	subq.w #0x1,(0xffff80da).l
 loc_011B0C:
 	bra.w ObjNext
-sub_011B10:
+T1000FrozenCheck:
 	tst.b (0xffff9ec2).l
 	beq.w loc_011B4A
 	move.l #0x11a90,(0x20,a6)
@@ -18559,16 +18866,16 @@ loc_013152:
 	move.w (sp)+,d7
 	movea.l (sp)+,a6
 loc_013172:
-	lea.l (loc_0131E2,pc),a5
+	lea.l (dat_0131E2,pc),a5
 	bra.s sub_013188
 loc_013178:
-	lea.l (loc_0131D2,pc),a5
+	lea.l (dat_0131D2,pc),a5
 	bra.s sub_013188
 loc_01317E:
-	lea.l (loc_0131BC+6,pc),a5
+	lea.l (dat_0131C2,pc),a5
 	bra.s sub_013188
 loc_013184:
-	lea.l (sub_0131B2,pc),a5
+	lea.l (dat_0131B2,pc),a5
 sub_013188:
 	jsr (sub_00C48E,pc)
 	tst.w d4
@@ -18584,23 +18891,15 @@ loc_0131A8:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80d6).l
 	bra.s loc_013192
-sub_0131B2:
-	dc.w 0x0134,0x0133,0x0132,0x0131,0x0130	| btst.l d0, ([$1320131, a4, d0.w], $aaaaaaaa)
-loc_0131BC:
-	dc.w 0x0130,0x012f,0x012f,0x0131,0x0130	| btst.l d0, ([$12f, a0], d0.w, $1310130)
-	btst.l d0,(0x12e,sp)
-	btst.l d0,(0x12d,a6)
-	btst.l d0,(0x12d,a5)
-loc_0131D2:
-	btst.l d0,(0x12f,sp)
-	btst.l d0,(0x12e,a6)
-	btst.l d0,(0x12d,a5)
-	btst.l d0,(0x12d,a5)
-loc_0131E2:
-	andi.w #0x257,(a0)+
-	andi.w #0x255,(a6)
-	andi.w #0x253,(a4)
-	andi.w #0x252,(a2)
+| data 0x0131B2-0x0131F2
+dat_0131B2:
+	.incbin "baserom.md",0x131B2,0x10
+dat_0131C2:
+	.incbin "baserom.md",0x131C2,0x10
+dat_0131D2:
+	.incbin "baserom.md",0x131D2,0x10
+dat_0131E2:
+	.incbin "baserom.md",0x131E2,0x10
 sub_0131F2:
 	move.l #0x4a88,(0xffff9e98).l
 	clr.w (0xffff8030).l
@@ -19559,7 +19858,7 @@ loc_014838:
 	jsr (sub_01227A,pc)
 loc_014844:
 	rts
-| data 0x014846-0x0151CC
+| data 0x014846-0x014866
 dat_014846:
 	dc.l dat_0A67F6
 	dc.l dat_0A6804
@@ -19569,7 +19868,567 @@ dat_014846:
 	dc.l dat_0A6FF4
 	dc.l dat_0A6FF4
 	dc.l dat_0A6FF4
-	.incbin "baserom.md",0x14866,0x966
+sub_014866:
+	jsr (ObjMoveX).l
+	move.w (0x24,a6),d5
+	andi.w #0x38,d5
+	lsr.w #0x3,d5
+	eori.w #0x7,d5
+	move.w d5,d1
+	jsr (sub_011616,pc)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_01488E
+	move.l #0x14956,(0x20,a6)
+loc_01488E:
+	cmpi.w #0xd6,(0x2,a6)
+	blt.s loc_0148A8
+	move.l #0x14a34,(0x20,a6)
+	move.w #0x7f,(0x24,a6)
+	bclr.b #0xf,(a6)
+loc_0148A8:
+	jmp (ObjNext).l
+sub_0148AE:
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (sub_0148E8,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	cmpi.w #0x30,(0x24,a6)
+	bne.s loc_0148CE
+	moveq #0x60,d0
+	jsr (sub_013D04,pc)
+loc_0148CE:
+	jsr (sub_009066).l
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_0148E2
+	move.l #0x14956,(0x20,a6)
+loc_0148E2:
+	jmp (ObjNext).l
+sub_0148E8:
+	move.b (a2),d0
+	move.b (a3),-(a1)
+	move.b (a3),-(a1)
+	move.b (a0),d1
+sub_0148F0:
+	move.w (0x24,a6),d1
+	andi.w #0x1c,d1
+	lsr.w #0x2,d1
+	move.b (sub_01494E,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	cmpi.w #0x10,(0x24,a6)
+	bne.s loc_01493A
+	move.w #0x9,d4
+loc_01490E:
+	movem.w (0x2,a6),d0-d1
+	addq.w #0x4,d0
+	subi.w #0x4b,d1
+	lea.l (dat_012866,pc),a2
+	bsr.w sub_01277C
+	dbra d4,loc_01490E
+	moveq #0x7b,d0
+	jsr (sub_013D04).l
+	jsr (sub_00908A).l
+	jsr (sub_00908A).l
+loc_01493A:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014948
+	move.l #0x14956,(0x20,a6)
+loc_014948:
+	jmp (ObjNext).l
+sub_01494E:
+	move.l (0x2826,a0),d1
+	move.l -(a3),d2
+	move.l -(a2),-(a1)
+sub_014956:
+	bset.b #0xf,(a6)
+	jsr (Random).l
+	andi.w #0x3,d0
+	cmpi.w #0x1,d0
+	bne.s loc_01497C
+	move.l #0x148f0,(0x20,a6)
+	move.w #0x20,(0x24,a6)
+	bra.w loc_0149AE
+loc_01497C:
+	cmpi.w #0x2,d0
+	bne.s loc_014994
+	move.l #0x148ae,(0x20,a6)
+	move.w #0x40,(0x24,a6)
+	bra.w loc_0149AE
+loc_014994:
+	move.l #0x14866,(0x20,a6)
+	jsr (Random).l
+	andi.w #0xf,d0
+	addi.w #0xa,d0
+	move.w d0,(0x24,a6)
+loc_0149AE:
+	movea.l (0x20,a6),a1
+	jmp (a1)
+sub_0149B4:
+	bset.b #0xf,(a6)
+	jsr (Random).l
+	btst.b #0x9,(a6)
+	bne.s loc_0149CA
+	subq.w #0x1,(0x1a,a6)
+	beq.s loc_014A08
+loc_0149CA:
+	lsl.w #0x1,d0
+	bcs.s loc_0149E4
+	move.l #0x14ab2,(0x20,a6)
+	clr.w (0x4,a6)
+	move.w #0xaa,(0x28,a6)
+	bra.w loc_0149FC
+loc_0149E4:
+	move.l #0x14afe,(0x20,a6)
+	move.w #0xaa,(0x4,a6)
+	move.w #0x3f,(0x24,a6)
+	bclr.b #0xf,(a6)
+loc_0149FC:
+	move.w #0x8c,(0x2,a6)
+	movea.l (0x20,a6),a1
+	jmp (a1)
+loc_014A08:
+	move.w #0x1f4,(0xffff9e76).l
+	moveq #0x33,d3
+	jsr (sub_0118EA).l
+	move.w #0x220,(0xffff9e76).l
+	moveq #0x32,d3
+	jsr (sub_0118EA).l
+	moveq #0x2,d3
+	jsr (sub_0118C0).l
+	bra.w loc_014BAC
+sub_014A34:
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (dat_014A9E,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	cmpi.w #0x40,(0x24,a6)
+	bne.s loc_014A62
+	movea.l (0xffff9ed2).l,a1
+	move.w #0x64,(0x24,a1)
+	move.l #0x14e4c,(0x20,a1)
+loc_014A62:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014A98
+	move.l #0x14aa6,(0x20,a6)
+	movea.l #0x20e4e,a0
+	jsr (ScriptNext).l
+	movea.l (0xffff9ece).l,a1
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+	movea.l (0xffff9eda).l,a1
+	clr.w (a1)
+	subq.w #0x1,(0xffff80da).l
+loc_014A98:
+	jmp (ObjNext).l
+| data 0x014A9E-0x014AA6
+dat_014A9E:
+	.incbin "baserom.md",0x14A9E,0x8
+sub_014AA6:
+	moveq #0x3e,d1
+	jsr (sub_011616,pc)
+	jmp (ObjNext).l
+sub_014AB2:
+	move.w (0x4,a6),d0
+	addq.w #0x8,d0
+	cmp.w (0x28,a6),d0
+	blt.s loc_014AD0
+	move.l #0x14ae2,(0x20,a6)
+	move.w #0xf,(0x24,a6)
+	move.w (0x28,a6),d0
+loc_014AD0:
+	move.w d0,(0x4,a6)
+	move.w #0x1c,d1
+	bsr.w sub_011616
+	jmp (ObjNext).l
+sub_014AE2:
+	move.w #0x1d,d1
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014AF8
+	move.l #0x14956,(0x20,a6)
+loc_014AF8:
+	jmp (ObjNext).l
+sub_014AFE:
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (sub_014B26,pc,d1.w),d1
+	beq.s loc_014B12
+	jsr (sub_011616,pc)
+loc_014B12:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014B20
+	move.l #0x14956,(0x20,a6)
+loc_014B20:
+	jmp (ObjNext).l
+sub_014B26:
+	move.w #0x3b3a,-(a6)
+	move.w (0x0).w,-(a4)
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (dat_014B56,pc,d1.w),d1
+	beq.s loc_014B42
+	jsr (sub_011616,pc)
+loc_014B42:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014B50
+	move.l #0x149b4,(0x20,a6)
+loc_014B50:
+	jmp (ObjNext).l
+| data 0x014B56-0x014B58
+dat_014B56:
+	.incbin "baserom.md",0x14B56,0x2
+sub_014B58:
+	move.w (0x4eb90000).l,d4
+	or.b (a4)+,d4
+	tst.w d0
+	bpl.s loc_014B6A
+	cmpi.w #0xd000,d0
+	blt.s loc_014B96
+loc_014B6A:
+	move.w (0x2,a6),d1
+	move.b #0x1,(0xe,a6)
+	cmpi.w #0xa0,d1
+	blt.s loc_014B7E
+	neg.b (0xe,a6)
+loc_014B7E:
+	andi.w #0xf,d0
+	addi.w #0x1e,d0
+	move.w d0,(0x24,a6)
+	move.l #0x14d4c,(0x20,a6)
+	bra.w sub_014D4C
+loc_014B96:
+	move.l #0x14c18,(0x20,a6)
+	bset.b #0xf,(a6)
+	move.w #0x50,(0x24,a6)
+	bra.w loc_014C18
+loc_014BAC:
+	jsr (Random).l
+	andi.w #0xff,d0
+	addi.w #0x20,d0
+	move.w d0,(0x2,a6)
+	move.w #0x150,(0x4,a6)
+	move.w #0x1f4,(0x14,a6)
+	move.l #0x14bee,(0x20,a6)
+	move.l #0x6d62,(0x1c,a6)
+	move.w #0x10,(0x24,a6)
+	move.b #0x80,(0xa,a6)
+	bclr.b #0xa,(a6)
+	bclr.b #0x9,(a6)
+	subi.w #0x8,(0x4,a6)
+	moveq #0x4c,d1
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014C12
+	move.l #0x14c18,(0x20,a6)
+	bset.b #0xf,(a6)
+	move.w #0xc8,(0x24,a6)
+loc_014C12:
+	jmp (ObjNext).l
+loc_014C18:
+	move.w (0x24,a6),d1
+	cmpi.w #0x78,d1
+	bgt.w loc_014C50
+	cmpi.w #0x1e,d1
+	blt.w loc_014C50
+	andi.w #0x4,d1
+	asr.w #0x2,d1
+	tst.w d1
+	beq.s loc_014C40
+	move.w #0x60,d0
+	jsr (sub_013D04).l
+loc_014C40:
+	jsr (sub_009066).l
+	addi.w #0x4a,d1
+	bsr.w sub_011616
+	bra.s loc_014C58
+loc_014C50:
+	move.w #0x4c,d1
+	bsr.w sub_011616
+loc_014C58:
+	subq.w #0x1,(0x24,a6)
+	bpl.s loc_014C66
+	move.l #0x14b5a,(0x20,a6)
+loc_014C66:
+	bra.w sub_014D7A
+sub_014C6A:
+	addi.w #0x8,(0x4,a6)
+	moveq #0x4c,d1
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014C9C
+	move.b #0x20,(0xa,a6)
+	move.b #0x1,(0xe,a6)
+	bclr.b #0xa,(a6)
+	move.l #0x6c8e,(0x1c,a6)
+	move.l #0x149b4,(0x20,a6)
+loc_014C9C:
+	jmp (ObjNext).l
+sub_014CA2:
+	move.w #0x64,(0x24,a6)
+	move.l #0x14cb4,(0x20,a6)
+	bclr.b #0xf,(a6)
+	moveq #0x4e,d1
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014CC8
+	move.l #0x14b5a,(0x20,a6)
+loc_014CC8:
+	jmp (ObjNext).l
+sub_014CCE:
+	move.w #0x64,(0x24,a6)
+	move.l #0x14ce0,(0x20,a6)
+	bclr.b #0xf,(a6)
+	moveq #0x4d,d1
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014CF4
+	move.l #0x14b5a,(0x20,a6)
+loc_014CF4:
+	jmp (ObjNext).l
+sub_014CFA:
+	move.w #0x7f,(0x24,a6)
+	move.l #0x14d0c,(0x20,a6)
+	bclr.b #0xf,(a6)
+	move.w (0x24,a6),d1
+	andi.w #0x7f,d1
+	asr.w #0x3,d1
+	move.b (sub_014D3C,pc,d1.w),d1
+	addi.w #0x4f,d1
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014D36
+	move.l #0x14c6a,(0x20,a6)
+	move.w #0x10,(0x24,a6)
+loc_014D36:
+	jmp (ObjNext).l
+sub_014D3C:
+	dc.w 0x0001,0x0202	| ori.b #$2, d1
+	btst.l d1,d3
+	dc.w 0x0203,0x0302	| andi.b #$2, d3
+	btst.l d1,d3
+	dc.w 0x0202,0x0100	| andi.b #$0, d2
+sub_014D4C:
+	jsr (ObjMoveX).l
+	moveq #0x4c,d1
+	bsr.w sub_011616
+	move.w (0x2,a6),d0
+	cmpi.w #0x28,d0
+	blt.s loc_014D6E
+	cmpi.w #0x118,d0
+	bgt.s loc_014D6E
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014D76
+loc_014D6E:
+	move.l #0x14b5a,(0x20,a6)
+loc_014D76:
+	bra.w sub_014D7A
+sub_014D7A:
+	jmp (ObjNext).l
+sub_014D80:
+	moveq #0x11,d1
+	cmpi.w #0x3,(0x24,a6)
+	bgt.s loc_014D8C
+	moveq #0x10,d1
+loc_014D8C:
+	bsr.w sub_011616
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014D9E
+	move.l #0x14956,(0x20,a6)
+loc_014D9E:
+	jmp (ObjNext).l
+loc_014DA4:
+	move.w (0x28,a6),(0x4,a6)
+	move.w #0x40,(0x24,a6)
+	move.l #0x14db8,(0x20,a6)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014DCC
+	move.l #0x14b2e,(0x20,a6)
+	move.w #0x1f,(0x24,a6)
+loc_014DCC:
+	move.w #0x21,d1
+	jsr (sub_011616,pc)
+	jmp (ObjNext).l
+sub_014DDA:
+	clr.b (0xd,a6)
+	move.b #0xa,(0x12,a6)
+	move.b #0x96,(0xc,a6)
+	move.b #0xff,(0xf,a6)
+	bclr.b #0xf,(a6)
+	move.w #0x20,(0x24,a6)
+	move.l #0x14e06,(0x20,a6)
+	jsr (sub_013DA8,pc)
+	jsr (sub_00D236,pc)
+	subq.w #0x1,(0x24,a6)
+	bpl.s loc_014E20
+	moveq #0x4,d1
+	move.w (0x4,a6),d0
+	cmp.w (0x28,a6),d0
+	bgt.w loc_014DA4
+	bra.s loc_014E2E
+loc_014E20:
+	move.w (0x24,a6),d1
+	asr.w #0x1,d1
+	eori.w #0xf,d1
+	move.b (dat_014E3C,pc,d1.w),d1
+loc_014E2E:
+	addi.w #0x1d,d1
+	jsr (sub_011616,pc)
+	jmp (ObjNext).l
+| data 0x014E3C-0x014E40
+dat_014E3C:
+	.incbin "baserom.md",0x14E3C,0x4
+sub_014E40:
+	btst.l d0,d1
+	btst.l d0,d2
+	dc.w 0x0202,0x0303	| andi.b #$3, d2
+	btst.l d1,d3
+	btst.l d1,d4
+sub_014E4C:
+	moveq #0xc,d1
+	cmpi.w #0x46,(0x24,a6)
+	blt.s loc_014E6C
+	moveq #0xb,d1
+	cmpi.w #0x50,(0x24,a6)
+	blt.s loc_014E6C
+	moveq #0xa,d1
+	cmpi.w #0x5a,(0x24,a6)
+	blt.s loc_014E6C
+	moveq #0x9,d1
+loc_014E6C:
+	bsr.w sub_010666
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014E7E
+	move.l #0x14e84,(0x20,a6)
+loc_014E7E:
+	jmp (ObjNext).l
+sub_014E84:
+	moveq #0xc,d1
+	bsr.w sub_010666
+	jmp (ObjNext).l
+sub_014E90:
+	move.w (0x24,a6),d1
+	andi.w #0xc,d1
+	lsr.w #0x2,d1
+	move.b (sub_014F08,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	btst.b #0xa,(a6)
+	bne.s loc_014EDC
+	subq.w #0x1,(0x4,a6)
+	btst.b #0x0,(0x25,a6)
+	beq.s loc_014EC6
+	cmpi.w #0xa0,(0x2,a6)
+	blt.s loc_014EC2
+	subq.w #0x1,(0x2,a6)
+	bra.s loc_014EC6
+loc_014EC2:
+	addq.w #0x1,(0x2,a6)
+loc_014EC6:
+	cmpi.w #0x80,(0x4,a6)
+	bgt.s loc_014EDC
+	move.w #0xd,(0xffff9ec6).l
+	move.w #0x80,(0x4,a6)
+loc_014EDC:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014F02
+	bset.b #0xf,(a6)
+	move.l #0x14f62,(0x20,a6)
+	move.w #0x1e,(0x24,a6)
+	cmpi.w #0x80,(0x4,a6)
+	bne.s loc_014F02
+	move.w #0x64,(0x24,a6)
+loc_014F02:
+	jmp (ObjNext).l
+sub_014F08:
+	move.b (a5)+,d7
+	move.b (a5)+,d7
+	move.w (0x24,a6),d1
+	andi.w #0xc,d1
+	lsr.w #0x2,d1
+	move.b (sub_014F5E,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	subq.w #0x1,(0x4,a6)
+	cmpi.w #0x80,(0x4,a6)
+	bgt.s loc_014F54
+	move.w #0xd,(0xffff9ec6).l
+	move.w #0x80,(0x4,a6)
+	bset.b #0xa,(a6)
+	bset.b #0xf,(a6)
+	move.l #0x14f62,(0x20,a6)
+	move.w #0x64,(0x24,a6)
+	move.w #0x1,(0x8,a6)
+loc_014F54:
+	subq.w #0x1,(0x24,a6)
+	jmp (ObjNext).l
+sub_014F5E:
+	move.b (a5)+,d7
+	move.b (a5)+,d7
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014F70
+	move.l #0x14f7c,(0x20,a6)
+loc_014F70:
+	moveq #0x10,d1
+	jsr (sub_011616,pc)
+	jmp (ObjNext).l
+sub_014F7C:
+	subq.w #0x1,(0x24,a6)
+	move.w (0x24,a6),d1
+	andi.w #0x1c,d1
+	lsr.w #0x2,d1
+	move.b (sub_014FC2,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	btst.b #0x0,(0x25,a6)
+	beq.s loc_014FBC
+	addq.w #0x1,(0x4,a6)
+	cmpi.w #0xaa,(0x4,a6)
+	bne.s loc_014FBC
+	bclr.b #0x9,(a6)
+	bclr.b #0xa,(a6)
+	move.l #0x14956,(0x20,a6)
+	move.w #0x5,(0x1a,a6)
+loc_014FBC:
+	jmp (ObjNext).l
+sub_014FC2:
+	move.b (a4)+,d0
+	move.b (a4)+,-(a0)
+	move.b (a4)+,d0
+	move.b (a4)+,-(a0)
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (dat_014FF8,pc,d1.w),d1
+	jsr (sub_011616,pc)
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_014FF2
+	move.l #0x15000,(0x20,a6)
+	move.w #0xa,(0xffff9eb8).l
+loc_014FF2:
+	jmp (ObjNext).l
+| data 0x014FF8-0x015190
+dat_014FF8:
+	.incbin "baserom.md",0x14FF8,0x198
+sub_015190:
+	move.w (0x24,a6),d1
+	andi.w #0x38,d1
+	lsr.w #0x3,d1
+	move.b (sub_0151B8,pc,d1.w),d1
+	beq.s loc_0151A4
+	jsr (sub_011616,pc)
+loc_0151A4:
+	subq.w #0x1,(0x24,a6)
+	bne.s loc_0151B2
+	move.l #0x151c0,(0x20,a6)
+loc_0151B2:
+	jmp (ObjNext).l
+sub_0151B8:
+	move.w #0x3b3a,-(a6)
+	move.w (0x0).w,-(a4)
+sub_0151C0:
+	moveq #0x10,d1
+	jsr (sub_011616,pc)
+	jmp (ObjNext).l
 sub_0151CC:
 	movem.w (0x2,a6),d0-d1
 	move.w (0x6,a6),d2

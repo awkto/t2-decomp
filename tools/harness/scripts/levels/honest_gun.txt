@@ -1,0 +1,8 @@
+# Honest 1P Menacer playthrough from level 1 (state l01 from boot_gun.txt): no cheats, the bot
+# continues while credits last. Saves outdir/hon<level>.state at each level change.
+load l01
+peekeach level FF80CC 2
+peekeach credits FF80CA 1
+botcfg savelevels hon
+bot until 0 400000
+shot honest_end

@@ -15,3 +15,5 @@
 00b3b6  object AI +$20 (ObjRunAll): every move.l of an immediate to +$20 and every spawn template
 00fede  object AI +$20 just stored (jump to the new state)
 0114be  object AI +$20 just stored (jump to the new state)
+0149b2  object AI +$20 just stored (jump to the new state; level-8 T-1000)
+014a06  object AI +$20 just stored (jump to the new state; level-8 T-1000)

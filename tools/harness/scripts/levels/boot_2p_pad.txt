@@ -1,0 +1,38 @@
+# Power-on -> "PRESS START" -> level-skip cheat code (pad 1: U D L R U D L R) -> main menu ->
+# "START 2 PLAYER - 1 JOYPAD 1 / 2 JOYPAD 2" (mode 1) -> level 1. Run with PAD2=1 (pad on port 2, no Menacer):
+# the menu cursor then starts on the joypad row.
+# Saves: ptitle2 (PRESS START, cheat not entered yet), q01 (level 1 just started, mode 1, cheat on).
+peekeach level FF80CC 2
+peekeach cheat FFA0A6 1
+run 1300
+press S 5
+run 480
+save ptitle2
+run 2
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 3
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 23
+press S 5
+run 180
+press D 3
+run 10
+press D 3
+run 10
+peek cursor FF9F60 2
+press S 3
+waitfor FF80CC 2 1 600
+peek mode FF9DF5 1
+save q01

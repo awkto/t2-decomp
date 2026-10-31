@@ -1,0 +1,85 @@
+# Menus and the paths around play (state title from boot_gun.txt, GUN=1 GUNMODE=lightgun):
+# OPTIONS (credits value, sound effect / sample / music tests with A/B/C), then a 1P Menacer game
+# with a forced continue, game over, high-score initials (bot) and the attract loop.
+load title
+peekeach level FF80CC 2
+peekeach cursor FF9F60 2
+press S 5
+run 180
+# main menu: down to OPTIONS (row 4)
+press D 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press S 3
+run 120
+shot options
+# row 0: credits 3..5
+press R 3
+run 10
+press R 3
+run 10
+press L 3
+run 10
+# row 1: sound effect
+press D 3
+run 10
+press R 3
+run 10
+press R 3
+run 10
+press A 3
+run 60
+press B 3
+run 60
+press C 3
+run 60
+# row 2: sample
+press D 3
+run 10
+press R 3
+run 10
+press A 3
+run 120
+press B 3
+run 60
+# row 3: music
+press D 3
+run 10
+press R 3
+run 10
+press A 3
+run 200
+press C 3
+run 60
+shot options2
+# Start leaves OPTIONS; back to row 0 of the main menu
+press S 3
+run 300
+shot back_from_options
+press U 3
+run 10
+press U 3
+run 10
+press U 3
+run 10
+press U 3
+run 10
+peek cursor_before_start FF9F60 2
+press S 3
+waitfor FF80CC 2 1 900
+# 1P Menacer game: bot plays, energy forced low -> continue (bot presses gun Start), then the
+# credits run out -> game over -> high-score initials -> attract
+bot 2500
+poke FF801E 2 0004
+bot 3000
+poke FF80CA 1 00
+poke FF801E 2 0004
+bot until 0 12000
+shot after_gameover
+run 20000
+shot attract

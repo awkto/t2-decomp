@@ -39,8 +39,31 @@
  *                         non-bitmask input path ignores POINTER_COUNT). Run with env GUNMODE=lightgun
  *                         to get A/B/Start too. Both POINTER and LIGHTGUN queries are answered.
  *
- * Env: GUN=1 plugs the Menacer into port 2; GUNMODE=lightgun|touchscreen sets the core option
- *   genesis_plus_gx_gun_input; CORE_OPTS="key=value,key=value" answers other core options.
+ * Env: GUN=1 plugs the Menacer into port 2 (GPGX also forces it for T2 by default); PAD2=1 plugs a
+ *   3-button pad into port 2 instead (driven by `press2` and the bot's pad2 device);
+ *   GUNMODE=lightgun|touchscreen sets the core option genesis_plus_gx_gun_input;
+ *   CORE_OPTS="key=value,key=value" answers other core options.
+ *   press2 BTN... N       like press, for the pad on port 2 (PAD2=1)
+ *
+ *   Gun-bot (tools/harness/bot.c; T2-specific, reads the object table every frame):
+ *   bot N                 play N frames with the bot
+ *   bot until LEVEL MAX   play until the level variable $FF80CC equals LEVEL (hex), at most MAX frames
+ *   bot while LEVEL MAX   play while it equals LEVEL
+ *   botcfg KEY VALUE      p1|p2 gun|pad1|pad2|off  device the bot drives for each player (default
+ *                           p1 gun, p2 off; mode 0 = p1 gun + p2 pad1, mode 1 = pad1 + pad2)
+ *                         missiles 0|1, missile_hp N (default 40), missile_crowd N (6), missile_keep N (5)
+ *                         continue 0|1 (press Start to continue, default 1), hiscore 0|1 (enter initials)
+ *                         focus N   alternate threat-first / big-target-first every N frames (300; 0 = off)
+ *                         savelevels PREFIX   save outdir/PREFIX<level>.state at each level change ("off")
+ *                         verbose 0|1|2   bot.log detail (2 = every target choice)
+ *                         Cheats (the run is marked CHEATED in bot.log):
+ *                         skip N    N frames into each level: set the level-skip flag and pause + B+C
+ *                         energy 1  refill energy every frame
+ *                         protect 1 keep the escorted truck/van at full hit points
+ *                         freeze 1  steel mill: let the T-1000 freeze on the next nitrogen contact
+ *                         Logs to outdir/bot.log: level changes, deaths, casualties, status every 1800 frames.
+ *   objs NAME             append the live object slots ($FF87B2, raw words) and the $FF9AB2 table to
+ *                         outdir/NAME.obj
  *   gunoff 0|1            report the gun as off screen
  *   gunhold X Y BTN       set the Menacer position/buttons and keep them (no frames run); later
  *                         run/press/gun commands see this state ("gun" resets buttons to 0 after it)
@@ -61,6 +84,8 @@
  *                         (raw - 128)  [needs vdptrace core exports vram/reg]
  *   (roomsave is a scooby-decomp leftover: it watches Scooby's room variables)
  *
+ * At exit also writes outdir/ijump.txt: "site target count" for every register-indirect jmp/jsr
+ * ((An), d16(An), d8(An,Xn)) executed, with its observed target (merge: tools/py/ijmerge.py).
  * At exit writes outdir/cov.bin: one byte per ROM byte,
  *   bit0 = instruction start executed, bit1 = read as data by the 68k,
  *   bit2 = byte belongs to an executed instruction's opcode word
@@ -77,7 +102,6 @@
 
 static uint8_t cov[ROM_MAX];
 static uint8_t ramexec[0x10000];
-static long rom_size;
 static const char *outdir;
 
 static const void *fb;
@@ -85,6 +109,30 @@ static unsigned fb_w, fb_h;
 static size_t fb_pitch;
 static enum retro_pixel_format pixfmt = RETRO_PIXEL_FORMAT_0RGB1555;
 static uint16_t pad;   /* bitmask of RETRO_DEVICE_ID_JOYPAD_* */
+static uint16_t pad2;  /* joypad on port 2 (bot pad2 player, `press2`), used when GUN is not set */
+static const uint8_t *romb; /* ROM bytes */
+static void bot_hook(int type, unsigned addr);
+static long rom_size;
+
+/* runtime targets of register-indirect jmp/jsr: (site, target) pairs, written to outdir/ijump.txt */
+#define IJ_MAX 8192
+static struct { unsigned site, target; long n; } ij[IJ_MAX];
+static int nij;
+static unsigned ij_vec[8];
+static void ijump_note(unsigned prev, unsigned addr)
+{
+	if (prev + 2 > (unsigned)rom_size || !romb)
+		return;
+	unsigned op = romb[prev] << 8 | romb[prev + 1];
+	unsigned kind = op & 0xFFC0, mode = (op >> 3) & 7;
+	if ((kind != 0x4E80 && kind != 0x4EC0) || (mode != 2 && mode != 5 && mode != 6))
+		return;
+	for (int i = 0; i < 8; i++)          /* an interrupt taken right after the jump */
+		if (addr == ij_vec[i]) return;
+	for (int i = 0; i < nij; i++)
+		if (ij[i].site == prev && ij[i].target == addr) { ij[i].n++; return; }
+	if (nij < IJ_MAX) { ij[nij].site = prev; ij[nij].target = addr; ij[nij].n = 1; nij++; }
+}
 
 enum { HOOK_M68K_E = 1, HOOK_M68K_R = 2, HOOK_M68K_W = 4,
        HOOK_VRAM_W = 16, HOOK_CRAM_W = 64, HOOK_VSRAM_W = 256 }; /* from gpgx core/debug/cpuhook.h */
@@ -241,8 +289,11 @@ static void hook(int type, int width, unsigned int addr, unsigned int value)
 	addr &= 0xFFFFFF;
 	if (nwatch || nbp)
 		dbg_hook(type, width, addr, value);
-	if (type == HOOK_M68K_E)
+	if (type == HOOK_M68K_E) {
+		ijump_note(cur_pc, addr);
 		cur_pc = addr;
+	}
+	bot_hook(type, addr);
 	if (type == HOOK_M68K_E && addr >= 0xFF0000) {
 		ramexec[addr & 0xFFFF] = 1;
 		return;
@@ -360,11 +411,12 @@ static int16_t input_cb(unsigned port, unsigned device, unsigned index, unsigned
 		}
 		return 0;
 	}
-	if (port != 0 || device != RETRO_DEVICE_JOYPAD)
+	if (port > 1 || device != RETRO_DEVICE_JOYPAD)
 		return 0;
+	uint16_t m = port ? pad2 : pad;
 	if (id == RETRO_DEVICE_ID_JOYPAD_MASK)
-		return pad;
-	return (pad >> id) & 1;
+		return m;
+	return (m >> id) & 1;
 }
 
 static void write_shot(const char *name)
@@ -411,6 +463,8 @@ static int btn_id(char c)
 	return -1;
 }
 
+#include "bot.c"
+
 #define SYM(name) \
 	do { \
 		*(void **)&p_##name = dlsym(core, #name); \
@@ -451,6 +505,9 @@ int main(int argc, char **argv)
 	if (!rf) { perror(argv[2]); return 1; }
 	static uint8_t rom[ROM_MAX];
 	rom_size = fread(rom, 1, ROM_MAX, rf);
+	romb = rom;
+	for (int i = 0; i < 8; i++)          /* spurious + level 1..7 autovectors */
+		ij_vec[i] = (rom[0x60 + 4 * i] << 24 | rom[0x61 + 4 * i] << 16 | rom[0x62 + 4 * i] << 8 | rom[0x63 + 4 * i]) & 0xFFFFFF;
 	fclose(rf);
 
 	p_retro_set_environment(env_cb);
@@ -464,7 +521,8 @@ int main(int argc, char **argv)
 	if (!p_retro_load_game(&gi)) { fprintf(stderr, "load failed\n"); return 1; }
 	p_set_cpu_hook(hook);
 	{ void (*spd)(unsigned, unsigned) = dlsym(core, "retro_set_controller_port_device");
-	  if (getenv("GUN") && spd) spd(1, RETRO_DEVICE_MENACER); }
+	  if (getenv("GUN") && spd) spd(1, RETRO_DEVICE_MENACER);
+	  else if (getenv("PAD2") && spd) spd(1, RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0)); }
 
 	FILE *sf = fopen(argv[3], "r");
 	if (!sf) { perror(argv[3]); return 1; }
@@ -531,6 +589,19 @@ int main(int argc, char **argv)
 				idx = link;
 			}
 			fclose(f);
+		} else if (!strcmp(cmd, "objs") && sscanf(line, "%*s %255s", arg) == 1) {
+			objs_dump(arg);
+		} else if (!strcmp(cmd, "bot")) {
+			bot_cmd(line);
+		} else if (!strcmp(cmd, "botcfg")) {
+			char k[64], v[64];
+			if (sscanf(line, "%*s %63s %63s", k, v) == 2) bot_config(k, v);
+		} else if (!strcmp(cmd, "press2") && sscanf(line, "%*s %255s %d", arg, &n) == 2) {
+			pad2 = 0;
+			for (char *c = arg; *c; c++)
+				if (btn_id(*c) >= 0) pad2 |= 1u << btn_id(*c);
+			while (n--) step();
+			pad2 = 0;
 		} else if (!strcmp(cmd, "gunoff") && sscanf(line, "%*s %d", &gun_off) == 1) {
 		} else if (!strcmp(cmd, "run") && sscanf(line, "%*s %d", &n) == 1) {
 			while (n--) step();
@@ -665,6 +736,10 @@ int main(int argc, char **argv)
 	snprintf(path, sizeof path, "%s/cov.bin", outdir);
 	FILE *cf = fopen(path, "wb");
 	fwrite(cov, 1, rom_size, cf);
+	fclose(cf);
+	snprintf(path, sizeof path, "%s/ijump.txt", outdir);
+	cf = fopen(path, "w");
+	for (int i = 0; i < nij; i++) fprintf(cf, "%06x %06x %ld\n", ij[i].site, ij[i].target & 0xFFFFFF, ij[i].n);
 	fclose(cf);
 	snprintf(path, sizeof path, "%s/ramexec.bin", outdir);
 	cf = fopen(path, "wb");

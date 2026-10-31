@@ -1,0 +1,10 @@
+# Every level in 2P mode 0 (P1 Menacer, P2 pad 1; state m01 from boot_2p_gun.txt, GUN=1
+# GUNMODE=lightgun): both players driven by the bot, 900 frames per level, then skipped.
+# Saves m<level>.state.
+load m01
+peekeach level FF80CC 2
+botcfg p1 gun
+botcfg p2 pad1
+botcfg skip 900
+botcfg savelevels m
+bot until 0 120000

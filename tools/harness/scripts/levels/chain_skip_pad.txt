@@ -1,0 +1,8 @@
+# Every level in 1P joypad mode (mode 5; state p01 from boot_pad.txt, run with PAD2=1): the bot
+# drives pad 1, plays 900 frames per level, then skips it (cheat: pause + B+C). Saves p<level>.state.
+load p01
+peekeach level FF80CC 2
+botcfg p1 pad1
+botcfg skip 900
+botcfg savelevels p
+bot until 0 120000

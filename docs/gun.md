@@ -218,7 +218,8 @@ Full list: `data/ram.txt`. The essentials:
 with +0 = 0). Pick a slot with +0 b15 set. Aim at (+2, +4 − ~20) and hold the trigger. Fire a missile
 (AUX_A for 2+ frames) when several objects are on screen. Keep `p1_energy` and `p1_gunpower` in view.
 The hit box comes from the table passed to `HitBox` `$005940` by each object's +$1C handler.
-Mapping types to handlers is future work (P3).
+Implemented as the harness `bot` command (`tools/harness/bot.c`): it learns the boxes, the dangerous
+types and the human handlers through the cpu hook. Results per level: `docs/levels.md`.
 
 **Cheat / level select.** There is no level select or debug menu in the strings. There is a
 **level-skip cheat**: on the "PRESS START" title, enter pad 1 **Up, Down, Left, Right, Up, Down,

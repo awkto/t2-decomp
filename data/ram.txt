@@ -120,3 +120,20 @@ FFB0D2 256 row_delta            # words, this frame's scroll step of every row; 
 FFB252 512 vdp_list             # VDP command list (word commands + args), run by VdpListRun after the vblank wait
 FFB452 1024 vdp_list_area        # data area for list commands that carry tilemap data (VdpQueueTileRect)
 FFFFF6 4 ram_magic            # long, "PAUL" once the hi-score table has been initialised (survives a soft reset)
+#
+# --- gun-bot / levels (issue #6). Evidence: docs/levels.md, tools/harness/bot.c
+FF802E 2 p1_invuln            # word, negative (counted up to 0 by EnergyHud) = PlayerDamage does nothing
+FF8034 2 p1_hk_kills          # word, flying HKs destroyed (end-of-level stats)
+FF8038 2 p1_humans_shot       # word, humans killed by this player (HUMAN CASUALTY)
+FF803A 2 p1_kills_3a          # word, level-specific stat (level-1 wall pieces, level-4 CPU parts)
+FF9EC2 1 t1000_frozen         # byte, level 8: set when the T-1000's temperature underflows ($011CC8)
+FF9ECA 4 escort_obj           # long, object pointer: level-3 truck, level-7 van, level-8 tanker; stale between levels
+FF9ECE 4 van_ok               # long, level 7: cleared when the helicopter got through ($010E82): the run fails
+FF9ED6 4 t1000_obj            # long, level 8: the T-1000 object
+FFA0A8 2 cyberdyne_equipment  # word, Cyberdyne equipment left (287 at level 5); 0 at the end = "Cyberdyne destroyed" ending
+FFA23C 2 heli_passes          # word, level 7: helicopter passes survived; 9 -> the van drives off (level ends)
+FFA23E 2 heli_hits            # word, level 7: hits on the helicopter's T-1000 this pass (> 4 needed)
+# FF9F60 (menu_cursor) is also the T-1000's temperature on level 8: -$3C per frame per nitrogen leak within
+#   10 px of him, +$C per frame otherwise; an underflow freezes him (t1000_frozen).
+# FFAE84 (options_values) is also level 3's 16 truck damage cells (bytes) and level 8's 100 tanker panels
+#   (words, $58 hit points each; a destroyed panel leaks nitrogen, object for $80 frames).

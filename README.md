@@ -63,6 +63,7 @@ scooby-decomp.
 - `tools/py/mergecov.py`, `tools/py/covreport.py` - merge harness `cov.bin` files into `data/exec_starts.txt` and `data/rom_data_reads.txt`; coverage report
 - `tools/py/fuzzscript.py`, `tools/py/campaign.py`, `tools/py/vmjob.sh` - random-play harness scripts (`attract`, `gun`, `pad`) and a coverage campaign driver
 - `tools/harness/` - headless libretro harness (patched GPGX core) with Menacer support (`GUN=1`, `gun X Y BTN N`); `h.sh` runs a script, `shot2png.sh` converts screenshots
+- `tools/harness/bot.c` - the gun-bot (`bot N`, `botcfg`): plays the game from RAM; `tools/harness/levels.sh` runs the level campaign and regenerates the per-level savestates (`states/INDEX.md`); levels and results: `docs/levels.md`
 - `data/` - runtime coverage; hand-edited `symbols.txt` (ROM labels), optional `ram.txt` (RAM/I-O vars, emitted as `.equ`),
   `gap_notes.txt` (classification of non-code ranges), `code_regions.txt`; generated `functions.txt`, `callgraph.txt`,
   `xrefs.txt`, `indirect.txt`, `code_gaps.txt`

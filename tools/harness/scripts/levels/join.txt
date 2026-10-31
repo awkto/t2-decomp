@@ -1,0 +1,21 @@
+# A second player joins a 1P joypad game (state p01 from boot_pad.txt, PAD2=1): the bot plays P1 on
+# pad 1, then P2 presses Start on pad 2 (mode 5 -> 1) and the bot drives both; P1 is then killed
+# (energy forced low) and plays on alone-continues, so the 2P death / wait-for-continue path runs.
+load p01
+peekeach level FF80CC 2
+peekeach mode FF9DF5 1
+peekeach p2idx FF8074 2
+botcfg p1 pad1
+bot 2500
+press2 S 4
+run 30
+botcfg p2 pad2
+bot 3000
+poke FF801E 2 0004
+bot 3000
+poke FF806E 2 0004
+bot 3000
+poke FF80CA 1 00
+poke FF801E 2 0004
+poke FF806E 2 0004
+bot until 0 15000

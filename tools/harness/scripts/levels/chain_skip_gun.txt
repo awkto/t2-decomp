@@ -1,0 +1,12 @@
+# Visit every level (1P Menacer) with the bot and the level-skip cheat (state l01 from boot_gun.txt).
+# The bot plays each level for 900 frames, then pauses and presses B+C (cheat), and saves
+# outdir/lv<level>.state at every level change (level $0A = high-score entry, 0 = back to attract).
+load l01
+peekeach level FF80CC 2
+peekeach p1idx FF8024 2
+botcfg skip 900
+botcfg savelevels lv
+bot until 0 120000
+shot after_chain
+run 3000
+shot attract

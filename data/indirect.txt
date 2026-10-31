@@ -27,3 +27,5 @@
 011d3c  jmp $11d40(pc, d0.w)  RESOLVED  011d40 011d44 011d48 011d4c 011d50 011d54 011d58 011d5c 011d60  [bra table 011d40]
 012408  jmp $1240c(pc, d0.w)  RESOLVED  01240c 012410 012414 012418 01241c 012420 012424 012428  [bra table 01240c]
 014524  jmp $14528(pc, d0.w)  RESOLVED  014528 01452c 014530 014534 014538 01453c 014540  [bra table 014528]
+0149b2  jmp (a1)        SEEDED  ; object AI +$20 just stored (jump to the new state; level-8 T-1000)
+014a06  jmp (a1)        SEEDED  ; object AI +$20 just stored (jump to the new state; level-8 T-1000)

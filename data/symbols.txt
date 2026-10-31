@@ -154,3 +154,19 @@
 011EC4 VramFillDma            #
 013376 SpriteQueueReset       # spr_queue_ptr = $FFA250, spr_queue_data = $FFA318, spr_queue_n = 0
 0152A8 SpriteMappings         # data: word offsets -> pieces (size, y, tile, tile-base RAM word, x), -1 terminated
+
+# --- gun-bot / levels (issue #6). Evidence: docs/levels.md, tools/harness/bot.c
+0015EC Ending                 # MISSION COMPLETE + credits; text by cyberdyne_equipment (0: "Cyberdyne has been destroyed")
+005F04 HitHumanSoldier        # hit test of the level-1 humans (type $13): only damage < 6 counts; kill -> SetPlayerState(6)
+0065FC HitHumanB              # human hit test (damage < 3); kill -> SetPlayerState(6)
+006652 HitHumanC              # human hit test (damage < 3); kill -> SetPlayerState(6)
+00627A HitTruck               # level-3 truck: hit only plays a sound (it cannot be hurt by the player)
+0062B0 HitSwatVan             # level-7 SWAT van, three boxes
+006C2E HitT1000Mill           # level-8 T-1000: a hit knocks him down; damage >= 5 shatters
+00909C PlayerDamageNearest    # d2 = energy loss for the player on the object's side of the screen (X <= $A0: P1)
+0090B2 PlayerDamage           # a4 = player, d2 = energy loss; 0 -> TERMINATED, < $2000 -> ENERGY LOW
+00D30A TruckDamageInit        # level 3: 16 damage cells at $FFAE84 = 1
+00D322 TruckDamage            # level 3: an enemy hit clears a random cell; none left -> "John Connor has perished" ($01F7DA)
+00E9C4 MillEndFade            # last object of level 8: fade, then level_exit = 1 (-> Ending)
+010E82 HeliPassCheck          # level 7: helicopter at X >= $88 with <= 4 hits this pass ($FFA23E) -> the run fails
+011B10 T1000FrozenCheck       # level 8: t1000_frozen set -> frozen AI $011A90 (he shatters, script $020DB2)
