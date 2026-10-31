@@ -35,9 +35,14 @@ the window" screen. A ROM that worked is remembered in the ini.
 |---|---|
 | Mouse position | Menacer aim (the game's crosshair follows) |
 | Left button | Trigger (Menacer A) |
-| Right button | Menacer button A, B or C, option `mouse_right` (default B) |
-| Middle button | Menacer Start (skips the intro text, pauses) |
+| Right button | Menacer button A, B or C, option `mouse_right` (default B = D0 = the missile) |
+| Middle button | Menacer Start (skips the intro text, pauses); Start on the menus too |
+| Wheel | Main menu: cursor up/down. OPTIONS: value up/down |
 | Mouse outside the picture | The gun points off screen |
+| Any click on the logos, story text, PRESS START | Start (pad 1 press injected by the host) |
+| Main menu: move over a row, left click | Cursor to the row, then left click = Start on it |
+| OPTIONS: move over a row, left click / right click | Select the row; left click = value up, right click = value down (rows 2-4 also play it); left click on EXIT leaves |
+| Left click on the continue screen | The gun's Start: continue (also a dead gun player in 2 PLAYER) |
 | Arrows, Z/A, X/S, C/D, Enter | Pad on port 1: D-pad, A, B, C, Start (menus, 2 PLAYER pad) |
 | Gamepad | D-pad / left stick, X/Y = A, A = B, B/RB = C, Start; Back = pause |
 | F1 | Debug overlay (frame, FPS, gun position and buttons, pad, audio queue) |
@@ -63,6 +68,8 @@ ones; `--options --json` lists all of them. Precedence: default, ini, command li
 | `vsync` | on | sync to the display |
 | `mouse` | on | Menacer on port 2 (off: empty port) |
 | `mouse_right` | B | Menacer button on the right mouse button: A, B or C |
+| `aim` | fast | `fast`: the crosshair follows the mouse within a frame; `game`: the original 4-8 frame lag |
+| `aim_correct` | on | host-side X correction table: the shot lands within 1-2 px of the mouse |
 | `mute`, `volume` | off, 100 | audio |
 | `rom` | | ROM path, remembered automatically |
 | `key_up` ... `key_start` | | SDL key names, several joined with `\|` |
@@ -86,6 +93,12 @@ One command per line, `#` starts a comment. Mouse coordinates are game pixels (0
 | `hold BTNS` / `hold -` | set / clear pad buttons held during `run` |
 | `mouse X Y` | aim the Menacer at game pixel X,Y |
 | `mouse leave` | point it off screen |
+| `wheel N` | mouse wheel (N > 0 up) |
+| `untilscreen NAME MAX` | run until the mouse logic sees screen `logo`, `intro`, `title`, `menu`, `options`, `continue` or `game` (at most MAX frames) |
+| `until ADDR W VAL MAX` | run until the work RAM value matches (at most MAX frames) |
+| `screen` | log the screen the host sees |
+| `crosshair LABEL` | log gun_x, gun_y, p1_x, p1_y and the crosshair sprite's centre from the VDP sprite table |
+| `cpu LABEL` | log the 68k PC, SP and the word above the top stack return slot |
 | `click L\|R\|M [N]` | hold the left (trigger) / right / middle (Start) button for N frames (default 6) |
 | `shot NAME` | write `OUTDIR/NAME.ppm` (a full path if NAME contains `/`) |
 | `ram NAME` | write the 64 KiB work RAM, 68k byte order |
@@ -103,6 +116,46 @@ Harness scripts (`tools/harness/scripts`) also run, the harness-only `trace` bei
   point, and the score (top left) rises after left clicks.
 - `port/tools/livetest.sh` (needs xvfb-run and xdotool) moves a real X pointer over a real window
   and checks the window-to-game mapping and trigger through F12 (printed gun position).
+
+## Mouse tests (issue #5)
+
+`port/tools/mousetest.sh [t2port] [test ...]` runs the headless mouse tests (SDL dummy drivers, no
+display, about a minute) and prints PASS or FAIL per test; PPM and PNG screenshots and the
+peek logs are in `build/mousetest/<test>/`. The scripts are in `port/scripts/`, the checks in
+`tools/py/mousecheck.py`. No test sends a pad command except `twop`, where the pad is the second player.
+
+| Test | What it proves |
+|---|---|
+| `flow` | power-on to level 1 with clicks only: logos, story, PRESS START, main menu (hover and wheel move the cursor), OPTIONS (credits value with left/right click and wheel, EXIT), "USE MENACER" |
+| `twop` | "START 2 PLAYER - 1 MENACER / 2 JOYPAD 1" from the mouse: mouse = player 1, scripted pad = player 2 |
+| `continue` | energy poked to 0: left click continues (credits 4 to 3, energy refilled); dying again with the countdown run out leads to the high-score screen, where three clicks enter ABC and ENTER |
+| `missile` | a 1-frame right click fires nothing (Menacer debounce), a 4-frame one fires a missile |
+| `grid` | 370 points over the screen: p1_x within 2 px of the mouse (97 % within 1), p1_y exact, and the crosshair sprite agrees |
+| `lag` | after a jump of the mouse the crosshair is there in 2 frames with `aim=fast` and takes 9 with `aim=game` |
+
+`port/tools/build.sh` builds `build/port/t2port` (what the tests need). `port/tools/aimcal.sh` remeasures
+the X correction table (`port/src/aimtab.h`, made by `tools/py/aimtab.py`) from the `flow` test's state.
+
+## Menus by mouse
+
+The game reads only pad 1 on the logos, title, main menu and OPTIONS, so `mouse.c` (SDL-free, shared
+with the browser build) injects pad-1 presses. The screen is worked out from the 68k: between frames
+it sits in `WaitVBlank` (`$0086E2`) and the return address on the stack names the loop that
+called it (`data/ram.txt`, "host/mouse"). A press is held until the game has latched it in `$FF8050`
+and released until it has seen the release, since the game wants clean edges. The main menu cursor is
+`menu_cursor` (`$FF9F60`): the host presses Up/Down until it equals the row under the mouse (rows
+at y = 32 + 24 n). The logo screens take Start only in a window of their 300 frames
+(`vblank_count` 180..299), so a click on them waits for it. "2 JOYPAD" (row 3) is refused by the game
+with a gun on port 2, so a click on it only moves the cursor. Nothing in the game is patched for this.
+
+## Aim
+
+`aim=fast` (default) writes `tools/py/gunpatch.py`'s 60 bytes into the core's in-memory copy of the
+ROM (`$01E460`) after the sha1 check: only the newest HV latch is used, so the crosshair is where the
+mouse is 2 frames later. The ROM file is never modified; `aim=game` leaves the original averaging
+(4-8 frames lag). `aim_correct=on` maps the commanded X through `aim_cmd_x[]`, which is measured:
+without it the game's X is -2..+4 px from the mouse, with it 0 (45 %), +1 (46 %), -1 (8 %), 2 (rare)
+across x = 0..319; x = 0 gives 2 because the game's X starts at 2. Y needs no correction.
 
 ## How the gun reaches the core
 

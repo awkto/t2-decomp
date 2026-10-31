@@ -228,6 +228,27 @@ with Start and press **B+C** on the pausing player's device (gun: AUX_A+AUX_B). 
 the stats screen follows. `gun_levelskip.txt` goes from level 1 to level 2 this way. This is the
 coverage shortcut that PLAN.md asked for. Poking `$FFA0A6 = $FF` does the same without the code.
 
+## Menus by mouse (issue #10)
+
+How the host tells the screens apart (there is no screen variable in RAM). Between frames the 68k
+is nearly always in `WaitVBlank` (`$0086E2`..`$0086F4`; it pushes d0 first), so the long word at
+sp+2 is the return address into the loop that waits:
+
+| Return address | Loop | Screen | Mouse action (`port/src/mouse.c`) |
+|---|---|---|---|
+| `$000E28` | WaitStartWindow | the three logo screens (300 frames each) | Start; only accepted for `vblank_count` 180..299, as an edge |
+| `$0045E0` | `$0042CE` StoryIntro | story text, 550 frames | Start held skips it |
+| `$001B9E` | PressStartLoop | PRESS START | Start edge |
+| `$00116A` | MainMenuInput | main menu, 5 rows at y = 32 + 24 n, cursor `$FF9F60` | Up/Down until the cursor is the row, then Start |
+| `$0013A8` | OptionsInput | OPTIONS, 5 rows, cursor `$FF9F60` (rows: credits `$FFAE84` 3..5, sound effect 0..35, sample 0..6, music 0..7, EXIT) | Up/Down, Right/Left for values, A plays a sound row, Start leaves |
+| `$008DFE`..`$008E66` | ContinueCountdown | "CONTINUE 5..0" (1 player) | left click = the gun's Start |
+
+In a 2 player game a dead gun player (`p1_state` = 7) also waits for Start in the game loop; the
+left click is Start then too. `ReadPad1` writes the pad it read to `$FF8050` (previous: `$FF8052`);
+the host holds each injected press until it shows there, and holds the release until it is gone,
+because every one of these loops wants a clean edge (`btn & ~prev`). The "2 JOYPAD" row is refused
+by the main menu loop when port 2 is a Menacer (`$000FC0`: it needs peripheral id `$D`).
+
 ## Harness changes
 
 `tools/harness/harness.c` (documented in its header):
