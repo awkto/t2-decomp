@@ -489,9 +489,9 @@
 0094f2   132 sub_0094F2  # 30 insns
 009576   104 sub_009576  # 22 insns
 0095de   104 sub_0095DE  # 22 insns
-009646   112 sub_009646  # 25 insns
+009646   112 spawn_t03  # 25 insns
 0096b6    98 sub_0096B6  # 20 insns
-009718   184 sub_009718  # 46 insns
+009718   184 spawn_t01d  # 46 insns
 0097d0    50 sub_0097D0  # 10 insns
 009802    48 sub_009802  # 9 insns
 009832    52 sub_009832  # 10 insns
@@ -527,7 +527,7 @@
 009c30     6 sub_009C30  # 2 insns
 009c36    10 ScrEndLevel  # 2 insns
 009c40    10 sub_009C40  # 2 insns
-009c4a    24 sub_009C4A  # 5 insns
+009c4a    24 copy_tiles_048ca6  # 5 insns
 009c62    80 sub_009C62  # 15 insns
 009cb2   112 sub_009CB2  # 44 insns
 009d22   224 sub_009D22  # 48 insns

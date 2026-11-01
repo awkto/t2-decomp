@@ -92,7 +92,7 @@ override fields and read script arguments. The names below for the handlers an e
 | `$12` | `$009B78` | spawn_t0fa (crate) | x? | type `$0F` crate at X (+ one more word when the next word is 0) |
 | `$13` | `$009BD2` | spawn_t0fb (crate) | xw | type `$0F` crate at X, +$2A = w |
 | `$14` | `$00A140` | native | l | `jmp` to the long routine; it may read more args (see `NATIVE_ARGS`) |
-| `$15` | `$009646` | spawn_15 | w | type `$03` at X, Y = `$150`, random variant (hit `$005AF8`, AI `$00D978`, hp 15); `$FF9E06++` |
+| `$15` | `$009646` | spawn_t03 | w | type `$03` at X, Y = `$150`, random variant (hit `$005AF8`, AI `$00D978`, hp 15); `$FF9E06++` |
 | `$16` | `$009C18` | text | l | print a text record (`PrintText` `$007DEE`) |
 | `$17` | `$009C2A` | draw_17 | - | tile rectangles (`$00BE42`) |
 | `$18` | `$00A138` | poke_long | value.l address.l | write a long to RAM |
@@ -102,7 +102,7 @@ override fields and read script arguments. The names below for the handlers an e
 | `$1C` | `$00A10A` | draw_tiles_e39a | - | 13x13 tile rect from ROM `$04E284` to plane-A `$E39A` (OR `$8000`), tile base `$FF9E48` |
 | `$1D` | `$009576` | spawn_t01c | xy | type `$01` at X,Y |
 | `$1E` | `$0095DE` | spawn_t11 | xy | type `$11` at X,Y |
-| `$1F` | `$009718` | spawn_t28 | xy | **type `$01`** at X,Y (AI `$00C564`, hit `$005BEC`); despite the name it is a type-`$01` endoskeleton |
+| `$1F` | `$009718` | spawn_t01d | xy | type `$01` at X,Y (AI `$00C564`, hit `$005BEC`) |
 | `$20` | `$0099D4` | spawn_t1a | - | type `$1A` |
 | `$21` | `$00A130` | poke_word | value.w address.l | write a word to RAM |
 | `$22` | `$009C30` | text_clear | - | fill the text rows (`$00BF46`) |
@@ -112,7 +112,7 @@ override fields and read script arguments. The names below for the handlers an e
 | `$26`/`$27` | `$009D22`/`$009E22` | spawn_t13a/b (humans) | - | type `$13`/`$14` humans and the human-scene tile rows; `$FF9E0C++` |
 | `$28` | `$009EA2` | clear_tiles_e780 | - | remove every type `$13`/`$14` object (`sub_012986`), then zero-fill 8 rows of `$30` words at `$E780` |
 | `$29` | `$009EB2` | clear_tiles_e7b0 | - | zero-fill 8 rows of `$20` words at `$E7B0` |
-| `$2A` | `$009C4A` | spawn_t15a | - | queues a tile block (ROM `$048CA6`) through the VDP list (`sub_009B14`); the name is historical, this is not a spawn |
+| `$2A` | `$009C4A` | copy_tiles_048ca6 | - | queue a tile block (ROM `$048CA6`) through the VDP list (`sub_009B14`) |
 | `$2B` | `$009C62` | spawn_t15b | - | type `$15` at X = `$168`, Y = `$A0` (AI `$00CABA`, hit `$0060F4`, hp 40); `$FF9E0A++` |
 | `$2C` | `$00A5F6` | spawn_t23 | ww | type `$23` at the two words; `$FF9E10++` |
 | `$2D` | `$00A644` | spawn_t0ea | - | type `$0E` at X = `$154`, Y = `$80` (AI `$00C332`, hit `$005CC6`, hp 10); `$FF9E08++` |
@@ -152,9 +152,9 @@ pieces add (`sprite.md`).
     ...
     01e586  +0    t=910   native           $00b2fa           ScrSetPlayers
     01e58e  +1    t=911   spawn_t0e        40
-    01e5be  +20   t=1023  spawn_t28        110 136
+    01e5be  +20   t=1023  spawn_t01d       110 136
     01e5c6  +70   t=1093  load_tiles       0 $ffff9e3c $027202
-    01e5d4  +70   t=1163  spawn_t28        200 136
+    01e5d4  +70   t=1163  spawn_t01d       200 136
 
 ## Scroll tables and maps
 
