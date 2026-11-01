@@ -3,7 +3,8 @@ project(t2port C)
 
 # usage (from the repo root):
 #   cmake -S port -B build/port -DCMAKE_BUILD_TYPE=Release && cmake --build build/port -j4
-# target: t2port (SDL2 host with Genesis Plus GX linked statically; docs/port.md)
+# targets: t2port (SDL2 host with Genesis Plus GX linked statically; docs/port.md),
+#          difftest (headless HLE equivalence tester; docs/porting.md)
 
 get_filename_component(T2_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
 if(NOT CMAKE_BUILD_TYPE)
@@ -36,11 +37,29 @@ if(EMSCRIPTEN)
   return()
 endif()
 
+# ---- emulator wrapper + HLE layer + decompiled game code (shared by t2port and difftest) ----
+# OBJECT library so that HLE_FUNC registrations (constructors) are never dropped by the linker.
+file(GLOB GAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/game/*.c")
+add_library(t2_common OBJECT
+  src/emu.c src/sha1.c src/script.c src/mouse.c src/gun.c src/capture.c
+  hle/hle.c hle/sandbox.c hle/gx.c
+  ${GAME_SOURCES})
+target_link_libraries(t2_common PUBLIC gpgx_core)
+target_include_directories(t2_common PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/hle"
+  "${CMAKE_CURRENT_SOURCE_DIR}/game")
+target_compile_options(t2_common PRIVATE -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing)
+target_compile_definitions(t2_common PUBLIC T2_ROOT="${T2_ROOT}")
+if(T2_DIST)
+  target_compile_definitions(t2_common PUBLIC T2_DIST)
+endif()
+# hle/gx.c is the only file that includes GPGX internals (shared.h): it needs the core's defines
+set_source_files_properties(hle/gx.c PROPERTIES COMPILE_DEFINITIONS "${GPGX_DEFINES}")
+
 find_package(SDL2 REQUIRED)
 add_executable(t2port
-  src/main.c src/emu.c src/gun.c src/mouse.c src/script.c src/options.c src/romfind.c src/overlay.c src/sha1.c)
-target_link_libraries(t2port PRIVATE gpgx_core)
-target_include_directories(t2port PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  src/main.c src/options.c src/romfind.c src/overlay.c)
+target_link_libraries(t2port PRIVATE t2_common)
 if(TARGET SDL2::SDL2)
   target_link_libraries(t2port PRIVATE SDL2::SDL2)
 else()
@@ -52,3 +71,8 @@ target_compile_definitions(t2port PRIVATE T2_ROOT="${T2_ROOT}")
 if(T2_DIST)
   target_compile_definitions(t2port PRIVATE T2_DIST)
 endif()
+
+# ---- headless differential tester (docs/porting.md) ----
+add_executable(difftest tools/difftest.c)
+target_link_libraries(difftest PRIVATE t2_common)
+target_compile_options(difftest PRIVATE -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing)

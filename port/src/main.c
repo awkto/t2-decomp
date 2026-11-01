@@ -21,6 +21,7 @@
 
 #include "emu.h"
 #include "gun.h"
+#include "hle.h"
 #include "mouse.h"
 #include "options.h"
 #include "overlay.h"
@@ -28,7 +29,7 @@
 #include "script.h"
 
 typedef struct {
-	const char *rom, *script, *outdir, *screenshot, *window_shot, *savedir, *config, *dump_ram;
+	const char *rom, *script, *outdir, *screenshot, *window_shot, *savedir, *config, *dump_ram, *hle;
 	bool realtime_script, no_throttle, overlay;
 	long frames;
 } args_t;
@@ -56,6 +57,8 @@ static void usage(const char *argv0)
 	       "  --savedir DIR           quick states (default ~/.local/share/t2-decomp)\n"
 	       "  --no-throttle           run as fast as possible\n"
 	       "  --no-mouse              no Menacer on port 2 (keyboard/gamepad only)\n"
+	       "  --hle SPEC              run 68k functions as C: none (default), all, or a comma list\n"
+	       "                          of names (-name off, +name on); see docs/porting.md\n"
 	       "Headless: SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy %s --script s.txt --screenshot out.ppm\n",
 	       argv0, argv0);
 }
@@ -315,6 +318,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(s, "--savedir")) a.savedir = NEXT();
 		else if (!strcmp(s, "--no-throttle")) a.no_throttle = true;
 		else if (!strcmp(s, "--no-mouse")) SETOPT("mouse", "off");
+		else if (!strcmp(s, "--hle")) a.hle = NEXT();
 		else if (!strcmp(s, "-h") || !strcmp(s, "--help")) { usage(argv[0]); return 0; }
 		else { fprintf(stderr, "unknown option %s\n", s); usage(argv[0]); return 2; }
 	}
@@ -352,6 +356,12 @@ int main(int argc, char **argv)
 	if (!emu_init(rompath, savedir, !no_mouse, err, sizeof err)) {
 		fprintf(stderr, "%s\n", err);
 		return 1;
+	}
+	/* C replacements for 68k functions: --hle overrides the hle option (default none) */
+	const char *hle_spec = a.hle ? a.hle : options_str("hle");
+	if (hle_spec && strcmp(hle_spec, "none") && !hle_configure(hle_spec)) {
+		fprintf(stderr, "--hle: unknown function in '%s' (see docs/porting.md)\n", hle_spec);
+		return 2;
 	}
 	if (!batch) {      /* remember a ROM that worked */
 		char *abs = realpath(rompath, NULL);
