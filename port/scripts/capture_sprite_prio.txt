@@ -1,0 +1,24 @@
+# BuildSpriteTable priority-boundary capture (docs/subsystems/sprite.md): sprite_prio_depth
+# $FF9EB8 is forced to 1 so the P1 crosshair piece (priority = player index + 1 = 1) sits
+# exactly on the `priority <= sprite_prio_depth` boundary. Normal play sets the depth to 14..16,
+# so the equality case never happens there (T2_SPRITE_STATS reports eq=0 over the default
+# captures) and the bset.b #7 boundary would be untested.
+#
+#   build/port/difftest capture 013272 100 --script port/scripts/capture_sprite_prio.txt --out runs/bst_prio
+load states/gun_05.state
+run 900
+poke FF9EB8 2 0001
+mouse 60 60
+run 20
+hold U
+run 20
+hold D
+run 20
+hold L
+run 20
+hold R
+run 20
+hold -
+run 20
+mouse 120 120
+run 20

@@ -55,6 +55,7 @@
 static unsigned long g_bst_empty, g_bst_single, g_bst_multi, g_bst_cap;
 static unsigned long g_bst_passes1, g_bst_passes_sum;
 static unsigned long g_bst_max_pieces, g_bst_max_sprites;
+static unsigned long g_bst_prio_eq, g_bst_prio_lt, g_bst_prio_gt;
 static int g_stats = -1;
 
 static void sprite_stats_print(void)
@@ -64,10 +65,12 @@ static void sprite_stats_print(void)
 	fprintf(stderr,
 	        "BuildSpriteTable paths: empty=%lu single=%lu multi=%lu (79-piece cap hit %lu)\n"
 	        "  sort passes over the multi states: 1 pass=%lu, average=%.2f\n"
-	        "  busiest: %lu pieces, %lu queued sprites\n",
+	        "  busiest: %lu pieces, %lu queued sprites\n"
+	        "  piece priority vs sprite_prio_depth: eq=%lu lt=%lu gt=%lu\n",
 	        g_bst_empty, g_bst_single, g_bst_multi, g_bst_cap,
 	        g_bst_passes1, g_bst_multi ? (double)g_bst_passes_sum / (double)g_bst_multi : 0.0,
-	        g_bst_max_pieces, g_bst_max_sprites);
+	        g_bst_max_pieces, g_bst_max_sprites,
+	        g_bst_prio_eq, g_bst_prio_lt, g_bst_prio_gt);
 }
 
 static int sprite_stats_on(void)
@@ -309,11 +312,23 @@ loc_0132E8:                                       /* one piece */
 	ctx->a[2] += 2;
 	cyc += 8;
 	cyc += 16;                                    /* cmp.w (sprite_prio_depth).l,d4 */
-	if ((int16_t)(ctx->d[4] & 0xFFFF) <= (int16_t)RAM16(SPRITE_PRIO_DEPTH)) {
-		cyc += 8 + 20;                            /* bgt.s not taken + bset.b #7,(-0x4,a2) */
-		RAM8(ctx->a[2] - 4) |= 0x80;
-	} else {
-		cyc += 10;                                /* bgt.s loc_013322 taken */
+	{
+		int16_t prio = (int16_t)(ctx->d[4] & 0xFFFF);
+		int16_t depth = (int16_t)RAM16(SPRITE_PRIO_DEPTH);
+		if (sprite_stats_on()) {
+			if (prio == depth)
+				g_bst_prio_eq++;
+			else if (prio < depth)
+				g_bst_prio_lt++;
+			else
+				g_bst_prio_gt++;
+		}
+		if (prio <= depth) {
+			cyc += 8 + 20;                        /* bgt.s not taken + bset.b #7,(-0x4,a2) */
+			RAM8(ctx->a[2] - 4) |= 0x80;
+		} else {
+			cyc += 10;                            /* bgt.s loc_013322 taken */
+		}
 	}
 	cyc += 16;                                    /* cmpi.w #0x141,(-0x8,a2) */
 	if ((int16_t)RAM16(ctx->a[2] - 8) >= 0x141) {
