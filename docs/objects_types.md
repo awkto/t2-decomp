@@ -36,15 +36,16 @@ parts were all alive together in `G1_13`/`G1_14` at the boss.
 
 ## Level 2 - human hideout interior
 
-Evidence: `gun_02` state; frames 1410/1740 (`N2_4`, `N2_5`) and 3000-15000 (`G2_*`); screenshots
-`N2_4_an.png`, `N2_5_an.png`, `G2_2_an.png`, `G2_4_an.png`, `G2_10_an.png`.
+Evidence: `gun_02` state; frames 1410/1740 (`N2_4`, `N2_5`), 3000-15000 (`G2_*`), and a fresh run
+3410-3660 (`T29_*`); screenshots `N2_4_an.png`, `N2_5_an.png`, `G2_2_an.png`, `G2_4_an.png`,
+`G2_10_an.png`, `T29_c_crop.png`.
 
 | type | name | description | hp | hit routine | AI routine(s) | confidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | `$26` | endoskeleton (infiltrator) | dark-chrome T-800 that breaks into the hideout; three spawn variants (walking in at the edges, dropping from the ceiling); the big one in `G2_4` | 10 | `$006894`, `$0068CA`, `$00683A` | `$00EFA4`, `$00EFFE`, `$00F18A`, `$00F1E4`, `$00EDD4`, `$00F69C` | high |
 | `$13` | human resistance fighter | unarmed/armed humans of the hideout; shooting one is the casualty penalty | 5 | `$0065FC`, `$006652` | `$00EAA8`, `$015212` | high |
 | `$20` | hanging ceiling lamp | lamp fixture hanging from the ceiling (top of screen, Y~25, scrolls in from the right); shootable | 4 | `$006544`, `$0066A8`, `$00597A` | `$00EA6A`, `$00EAEC`, `$0151F0` | high |
-| `$29` | endoskeleton (floor pop-up) | rises out of the floor (Y starts at 256, rises 8 px/frame), fires, then sinks; three hit-point stages drop parts | 20 | `$0067F2` | `$00EC58` (rise), `$00EC82` (fire), `$00ED2E` (dying) | medium |
+| `$29` | endoskeleton (floor pop-up) | rises out of the floor (Y starts at 256, rises 8 px/frame), fires, then sinks; three hit-point stages drop parts. Confirmed on a fresh run: frame 3510 (`T29_c`, X=100 Y=208) shows the chrome endoskeleton at that spot | 20 | `$0067F2` | `$00EC58` (rise), `$00EC82` (fire), `$00ED2E` (dying) | high |
 | `$0F` | crate / ceiling fixture | wooden crate on the floor (and a variant at the ceiling, `spawn_t0fc`); generic destructible prop | 2-4 | `$006512`, `$006576`, `$0065A4`, `$0065D2` | `$00EA26`, `$00EB2E`, `$00EB4C`, `$00EB62`, `$00EB96`, `$00EB9C` | high |
 
 ## Level 3 - escort John Connor's truck (future battlefield)
@@ -173,7 +174,7 @@ and evidence.
 | `$26` | endoskeleton (infiltrator) | 2,4 | 10 | `$006894`, `$0068CA`, `$00683A` | `$00EFA4`, `$00EFFE`, `$00F18A`, `$00F1E4`, `$00EDD4`, `$00F69C`, `$00F24C` | high |
 | `$27` | level 5-8 actor: endoskeleton / vehicles / T-1000 | 5,6,7,8 | 10-100 | `$006AE0`, `$006B32`, `$0062B0`, `$006E52`, `$006C2E`, `$006EF8`, `$00597A` | `$00FBAA`, `$00FF12`, `$010906`, `$010AF8`, `$0111CA`, `$011BF4`, `$011C44`, `$011CD8` | medium |
 | `$28` | lab equipment / T-800 model | 5,6 | 400 | `$006B96`, `$006BE2` | `$010238`, `$01036E`, `$01031E`, `$0104B6`, `$010532`, `$010582` | medium |
-| `$29` | endoskeleton (floor pop-up) | 2,4 | 20 | `$0067F2` | `$00EC58`, `$00EC82`, `$00ED2E` | medium |
+| `$29` | endoskeleton (floor pop-up) | 2,4 | 20 | `$0067F2` | `$00EC58`, `$00EC82`, `$00ED2E` | high |
 
 Types seen only as spawn opcodes but not captured in a dump: `$03` (endoskeleton, `spawn_t03`).
 Types `$16`-`$19` also appear on level 4 (`G4_7`) - the same HK tank boss.
