@@ -174,11 +174,13 @@ at frame 1. The six default states are `gun_01 gun_02 gun_04 gun_05 gun_07 title
   model is fine-grained (it assumes the instruction costs are added in arbitrarily small steps),
   so it can be ±2 cycles off at a refresh boundary - the main residual below.
 
-**Result.** With these fixes `--hle PalFade` alone is identical for 3000 frames from `gun_01`
-(its delay is now run as 68k so `CramUpload` polls the status at the real raster time). `--hle
-all` still diverges, now at frames 16-80 depending on the state. The remaining drift is the VDP
-command-list path (`VdpListRun`, `VdpCmd1CopyWords`, `VdpCmd6TileRect`, `VdpCmd7HScroll`) and, on
-`gun_02`, a handful of input/sprite functions at frames ~670+. `T2_HLE_ORIG=name` runs a
+**Result.** With these fixes `--hle PalFade` alone is identical for 3000 frames from `gun_01` and
+`gun_04` (its delay is now run as 68k so `CramUpload` polls the status at the real raster time);
+on `gun_02`/`gun_05`/`gun_07` a single VRAM byte differs around frames 16-20 (the game state, live
+RAM, stays identical) and on `title` at frame 863. `--hle all` still diverges, now at frames 16-80
+depending on the state. The remaining drift is the VDP command-list path (`VdpListRun`,
+`VdpCmd1CopyWords`, `VdpCmd6TileRect`, `VdpCmd7HScroll`) and, on `gun_02`, a handful of
+input/sprite functions at frames ~670+. `T2_HLE_ORIG=name` runs a
 replacement as the original 68k inside the full frame loop and logs its real cost next to the C
 charge (`T2_HLE_CHARGE=1` logs the charge); for the first two `VdpCmd7HScroll` calls of a level
 load the original costs ~3008 cycles but the C charges 2204 - the level load runs the list
