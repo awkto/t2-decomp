@@ -44,9 +44,9 @@
  * addscorebcd_impl() (i.e. the AddScoreBcd C code) directly, and restore d0/a0/a1; difftest
  * confirms they match. $007306 (AddScore500) is never referenced anywhere in the ROM
  * (data/functions.txt, xref): it is dead code, so no state can be captured at its address.
- * It is proven with the AddScore250 entry states through difftest's --entry mode (same
- * calling context, PC redirected to $007306):
- *     build/port/difftest run AddScore500 --entry --states runs/states/0072F8
+ * Its runs/states/007306 dir therefore holds the AddScore250 captures with the saved entry
+ * PC redirected to $007306 (what difftest --entry does, made permanent so a plain
+ * `dt AddScore500` works): identical calling context, only the immediate differs.
  *
  * BcdAdd (src/t2.s $007A92): convert d4 to (d3+1) ASCII decimal digits at $FFA0BA, most
  * significant first, NUL-terminated, then rts. It calls sub_007AD4 (d0 *= 10) d3 times to
