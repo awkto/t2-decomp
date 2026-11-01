@@ -66,6 +66,31 @@ Evidence: `gun_03` state; frames 420 (`N3_1`), 1410 (`N3_4`), 2000 (`G3_2`), 240
 Note: `docs/levels.md` calls type `$07` "flying HK", but the flying machine is type `$0E`
 (confirmed on screen); `$07` draws no sprite at all on level 3.
 
+## Level 4 - Skynet base approach, corridors and core
+
+Evidence: `gun_04` state; frames 1080/1410 (`N4_3`, `N4_4`), 3600 (`G4_3`), 6000 (`G4_5`),
+10800 (`G4_9`), 12000 (`G4_10`); screenshots `N4_3_an.png`, `N4_4_an.png`, `G4_5_an.png`,
+`G4_9_an.png`, `G4_10_an.png`.
+
+| type | name | description | hp | hit routine | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$25` | Skynet CPU | the wall-mounted core in the final room: a set of parts (17 pieces, hp 20..200); its parts cover each other | 20-200 | `$00675E`, `$006724` | `$00E746`, `$00E74A`, `$00E2E6`, `$00E72E`, `$00E91E`, `$00E9C4` | high |
+| `$29` | endoskeleton (floor pop-up) | rises out of the ground and fires (the large endoskeleton seen on the base approach, `N4_3` at X=126) | 20 | `$0067F2` | `$00EC58`, `$00EC82` | high |
+| `$0E` | flying HK (aerial) | flying HK (same as level 3) | 10 | `$005CC6` | `$00C332` | high |
+| `$07` | gun turret | small turret/gun on top of the fence (sprite frame `$190`; the tile-drawing state is level 3's `$00BD54`) | 40 | `$0064E0` | `$00E254`, `$00E2AC` | medium |
+| `$22` | base window / wall panel | grid of destructible window-like panels in the base wall (spawned in a 5-wide grid at Y 88/136/184) | 25-120 | `$006424` | `$00DBF6`, `$00DC06`, `$00DCDC`, `$00DCE4` | medium |
+| `$23` | orb | floating energy sphere (`spawn_t23a`); green at low hp, red at full hp; spawns shots | 12-30 | `$0067C6`, `$006900` | `$00F540`, `$00DE08`, `$00F5AC` | medium |
+| `$21` | ceiling lamp / fixture | fixture hanging at the top of the screen (Y~18) | 15 | `$00638E` | `$00DB8C`, `$00DBE0` | medium |
+| `$20` | ceiling lamp / fixture | fixture at the top of the screen (Y~18); also a background fence/rail variant (Y~56, depth 200) | 1 | `$00635C`, `$0063F2` | `$00DB36`, `$00FB8E`, `$00FB94` | medium |
+| `$01` | endoskeleton (foot soldier) | same as level 1 | 1-3 | `$005A48`, `$005A80` | `$00B586`, `$00B5EC`, `$00B6D0` | high |
+| `$1F` | supply container | white container/box at the ground (Y~208, hp 160) | 160 | `$006326` | `$00DAC4` | low |
+| `$24` | invisible background mover | no sprite drawn (AI `$00E166` only scrolls and despawns); spawned with a tile offset in +$A | 80 | `$006456` | `$00E166` | low |
+| `$09` | explosion | same effect type as level 3 (also in the core room) | 0 | `$006042` | `$00C442` | medium |
+| `$0A` | explosion (variant) | hp 0, hit `$006004` (same hit as `$1A`); rare | 0 | `$006004` | `$00C4E4` | low |
+| `$0F` | crate | white crate on the ground | 0 | `$00597C` | `$00C886`, `$00C802` | high |
+| `$1E` | ? | hp 0, depth 14 | 0 | `$00597A` | `$00D90E`, `$00D93E` | low |
+| `$26` | endoskeleton | one-off appearance on the base approach | - | `$0068CA` | `$00F24C` | low |
+
 ## Summary table
 
 Filled in level by level below.
