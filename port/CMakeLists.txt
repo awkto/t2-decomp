@@ -22,9 +22,10 @@ option(T2_DIST "release build: no development-tree ROM lookups" OFF)
 # target (t2.js + t2.wasm; tools/web_build.sh assembles the site) ----
 if(EMSCRIPTEN)
   set(WEB_SDL -sUSE_SDL=2)
-  add_executable(t2_web src/web/main_web.c src/emu.c src/gun.c src/mouse.c src/options.c src/overlay.c src/sha1.c)
+  add_executable(t2_web src/web/main_web.c src/emu.c src/gun.c src/mouse.c src/options.c src/overlay.c src/sha1.c
+    hle/hle.c hle/gx.c)
   target_link_libraries(t2_web PRIVATE gpgx_core)
-  target_include_directories(t2_web PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_include_directories(t2_web PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/hle")
   target_compile_options(t2_web PRIVATE ${WEB_SDL} -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing)
   target_compile_definitions(t2_web PRIVATE T2_ROOT="." T2_DIST)
   set_target_properties(t2_web PROPERTIES OUTPUT_NAME t2 SUFFIX ".js")

@@ -9,7 +9,7 @@
 
 #include "gx.h"
 
-#define CAP_MAGIC 0x50414353u   /* "SCAP" */
+#define CAP_MAGIC 0x50414353u   /* capture-file magic */
 #define CAP_VERSION 2   /* v2: state blob zero-run encoded (states are ~95% zeros) */
 
 /* capture slots: one per address (difftest capture = 1 slot, capture-multi = several) */
