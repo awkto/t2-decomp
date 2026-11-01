@@ -31,7 +31,8 @@ At configure time CMake applies `tools/patches/gpgx-cpuhook.patch` (HOOK_CPU) an
     build/port/t2port --hle all,-Random     # everything except one function
     build/port/t2port --options hle=all     # same, through the ini/option system
 
-The registry holds `Random` ($00881C) and `MenacerReadXY` ($01E442). `hle` is a normal option
+The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0088A0) and
+`ReadPad2` ($008908). `hle` is a normal option
 (default `none`), so it can also go in `~/.config/t2-decomp/t2.ini`.
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
@@ -111,3 +112,11 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | --- | --- | --- | --- |
 | $00881C | Random | game/random.c | 200/200 states equal (a deliberate off-by-one is caught) |
 | $01E442 | MenacerReadXY | game/menacer.c | 200/200 states equal, `--aim game` and `--aim fast` (a deliberate wrong divisor is caught) |
+| $0088A0 | ReadPad1 | game/pads.c | 200/200 states equal (a deliberate missing `not.b` is caught) |
+| $008908 | ReadPad2 | game/pads.c | 200/200 states equal (a deliberate missing `not.b` is caught) |
+
+`ReadPad1`/`ReadPad2` share `read_pad()` in `game/pads.c`: the Z80 bus request/BUSACK spin, the
+TH=0 and TH=1 reads of the port data register, the active-low invert, the button word/previous
+word writes and the final `SR = $2000`. The capture routes are `port/scripts/capture_pad.txt`
+(1P joypad, level 5, scripted pad-1 holds) and `port/scripts/capture_pad2.txt` (a 2 JOYPAD state;
+the emulator always puts a Menacer on port 2, which answers the same read with changing data).
