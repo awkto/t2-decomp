@@ -488,9 +488,9 @@
 0094f2 sub_0094F2 -> ObjAlloc sub_00C652
 009576 sub_009576 -> ObjAlloc sub_00B772
 0095de sub_0095DE -> ObjAlloc sub_00B846
-009646 sub_009646 -> Random ObjAlloc sub_013D04
+009646 spawn_t03 -> Random ObjAlloc sub_013D04
 0096b6 sub_0096B6 -> ObjAlloc
-009718 sub_009718 -> ObjAlloc
+009718 spawn_t01d -> ObjAlloc
 0097d0 sub_0097D0 -> ObjAlloc sub_009832^
 009802 sub_009802 -> ObjAlloc
 009832 sub_009832 -> sub_009866
@@ -526,7 +526,7 @@
 009c30 sub_009C30 -> sub_00BF46
 009c36 ScrEndLevel -> -
 009c40 sub_009C40 -> -
-009c4a sub_009C4A -> sub_009B14^
+009c4a copy_tiles_048ca6 -> sub_009B14^
 009c62 sub_009C62 -> ObjAlloc
 009cb2 sub_009CB2 -> sub_009B14^ sub_009B16^
 009d22 sub_009D22 -> ObjAlloc sub_009E86^

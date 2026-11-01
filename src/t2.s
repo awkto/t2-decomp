@@ -7954,7 +7954,7 @@ loc_009634:
 	addq.w #0x1,(0xffff9e06).l
 	jsr (sub_00B846,pc)
 	rts
-sub_009646:
+spawn_t03:
 	jsr (ObjAlloc,pc)
 	move.w #0x3,d0
 	bclr.b #0xf,d0
@@ -8003,7 +8003,7 @@ sub_0096B6:
 	addq.w #0x1,(0xffff80da).l
 	addq.w #0x1,(0xffff9e06).l
 	rts
-sub_009718:
+spawn_t01d:
 	jsr (ObjAlloc,pc)
 	move.w #0x1,d0
 	bset.b #0xf,d0
@@ -8356,7 +8356,7 @@ ScrEndLevel:
 sub_009C40:
 	move.b #0x2,(0xffffa234).l
 	rts
-sub_009C4A:
+copy_tiles_048ca6:
 	lea.l (dat_048CA6).l,a1
 	move.w (0xffff9e44).l,d1
 	addi.w #0xc7,d1

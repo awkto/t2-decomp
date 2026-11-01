@@ -47,7 +47,7 @@ OPS = {
     0x12: ("spawn_t0fa", "x?"),             # x, w; if w == 0 one more word
     0x13: ("spawn_t0fb", "xw"),
     0x14: ("native", "l"),                 # jmp to a routine (it may read more args)
-    0x15: ("spawn_15", "w"),
+    0x15: ("spawn_t03", "w"),              # $009646 type $03 at x, y = $150, random variant (hit $005AF8, ai $00D978 hp 15); $FF9E06++
     0x16: ("text", "l"),                   # print a text record (PrintText $007DEE)
     0x17: ("draw_17", ""),
     0x18: ("poke_long", "ll"),             # value.l, address.l
@@ -57,7 +57,7 @@ OPS = {
     0x1C: ("draw_tiles_e39a", ""),         # $00A10A: 13x13 tile rect from ROM $04E284 -> plane-A $E39A (OR $8000), tile base $FF9E48
     0x1D: ("spawn_t01c", "xy"),
     0x1E: ("spawn_t11", "xy"),
-    0x1F: ("spawn_t28", "xy"),
+    0x1F: ("spawn_t01d", "xy"),            # $009718 type $01 at x, y (ai $00C564 hit $005BEC); $FF9E06++
     0x20: ("spawn_t1a", ""),
     0x21: ("poke_word", "wl"),             # value.w, address.l
     0x22: ("text_clear", ""),
@@ -68,7 +68,7 @@ OPS = {
     0x27: ("spawn_t13b", ""),
     0x28: ("clear_tiles_e780", ""),        # $009EA2: remove all type $13/$14 objects, then zero 8 rows of $30 words at $E780
     0x29: ("clear_tiles_e7b0", ""),        # $009EB2: zero 8 rows of $20 words at $E7B0
-    0x2A: ("spawn_t15a", ""),
+    0x2A: ("copy_tiles_048ca6", ""),       # $009C4A queue tile block ROM $048CA6 through the VDP list (sub_009B14), not a spawn
     0x2B: ("spawn_t15b", ""),
     0x2C: ("spawn_t23", "ww"),
     0x2D: ("spawn_t0ea", ""),              # $00A644 type $0E (ai $00C332 hit $005CC6 hp 10), counter $FF9E08++

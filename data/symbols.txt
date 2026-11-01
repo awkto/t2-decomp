@@ -131,7 +131,10 @@
 00B35A ScrDemoSkip            # native: offset.w, taken only in the attract demo (control_mode 7)
 00A2A8 ScrLoadPalette         # native: line.w, palette.l -> pal_target line, CramUpload
 00B2FA ScrSetPlayers          # native: player index fields by control_mode
-# the ScriptOps handlers an earlier pass left unnamed (op_NN): named from each handler + its template
+# the ScriptOps handlers named from each handler + its template (earlier passes left some op_NN or mislabelled)
+009646 spawn_t03              # op $15: type $03 (AI $00D978, hit $005AF8, hp 15); random variant; $FF9E06++
+009718 spawn_t01d             # op $1F: type $01 (AI $00C564, hit $005BEC); $FF9E06++
+009C4A copy_tiles_048ca6      # op $2A: queue tile block ROM $048CA6 through the VDP list (sub_009B14)
 009EA2 clear_tiles_e780       # op $28: remove type $13/$14 objects (sub_012986), zero-fill 8 rows of $30 words at $E780
 009EB2 clear_tiles_e7b0       # op $29: zero-fill 8 rows of $20 words at $E7B0
 00A10A draw_tiles_e39a        # op $1C: 13x13 tile rect from ROM $04E284 -> plane-A $E39A (OR $8000), tile base $FF9E48
