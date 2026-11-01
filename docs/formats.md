@@ -100,8 +100,8 @@ tile word: bits 0-10 tile index, 11 h-flip, 12 v-flip, 13-14 palette, 15 priorit
 
 Tile graphics are uncompressed, loaded by `LoadTiles` `$01320A` (`a0` = `len.w` then
 `len/2` words, `d1` = first VRAM tile index). A tile is 32 bytes. **The bytes are packed
-4 bpp, two pixels per byte (high nibble first)** — this is what the emulator renders and
-what `maprender.py` decodes; see "Open" below.
+4 bpp, two pixels per byte (high nibble first)**, the standard Mega Drive
+mode-5 tile format (row-major, 4 bytes per row).
 
 Tile bases and graphics per level (from the loader and the script's `load_tiles` ops):
 
@@ -144,11 +144,6 @@ the phase the level starts in.
 
 ## Open / uncertain
 
-* **Tile format.** The tile bytes in VRAM are stored planar on hardware, but GPGX's
-  mode-5 renderer (and therefore every harness screenshot) decodes the same 32 bytes as
-  packed 4 bpp nibbles; `maprender.py` uses that decode so the render matches the
-  emulator. On real hardware the tiles would be planar, so this is the one place where the
-  tool follows the emulator rather than the hardware — worth confirming on hardware.
 * The exact initial `row_pos` / trigger values (which decide the very first streamed
   column) were not traced; the render lays columns out from map byte 0, so it is the whole
   level strip, not a particular camera offset.

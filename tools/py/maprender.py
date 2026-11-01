@@ -294,7 +294,7 @@ def write_png(path, rgb, scale=1):
 
     def chunk(t, b):
         c = struct.pack('>I', len(b)) + t + b
-        return c + struct.pack('>I', zlib.crc32(t + c) & 0xFFFFFFFF)
+        return c + struct.pack('>I', zlib.crc32(t + b) & 0xFFFFFFFF)
 
     png = b'\x89PNG\r\n\x1a\n'
     png += chunk(b'IHDR', struct.pack('>IIBBBBB', W * scale, H * scale, 8, 2, 0, 0, 0))
