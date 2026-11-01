@@ -115,6 +115,9 @@ HLE_FUNC(0x01E442, MenacerReadXY, 1588)   /* measured original cost (gun on scre
 	RAM8(GUN_BTN) = RAM8(GUN_BTN_RAW);
 	uint8_t latch = RAM8(GUN_LATCH_COUNT);
 	if (!latch) {
+		/* gun off screen: the original returns after 5 insns (98 cycles); charge that,
+		 * not the averaging path's cost, so the emulated timing does not drift. */
+		ctx->cycles = 98;
 		/* tst.b gun_latch_count: N/Z from the byte, V=C=0, X untouched */
 		cc_set(ctx, CC_N | CC_Z | CC_V | CC_C,
 		       ((latch & 0x80) ? CC_N : 0) | (latch ? 0 : CC_Z));
