@@ -532,8 +532,8 @@
 009d22 sub_009D22 -> ObjAlloc sub_009E86^
 009e22 sub_009E22 -> ObjAlloc
 009e86 sub_009E86 -> VdpQueueTileRect
-009ea2 sub_009EA2 -> sub_009EBA^ sub_012986
-009eb2 sub_009EB2 -> -
+009ea2 clear_tiles_e780 -> sub_009EBA^ sub_012986
+009eb2 clear_tiles_e7b0 -> -
 009eba sub_009EBA -> -
 009ebe sub_009EBE -> -
 009ede sub_009EDE -> sub_009F24
@@ -542,12 +542,12 @@
 009ef8 sub_009EF8 -> -
 009f0c sub_009F0C -> -
 009f24 sub_009F24 -> ObjAlloc sub_009EF8 VdpQueueTileRect sub_0FBB6C
-00a10a sub_00A10A -> VdpQueueTileRect
+00a10a draw_tiles_e39a -> VdpQueueTileRect
 00a130 ScrPokeWord -> -
 00a138 ScrPokeLong -> -
 00a140 ScrNative -> -
 00a144 sub_00A144 -> ObjAlloc sub_009EF8 TruckDamageInit VdpQueueTileRect
-00a228 sub_00A228 -> VdpQueueTileRect
+00a228 draw_tiles_e51e -> VdpQueueTileRect
 00a24e sub_00A24E -> sub_013D04
 00a25a sub_00A25A -> sub_013D04
 00a266 sub_00A266 -> sub_00A278^
@@ -578,39 +578,39 @@
 00a5b2 sub_00A5B2 -> ObjAlloc
 00a5f6 sub_00A5F6 -> -
 00a5fa sub_00A5FA -> Random sub_009A02
-00a644 sub_00A644 -> ObjSpawnTemplate
-00a666 sub_00A666 -> ObjSpawnTemplate
-00a692 sub_00A692 -> ObjSpawnTemplate
+00a644 spawn_t0ea -> ObjSpawnTemplate
+00a666 spawn_t24a -> ObjSpawnTemplate
+00a692 spawn_t24b -> ObjSpawnTemplate
 00a712 sub_00A712 -> ObjSpawnTemplate
 00a764 sub_00A764 -> ObjSpawnTemplate
-00a7e8 sub_00A7E8 -> ObjSpawnTemplate
-00a80c sub_00A80C -> ObjSpawnTemplate
+00a7e8 spawn_t0fc -> ObjSpawnTemplate
+00a80c spawn_t20 -> ObjSpawnTemplate
 00a82c sub_00A82C -> ObjSpawnTemplate
 00a85e sub_00A85E -> ObjSpawnTemplate
 00a880 sub_00A880 -> ObjSpawnTemplate
 00a8bc sub_00A8BC -> ObjSpawnTemplate
-00a8cc sub_00A8CC -> ObjSpawnTemplate
-00a8f0 sub_00A8F0 -> ObjSpawnTemplate
+00a8cc spawn_t0fd -> ObjSpawnTemplate
+00a8f0 spawn_t0fe -> ObjSpawnTemplate
 00a914 sub_00A914 -> ObjSpawnTemplate
 00a94a sub_00A94A -> ObjSpawnTemplate
-00aa3e sub_00AA3E -> ObjSpawnTemplate
-00aa6a sub_00AA6A -> ObjSpawnTemplate sub_00EE88
-00aad2 sub_00AAD2 -> ObjSpawnTemplate sub_00F170
+00aa3e spawn_t29 -> ObjSpawnTemplate
+00aa6a spawn_t26a -> ObjSpawnTemplate sub_00EE88
+00aad2 spawn_t26b -> ObjSpawnTemplate sub_00F170
 00ab4e sub_00AB4E -> sub_009B14^
 00ab62 sub_00AB62 -> sub_009B14^
 00ab76 sub_00AB76 -> sub_009B14^
-00ab8a sub_00AB8A -> ObjSpawnTemplate sub_00F356
+00ab8a spawn_t26c -> ObjSpawnTemplate sub_00F356
 00ac06 sub_00AC06 -> ObjSpawnTemplate
-00ac6a sub_00AC6A -> ObjSpawnTemplate
+00ac6a spawn_t23a -> ObjSpawnTemplate
 00acb0 sub_00ACB0 -> ObjSpawnTemplate
 00acd0 sub_00ACD0 -> ObjSpawnTemplate
-00acf2 sub_00ACF2 -> ObjSpawnTemplate
-00ad14 sub_00AD14 -> ObjSpawnTemplate sub_010408
+00acf2 spawn_t0ff -> ObjSpawnTemplate
+00ad14 spawn_t28b -> ObjSpawnTemplate sub_010408
 00ad48 sub_00AD48 -> sub_00AD9C
 00ad6e sub_00AD6E -> sub_00AD9C
 00ad9c sub_00AD9C -> ObjSpawnTemplate sub_010642
-00add0 sub_00ADD0 -> ObjSpawnTemplate sub_00FD0C
-00ae72 sub_00AE72 -> ObjSpawnTemplate sub_00FFC0
+00add0 spawn_t27a -> ObjSpawnTemplate sub_00FD0C
+00ae72 spawn_t27b -> ObjSpawnTemplate sub_00FFC0
 00aefa sub_00AEFA -> ObjSpawnTemplate
 00af1c sub_00AF1C -> ObjSpawnTemplate sub_009EF8 sub_00D0F8 VdpQueueTileRect
 00af72 sub_00AF72 -> ObjSpawnTemplate sub_009EF8 VdpQueueTileRect

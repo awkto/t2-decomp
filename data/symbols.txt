@@ -131,6 +131,27 @@
 00B35A ScrDemoSkip            # native: offset.w, taken only in the attract demo (control_mode 7)
 00A2A8 ScrLoadPalette         # native: line.w, palette.l -> pal_target line, CramUpload
 00B2FA ScrSetPlayers          # native: player index fields by control_mode
+# the ScriptOps handlers an earlier pass left unnamed (op_NN): named from each handler + its template
+009EA2 clear_tiles_e780       # op $28: remove type $13/$14 objects (sub_012986), zero-fill 8 rows of $30 words at $E780
+009EB2 clear_tiles_e7b0       # op $29: zero-fill 8 rows of $20 words at $E7B0
+00A10A draw_tiles_e39a        # op $1C: 13x13 tile rect from ROM $04E284 -> plane-A $E39A (OR $8000), tile base $FF9E48
+00A228 draw_tiles_e51e        # op $1A: 16x11 tile rect from ROM $0539EE -> plane-A $E51E (OR $E000), tile base $FF9E4A
+00A644 spawn_t0ea             # op $2D: type $0E (AI $00C332, hit $005CC6, hp 10); $FF9E08++
+00A666 spawn_t24a             # op $2E: type $24 (AI $00E166, hit $006456, hp 80); w -> +$A = $E300 + w
+00A692 spawn_t24b             # op $2F: three type $24 (AI $00E166); w -> +$A; sets $FF9EDA, $FFA23C = 2
+00A7E8 spawn_t0fc             # op $30: type $0F (AI $00EA26, hit $006512, hp 4); w = X, w -> +$A
+00A80C spawn_t20              # op $31: type $20 (AI $00EA6A, hit $006544, hp 4); w = X
+00A8CC spawn_t0fd             # op $32: type $0F (AI $00EB2E, hit $006576, hp 4); w = X, w = Y
+00A8F0 spawn_t0fe             # op $33: type $0F (AI $00EB62, hit $0065A4, hp 2); w = X, w = Y
+00AA3E spawn_t29              # op $34: type $29 (AI $00EC58, hit $0067F2, hp 20); w = X, +$24 = $10; $FF9E12++
+00AA6A spawn_t26a             # op $35: type $26 (AI $00EDD4, hit $00683A, hp 10); w = X, w = Y, +$28 = $BB
+00AAD2 spawn_t26b             # op $36: type $26 (AI $00EFA4, hit $006894, hp 10); w = X, w = Y (Y < 0: AI $00F69C)
+00AB8A spawn_t26c             # op $37: type $26 (AI $00F18A, hit $0068CA, hp 10); w = X, w = Y (Y < 0: AI $00F6F4)
+00AC6A spawn_t23a             # op $38: type $23 (AI $00F540, hit $0067C6, hp 30); w = X, w = Y (Y < 0: +$26 = $FFFF)
+00ACF2 spawn_t0ff             # op $3C: type $0F (AI $010122, hit $006B68, hp 4); $FF9EDA = object
+00AD14 spawn_t28b             # op $3B: type $28 (AI $010238, hit $006B96, hp 400); helper $010408
+00ADD0 spawn_t27a             # op $39: type $27 (AI $00FBAA, hit $006AE0, hp 10); w = X, w = Y (Y < 0: AI $00FE3C)
+00AE72 spawn_t27b             # op $3A: type $27 (AI $00FF12, hit $006B32, hp 10); w = X, w = Y (Y < 0: AI $0100D0)
 004752 ScrollRows             # per-row hscroll from scroll_script: (rows, speed 8.8) groups, 0 = switch to plane B, -1 end
 00498A BgStreamLayers         # per layer: when its row position passes the next column, queue the next map column (0 = end -> level_exit)
 0047CE BgStreamL6             #

@@ -8513,13 +8513,13 @@ sub_009E86:
 	movea.l (sp)+,a0
 	addq.w #0x1,(0xffff9e0c).l
 	rts
-sub_009EA2:
+clear_tiles_e780:
 	move.l a0,-(sp)
 	jsr (sub_012986).l
 	move.w #0xe780,d1
 	moveq #0x30,d2
 	bra.s sub_009EBA
-sub_009EB2:
+clear_tiles_e7b0:
 	move.l a0,-(sp)
 	move.w #0xe7b0,d1
 	moveq #0x20,d2
@@ -8661,7 +8661,7 @@ loc_00A0DA:
 	move.w #0x10,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_00A10A:
+draw_tiles_e39a:
 	move.l a0,-(sp)
 	move.w #0xe39a,d1
 	lea.l (dat_04E284).l,a0
@@ -8733,7 +8733,7 @@ loc_00A1FA:
 	movea.l (sp)+,a0
 	move.w #0xffff,(0xffff9ea6).l
 	rts
-sub_00A228:
+draw_tiles_e51e:
 	move.l a0,-(sp)
 	move.w #0xe51e,d1
 	lea.l (dat_0539EE).l,a0
@@ -9012,7 +9012,7 @@ sub_00A5FA:
 	move.w #0x6,(0x28,a6)
 	addq.w #0x1,(0xffff9e10).l
 	rts
-sub_00A644:
+spawn_t0ea:
 	lea.l (dat_00A654,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	addq.w #0x1,(0xffff9e08).l
@@ -9020,7 +9020,7 @@ sub_00A644:
 | data 0x00A654-0x00A666
 dat_00A654:
 	.incbin "baserom.md",0xA654,0x12
-sub_00A666:
+spawn_t24a:
 	lea.l (dat_00A680,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,d0
@@ -9031,7 +9031,7 @@ sub_00A666:
 | data 0x00A680-0x00A692
 dat_00A680:
 	.incbin "baserom.md",0xA680,0x12
-sub_00A692:
+spawn_t24b:
 	lea.l (dat_00A700,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0),d0
@@ -9103,7 +9103,7 @@ sub_00A764:
 | data 0x00A7D6-0x00A7E8
 dat_00A7D6:
 	.incbin "baserom.md",0xA7D6,0x12
-sub_00A7E8:
+spawn_t0fc:
 	lea.l (dat_00A7FA,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
@@ -9112,7 +9112,7 @@ sub_00A7E8:
 | data 0x00A7FA-0x00A80C
 dat_00A7FA:
 	.incbin "baserom.md",0xA7FA,0x12
-sub_00A80C:
+spawn_t20:
 	lea.l (dat_00A81A,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
@@ -9159,7 +9159,7 @@ sub_00A8BC:
 	jsr (ObjSpawnTemplate,pc)
 	move.w #0x154,(0x2,a6)
 	rts
-sub_00A8CC:
+spawn_t0fd:
 	lea.l (dat_00A8DE,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
@@ -9168,7 +9168,7 @@ sub_00A8CC:
 | data 0x00A8DE-0x00A8F0
 dat_00A8DE:
 	.incbin "baserom.md",0xA8DE,0x12
-sub_00A8F0:
+spawn_t0fe:
 	lea.l (dat_00A902,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
@@ -9237,7 +9237,7 @@ dat_00AA1A:
 	.incbin "baserom.md",0xAA1A,0x12
 dat_00AA2C:
 	.incbin "baserom.md",0xAA2C,0x12
-sub_00AA3E:
+spawn_t29:
 	lea.l (dat_00AA58,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
@@ -9247,7 +9247,7 @@ sub_00AA3E:
 | data 0x00AA58-0x00AA6A
 dat_00AA58:
 	.incbin "baserom.md",0xAA58,0x12
-sub_00AA6A:
+spawn_t26a:
 	lea.l (dat_00AAC0,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
@@ -9272,7 +9272,7 @@ loc_00AAB8:
 | data 0x00AAC0-0x00AAD2
 dat_00AAC0:
 	.incbin "baserom.md",0xAAC0,0x12
-sub_00AAD2:
+spawn_t26b:
 	lea.l (dat_00AB3C,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
@@ -9319,7 +9319,7 @@ sub_00AB76:
 	lea.l (dat_0852CC).l,a1
 	move.w #0x500,d2
 	bra.w sub_009B14
-sub_00AB8A:
+spawn_t26c:
 	lea.l (dat_00ABF4,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w #0x10,(0x24,a6)
@@ -9374,7 +9374,7 @@ loc_00AC4A:
 | data 0x00AC58-0x00AC6A
 dat_00AC58:
 	.incbin "baserom.md",0xAC58,0x12
-sub_00AC6A:
+spawn_t23a:
 	lea.l (dat_00AC9E,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	clr.w (0x26,a6)
@@ -9408,7 +9408,7 @@ sub_00ACD0:
 | data 0x00ACE0-0x00ACF2
 dat_00ACE0:
 	.incbin "baserom.md",0xACE0,0x12
-sub_00ACF2:
+spawn_t0ff:
 	lea.l (dat_00AD02,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.l a6,(0xffff9eda).l
@@ -9416,7 +9416,7 @@ sub_00ACF2:
 | data 0x00AD02-0x00AD14
 dat_00AD02:
 	.incbin "baserom.md",0xAD02,0x12
-sub_00AD14:
+spawn_t28b:
 	lea.l (dat_00AD36,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	bset.b #0xe,(a6)
@@ -9459,7 +9459,7 @@ sub_00AD9C:
 | data 0x00ADBE-0x00ADD0
 dat_00ADBE:
 	.incbin "baserom.md",0xADBE,0x12
-sub_00ADD0:
+spawn_t27a:
 	lea.l (dat_00AE60,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
@@ -9508,7 +9508,7 @@ loc_00AE58:
 | data 0x00AE60-0x00AE72
 dat_00AE60:
 	.incbin "baserom.md",0xAE60,0x12
-sub_00AE72:
+spawn_t27b:
 	lea.l (dat_00AEE8,pc),a1
 	jsr (ObjSpawnTemplate,pc)
 	move.w (a0)+,(0x2,a6)
