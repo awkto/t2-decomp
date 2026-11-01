@@ -30,6 +30,7 @@
 
 typedef struct {
 	const char *rom, *script, *outdir, *screenshot, *window_shot, *savedir, *config, *dump_ram, *hle;
+	const char *framehash, *memdump;
 	bool realtime_script, no_throttle, overlay, hle_list;
 	long frames;
 } args_t;
@@ -43,6 +44,9 @@ static void usage(const char *argv0)
 	       "                          ini file ~/.config/t2-decomp/t2.ini holds the permanent ones\n"
 	       "  --config FILE           use this ini instead\n"
 	       "  --dump-ram FILE         at exit, write the 64 KiB work RAM\n"
+	       "  --framehash FILE        one line per emulated frame: hashes of work RAM, VRAM, CRAM,\n"
+	       "                          VSRAM, VDP registers (lockstep gate; port/tools/lockstep.sh)\n"
+	       "  --memdump FILE          at exit, write RAM|VRAM|CRAM|VSRAM|VDPREG concatenated\n"
 	       "  --scale N               initial window scale (default 3)\n"
 	       "  --fullscreen            start fullscreen (F11 toggles)\n"
 	       "  --no-vsync              don't sync presentation to the display\n"
@@ -305,6 +309,8 @@ int main(int argc, char **argv)
 			}
 		}
 		else if (!strcmp(s, "--dump-ram")) a.dump_ram = NEXT();
+		else if (!strcmp(s, "--framehash")) a.framehash = NEXT();
+		else if (!strcmp(s, "--memdump")) a.memdump = NEXT();
 		else if (!strcmp(s, "--scale")) { SETOPT("scale", NEXT()); scale_arg = 1; }
 		else if (!strcmp(s, "--fullscreen")) SETOPT("fullscreen", "on");
 		else if (!strcmp(s, "--no-vsync")) SETOPT("vsync", "off");
@@ -414,6 +420,14 @@ int main(int argc, char **argv)
 		scr = script_open(a.script, a.outdir);
 		if (!scr)
 			return 1;
+	}
+	FILE *fh = NULL;
+	if (a.framehash) {
+		fh = fopen(a.framehash, "w");
+		if (!fh) {
+			fprintf(stderr, "cannot write %s\n", a.framehash);
+			return 1;
+		}
 	}
 	int rc = 0;
 	bool quit = false, paused = false, step = false, ff = false, overlay = a.overlay;
@@ -582,6 +596,8 @@ int main(int argc, char **argv)
 			fps_frames++;
 			if (!scripted)
 				frames_after_script++;
+			if (fh)
+				emu_frame_hash(fh, emu_frame_count());
 		}
 
 		bool fast = a.no_throttle || ff || ((scripted || batch) && !a.realtime_script);
@@ -676,6 +692,12 @@ int main(int argc, char **argv)
 	}
 	if (a.dump_ram && !emu_write_ram(a.dump_ram)) {
 		fprintf(stderr, "cannot write %s\n", a.dump_ram);
+		rc = 1;
+	}
+	if (fh)
+		fclose(fh);
+	if (a.memdump && !emu_write_memdump(a.memdump)) {
+		fprintf(stderr, "cannot write %s\n", a.memdump);
 		rc = 1;
 	}
 	printf("%ld frames in %.2f s (%.1f fps)\n", total, secs, total / (secs > 0 ? secs : 1));

@@ -6,6 +6,7 @@
  * RETRO_DEVICE_LIGHTGUN: IS_OFFSCREEN, SCREEN_X/Y (-0x7fff..0x7fff over the viewport),
  * TRIGGER = Menacer A, AUX_A = B, AUX_B = C, START = Start. */
 #include "emu.h"
+#include "gx.h"
 #include "hle.h"
 #include "sha1.h"
 
@@ -536,6 +537,53 @@ bool emu_write_ram(const char *path)
 		fputc(work_ram[a ^ 1], f);   /* GPGX keeps words host-endian: natural 68k byte order */
 	fclose(f);
 	return true;
+}
+
+/* ------------------------------------------------------------------ lockstep hashes */
+static uint64_t fnv1a(const void *p, size_t n, uint64_t h)
+{
+	const uint8_t *b = p;
+	for (size_t i = 0; i < n; i++) {
+		h ^= b[i];
+		h *= 0x100000001b3ULL;
+	}
+	return h;
+}
+#define FNV_INIT 0xcbf29ce484222325ULL
+
+void emu_frame_hash(FILE *f, long frame)
+{
+	uint64_t hr = fnv1a(work_ram, sizeof work_ram, FNV_INIT);
+	uint64_t hv = fnv1a(gx_vram(), 0x10000, FNV_INIT);
+	uint64_t hc = fnv1a(gx_cram(), 0x80, FNV_INIT);
+	uint64_t hs = fnv1a(gx_vsram(), 0x80, FNV_INIT);
+	uint64_t hg = fnv1a(gx_vdp_reg(), 0x20, FNV_INIT);
+	uint64_t ha = hr;
+	ha = fnv1a(gx_vram(), 0x10000, ha);
+	ha = fnv1a(gx_cram(), 0x80, ha);
+	ha = fnv1a(gx_vsram(), 0x80, ha);
+	ha = fnv1a(gx_vdp_reg(), 0x20, ha);
+	/* m68k.cycles is not compared by the gate; it is there to see a charge drift early. */
+	fprintf(f, "%ld %016llx %016llx %016llx %016llx %016llx %016llx %d\n", frame,
+	        (unsigned long long)hr, (unsigned long long)hv, (unsigned long long)hc,
+	        (unsigned long long)hs, (unsigned long long)hg, (unsigned long long)ha,
+	        gx_m68k_cycles());
+}
+
+bool emu_write_memdump(const char *path)
+{
+	FILE *f = fopen(path, "wb");
+	if (!f)
+		return false;
+	bool ok = true;
+	for (unsigned a = 0; a < 0x10000; a++)
+		fputc(work_ram[a ^ 1], f);   /* 68k byte order: offset o is address $FF0000+o */
+	ok &= fwrite(gx_vram(), 1, 0x10000, f) == 0x10000;
+	ok &= fwrite(gx_cram(), 1, 0x80, f) == 0x80;
+	ok &= fwrite(gx_vsram(), 1, 0x80, f) == 0x80;
+	ok &= fwrite(gx_vdp_reg(), 1, 0x20, f) == 0x20;
+	ok &= fclose(f) == 0;
+	return ok;
 }
 
 uint8_t emu_ram8(uint32_t a) { return work_ram[(a & 0xFFFF) ^ 1]; }
