@@ -1,0 +1,95 @@
+# Capture route for difftest (docs/porting.md): start of level 5 (Menacer), then play ~6800
+# frames with the mouse so Random ($00881C) is called from many places (>=200 calls). The
+# states under states/ are harness savestates; the .state files are not committed.
+load states/gun_05.state
+mouse 63 57
+click L 6
+run 90
+mouse 116 94
+click L 6
+run 90
+mouse 169 131
+click L 6
+run 90
+mouse 222 168
+click L 6
+run 90
+mouse 275 25
+click L 6
+run 90
+mouse 28 62
+click L 6
+run 90
+mouse 81 99
+click L 6
+run 90
+mouse 134 136
+click L 6
+run 90
+mouse 187 173
+click L 6
+run 90
+mouse 240 30
+click L 6
+run 90
+mouse 293 67
+click L 6
+run 90
+mouse 46 104
+click L 6
+run 90
+mouse 99 141
+click L 6
+run 90
+mouse 152 178
+click L 6
+run 90
+mouse 205 35
+click L 6
+run 90
+mouse 258 72
+click L 6
+run 90
+mouse 11 109
+click L 6
+run 90
+mouse 64 146
+click L 6
+run 90
+mouse 117 183
+click L 6
+run 90
+mouse 170 40
+click L 6
+run 90
+mouse 223 77
+click L 6
+run 90
+mouse 276 114
+click L 6
+run 90
+mouse 29 151
+click L 6
+run 90
+mouse 82 188
+click L 6
+run 90
+mouse 135 45
+click L 6
+run 90
+mouse 188 82
+click L 6
+run 90
+mouse 241 119
+click L 6
+run 90
+mouse 294 156
+click L 6
+run 90
+mouse 47 193
+click L 6
+run 90
+mouse 100 50
+click L 6
+run 90
+run 4000

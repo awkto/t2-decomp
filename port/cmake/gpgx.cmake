@@ -11,8 +11,9 @@ set(GPGX_URL https://github.com/libretro/Genesis-Plus-GX)
 set(GPGX_DIR "${T2_ROOT}/ext/gpgx" CACHE PATH "Genesis-Plus-GX git checkout that contains commit ${GPGX_COMMIT}")
 option(GPGX_CLONE "Clone Genesis-Plus-GX into GPGX_DIR if it does not exist (network)" OFF)
 
-# applied in this order (none needed for the host; the list is kept for later phases)
-set(GPGX_PATCHES)
+# applied in this order: cpuhook (HOOK_CPU: the bus/exec hooks the HLE sandbox and the
+# entry-state capture need), then gpgx-hle.patch (m68k_hle_*: the C function override hook)
+set(GPGX_PATCHES gpgx-cpuhook.patch gpgx-hle.patch)
 
 set(GPGX_SRC "${CMAKE_BINARY_DIR}/gpgx-src")
 
@@ -68,7 +69,7 @@ endif()
 
 # ---- source list (mirrors libretro/Makefile.common, HAVE_CHD=0, HAVE_CDROM=0) ----
 set(_dirs core core/z80 core/m68k core/ntsc core/sound core/sound/minimp3 core/input_hw
-          core/cd_hw core/cart_hw core/cart_hw/svp)
+          core/cd_hw core/cart_hw core/cart_hw/svp core/debug)
 set(GPGX_SOURCES)
 foreach(d ${_dirs})
   file(GLOB _s "${GPGX_SRC}/${d}/*.c")
@@ -100,7 +101,8 @@ set(GPGX_DEFINES
   LSB_FIRST BYTE_ORDER=LITTLE_ENDIAN HAVE_ZLIB USE_LIBTREMOR
   USE_16BPP_RENDERING FRONTEND_SUPPORTS_RGB565
   __LIBRETRO__ USE_LIBRETRO_VFS M68K_OVERCLOCK_SHIFT=20 Z80_OVERCLOCK_SHIFT=20
-  HAVE_YM3438_CORE HAVE_OPLL_CORE MAXROMSIZE=33554432 "INLINE=static inline")
+  HAVE_YM3438_CORE HAVE_OPLL_CORE MAXROMSIZE=33554432 "INLINE=static inline"
+  HOOK_CPU HOOK_HLE)
 target_compile_definitions(gpgx_core PRIVATE ${GPGX_DEFINES})
 # GPGX_OPT: the core's optimisation level (the web build uses -O3)
 set(GPGX_OPT -O2 CACHE STRING "optimisation flag for the GPGX core")

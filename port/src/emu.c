@@ -6,6 +6,7 @@
  * RETRO_DEVICE_LIGHTGUN: IS_OFFSCREEN, SCREEN_X/Y (-0x7fff..0x7fff over the viewport),
  * TRIGGER = Menacer A, AUX_A = B, AUX_B = C, START = Start. */
 #include "emu.h"
+#include "hle.h"
 #include "sha1.h"
 
 #include <stdarg.h>
@@ -17,6 +18,9 @@
 #include "libretro.h"
 
 #define RETRO_DEVICE_MENACER RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_LIGHTGUN, 1)
+
+/* core/debug/cpuhook.c (HOOK_CPU build; type is hook_type_t, an enum) */
+extern void set_cpu_hook(void (*hook)(int type, int width, unsigned int address, unsigned int value));
 
 extern uint8_t work_ram[0x10000];     /* core/genesis.c */
 /* the core's cartridge area (core/cart_hw/md_cart.h: ext.md_cart.rom, 16-bit byte-swapped on little endian) */
@@ -189,6 +193,40 @@ static int16_t input_cb(unsigned port, unsigned device, unsigned index, unsigned
 	return (mask >> id) & 1;
 }
 
+/* ------------------------------------------------------------------ hooks */
+/* Fan-out of the core's cpu_hook (HOOK_CPU): the HLE sandbox records port writes, and the
+ * entry-state capture fires on execute. */
+#define MAX_HOOKS 8
+static emu_hook_fn g_hooks[MAX_HOOKS];
+static int g_nhooks;
+
+static void hook_tramp(int type, int width, unsigned int addr, unsigned int value)
+{
+	for (int i = 0; i < g_nhooks; i++)
+		g_hooks[i](type, width, addr, value);
+}
+
+void emu_add_hook(emu_hook_fn fn)
+{
+	for (int i = 0; i < g_nhooks; i++)
+		if (g_hooks[i] == fn)
+			return;
+	if (g_nhooks < MAX_HOOKS)
+		g_hooks[g_nhooks++] = fn;
+	set_cpu_hook(hook_tramp);
+}
+
+void emu_remove_hook(emu_hook_fn fn)
+{
+	for (int i = 0; i < g_nhooks; i++)
+		if (g_hooks[i] == fn) {
+			memmove(g_hooks + i, g_hooks + i + 1, (g_nhooks - i - 1) * sizeof *g_hooks);
+			g_nhooks--;
+			break;
+		}
+	set_cpu_hook(g_nhooks ? hook_tramp : NULL);
+}
+
 /* ------------------------------------------------------------------ setup */
 static bool file_exists(const char *p)
 {
@@ -313,6 +351,7 @@ bool emu_init(const char *rom_path, const char *workdir, bool use_gun, char *err
 			ext.md_cart.rom[(AIM_PATCH_ADDR + i) ^ 1] = aim_patch[i];
 	retro_set_controller_port_device(1, use_gun ? RETRO_DEVICE_MENACER : RETRO_DEVICE_NONE);
 	retro_get_system_av_info(&g_av);
+	hle_install();          /* hook the CPU (docs/porting.md); no function is enabled by default */
 	g_boot = malloc(emu_state_size());
 	if (!emu_state_save(g_boot, emu_state_size())) {
 		free(g_boot);
@@ -393,6 +432,7 @@ void emu_set_gun(int x, int y, bool offscreen, unsigned buttons)
 void emu_run_frame(void)
 {
 	g_audio_frames = 0;
+	hle_frame_begin();
 	retro_run();
 	g_frames++;
 	if (g_fb && g_fb_w <= 720 && g_fb_h <= 576) {
@@ -405,6 +445,7 @@ long emu_frame_count(void) { return g_frames; }
 
 void emu_reset(void)
 {
+	hle_state_reset();
 	/* restore the power-on snapshot: retro_reset() is a soft reset that keeps RAM, so runs
 	 * after it are not reproducible */
 	if (g_boot)
@@ -434,7 +475,7 @@ double emu_sample_rate(void) { return g_av.timing.sample_rate; }
 /* ------------------------------------------------------------------ state */
 size_t emu_state_size(void) { return retro_serialize_size(); }
 bool emu_state_save(void *buf, size_t size) { return retro_serialize(buf, size); }
-bool emu_state_load(const void *buf, size_t size) { return retro_unserialize(buf, size); }
+bool emu_state_load(const void *buf, size_t size) { hle_state_reset(); return retro_unserialize(buf, size); }
 
 bool emu_state_save_file(const char *path)
 {

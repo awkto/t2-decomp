@@ -67,6 +67,14 @@ bool emu_state_load_file(const char *path);
 bool emu_write_ppm(const char *path);         /* current frame */
 bool emu_write_ram(const char *path);         /* 64 KiB work RAM, 68k byte order */
 
+/* 68k bus-event hook fan-out (cpu_hook of the patched core; tools/difftest, HLE sandbox).
+ * type: EMU_HOOK_* (matching core/debug/cpuhook.h's HOOK_M68K_*). */
+enum { EMU_HOOK_EXEC = 1, EMU_HOOK_READ = 2, EMU_HOOK_WRITE = 4,
+       EMU_HOOK_VRAM_W = 16, EMU_HOOK_CRAM_W = 64, EMU_HOOK_VSRAM_W = 256 };
+typedef void (*emu_hook_fn)(int type, int width, unsigned addr, unsigned value);
+void emu_add_hook(emu_hook_fn fn);
+void emu_remove_hook(emu_hook_fn fn);
+
 /* misc state for overlays/tools */
 uint8_t emu_ram8(uint32_t addr);
 uint16_t emu_ram16(uint32_t addr);
