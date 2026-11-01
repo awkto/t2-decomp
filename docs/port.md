@@ -72,12 +72,13 @@ ones; `--options --json` lists all of them. Precedence: default, ini, command li
 | `aim_correct` | on | host-side X correction table: the shot lands within 1-2 px of the mouse |
 | `mute`, `volume` | off, 100 | audio |
 | `rom` | | ROM path, remembered automatically |
+| `hle` | none | run 68k functions as C: none, all, or a list of names (`+`-separated when given through `--options`, which splits on commas); see docs/porting.md |
 | `key_up` ... `key_start` | | SDL key names, several joined with `\|` |
 
 Command line: `--rom`, `--options`, `--config`, `--scale`, `--fullscreen`, `--no-vsync`, `--mute`,
 `--no-mouse`, `--overlay`, `--script`, `--realtime-script`, `--frames N`, `--screenshot FILE.ppm`,
 `--window-shot FILE.ppm`, `--outdir`, `--savedir` (quick states; default `~/.local/share/t2-decomp`),
-`--dump-ram`, `--no-throttle`, `--help`.
+`--dump-ram`, `--no-throttle`, `--hle SPEC`, `--hle-list`, `--help`.
 
 ## Headless scripts
 

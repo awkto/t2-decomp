@@ -26,13 +26,26 @@ At configure time CMake applies `tools/patches/gpgx-cpuhook.patch` (HOOK_CPU) an
 
 ## Running with C replacements
 
-    build/port/t2port --hle none            # pure emulation (default)
-    build/port/t2port --hle all             # every registered replacement
-    build/port/t2port --hle all,-Random     # everything except one function
-    build/port/t2port --options hle=all     # same, through the ini/option system
+Every registered replacement starts disabled, so plain `t2port` (and `--hle none`) runs the
+original 68k code. `--hle` selects what runs as C:
 
-The registry holds `Random` ($00881C) and `MenacerReadXY` ($01E442). `hle` is a normal option
-(default `none`), so it can also go in `~/.config/t2-decomp/t2.ini`.
+    build/port/t2port                                   # pure emulation (default: nothing enabled)
+    build/port/t2port --hle none                        # same, explicit
+    build/port/t2port --hle all                         # every registered replacement
+    build/port/t2port --hle Random,MenacerReadXY        # just these two
+    build/port/t2port --hle all,-Random                 # everything except one function
+    build/port/t2port --options hle=all                 # same, through the ini/option system
+    build/port/t2port --options hle=Random+MenacerReadXY  # a list there: '+' separates names
+    build/port/t2port --hle-list                        # print the active set and exit
+
+Names may be separated by `,` or `+`; a leading `-` turns a single one off. An unknown name is
+an error (exit status 2). `--options` splits its value on commas, so a list given through it
+must use `+` (as above); the ini form is the same (`hle = all` or `hle = Random+MenacerReadXY`).
+`hle` is a normal option (default `none`), so it can also go in
+`~/.config/t2-decomp/t2.ini`. At startup t2port prints the active set on stderr, e.g.
+`hle: 2 active: MenacerReadXY ($01E442), Random ($00881C)` (or `hle: 0 active: (none)`).
+
+The registry holds `Random` ($00881C) and `MenacerReadXY` ($01E442).
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
 before the CPU is hooked, so it agrees with the in-memory ROM patch) it runs the $01E460 patch
