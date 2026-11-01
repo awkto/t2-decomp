@@ -1,0 +1,75 @@
+# Menacer button-mapping coverage for ReadInput/ReadInputAim: left = trigger -> A, right =
+# AUX_A -> B, middle = Start, each alone and in sequence, in modes 4 (nibble mask), 0 (nibble
+# mask) and 2 (no mask, no Y clamp). Aiming exercises the gun_x/gun_y copy.
+
+# mode 4
+load states/gun_05.state
+run 900
+mouse 100 80
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+mouse 220 160
+click R 8
+run 20
+click M 8
+run 20
+mouse leave
+run 10
+click L 8
+run 20
+
+# mode 0
+load states/2p_gun_05.state
+run 900
+mouse 120 90
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+mouse 240 170
+click R 8
+run 20
+click M 8
+run 20
+
+# mode 2 (poke; no nibble mask / no Y clamp)
+load states/gun_05.state
+run 900
+poke FF9DF5 1 02
+mouse 150 100
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+click L 8
+run 20
+click R 8
+run 20
+mouse 260 40
+click R 8
+run 20
+mouse 30 200
+click M 8
+run 20
+poke FF9DF5 1 04
+run 30

@@ -45,8 +45,9 @@ must use `+` (as above); the ini form is the same (`hle = all` or `hle = Random+
 `~/.config/t2-decomp/t2.ini`. At startup t2port prints the active set on stderr, e.g.
 `hle: 2 active: MenacerReadXY ($01E442), Random ($00881C)` (or `hle: 0 active: (none)`).
 
-The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0088A0) and
-`ReadPad2` ($008908).
+The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0088A0),
+`ReadPad2` ($008908), `ReadInput` ($0003DE), `ReadInputAim` ($0004B6), `PadMoveCrosshair`
+($0005FC) and `QueueCrosshair` ($00071C).
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
 before the CPU is hooked, so it agrees with the in-memory ROM patch) it runs the $01E460 patch
@@ -127,9 +128,55 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | $01E442 | MenacerReadXY | game/menacer.c | 200/200 states equal, `--aim game` and `--aim fast` (a deliberate wrong divisor is caught) |
 | $0088A0 | ReadPad1 | game/pads.c | 200/200 states equal (a deliberate missing `not.b` is caught) |
 | $008908 | ReadPad2 | game/pads.c | 200/200 states equal (a deliberate missing `not.b` is caught) |
+| $0003DE | ReadInput | game/input.c | 200/200 states equal (mode 2 also 200/200 with `--poke B:FF9DF5=2`) |
+| $0004B6 | ReadInputAim | game/input.c | 200/200 states equal (a deliberate wrong button nibble `$f0`->`$e0` is caught) |
+| $0005FC | PadMoveCrosshair | game/input.c | 200/200 states equal |
+| $00071C | QueueCrosshair | game/input.c | 200/200 states equal |
 
 `ReadPad1`/`ReadPad2` share `read_pad()` in `game/pads.c`: the Z80 bus request/BUSACK spin, the
 TH=0 and TH=1 reads of the port data register, the active-low invert, the button word/previous
 word writes and the final `SR = $2000`. The capture routes are `port/scripts/capture_pad.txt`
 (1P joypad, level 5, scripted pad-1 holds) and `port/scripts/capture_pad2.txt` (a 2 JOYPAD state;
 the emulator always puts a Menacer on port 2, which answers the same read with changing data).
+
+## The input path (`game/input.c`)
+
+`ReadInput` ($0003DE) and `ReadInputAim` ($0004B6) dispatch on `control_mode $FF9DF5`; the
+per-frame path is `ReadInputAim` -> `PadMoveCrosshair` ($0005FC, pad acceleration table
+`$000738`, X 8..312, Y 24..200) or the Menacer X/Y, then `QueueCrosshair` ($00071C) ->
+`QueueSprite` ($013240). The C versions call the ported `ReadPad1`/`ReadPad2`/`MenacerReadXY`
+directly (proven equivalent, so the nested call's registers, flags, RAM and I/O writes are
+identical to the `jsr`); `QueueSprite` is not ported yet, so it is reached through
+`hle_call68k`, which runs the 68k leaf exactly as the original `jsr` would. `PadMoveCrosshair`
+falls through into `QueueCrosshair` in the original and ends by calling the C `QueueCrosshair`.
+
+Capture routes (`port/scripts/`): `capture_input_gun.txt` (mode 4, 1P Menacer + scripted pad 1),
+`capture_input_pad.txt` (mode 5, 1P pad), `capture_input_2p.txt` (mode 0, Menacer + pad 1),
+`capture_input_2ppad.txt` (mode 1, two pads), `capture_input_dirs.txt` (long single-direction
+holds so the acceleration index walks 0..18 and the clamps are reached), `capture_input_mode2.txt`
+(mode 2, reached by poking `$FF9DF5`) and `capture_input_buttons.txt` (Menacer buttons). The
+states are at the level intro; each route runs ~900 frames first so the player is in (index >= 0).
+`ReadInput` is only called from the pause loop and the continue countdown, so
+`capture_input_pause.txt` pauses every mode with Start (the gun's middle mouse button or pad 1)
+and `capture_input_continue.txt` (played after `menuflow.txt`) dies into the continue screen.
+On the default `dt` states the paths split: ReadInputAim mode2/twopad/mode04 = 5/99/96; ReadInput
+twopad/mode04 = 91/109; PadMoveCrosshair directions up/down/left/right/none = 108/19/100/16/40;
+QueueCrosshair queued/skipped = 98/102. `T2_INPUT_STATS=1` prints these counts at exit.
+
+Reproduce the states (each `capture` writes `runs/states/<ADDR>/`):
+
+    build/port/difftest capture 0004B6 200 --script port/scripts/capture_input_gun.txt \
+        --script port/scripts/capture_input_pad.txt --script port/scripts/capture_input_2p.txt \
+        --script port/scripts/capture_input_2ppad.txt --script port/scripts/capture_input_dirs.txt \
+        --script port/scripts/capture_input_mode2.txt --script port/scripts/capture_input_buttons.txt
+    build/port/difftest capture 0005FC 200 --script port/scripts/capture_input_dirs.txt
+    build/port/difftest capture 00071C 200 --script port/scripts/capture_input_dirs.txt \
+        --script port/scripts/capture_input_gun.txt --script port/scripts/capture_input_pad.txt \
+        --script port/scripts/capture_input_2p.txt --script port/scripts/capture_input_2ppad.txt \
+        --script port/scripts/capture_input_mode2.txt --script port/scripts/capture_input_buttons.txt
+    build/port/difftest capture 0003DE 200 --script port/scripts/capture_input_pause.txt
+    # the continue countdown, an extra ReadInput route (needs menuflow first for `l1`):
+    build/port/difftest capture 0003DE 200 --script port/scripts/menuflow.txt \
+        --script port/scripts/capture_input_continue.txt --out runs/cont_states
+    port/tools/dt ReadInput ReadInputAim PadMoveCrosshair QueueCrosshair
+    build/port/difftest run ReadInput --poke B:FF9DF5=2       # mode 2

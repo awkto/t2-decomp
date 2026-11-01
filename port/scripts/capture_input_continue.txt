@@ -1,0 +1,22 @@
+# ReadInput ($0003DE) via the continue countdown ($008E36): ReadInput is called every frame
+# while "CONTINUE 5..0" runs. Loads `l1` (saved by menuflow.txt, passed as an earlier --script)
+# and dies by poking the energy; the countdown then polls the dead player's own device.
+load l1
+mouse 160 100
+run 10
+poke FF9EA8 4 00500000
+poke FF801E 2 0200
+untilscreen continue 900
+run 300
+hold U
+run 10
+hold D
+run 10
+hold L
+run 10
+hold R
+run 10
+hold UDLR
+run 10
+hold -
+run 300

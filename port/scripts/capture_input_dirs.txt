@@ -1,0 +1,132 @@
+# Direction-branch coverage for PadMoveCrosshair ($0005FC): the route is dominated by long
+# single-direction holds so the acceleration index walks 0..18 (table $000738) and the X/Y
+# clamps are reached, in every control mode, for P1 (index 0), P2 (index 1) and the bmi /
+# no-player path (mode 4 P2). Direction holds start early (the game loop runs during the level
+# intro too) and continue after the player is in.
+
+# mode 5: two pads, PadMoveCrosshair runs for P1 ($FF8000) and P2 ($FF8050)
+load states/pad_05.state
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold -
+run 5
+
+# mode 4: PadMoveCrosshair on P2 only (index -1 -> QueueCrosshair bmi), directions still run
+load states/gun_05.state
+mouse 60 60
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold -
+run 5
+
+# mode 0: P1 Menacer, P2 pad 1 (index 1)
+load states/2p_gun_05.state
+mouse 60 60
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold -
+run 5
+
+# mode 1: two pads (both P1 and P2 index >= 0)
+load states/2p_pad_05.state
+mouse 60 60
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold R
+run 40
+hold L
+run 40
+hold D
+run 40
+hold U
+run 40
+hold -
+run 1000

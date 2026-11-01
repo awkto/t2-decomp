@@ -1,0 +1,103 @@
+# ReadInput ($0003DE) capture. ReadInput is only called from the pause loop ($007714/$007732)
+# and the continue countdown. Pause each control mode after the level intro (the player must be
+# in, index >= 0) and hold pad-1 directions while the pause loop calls ReadInput every frame.
+#   mode 4 (1P Menacer): the gun's Start = middle mouse, pad 1 -> P2's struct  -> mode-04 path
+#   mode 5 (1P pad 1):   pad 1 Start                                      -> two-pad path
+#   mode 0 (2P Menacer/pad 1): P2's pad Start                            -> mode-04 path
+#   mode 1 (2P pad 1/pad 2):   pad 1 Start                               -> two-pad path
+# mode 2 (Menacer only) is covered separately with --poke B:FF9DF5=2.
+
+# --- mode 4 ---
+load states/gun_05.state
+run 900
+mouse 120 90
+click M 8
+run 60
+hold U
+run 10
+hold D
+run 10
+hold L
+run 10
+hold R
+run 10
+hold UDLR
+run 10
+hold -
+run 30
+
+# --- mode 5 ---
+load states/pad_05.state
+run 900
+hold S
+run 60
+hold U
+run 10
+hold D
+run 10
+hold L
+run 10
+hold R
+run 10
+hold UDLR
+run 10
+hold -
+run 30
+
+# --- mode 0 ---
+load states/2p_gun_05.state
+run 900
+hold S
+run 60
+hold U
+run 10
+hold D
+run 10
+hold L
+run 10
+hold R
+run 10
+hold UDLR
+run 10
+hold -
+run 30
+
+# --- mode 1 ---
+load states/2p_pad_05.state
+run 900
+hold S
+run 60
+hold U
+run 10
+hold D
+run 10
+hold L
+run 10
+hold R
+run 10
+hold UDLR
+run 10
+hold -
+run 30
+
+# --- mode 4 with Menacer buttons (the button-mapping branches during pause) ---
+load states/gun_05.state
+run 900
+mouse 120 90
+click M 8
+run 40
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+click R 8
+run 20
+click L 8
+run 20
+mouse 200 150
+click R 8
+run 20
+click M 8
+run 20
