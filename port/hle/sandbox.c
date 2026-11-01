@@ -27,6 +27,13 @@ static void post(void)
 void sb_begin(void)
 {
 	hle_post_access = post;
+	/* The savestate does not carry the VDP FIFO read-out stamps or the raster line base, so
+	 * they would otherwise leak in from whatever ran before (the reference side, or the
+	 * previous state) and make a status-port read's FIFO/VBLANK/VINT bits depend on the run
+	 * order. Pin both to the restored CPU clock so the reference and the C side see the same
+	 * VDP timing. */
+	gx_vdp_fifo_clamp();
+	gx_vdp_set_line_base((unsigned)gx_m68k_cycles());
 	post();
 }
 
