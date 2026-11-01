@@ -31,8 +31,14 @@ At configure time CMake applies `tools/patches/gpgx-cpuhook.patch` (HOOK_CPU) an
     build/port/t2port --hle all,-Random     # everything except one function
     build/port/t2port --options hle=all     # same, through the ini/option system
 
-The registry is empty except for `Random` ($00881C) for now. `hle` is a normal option (default
-`none`), so it can also go in `~/.config/t2-decomp/t2.ini`.
+The registry holds `Random` ($00881C) and `MenacerReadXY` ($01E442). `hle` is a normal option
+(default `none`), so it can also go in `~/.config/t2-decomp/t2.ini`.
+
+`MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
+before the CPU is hooked, so it agrees with the in-memory ROM patch) it runs the $01E460 patch
+behaviour (newest latch only) and charges the patch's ~250 cycles; otherwise it runs the original
+8/16-latch average and charges 1588. `difftest --aim game` (default) compares against the
+unpatched 68k, `--aim fast` against the patched 68k.
 
 ## The C API (`port/hle/hle.h`)
 
@@ -82,17 +88,22 @@ HLE_FUNC(0x00881C, Random, 192)
 `--script FILE` (capture route), `--every K`/`--skip K`, `--ignore-regs d1,a0` and
 `--ignore-flags` (only with a proof in the C source that no caller reads them), `--strict-stack`,
 `--with-hle`, `--passthrough` (C side calls the original: self-test), `--poke "W:ADDR=VAL,D0=7"`
-(run each state once per variant), `-v`, `--keep-going`. `difftest list` prints the registry,
-`difftest check all` tests everything.
+(run each state once per variant), `--aim game|fast` (default game: the reference is the unpatched
+68k; fast patches MenacerReadXY's body in memory as t2port does), `-v`, `--keep-going`. `difftest
+list` prints the registry, `difftest check all` tests everything.
 
 ## The capture route
 
 `port/scripts/capture.txt` loads a harness savestate (`states/gun_05.state`, not committed) and
 plays ~6800 frames with the mouse, which calls `Random` ~210 times. `dt` first counts the calls
 on the route and keeps every k-th so the captured states are spread out, then captures 200.
+The capture loop feeds the scripted mouse through `mouse_frame()` as the real frame loop does, so
+the Menacer actually latches and `MenacerReadXY` sees gun-on states (both the 8-sample moving and
+16-sample still branches: 13/187 of the 200).
 
 ## Result so far
 
 | Address | Name | File | difftest |
 | --- | --- | --- | --- |
 | $00881C | Random | game/random.c | 200/200 states equal (a deliberate off-by-one is caught) |
+| $01E442 | MenacerReadXY | game/menacer.c | 200/200 states equal, `--aim game` and `--aim fast` (a deliberate wrong divisor is caught) |

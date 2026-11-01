@@ -175,6 +175,12 @@ The averaging is the bigger problem for a mouse:
 With it the 200 px step lands in **1 frame** and the ramp no longer trails. This is a host/ROM-side
 choice for P1. The decomp/native build gets it for free.
 
+The C replacement `port/game/menacer.c` (`MenacerReadXY` `$01E442`) implements both: with the
+`aim` option at `fast` (the default) it runs the patched one-latch behaviour, at `game` the original
+8/16 average, matching the ROM in either case (difftest `--aim game`/`--aim fast`). The exact-equality
+quirk of the original `bmi`/`neg.w`/`bcs` sequence is preserved: the 16-sample "still" branch fires
+only when the two 8-sample sums are equal.
+
 ## 5. Menacer mode vs pad mode
 
 * **Crosshair**: Menacer = absolute and smoothed (above). Pad (`PadMoveCrosshair` `$0005FC`) =
