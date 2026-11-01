@@ -400,10 +400,8 @@ HLE_FUNC(0x005892, ShotHitTest, 500)
 	cyc += C_BCC_W_NOT;
 
 	unsigned n_hits = (unsigned)(ctx->d[5] & 0xFFFF) + 2;
-	unsigned passes = 0;
 	for (;;) {
 		/* loc_0058D8: one bubble-sort pass */
-		passes++;
 		ctx->d[0] = 0;                            /* moveq #0,d0 */
 		ctx->d[3] = 0;                            /* moveq #0,d3 */
 		set_w(&ctx->d[7], ctx->d[5]);             /* move.w d5,d7 */
