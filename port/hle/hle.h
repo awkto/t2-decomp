@@ -172,6 +172,14 @@ void hle_state_reset(void);
 
 /* ------------------------------------------------------------------ control */
 void hle_install(void);                 /* hook the CPU (called by emu_init) */
+/* aim=fast (docs/gun.md, "Latency"): the host replaces the 8/16-latch averaging in
+ * MenacerReadXY with the one-latch fast path. A decompiled replacement that can serve both
+ * behaviours (game/ menacer.c) reads this to pick which one the current run wants. Set by
+ * emu_set_aim_fast() before the CPU is hooked, so the in-memory ROM patch and the C code
+ * always agree. Default true (fast), matching the emulator wrapper. */
+void hle_set_aim_fast(bool on);
+bool hle_aim_fast(void);
+
 /* spec: "all" | "none" | comma list of [+-]name-or-$hexaddr, applied left to right.
  * Returns false on an unknown name. */
 bool hle_configure(const char *spec);

@@ -37,6 +37,7 @@ typedef struct {
 
 static entry g_ent[MAX_DEFS];
 static int g_n;
+static bool g_aim_fast = true;   /* aim=fast: see hle.h */
 /* address -> entry index + 1, open addressing (dispatch runs for every C block) */
 #define HASH_SIZE 16384
 static uint16_t g_hash[HASH_SIZE];
@@ -186,6 +187,9 @@ void hle_set_group(const char *group, bool on)
 			bitmap_set(g_ent[i].def.addr, g_ent[i].enabled);
 		}
 }
+
+void hle_set_aim_fast(bool on) { g_aim_fast = on; }
+bool hle_aim_fast(void) { return g_aim_fast; }
 
 bool hle_configure(const char *spec)
 {

@@ -417,7 +417,7 @@ bool emu_crosshair_sprite(int *x, int *y)
 	return false;
 }
 
-void emu_set_aim_fast(bool on) { g_aim_fast = on; }
+void emu_set_aim_fast(bool on) { g_aim_fast = on; hle_set_aim_fast(on); }
 uint32_t emu_cpu_pc(void) { return m68k_get_reg(16); }
 uint32_t emu_cpu_sp(void) { return m68k_get_reg(15); }
 

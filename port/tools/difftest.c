@@ -63,6 +63,7 @@ typedef struct {
 	uint32_t stack_window;
 	bool with_hle, passthrough, keep_going, verbose;
 	bool entry;                 /* --entry: states captured elsewhere, PC set to the target */
+	bool aim_fast;              /* --aim fast: patch MenacerReadXY in memory (docs/gun.md); default game */
 	const char *out;
 	const char *pokes[1024];    /* --poke variants, each "W:ADDR=VAL,B:ADDR=VAL,..." */
 	int npokes;
@@ -103,6 +104,7 @@ static void usage(void)
 	        "       difftest capture-multi N TAG ADDR... [--out BASE] [--script FILE]...\n"
 	        "       difftest run FUNC... [--states DIR] [--max N] [--ignore-regs d1,a0] [--ignore-flags]\n"
 	        "                [--strict-stack] [--stack-window B] [--with-hle] [--passthrough] [--keep-going] [-v]\n"
+	        "                [--aim game|fast]   (default game: reference is the unpatched 68k)\n"
 	        "       difftest check FUNC...|all [--n N] [capture and run options]\n");
 	exit(2);
 }
@@ -430,6 +432,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(a, "--keep-going")) o.keep_going = true;
 		else if (!strcmp(a, "-v")) o.verbose = true;
 		else if (!strcmp(a, "--entry")) o.entry = true;
+		else if (!strcmp(a, "--aim")) o.aim_fast = !strcmp(ARG(), "fast");
 		else if (a[0] == '-' && a[1]) usage();
 		else if (npos < 64) pos[npos++] = a;
 	}
@@ -440,10 +443,16 @@ int main(int argc, char **argv)
 		fprintf(stderr, "rom/baserom.md not found (set T2_ROM)\n");
 		return 1;
 	}
+	/* aim=game (default) leaves the ROM unpatched so the reference is the true original;
+	 * aim=fast patches $01E460 in memory (as t2port does) to compare the C fast path against
+	 * the patched 68k code. Must be set before emu_init, which applies the patch. */
+	emu_set_aim_fast(o.aim_fast);
 	if (!emu_init(rom, "build", true, err, sizeof err)) {   /* Menacer on port 2: the states are gun states */
 		fprintf(stderr, "%s\n", err);
 		return 1;
 	}
+	if (o.aim_fast)
+		printf("aim=fast: MenacerReadXY body at $01E460 patched in memory (reference = patched 68k)\n");
 	g_saved_enable = calloc(hle_count() + 1, sizeof *g_saved_enable);
 	for (int i = 0; i < hle_count(); i++)
 		g_saved_enable[i] = hle_is_enabled(i);
