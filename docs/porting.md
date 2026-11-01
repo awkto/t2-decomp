@@ -162,3 +162,21 @@ and `capture_input_continue.txt` (played after `menuflow.txt`) dies into the con
 On the default `dt` states the paths split: ReadInputAim mode2/twopad/mode04 = 5/99/96; ReadInput
 twopad/mode04 = 91/109; PadMoveCrosshair directions up/down/left/right/none = 108/19/100/16/40;
 QueueCrosshair queued/skipped = 98/102. `T2_INPUT_STATS=1` prints these counts at exit.
+
+Reproduce the states (each `capture` writes `runs/states/<ADDR>/`):
+
+    build/port/difftest capture 0004B6 200 --script port/scripts/capture_input_gun.txt \
+        --script port/scripts/capture_input_pad.txt --script port/scripts/capture_input_2p.txt \
+        --script port/scripts/capture_input_2ppad.txt --script port/scripts/capture_input_dirs.txt \
+        --script port/scripts/capture_input_mode2.txt --script port/scripts/capture_input_buttons.txt
+    build/port/difftest capture 0005FC 200 --script port/scripts/capture_input_dirs.txt
+    build/port/difftest capture 00071C 200 --script port/scripts/capture_input_dirs.txt \
+        --script port/scripts/capture_input_gun.txt --script port/scripts/capture_input_pad.txt \
+        --script port/scripts/capture_input_2p.txt --script port/scripts/capture_input_2ppad.txt \
+        --script port/scripts/capture_input_mode2.txt --script port/scripts/capture_input_buttons.txt
+    build/port/difftest capture 0003DE 200 --script port/scripts/capture_input_pause.txt
+    # the continue countdown, an extra ReadInput route (needs menuflow first for `l1`):
+    build/port/difftest capture 0003DE 200 --script port/scripts/menuflow.txt \
+        --script port/scripts/capture_input_continue.txt --out runs/cont_states
+    port/tools/dt ReadInput ReadInputAim PadMoveCrosshair QueueCrosshair
+    build/port/difftest run ReadInput --poke B:FF9DF5=2       # mode 2
