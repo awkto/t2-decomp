@@ -1,0 +1,55 @@
+# Input-path capture, mode 5 (START 1 PLAYER - USE JOYPAD 1), level 5. Pad 1 is scripted;
+# port 2 answers as a Menacer driven by the mouse. ReadInputAim mode 5 runs the two-pad swap
+# (ReadPad2 -> P1, ReadPad1 -> P2) then PadMoveCrosshair for P1 (index 0) and P2 (index 1),
+# so both QueueCrosshair paths queue a sprite. Run past the intro so the player is in.
+load states/pad_05.state
+run 900
+mouse 70 70
+hold U
+run 6
+hold D
+run 6
+hold L
+run 6
+hold R
+run 6
+hold UL
+run 6
+hold DR
+run 6
+hold UR
+run 6
+hold DL
+run 6
+hold UDLR
+run 8
+hold -
+run 4
+mouse 140 140
+hold U
+run 12
+hold D
+run 12
+hold L
+run 12
+hold R
+run 12
+hold -
+run 4
+mouse 220 180
+hold UR
+run 14
+hold DL
+run 14
+hold -
+run 4
+mouse 40 40
+hold UDLR
+run 16
+hold -
+run 4
+mouse 300 200
+hold UDLR
+run 16
+hold -
+run 1500

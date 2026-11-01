@@ -1,0 +1,76 @@
+# Input-path capture, mode 4 (START 1 PLAYER - USE MENACER), level 5. The gun is on port 2
+# (mouse) and pad 1 is scripted: ReadInputAim mode 4 runs ReadPad1 -> P2 and Menacer -> P1.
+# The state is at the level-5 intro; ~900 frames bring the player in (index >= 0). P2 is not
+# playing (index -1), so PadMoveCrosshair still runs all four direction branches (accel table
+# + clamps) but QueueCrosshair takes the bmi early exit for P2; P1 (Menacer, index 0) is queued
+# through the tail jump.
+load states/gun_05.state
+run 900
+mouse 60 60
+run 8
+hold U
+run 6
+hold D
+run 6
+hold L
+run 6
+hold R
+run 6
+hold UL
+run 6
+hold DR
+run 6
+hold UR
+run 6
+hold DL
+run 6
+hold UDLR
+run 8
+hold -
+run 4
+mouse 120 120
+hold U
+run 12
+hold D
+run 12
+hold L
+run 12
+hold R
+run 12
+hold -
+run 4
+mouse 200 160
+hold UR
+run 14
+hold DL
+run 14
+hold -
+run 4
+mouse leave
+run 20
+mouse 40 40
+hold UDLR
+run 16
+hold -
+run 4
+mouse 300 200
+hold UDLR
+run 16
+hold -
+run 4
+# mode 2 (Menacer only, no Y clamp): the only way to reach it, no menu entry (docs/gun.md)
+poke FF9DF5 1 02
+mouse 100 80
+hold UDLR
+run 20
+hold -
+run 10
+mouse 260 150
+hold U
+run 20
+hold -
+run 10
+mouse leave
+run 10
+poke FF9DF5 1 04
+run 1500

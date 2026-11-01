@@ -1,0 +1,54 @@
+# Input-path capture, mode 0 (START 2 PLAYER - 1 MENACER / 2 JOYPAD 1), level 5.
+# P1 is the Menacer (mouse, index 0), P2 is scripted pad 1 (index 1). ReadInputAim mode 0 runs
+# ReadPad1 -> P2, PadMoveCrosshair on P2 (queues P2's crosshair), Menacer -> P1 (queues P1's).
+load states/2p_gun_05.state
+run 900
+mouse 70 70
+hold U
+run 6
+hold D
+run 6
+hold L
+run 6
+hold R
+run 6
+hold UL
+run 6
+hold DR
+run 6
+hold UR
+run 6
+hold DL
+run 6
+hold UDLR
+run 8
+hold -
+run 4
+mouse 150 130
+hold U
+run 12
+hold D
+run 12
+hold L
+run 12
+hold R
+run 12
+hold -
+run 4
+mouse 240 170
+hold UR
+run 14
+hold DL
+run 14
+hold -
+run 4
+mouse 40 40
+hold UDLR
+run 16
+hold -
+run 4
+mouse 300 200
+hold UDLR
+run 16
+hold -
+run 1500

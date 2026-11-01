@@ -1,0 +1,54 @@
+# Input-path capture, mode 1 (START 2 PLAYER - JOYPAD 1 / JOYPAD 2), level 5. Pad 1 is scripted;
+# port 2 answers as a Menacer driven by the mouse. ReadInputAim mode 1 runs the two-pad swap
+# then PadMoveCrosshair for P1 (index 0) and P2 (index 1).
+load states/2p_pad_05.state
+run 900
+mouse 70 70
+hold U
+run 6
+hold D
+run 6
+hold L
+run 6
+hold R
+run 6
+hold UL
+run 6
+hold DR
+run 6
+hold UR
+run 6
+hold DL
+run 6
+hold UDLR
+run 8
+hold -
+run 4
+mouse 150 130
+hold U
+run 12
+hold D
+run 12
+hold L
+run 12
+hold R
+run 12
+hold -
+run 4
+mouse 240 170
+hold UR
+run 14
+hold DL
+run 14
+hold -
+run 4
+mouse 40 40
+hold UDLR
+run 16
+hold -
+run 4
+mouse 300 200
+hold UDLR
+run 16
+hold -
+run 1500

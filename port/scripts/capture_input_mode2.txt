@@ -1,0 +1,32 @@
+# control_mode 2 (Menacer only, no menu entry, Y not clamped): reach it by poking $FF9DF5,
+# so ReadInput/ReadInputAim take the mode-2 branch. Aim the gun around and hold pad 1
+# directions (mode 2 ignores the pads but the shared code path is still exercised).
+load states/gun_05.state
+run 900
+poke FF9DF5 1 02
+mouse 80 60
+hold UDLR
+run 60
+hold -
+run 10
+mouse 250 180
+hold U
+run 40
+hold -
+run 10
+mouse 40 200
+hold D
+run 40
+hold -
+run 10
+mouse leave
+run 20
+mouse 300 20
+run 60
+mouse 20 220
+hold UDLR
+run 60
+hold -
+run 10
+poke FF9DF5 1 04
+run 30
