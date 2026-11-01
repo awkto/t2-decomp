@@ -79,3 +79,25 @@ hold UDLR
 run 10
 hold -
 run 30
+
+# --- mode 4 with Menacer buttons (the button-mapping branches during pause) ---
+load states/gun_05.state
+run 900
+mouse 120 90
+click M 8
+run 40
+click L 8
+run 20
+click R 8
+run 20
+click M 8
+run 20
+click R 8
+run 20
+click L 8
+run 20
+mouse 200 150
+click R 8
+run 20
+click M 8
+run 20

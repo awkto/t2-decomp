@@ -34,13 +34,15 @@ run() {
 for t in $TESTS; do
 	echo "== $t"
 	case $t in
-	flow | twop | continue | missile)
-		# the others start from states the flow run saved
+	flow | twop | twopad | continue | missile)
+		# the others start from states the flow run saved; `twopad` is an alias for `twop`
+		kind=$t
+		[ "$t" = twopad ] && kind=twop
 		if [ "$t" != flow ] && [ ! -f "$OUT/flow/l1.state" ]; then
 			run flow port/scripts/menuflow.txt || continue
 		fi
-		run "$t" "port/scripts/$( [ "$t" = flow ] && echo menuflow || echo "$t").txt" || continue
-		python3 -I tools/py/mousecheck.py flow "$OUT/$t/peek.log" "$( [ "$t" = flow ] && echo menuflow || echo "$t")" || rc=1
+		run "$t" "port/scripts/$( [ "$t" = flow ] && echo menuflow || echo "$kind").txt" || continue
+		python3 -I tools/py/mousecheck.py flow "$OUT/$t/peek.log" "$( [ "$t" = flow ] && echo menuflow || echo "$kind")" || rc=1
 		;;
 	grid)
 		[ -f "$OUT/flow/l1.state" ] || run flow port/scripts/menuflow.txt || continue
