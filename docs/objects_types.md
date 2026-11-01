@@ -116,6 +116,25 @@ Evidence: `gun_06` state; frames 5000 (`G6_5`) and 1500-4500 (`G6_*`); screensho
 | `$27` | endoskeleton | silver endoskeleton walking through the lab (`spawn_t27b`) | 10 | `$006B32` | `$00FF12`, `$00FF6C`, `$01003A`, `$0100FE`, `$0100D0` | high |
 | `$0A` | ceiling light / wall fixture | hp 0, hit `$006004`; a shootable fixture (ceiling/wall) in the white lab | 0 | `$006004` | `$00C348`, `$00C3AC` | low |
 
+## Level 7 - freeway, the T-1000's police helicopter chases the SWAT van
+
+Evidence: `gun_07` state; frames 1000 (`G7_1`), 3000/5000/10000 (`G7_3`/`G7_5`/`G7_10`);
+screenshots `G7_1_an.png`.
+
+| type | name | description | hp | hit routine | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$27` | SWAT van | the van John and Sarah ride (hit routine `$0062B0` = `HitSwatVan`, three boxes; fixed at X~227, hp 100); drives off when the chase ends | 100 | `$0062B0` (`HitSwatVan`) | `$010906` | high |
+| `$27` | T-1000 on the police vehicle | the chaser (hit `$006E52`); its hit points are the "more than 4 hits this pass" counter; X/Y driven by the pass AI | 100 | `$006E52` | `$010AF8`, `$0108E8`, `$010B84`, `$010C1C`, `$010E4A` | medium |
+
+## Level 8 - steel mill, the T-1000 and the liquid-nitrogen tanker
+
+Evidence: `gun_08` state; frames 1000 (`G8_1`), 10000 (`G8_10`); screenshots `G8_10_an.png`.
+
+| type | name | description | hp | hit routine | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$27` | T-1000 | the liquid-metal terminator (the man in black in `G8_10`); shots only knock him down (hit `$006C2E` = `HitT1000Mill`), and a hit while frozen shatters him | 100 | `$00597A`, `$006C2E` (`HitT1000Mill`), `$006EF8` | `$0111CA`, `$0113D8`, `$011BF4` | high |
+| `$27` | tanker panel / body | the liquid-nitrogen tanker and its panels (objects with big/negative hp, attached to row -10; destroyed panels leak nitrogen) | 20 | `$00597A`, `$006C2E` | `$01116A`, `$011C44`, `$011CD8`, `$011BF4` | medium |
+
 ## Summary table
 
 Filled in level by level below.
