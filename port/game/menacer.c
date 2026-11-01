@@ -125,7 +125,12 @@ HLE_FUNC(0x01E442, MenacerReadXY, 1588)   /* measured original cost (gun on scre
 	uint32_t a1 = 0xFFFF0000u | GUN_HTABLE;   /* lea.l (gun_htable).l,a1 */
 
 	if (hle_aim_fast()) {
-		/* the in-memory patch at $01E460: newest latch only, X = 2*table[H] */
+		/* the in-memory patch at $01E460: newest latch only, X = 2*table[H].
+		 * Charge the patch's own cost (18 insns / ~250 cycles), not the original's: the
+		 * fast path is short enough not to be interrupted, and charging 1588 would cross
+		 * the HLE 1000-cycle slicing threshold (hle.c) and take a TH latch interrupt in
+		 * the middle, corrupting the ring and the next frames' latches. */
+		ctx->cycles = 250;
 		if (a0 == RING_FIRST)
 			a0 = RING_END;
 		uint32_t d0 = RAM8(GUN_HTABLE + RAM8(--a0));   /* moveq #0,d0; move.b -(a0),d0; table */
