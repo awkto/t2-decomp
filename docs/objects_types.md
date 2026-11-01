@@ -47,6 +47,25 @@ Evidence: `gun_02` state; frames 1410/1740 (`N2_4`, `N2_5`) and 3000-15000 (`G2_
 | `$29` | endoskeleton (floor pop-up) | rises out of the floor (Y starts at 256, rises 8 px/frame), fires, then sinks; three hit-point stages drop parts | 20 | `$0067F2` | `$00EC58` (rise), `$00EC82` (fire), `$00ED2E` (dying) | medium |
 | `$0F` | crate / ceiling fixture | wooden crate on the floor (and a variant at the ceiling, `spawn_t0fc`); generic destructible prop | 2-4 | `$006512`, `$006576`, `$0065A4`, `$0065D2` | `$00EA26`, `$00EB2E`, `$00EB4C`, `$00EB62`, `$00EB96`, `$00EB9C` | high |
 
+## Level 3 - escort John Connor's truck (future battlefield)
+
+Evidence: `gun_03` state; frames 420 (`N3_1`), 1410 (`N3_4`), 2000 (`G3_2`), 2400 (`N3_7`),
+3000 (`G3_3`); screenshots `N3_4_an.png`, `G3_2_an.png`.
+
+| type | name | description | hp | hit routine | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$1B` | John Connor's truck | the red pickup the player escorts (spans two objects, X~64 and X~190); enemy hits clear its damage cells; the player's shots cannot hurt it | 100 | `$00627A` (`HitTruck`), `$00597A` | `$00D56E`, `$00D2AC`, `$00D112` | high |
+| `$13` | human resistance fighter | green-clad humans, some riding the truck | 20 | `$0065FC`, `$006652` | `$00EAA8`, `$015212` | high |
+| `$0E` | flying HK (aerial) | winged Hunter-Killer flying in at the top of the screen (Y~41-128) | 5-10 | `$005CEE`, `$005CC6` | `$00C0E8`, `$00C332` | high |
+| `$09` | bomb / explosion | hp 0; draws a frame from +$14, spits random sparks, expires on a timer - the explosion seen over the battlefield (`N3_4`) | 0 | `$006042` | `$00C4EA`, `$00C4E4` | medium |
+| `$0F` | crate | white crate on the ground (Y~208) | 0 | `$00597C` | `$00C886` | high |
+| `$1D` | endoskeleton | foot soldier variant that walks in at the truck | 4 | `$0059AC` | `$00D674`, `$00C6B0` | medium |
+| `$07` | background structure | tile-drawn background object (AI `$00BD54` writes VRAM tile rects and moves 8 column-scroll words, draws no sprite); shootable hp 40 | 40 | `$005DC0` | `$00BD54` | low |
+| `$1E` | ? | hp 0, depth 140, one box; appears at the screen edges (X~160, Y~184) | 0 | `$00597A` | `$00D712`, `$00D746`, `$00D89E`, `$00D90E` | low |
+
+Note: `docs/levels.md` calls type `$07` "flying HK", but the flying machine is type `$0E`
+(confirmed on screen); `$07` draws no sprite at all on level 3.
+
 ## Summary table
 
 Filled in level by level below.
