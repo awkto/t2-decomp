@@ -458,6 +458,10 @@ int main(int argc, char **argv)
 	}
 	if (o.aim_fast)
 		printf("aim=fast: MenacerReadXY body at $01E460 patched in memory (reference = patched 68k)\n");
+	/* difftest's baseline: every registered replacement is available, so --with-hle keeps the
+	 * others active for a function that calls them (the capture paths reset this themselves).
+	 * Registrations now start disabled, so this is stated explicitly. */
+	hle_set_all(true);
 	g_saved_enable = calloc(hle_count() + 1, sizeof *g_saved_enable);
 	for (int i = 0; i < hle_count(); i++)
 		g_saved_enable[i] = hle_is_enabled(i);

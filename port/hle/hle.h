@@ -26,6 +26,7 @@
 #define T2_HLE_H
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 typedef struct hle_ctx {
 	uint32_t d[8];      /* D0-D7 */
@@ -180,8 +181,10 @@ void hle_install(void);                 /* hook the CPU (called by emu_init) */
 void hle_set_aim_fast(bool on);
 bool hle_aim_fast(void);
 
-/* spec: "all" | "none" | comma list of [+-]name-or-$hexaddr, applied left to right.
- * Returns false on an unknown name. */
+/* spec: "all" | "none" | a list of [+-]name-or-$hexaddr, applied left to right. Names may be
+ * separated by ',' or '+' (the latter is what a --options hle=... list must use, since
+ * --options itself splits on commas). Every replacement starts disabled; only what the spec
+ * names ends up enabled. Returns false (and prints the offending name) on an unknown name. */
 bool hle_configure(const char *spec);
 bool hle_set_enabled(const char *name_or_addr, bool on);
 void hle_set_all(bool on);
@@ -196,7 +199,9 @@ bool hle_is_enabled(int i);
 unsigned long hle_calls(int i);
 unsigned long hle_calls_this_frame(void);
 void hle_frame_begin(void);
-void hle_list(void);                    /* print registry to stdout */
+void hle_list(void);                    /* print the whole registry to stdout (on/off) */
+int hle_count_active(void);             /* how many replacements are enabled right now */
+void hle_list_active(FILE *f);          /* print the enabled replacements, comma separated */
 
 /* Run def->fn on the current CPU state exactly as the CPU hook would (load ctx, call,
  * rts, store ctx); def need not be registered. Used by difftest. Returns charged cycles. */
