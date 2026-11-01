@@ -52,7 +52,8 @@ The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0
 ($0072F8..$007368), `BcdAdd` ($007A92), and the palette path `PalFadeStep` ($008970),
 `Copy32` ($008A7C), `PalCycle` ($00E9FA), `PalFade` ($008A5E, the loop body after the
 two WaitVBlank calls; see "The palette path" below),
-and the sprite queue `QueueSprite` ($013240), `ObjQueueSprite` ($013228) and `BuildSpriteTable` ($013272).
+and the sprite queue `QueueSprite` ($013240), `ObjQueueSprite` ($013228) and `BuildSpriteTable` ($013272),
+and the hit-test path `ShotHitTest` ($005892), `HitBox` ($005940) and `PickupHitBox` ($007086).
 
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
@@ -148,6 +149,9 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | $013240 | QueueSprite | game/sprite.c | 600/600 states equal (180 cycles, constant) |
 | $013228 | ObjQueueSprite | game/sprite.c | 600/600 states equal (278 cycles; calls the C `QueueSprite`) |
 | $013272 | BuildSpriteTable | game/sprite.c | 1300/1300 states equal (a deliberate descending sort is caught; exact per-path cycle charge) |
+| $005940 | HitBox | game/hittest.c | 600/600 states equal (21 hit / 579 miss; a deliberate box edge `<`->`<=` is caught at state 67) |
+| $007086 | PickupHitBox | game/hittest.c | 687/687 states equal (2 hit / 685 miss; a deliberate box edge `<`->`<=` is caught at state 407) |
+| $005892 | ShotHitTest | game/hittest.c | 200/200 states equal (no-hit 69 / hit 131, multi-hit sort 27, kill 55, front-not-shootable 7, human objects 4; a deliberate descending depth sort is caught at state 15) |
 
 `QueueSprite`/`ObjQueueSprite`/`BuildSpriteTable` are in `game/sprite.c` (docs/subsystems/sprite.md).
 `QueueSprite` (`$013240`) appends one entry to `spr_queue_args` `$FFA318` and an (index, priority)
@@ -307,3 +311,51 @@ rts 25; the `pal_fading = 0` early exit is 0 on the route, so it is covered with
     build/port/difftest capture 00E9FA 200 --script port/scripts/capture_palcycle.txt
     port/tools/dt PalFadeStep Copy32 PalCycle PalFade
     build/port/difftest run PalFadeStep --poke B:FFA246=0    # the early exit
+
+## The hit-test path (`game/hittest.c`)
+
+`HitBox` ($005940), `PickupHitBox` ($007086) and `ShotHitTest` ($005892) are in `game/hittest.c`
+(docs/subsystems/objects.md, "Hit testing, damage, kills"). `HitBox` tests `shot_xy` `$FF9E94`
+against the box at a3 (x-off, y-off, w, h, relative to the object at a6+2/+4); on a hit it sets
+d6 = -1 and appends (a6, a2) to `hit_list` `$FFA958` via a5 (a5 ends +8). `PickupHitBox` is the same
+box test for the pickup pool (a6 = the pickup); on a hit it calls `sub_012AF4` (the pickup reaction)
+and `sub_013E30` (the hit sound, d0 = the pickup type d6) and returns d6 = -1. `ShotHitTest` walks
+`obj_table` `$FF87B2` (`obj_count` `$FF80DA` live slots, stride $2C, free slots skipped), calls every
+live slot's +$1C hit test, bubble-sorts `hit_list` by the depth byte (+7) smallest first (stable:
+equal depths are not swapped) and damages only the front-most entry (b15 set): `jsr onhit`,
+`hp (+8) -= shot_damage` `$FFA0CA`, and if hp < 0 `jsr (a0)` again (the kill routine the on-hit
+routine left in a0). Returns d5 = -1 if anything was hit, else 0.
+
+Calls: nothing here calls a ported function directly. The per-object +$1C routines, the on-hit and
+kill routines, and PickupHitBox's `sub_012AF4`/`sub_013E30` all go through `hle_call68k` (68k); when
+`HitBox` is enabled the HLE dispatch inside the nested call runs the C version, exactly as the
+original `jsr` would run the 68k one. Registers: every instruction is mirrored, including GPGX's
+`movem.w` sign-extension into the whole register (HitBox/PickupHitBox d0-d3), the surviving high
+words of `move.w` writes (ShotHitTest d5/d7, HitBox d2/d3), a3/a5 advancing and the final CCR (the
+box tests' last flag setter is a `move.l`/`moveq`; X survives from the last `sub.w`/`add.w`, and
+ShotHitTest's from its `sub.w`/nested call).
+
+Cycles: charged per path, summed instruction by instruction with the GPGX 68000 table (plus the
+movem/shift/dbcc extras). The nested calls' time is added by the layer, so ctx->cycles is only the
+non-nested part. HitBox/PickupHitBox match the original exactly (HitBox min/avg/max 94/115/192,
+charged 114 on 600 states; PickupHitBox 94/115/650, charged 114 on 687). ShotHitTest's total is
+dominated by its nested calls (original 406/7678/12424); its non-nested share is charged 2675 avg.
+
+Captures: `port/scripts/capture_hittest.txt` concatenates three recorded routes: level 1 (gun_01)
+mouse play long enough for the type $13 humans and crates, the level-5 pad-bot kill run
+(capture_score) and the 2P run (capture_score2p). Reproduce:
+
+    build/port/difftest capture 005892 200 --script port/scripts/capture_hittest.txt
+    build/port/difftest capture 005940 600 --script port/scripts/capture_hittest.txt
+    build/port/difftest capture 007086 687 --every 1 --script port/scripts/capture_score.txt
+    port/tools/dt ShotHitTest HitBox PickupHitBox
+
+`T2_HITTEST_STATS=1` prints the path counts (object types seen, hit/miss/kill/sort). The
+PickupHitBox hit path is rare (2 of 687 calls), so its captures are taken with `--every 1` over the
+score route to include both hits; a deliberate box-edge bug is caught at state 407. A deliberate
+descending depth sort in ShotHitTest is caught at state 15, and a HitBox box-edge bug at state 67.
+Play-test: `port/tools/mousetest.sh runs/t2port_hle_all.sh` (a wrapper that runs `t2port --hle all`)
+passes all six tests (flow, twop, continue, missile, grid, lag). A busy level-5 scene (a mid-level
+savestate, after the intro fade) is byte-identical between `--hle all` and `--hle none`; the
+level-intro frame differs only because of the pre-existing `PalFade` range, and the three hit-test
+functions alone are identical at that frame.
