@@ -52,9 +52,9 @@ OPS = {
     0x17: ("draw_17", ""),
     0x18: ("poke_long", "ll"),             # value.l, address.l
     0x19: ("spawn_t1b", ""),
-    0x1A: ("op_1a", ""),
+    0x1A: ("draw_tiles_e51e", ""),         # $00A228: 16x11 tile rect from ROM $0539EE -> plane-A $E51E (OR $E000), tile base $FF9E4A
     0x1B: ("spawn_t17", ""),
-    0x1C: ("op_1c", ""),
+    0x1C: ("draw_tiles_e39a", ""),         # $00A10A: 13x13 tile rect from ROM $04E284 -> plane-A $E39A (OR $8000), tile base $FF9E48
     0x1D: ("spawn_t01c", "xy"),
     0x1E: ("spawn_t11", "xy"),
     0x1F: ("spawn_t28", "xy"),
@@ -66,27 +66,27 @@ OPS = {
     0x25: ("load_tiles", "wll"),
     0x26: ("spawn_t13a", ""),
     0x27: ("spawn_t13b", ""),
-    0x28: ("op_28", ""),
-    0x29: ("op_29", ""),
+    0x28: ("clear_tiles_e780", ""),        # $009EA2: remove all type $13/$14 objects, then zero 8 rows of $30 words at $E780
+    0x29: ("clear_tiles_e7b0", ""),        # $009EB2: zero 8 rows of $20 words at $E7B0
     0x2A: ("spawn_t15a", ""),
     0x2B: ("spawn_t15b", ""),
     0x2C: ("spawn_t23", "ww"),
-    0x2D: ("op_2d", ""),
-    0x2E: ("op_2e", "w"),
-    0x2F: ("op_2f", "w"),
-    0x30: ("op_30", "ww"),
-    0x31: ("op_31", "w"),
-    0x32: ("op_32", "ww"),
-    0x33: ("op_33", "ww"),
-    0x34: ("op_34", "w"),
-    0x35: ("op_35", "ww"),
-    0x36: ("op_36", "ww"),
-    0x37: ("op_37", "ww"),
-    0x38: ("op_38", "ww"),
-    0x39: ("op_39", "ww"),
-    0x3A: ("op_3a", "ww"),
-    0x3B: ("op_3b", ""),
-    0x3C: ("op_3c", ""),
+    0x2D: ("spawn_t0ea", ""),              # $00A644 type $0E (ai $00C332 hit $005CC6 hp 10), counter $FF9E08++
+    0x2E: ("spawn_t24a", "w"),             # $00A666 type $24 (ai $00E166 hit $006456 hp 80); w -> +$A = $E300 + w; $FF9E0E++
+    0x2F: ("spawn_t24b", "w"),             # $00A692 three type $24 at x, x+$40, x+$60 (ai $00E166 hit $006488 hp 40); w -> +$A = $E400/$E410 + w; $FF9EDA, $FFA23C = 2
+    0x30: ("spawn_t0fc", "ww"),            # $00A7E8 type $0F (ai $00EA26 hit $006512 hp 4); w = x, w -> +$A
+    0x31: ("spawn_t20", "w"),              # $00A80C type $20 (ai $00EA6A hit $006544 hp 4); w = x
+    0x32: ("spawn_t0fd", "ww"),            # $00A8CC type $0F (ai $00EB2E hit $006576 hp 4); w = x, w = y
+    0x33: ("spawn_t0fe", "ww"),            # $00A8F0 type $0F (ai $00EB62 hit $0065A4 hp 2); w = x, w = y
+    0x34: ("spawn_t29", "w"),              # $00AA3E type $29 (ai $00EC58 hit $0067F2 hp 20); w = x, +$24 = $10; $FF9E12++
+    0x35: ("spawn_t26a", "ww"),            # $00AA6A type $26 (ai $00EDD4 hit $00683A hp 10); w = x, w = y, +$28 = $BB; $FF9E12++
+    0x36: ("spawn_t26b", "ww"),            # $00AAD2 type $26 (ai $00EFA4 hit $006894 hp 10); w = x, w = y (y<0: AI $00F69C, +$28 = -y); $FF9E12++
+    0x37: ("spawn_t26c", "ww"),            # $00AB8A type $26 (ai $00F18A hit $0068CA hp 10); w = x, w = y (y<0: AI $00F6F4, +$28 = -y); $FF9E12++
+    0x38: ("spawn_t23a", "ww"),            # $00AC6A type $23 (ai $00F540 hit $0067C6 hp 30); w = x, w -> +$28 (w<0: +$26 = $FFFF, +$28 = -w); $FF9E10++
+    0x39: ("spawn_t27a", "ww"),            # $00ADD0 type $27 (ai $00FBAA hit $006AE0 hp 10); w = x, w = y (y<0: AI $00FE3C, +$28 = -y); $FF9E0A++
+    0x3A: ("spawn_t27b", "ww"),            # $00AE72 type $27 (ai $00FF12 hit $006B32 hp 10); w = x, w = y (y<0: AI $0100D0, +$28 = -y); $FF9E0A++
+    0x3B: ("spawn_t28b", ""),              # $00AD14 type $28 (ai $010238 hit $006B96 hp 400), helper $010408
+    0x3C: ("spawn_t0ff", ""),              # $00ACF2 type $0F (ai $010122 hit $006B68 hp 4); $FF9EDA = object
     0x3D: ("gosub", "l"),
     0x3E: ("return", ""),
 }
