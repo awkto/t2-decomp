@@ -5753,10 +5753,10 @@ loc_00738A:
 	movea.l a0,a1
 	move.l d0,(a1)+
 	andi.b #0xef,ccr
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
 loc_00739A:
 	movem.l (sp)+,d0/a0-a1
 	rts
@@ -6326,23 +6326,24 @@ sub_007C18:
 	lea.l (0xffff9eb4).l,a0
 sub_007C1E:
 	andi.b #0xef,ccr
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
 	rts
 sub_007C2C:
 	lea.l (0xffff80cb).l,a0
 	movea.l a0,a1
 	move.b #0x1,(a1)+
 	andi.b #0xef,ccr
-	dc.w 0x8109,0x4e75	| sbcd -(a1), -(a0), #$4e75
+	sbcd -(a1),-(a0)
+	rts
 sub_007C40:
 	lea.l (0xffff80cb).l,a0
 	movea.l a0,a1
 	move.b #0x1,(a1)+
 	andi.b #0xef,ccr
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	abcd -(a1),-(a0)
 	rts
 sub_007C54:
 	move.w #0xc0a6,d3
@@ -6355,7 +6356,8 @@ sub_007C68:
 	movea.l a0,a1
 	move.w #0x1,(a1)+
 	andi.b #0xef,ccr
-	dc.w 0x8109,0x8109	| sbcd -(a1), -(a0), #$8109
+	sbcd -(a1),-(a0)
+	sbcd -(a1),-(a0)
 	rts
 sub_007C7C:
 	lea.l (0x1a,a4),a0
@@ -6368,8 +6370,8 @@ sub_007C86:
 	move.w #0x1,(a1)+
 sub_007C90:
 	andi.b #0xef,ccr
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
-	dc.w 0xc109	| abcd.b -(a1), -(a0)
+	abcd -(a1),-(a0)
+	abcd -(a1),-(a0)
 	rts
 sub_007C9A:
 	tst.w (0xffff8024).l

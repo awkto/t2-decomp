@@ -58,6 +58,9 @@ def fmt_operand(insn, op, label_for):
     t = op.type
     am = op.address_mode
     if t == M.M68K_OP_REG:
+        # capstone gives the SBCD/ABCD -(An) operand as a REG with pre-dec mode
+        if am == M.M68K_AM_REGI_ADDR_PRE_DEC:
+            return f"-({REG_NAMES[op.reg]})"
         return REG_NAMES[op.reg]
     if t == M.M68K_OP_IMM:
         return "#" + hx(op.imm)
@@ -102,6 +105,8 @@ def fmt(insn, label_for=lambda a: None):
     mn = insn.mnemonic
     # capstone spells some mnemonics differently from GAS
     mn = {"bra.b": "bra.s", "bsr.b": "bsr.s"}.get(mn, mn)
+    if mn.split(".")[0] in ("sbcd", "abcd"):   # BCD ops take no size suffix (GAS rejects abcd.b)
+        mn = mn.split(".")[0]
     if mn.startswith("b") and mn.endswith(".b") and len(mn) <= 5:
         mn = mn[:-2] + ".s"
     ops = [fmt_operand(insn, op, label_for) for op in insn.operands]
