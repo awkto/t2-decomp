@@ -27,7 +27,9 @@ extern int m68k_step_one(void);
 #define MAX_DEFS 4096
 #define SENTINEL_RET 0x0000F0u   /* return address used for hle_call68k (never executed) */
 #define STALL_PC     0x0000F4u   /* "burn the rest of a long C function's cost" trap (#31) */
-#define STALL_SLICE  1000        /* 68k cycles burnt per visit: interrupts get in between */
+#define STALL_SLICE  256       /* 68k cycles burnt per STALL_PC visit. Must stay below a scanline (~488 68k cycles): a
+                                 * slice that overshoots the line boundary makes the next m68k_run() skip its
+                                 * interrupt check, which drops the Menacer TH latch on that line (#7 grid). */
 
 typedef struct {
 	hle_def def;
