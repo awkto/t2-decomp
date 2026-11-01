@@ -137,4 +137,53 @@ Evidence: `gun_08` state; frames 1000 (`G8_1`), 10000 (`G8_10`); screenshots `G8
 
 ## Summary table
 
-Filled in level by level below.
+All object-table types seen. "levels" is where the type was observed in a dump or its spawn opcode
+is used; hp is the spawn/observed value. See the per-level tables above for the full routine lists
+and evidence.
+
+| type | name | levels | hp | hit routine(s) | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$00` | effect / projectile? | 1 | 11 | `$005AF8` | `$00DA48` | low |
+| `$01` | endoskeleton (foot soldier) | 1,4,5 | 1-5 | `$0059AC`, `$005A48`, `$005A80`, `$005BEC`, `$005AF8` | `$00B586`, `$00B5EC`, `$00B52E`, `$00B6D0`, `$00C564`, `$00C7C8`, `$00C6B0`, `$00FD98` | high |
+| `$03` | endoskeleton (ground trooper) | 1 | 15 | `$005AF8` | `$00D978` | low |
+| `$07` | background structure / gun turret | 3,4 | 40 | `$005DC0`, `$0064E0` | `$00BD54`, `$00E254`, `$00E2AC` | low |
+| `$09` | bomb / explosion | 3,4 | 0 | `$006042` | `$00C4EA`, `$00C4E4`, `$00C442` | medium |
+| `$0A` | explosion / wall fixture | 4,6 | 0 | `$006004`, `$006042` | `$00C348`, `$00C3AC`, `$00C4E4` | low |
+| `$0D` | endoskeleton (variant) | 1 | 28 | `$005E1C` | `$00B896` | low |
+| `$0E` | flying HK (aerial) | 3,4 | 5-10 | `$005CEE`, `$005CC6` | `$00C0E8`, `$00C332` | high |
+| `$0F` | destructible prop: crate / lamp / lab equipment | 1-6 | 0-5 | `$00597C`, `$006512`, `$006576`, `$0065A4`, `$0065D2`, `$0069EE`, `$006B68` | `$00C886`, `$00EA26`, `$00EB2E`, `$00EB4C`, `$00EB62`, `$00EB96`, `$00F8A2`, `$010122` | high |
+| `$11` | endoskeleton (variant) | 1 | ? | `$005ABC` | `$00C6B0` | low |
+| `$13` | human resistance fighter | 1,2,3 | 5-20 | `$005F04`, `$0065FC`, `$006652` | `$00C9A2`, `$00EAA8`, `$015212` | high |
+| `$14` | destructible wall section | 1 | 10 | `$005F56` | `$00CA0A`, `$00CA12` | medium |
+| `$16` | HK tank body | 1,4 | 1120 | `$006126` | `$00CB9E`, `$00CB34` | high |
+| `$17` | HK tank hull | 1,4 | 900 | `$006174` | `$00CDFE` | medium |
+| `$18` | HK tank turret | 1,4 | 635 | `$0061CA` | `$00CE46` | high |
+| `$19` | HK tank arm | 1,4 | 750 | `$006208` | `$00CF9E` | high |
+| `$1A` | tank weak point | 1,4 | 0 | `$006004` | `$00D028`, `$00D08C` | low |
+| `$1B` | John Connor's truck | 3 | 100 | `$00627A`, `$00597A` | `$00D56E`, `$00D2AC`, `$00D112` | high |
+| `$1D` | endoskeleton | 3 | 4 | `$0059AC` | `$00D674`, `$00C6B0` | medium |
+| `$1E` | ? | 3,4 | 0 | `$00597A` | `$00D712`, `$00D746`, `$00D89E`, `$00D90E`, `$00D93E` | low |
+| `$1F` | supply container | 4 | 160 | `$006326` | `$00DAC4` | low |
+| `$20` | ceiling lamp / fixture | 2,4,5 | 1-4 | `$006544`, `$0066A8`, `$00597A`, `$00635C`, `$0063F2`, `$0063C0` | `$00EA6A`, `$00EAEC`, `$0151F0`, `$00DB36`, `$00FB8E`, `$00FB60` | medium |
+| `$21` | ceiling lamp / fixture | 4 | 15 | `$00638E` | `$00DB8C`, `$00DBE0` | medium |
+| `$22` | base window / wall panel | 4 | 25-120 | `$006424` | `$00DBF6`, `$00DC06`, `$00DCDC`, `$00DCE4` | medium |
+| `$23` | orb | 4 | 12-30 | `$0067C6`, `$006900` | `$00F540`, `$00DE08`, `$00F5AC` | medium |
+| `$24` | invisible background mover | 4 | 80 | `$006456` | `$00E166` | low |
+| `$25` | Skynet CPU | 4 | 20-200 | `$00675E`, `$006724` | `$00E746`, `$00E74A`, `$00E2E6`, `$00E72E`, `$00E91E`, `$00E9C4` | high |
+| `$26` | endoskeleton (infiltrator) | 2,4 | 10 | `$006894`, `$0068CA`, `$00683A` | `$00EFA4`, `$00EFFE`, `$00F18A`, `$00F1E4`, `$00EDD4`, `$00F69C`, `$00F24C` | high |
+| `$27` | level 5-8 actor: endoskeleton / vehicles / T-1000 | 5,6,7,8 | 10-100 | `$006AE0`, `$006B32`, `$0062B0`, `$006E52`, `$006C2E`, `$006EF8`, `$00597A` | `$00FBAA`, `$00FF12`, `$010906`, `$010AF8`, `$0111CA`, `$011BF4`, `$011C44`, `$011CD8` | medium |
+| `$28` | lab equipment / T-800 model | 5,6 | 400 | `$006B96`, `$006BE2` | `$010238`, `$01036E`, `$01031E`, `$0104B6`, `$010532`, `$010582` | medium |
+| `$29` | endoskeleton (floor pop-up) | 2,4 | 20 | `$0067F2` | `$00EC58`, `$00EC82`, `$00ED2E` | medium |
+
+Types seen only as spawn opcodes but not captured in a dump: `$03` (endoskeleton, `spawn_t03`).
+Types `$16`-`$19` also appear on level 4 (`G4_7`) - the same HK tank boss.
+
+### Not worked out / open
+
+* `$07`, `$1E`, `$24`, `$00`, `$0A`, `$1A`, `$0D`, `$11`, `$1F`, `$00` - role inferred from code
+  only, no clear sprite in the screenshots I looked at.
+* `$27` is one type reused with completely different hit routines per level; whether the level-5/6
+  endoskeleton, the level-7 vehicles and the level-8 T-1000 are really the same game type or the
+  type byte means something broader was not settled.
+* `$0F` is clearly a generic "destructible prop" type: crate on levels 1-3, ceiling fixture on
+  level 2, Cyberdyne equipment on levels 5-6; the per-level spawn opcode decides the sprite.
