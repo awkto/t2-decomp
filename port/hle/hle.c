@@ -89,8 +89,10 @@ void hle_register_def(const hle_def *def)
 		h = (h + 1) & (HASH_SIZE - 1);
 	g_hash[h] = (uint16_t)g_n;
 	e->def = *def;
-	e->enabled = !def->group;
-	bitmap_set(def->addr, e->enabled);
+	/* Every replacement starts disabled: plain t2port runs the original 68k code until
+	 * hle_configure() / hle_set_all() enables something (docs/porting.md). The bitmap
+	 * starts zeroed, so there is nothing to clear here. */
+	e->enabled = false;
 }
 
 void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles)
@@ -198,16 +200,19 @@ bool hle_configure(const char *spec)
 	char buf[4096];
 	snprintf(buf, sizeof buf, "%s", spec);
 	bool ok = true;
-	for (char *t = strtok(buf, ","); t; t = strtok(NULL, ",")) {
+	/* Both ',' and '+' separate names. --options splits its own list on commas, so a list
+	 * passed there (--options hle=Random+MenacerReadXY) must use '+'. A leading '+' or '-'
+	 * on a single name still means on/off (it is consumed as a separator here). */
+	for (char *t = strtok(buf, ",+"); t; t = strtok(NULL, ",+")) {
 		if (!strcmp(t, "all") || !strcmp(t, "on"))
 			hle_set_all(true);
 		else if (!strcmp(t, "none") || !strcmp(t, "off"))
 			hle_set_all(false);
 		else {
 			bool on = *t != '-';
-			const char *n = (*t == '-' || *t == '+') ? t + 1 : t;
-			if (!hle_set_enabled(n, on)) {
-				fprintf(stderr, "hle: unknown function '%s'\n", n);
+			const char *n = *t == '-' ? t + 1 : t;
+			if (!*n || !hle_set_enabled(n, on)) {
+				fprintf(stderr, "hle: unknown function '%s' (see `t2port --hle-list`)\n", *n ? n : t);
 				ok = false;
 			}
 		}
@@ -221,6 +226,24 @@ void hle_list(void)
 		printf("$%06X  %-24s %-3s cyc=%-5d %s%s%s\n", g_ent[i].def.addr, g_ent[i].def.name,
 		       g_ent[i].enabled ? "on" : "off", g_ent[i].def.cycles, g_ent[i].def.file,
 		       g_ent[i].def.group ? "  group=" : "", g_ent[i].def.group ? g_ent[i].def.group : "");
+}
+
+int hle_count_active(void)
+{
+	int n = 0;
+	for (int i = 0; i < g_n; i++)
+		if (g_ent[i].enabled)
+			n++;
+	return n;
+}
+
+void hle_list_active(FILE *f)
+{
+	int n = 0;
+	for (int i = 0; i < g_n; i++)
+		if (g_ent[i].enabled)
+			fprintf(f, "%s%s ($%06X)", n++ ? ", " : "", g_ent[i].def.name, g_ent[i].def.addr);
+	fprintf(f, "%s\n", n ? "" : "(none)");
 }
 
 /* ------------------------------------------------------------------ CPU state <-> ctx */
