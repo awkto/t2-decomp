@@ -120,10 +120,10 @@
 005892   174 ShotHitTest  # 52 insns
 005940    58 HitBox  # 20 insns
 00597a     2 sub_00597A  # 1 insns
-00597c    12 sub_00597C  # 3 insns
+00597c    12 hit_destructible_prop  # 3 insns
 005988     6 sub_005988  # 2 insns
 00598e    22 sub_00598E  # 5 insns
-0059ac    26 sub_0059AC  # 7 insns
+0059ac    26 hit_endoskeleton  # 7 insns
 0059e6    26 sub_0059E6  # 6 insns
 005a00     2 sub_005A00  # 1 insns
 005a02     6 sub_005A02  # 2 insns
@@ -143,13 +143,13 @@
 005b2e    40 sub_005B2E  # 9 insns
 005b56   104 sub_005B56  # 24 insns
 005bbe    30 sub_005BBE  # 7 insns
-005bec    30 sub_005BEC  # 8 insns
+005bec    30 hit_endoskeleton2  # 8 insns
 005c0a     6 sub_005C0A  # 2 insns
 005c10    46 sub_005C10  # 12 insns
 005cc6    12 sub_005CC6  # 3 insns
 005cd2     6 sub_005CD2  # 2 insns
 005cd8    14 sub_005CD8  # 3 insns
-005cee    30 sub_005CEE  # 8 insns
+005cee    30 hit_flying_hk  # 8 insns
 005d9c     6 sub_005D9C  # 2 insns
 005da2    30 sub_005DA2  # 7 insns
 005dc0    12 sub_005DC0  # 3 insns
@@ -174,7 +174,7 @@
 005f1a    24 sub_005F1A  # 4 insns
 005f32     2 sub_005F32  # 1 insns
 005f34    26 sub_005F34  # 7 insns
-005f56    36 sub_005F56  # 15 insns +005fce:16
+005f56    36 hit_wall_section  # 15 insns +005fce:16
 005f7a     6 sub_005F7A  # 2 insns
 005f80    14 sub_005F80  # 3 insns
 005fde     6 sub_005FDE  # 2 insns
@@ -187,16 +187,16 @@
 0060f4    12 sub_0060F4  # 3 insns
 006100     6 sub_006100  # 2 insns
 006106    24 sub_006106  # 6 insns
-006126    32 sub_006126  # 8 insns
+006126    32 hit_hk_tank_body  # 8 insns
 006146    14 sub_006146  # 4 insns
 006154    24 sub_006154  # 6 insns
-006174    32 sub_006174  # 8 insns
+006174    32 hit_hk_tank_hull  # 8 insns
 006194    14 sub_006194  # 4 insns
 0061a2    32 sub_0061A2  # 7 insns
-0061ca    12 sub_0061CA  # 3 insns
+0061ca    12 hit_hk_tank_turret  # 3 insns
 0061d6    14 sub_0061D6  # 4 insns
 0061e4    28 sub_0061E4  # 6 insns
-006208    12 sub_006208  # 3 insns
+006208    12 hit_hk_tank_arm  # 3 insns
 006214    10 sub_006214  # 3 insns
 00621e    44 sub_00621E  # 10 insns
 006252    40 sub_006252  # 9 insns
@@ -272,20 +272,20 @@
 006724    12 sub_006724  # 3 insns
 006730    14 sub_006730  # 4 insns
 00673e    24 sub_00673E  # 6 insns
-00675e    18 sub_00675E  # 5 insns
+00675e    18 hit_skynet_cpu  # 5 insns
 006770    14 sub_006770  # 4 insns
 00677e    24 sub_00677E  # 6 insns
 0067c6    12 sub_0067C6  # 3 insns
 0067d2     6 sub_0067D2  # 2 insns
 0067d8    18 sub_0067D8  # 4 insns
-0067f2    20 sub_0067F2  # 5 insns
+0067f2    20 hit_endoskeleton_popup  # 5 insns
 006806     6 sub_006806  # 2 insns
 00680c    30 sub_00680C  # 7 insns
 00683a    12 sub_00683A  # 3 insns
 006846     6 sub_006846  # 2 insns
 00684c    28 sub_00684C  # 7 insns
 006870    36 sub_006870  # 8 insns
-006894    12 sub_006894  # 3 insns
+006894    12 hit_infiltrator  # 3 insns
 0068a0     6 sub_0068A0  # 2 insns
 0068a6    28 sub_0068A6  # 7 insns
 0068ca    12 sub_0068CA  # 3 insns
@@ -297,7 +297,7 @@
 0069bc    12 sub_0069BC  # 3 insns
 0069c8     6 sub_0069C8  # 2 insns
 0069ce    24 sub_0069CE  # 6 insns
-0069ee    18 sub_0069EE  # 5 insns
+0069ee    18 hit_cyberdyne_equipment  # 5 insns
 006a00     6 sub_006A00  # 2 insns
 006a06    18 sub_006A06  # 4 insns
 006ae0    12 sub_006AE0  # 3 insns
@@ -645,7 +645,7 @@
 00b4de    38 sub_00B4DE  # 10 insns
 00b504    42 sub_00B504  # 9 insns
 00b52e    88 sub_00B52E  # 27 insns
-00b586    60 sub_00B586  # 19 insns
+00b586    60 ai_endoskeleton_walk  # 19 insns
 00b5c2    38 sub_00B5C2  # 7 insns
 00b5e8     4 sub_00B5E8  # 1 insns
 00b5ec   110 sub_00B5EC  # 29 insns
@@ -698,7 +698,7 @@
 00c05a    38 sub_00C05A  # 9 insns
 00c080    42 sub_00C080  # 10 insns
 00c0aa    62 sub_00C0AA  # 15 insns
-00c0e8   174 sub_00C0E8  # 49 insns
+00c0e8   174 ai_flying_hk  # 49 insns
 00c1e6    36 sub_00C1E6  # 11 insns
 00c20a    56 sub_00C20A  # 14 insns
 00c242    16 sub_00C242  # 4 insns
@@ -715,7 +715,7 @@
 00c4ea    10 sub_00C4EA  # 3 insns
 00c4f4    86 sub_00C4F4  # 24 insns
 00c54a    26 sub_00C54A  # 6 insns
-00c564    92 sub_00C564  # 24 insns
+00c564    92 ai_endoskeleton_walk2  # 24 insns
 00c5e2   112 sub_00C5E2  # 33 insns +00f74c:44
 00c652    26 sub_00C652  # 6 insns
 00c66c    68 sub_00C66C  # 15 insns
@@ -725,7 +725,7 @@
 00c802    36 sub_00C802  # 9 insns
 00c826    32 sub_00C826  # 8 insns
 00c846    64 sub_00C846  # 16 insns
-00c886    34 sub_00C886  # 10 insns
+00c886    34 ai_crate  # 10 insns
 00c8a8    18 sub_00C8A8  # 5 insns
 00c8ba    54 sub_00C8BA  # 13 insns
 00c8f0    46 sub_00C8F0  # 12 insns
@@ -733,17 +733,17 @@
 00c95e    10 sub_00C95E  # 3 insns
 00c968    50 sub_00C968  # 14 insns
 00c99a     8 sub_00C99A  # 2 insns
-00c9a2    22 sub_00C9A2  # 7 insns
+00c9a2    22 ai_human_soldier  # 7 insns
 00c9b8    10 sub_00C9B8  # 3 insns
 00c9c2    36 sub_00C9C2  # 10 insns
 00c9e6     4 sub_00C9E6  # 1 insns
 00c9ea    32 sub_00C9EA  # 10 insns
-00ca0a     8 sub_00CA0A  # 2 insns
+00ca0a     8 ai_wall_section  # 2 insns
 00ca12   136 sub_00CA12  # 40 insns
 00caba    66 sub_00CABA  # 18 insns
 00cafc    56 sub_00CAFC  # 17 insns
 00cb34   106 sub_00CB34  # 31 insns
-00cb9e    74 sub_00CB9E  # 19 insns
+00cb9e    74 ai_hk_tank_body  # 19 insns
 00cbe8    84 sub_00CBE8  # 24 insns
 00cc3c    38 sub_00CC3C  # 11 insns
 00cc6a    38 sub_00CC6A  # 11 insns
@@ -755,14 +755,14 @@
 00cdb0    18 sub_00CDB0  # 3 insns
 00cdc2    58 sub_00CDC2  # 17 insns
 00cdfc     2 sub_00CDFC  # 1 insns
-00cdfe    14 sub_00CDFE  # 3 insns
+00cdfe    14 ai_hk_tank_hull  # 3 insns
 00ce0c    54 sub_00CE0C  # 13 insns
 00ce42     4 sub_00CE42  # 1 insns
-00ce46    94 sub_00CE46  # 27 insns
+00ce46    94 ai_hk_tank_turret  # 27 insns
 00cec4    54 sub_00CEC4  # 13 insns
 00cefa    94 sub_00CEFA  # 25 insns
 00cf58    70 sub_00CF58  # 21 insns
-00cf9e    56 sub_00CF9E  # 15 insns
+00cf9e    56 ai_hk_tank_arm  # 15 insns
 00cfde    70 sub_00CFDE  # 18 insns
 00d024     4 sub_00D024  # 1 insns
 00d028    68 sub_00D028  # 18 insns
@@ -850,7 +850,7 @@
 00e546    96 sub_00E546  # 24 insns
 00e5a6   136 sub_00E5A6  # 29 insns
 00e72e    24 sub_00E72E  # 7 insns
-00e746     4 sub_00E746  # 1 insns
+00e746     4 ai_skynet_cpu  # 1 insns
 00e74a    84 sub_00E74A  # 22 insns
 00e79e    34 sub_00E79E  # 10 insns
 00e7c0   164 sub_00E7C0  # 38 insns
@@ -884,7 +884,7 @@
 00ebfe    24 sub_00EBFE  # 6 insns
 00ec16    18 sub_00EC16  # 5 insns
 00ec28    48 sub_00EC28  # 12 insns
-00ec58    42 sub_00EC58  # 9 insns
+00ec58    42 ai_endoskeleton_popup  # 9 insns
 00ec82   102 sub_00EC82  # 27 insns
 00ece8    28 sub_00ECE8  # 7 insns
 00ed04    42 sub_00ED04  # 11 insns
@@ -896,7 +896,7 @@
 00eeb0    36 sub_00EEB0  # 9 insns
 00eed4    54 sub_00EED4  # 10 insns
 00ef0a   118 sub_00EF0A  # 35 insns +00eea2:14
-00efa4    90 sub_00EFA4  # 24 insns
+00efa4    90 ai_infiltrator  # 24 insns
 00effe    90 sub_00EFFE  # 25 insns
 00f066    46 sub_00F066  # 12 insns
 00f094    54 sub_00F094  # 10 insns
@@ -936,7 +936,7 @@
 00f83e    46 sub_00F83E  # 11 insns
 00f86c    50 sub_00F86C  # 12 insns
 00f89e     4 sub_00F89E  # 1 insns
-00f8a2    64 sub_00F8A2  # 19 insns
+00f8a2    64 ai_cyberdyne_equipment  # 19 insns
 00f8e2     8 sub_00F8E2  # 3 insns
 00f8ea   516 sub_00F8EA  # 135 insns
 00fb52     8 sub_00FB52  # 1 insns

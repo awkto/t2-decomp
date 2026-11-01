@@ -3936,7 +3936,7 @@ loc_005976:
 	rts
 sub_00597A:
 	rts
-sub_00597C:
+hit_destructible_prop:
 	lea.l (sub_005988,pc),a2
 	lea.l (dat_0059A4,pc),a3
 	jmp (HitBox,pc)
@@ -3952,7 +3952,7 @@ sub_00598E:
 | data 0x0059A4-0x0059AC
 dat_0059A4:
 	.incbin "baserom.md",0x59A4,0x8
-sub_0059AC:
+hit_endoskeleton:
 	lea.l (sub_0059E6,pc),a2
 	lea.l (dat_0059CE,pc),a3
 	jsr (HitBox,pc)
@@ -4115,7 +4115,7 @@ dat_005BDC:
 	.incbin "baserom.md",0x5BDC,0x8
 dat_005BE4:
 	.incbin "baserom.md",0x5BE4,0x8
-sub_005BEC:
+hit_endoskeleton2:
 	lea.l (dat_005C3E,pc),a3
 	move.w (0x14,a6),d0
 	andi.w #0xf0,d0
@@ -4157,7 +4157,7 @@ sub_005CD8:
 | data 0x005CE6-0x005CEE
 dat_005CE6:
 	.incbin "baserom.md",0x5CE6,0x8
-sub_005CEE:
+hit_flying_hk:
 	lea.l (sub_005D9C,pc),a2
 	move.w #0x4f,d0
 	sub.w (0x24,a6),d0
@@ -4308,7 +4308,7 @@ sub_005F34:
 | data 0x005F4E-0x005F56
 dat_005F4E:
 	.incbin "baserom.md",0x5F4E,0x8
-sub_005F56:
+hit_wall_section:
 	move.w (0x2a,a6),d0
 	cmpi.w #0x3,d0
 	bgt.w loc_005FCE
@@ -4396,7 +4396,7 @@ sub_006106:
 | data 0x00611E-0x006126
 dat_00611E:
 	.incbin "baserom.md",0x611E,0x8
-sub_006126:
+hit_hk_tank_body:
 	lea.l (dat_00616C,pc),a3
 	lea.l (loc_006166,pc),a2
 	move.b (0xffff9ebc).l,d0
@@ -4422,7 +4422,7 @@ loc_006166:
 | data 0x00616C-0x006174
 dat_00616C:
 	.incbin "baserom.md",0x616C,0x8
-sub_006174:
+hit_hk_tank_hull:
 	lea.l (dat_0061C2,pc),a3
 	lea.l (loc_0061BC,pc),a2
 	move.b (0xffff9ebc).l,d0
@@ -4449,7 +4449,7 @@ loc_0061BC:
 | data 0x0061C2-0x0061CA
 dat_0061C2:
 	.incbin "baserom.md",0x61C2,0x8
-sub_0061CA:
+hit_hk_tank_turret:
 	lea.l (dat_006200,pc),a3
 	lea.l (sub_0061D6,pc),a2
 	jmp (HitBox,pc)
@@ -4468,7 +4468,7 @@ sub_0061E4:
 | data 0x006200-0x006208
 dat_006200:
 	.incbin "baserom.md",0x6200,0x8
-sub_006208:
+hit_hk_tank_arm:
 	lea.l (dat_00624A,pc),a3
 	lea.l (sub_006214,pc),a2
 	jmp (HitBox,pc)
@@ -4915,7 +4915,7 @@ sub_00673E:
 | data 0x006756-0x00675E
 dat_006756:
 	.incbin "baserom.md",0x6756,0x8
-sub_00675E:
+hit_skynet_cpu:
 	move.w (0x1a,a6),d0
 	asl.w #0x3,d0
 	lea.l (dat_006796,pc,d0.w),a3
@@ -4951,7 +4951,7 @@ sub_0067D8:
 | data 0x0067EA-0x0067F2
 dat_0067EA:
 	.incbin "baserom.md",0x67EA,0x8
-sub_0067F2:
+hit_endoskeleton_popup:
 	lea.l (dat_006832,pc),a3
 	lea.l (sub_006806,pc),a2
 	jsr (HitBox,pc)
@@ -5001,7 +5001,7 @@ loc_006886:
 	st.b (0xffff9ebe).l
 	move.l a6,(0xffff9ed2).l
 	rts
-sub_006894:
+hit_infiltrator:
 	lea.l (dat_0068C2,pc),a3
 	lea.l (sub_0068A0,pc),a2
 	jmp (HitBox,pc)
@@ -5105,7 +5105,7 @@ sub_0069CE:
 | data 0x0069E6-0x0069EE
 dat_0069E6:
 	.incbin "baserom.md",0x69E6,0x8
-sub_0069EE:
+hit_cyberdyne_equipment:
 	move.w (0x1a,a6),d0
 	asl.w #0x3,d0
 	lea.l (dat_006A18,pc,d0.w),a3
@@ -9971,7 +9971,7 @@ loc_00B56C:
 	subq.w #0x1,(0xffff80da).l
 loc_00B582:
 	bra.w ObjNext
-sub_00B586:
+ai_endoskeleton_walk:
 	jsr (ObjMoveX,pc)
 	jsr (ObjScrollX,pc)
 	btst.b #0x6,(a6)
@@ -10813,7 +10813,7 @@ loc_00C0C6:
 	subq.w #0x1,(0x4,a6)
 loc_00C0E4:
 	bra.w ObjNext
-sub_00C0E8:
+ai_flying_hk:
 	bsr.w sub_009078
 	subq.w #0x1,(0x24,a6)
 	bne.s loc_00C0FA
@@ -11103,7 +11103,7 @@ sub_00C54A:
 	clr.w (a6)
 	subq.w #0x1,(0xffff80da).l
 	bra.w ObjNext
-sub_00C564:
+ai_endoskeleton_walk2:
 	jsr (ObjScrollX,pc)
 	move.w #0x168,d0
 	jsr (ObjKillIfRightOf,pc)
@@ -11296,7 +11296,7 @@ loc_00C87C:
 	move.w d0,(0x4,a6)
 	moveq #0x16,d1
 	bra.w sub_00C8A8
-sub_00C886:
+ai_crate:
 	subq.w #0x1,(0x14,a6)
 	bne.s loc_00C894
 	clr.w (a6)
@@ -11387,7 +11387,7 @@ loc_00C97E:
 sub_00C99A:
 	move.w #0x2e0,d1
 	bra.w sub_00C9C2
-sub_00C9A2:
+ai_human_soldier:
 	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d0
 	subq.w #0x1,d0
@@ -11423,7 +11423,7 @@ sub_00C9EA:
 	movep.w d2,(0x580,a4)
 	movep.w d2,(0x568,a4)
 	dc.w 0x0574,0x0568,0x0574	| bchg.b d2, $574(a4, invalid.w)
-sub_00CA0A:
+ai_wall_section:
 	jsr (ObjScrollX,pc)
 	bra.w ObjNext
 sub_00CA12:
@@ -11548,7 +11548,7 @@ loc_00CB7C:
 loc_00CB96:
 	move.w d4,(0x24,a6)
 	bra.w sub_00CBE8
-sub_00CB9E:
+ai_hk_tank_body:
 	btst.b #0x2,(0xffff9ebc).l
 	beq.s loc_00CBAC
 	jsr (sub_00CD66,pc)
@@ -11734,7 +11734,7 @@ loc_00CDE2:
 	movea.l (sp)+,a6
 sub_00CDFC:
 	rts
-sub_00CDFE:
+ai_hk_tank_hull:
 	move.w (0xffff9eba).l,d0
 	add.w d0,(0x2,a6)
 	bra.w ObjNext
@@ -11754,7 +11754,7 @@ sub_00CE0C:
 	bra.w ObjNext
 sub_00CE42:
 	bra.w ObjNext
-sub_00CE46:
+ai_hk_tank_turret:
 	jsr (sub_00CF58,pc)
 	move.w (0xffff9eba).l,d0
 	add.w d0,(0x2,a6)
@@ -11856,7 +11856,7 @@ loc_00CF96:
 	movea.l (sp)+,a6
 loc_00CF9C:
 	rts
-sub_00CF9E:
+ai_hk_tank_arm:
 	movea.l (0xffff9eca).l,a1
 	move.w (0x2,a1),d0
 	btst.b #0x6,(a6)
@@ -13567,7 +13567,7 @@ sub_00E72E:
 	jsr (sub_013DD4,pc)
 loc_00E742:
 	bra.w ObjNext
-sub_00E746:
+ai_skynet_cpu:
 	bra.w ObjNext
 sub_00E74A:
 	tst.w (0x28,a6)
@@ -13949,7 +13949,7 @@ loc_00EC40:
 	jsr (sub_01274E,pc)
 	dbra d5,loc_00EC40
 	bra.w ObjNext
-sub_00EC58:
+ai_endoskeleton_popup:
 	subi.w #0x8,(0x4,a6)
 	move.w #0x1b2,d1
 	bsr.w ObjQueueSprite
@@ -14188,7 +14188,7 @@ dat_00EF80:
 	.incbin "baserom.md",0xEF80,0x10
 dat_00EF90:
 	.incbin "baserom.md",0xEF90,0x14
-sub_00EFA4:
+ai_infiltrator:
 	jsr (ObjMoveX,pc)
 	jsr (ObjScrollX,pc)
 	move.w (0x24,a6),d5
@@ -14828,7 +14828,7 @@ loc_00F89A:
 	bra.w ObjNext
 sub_00F89E:
 	ori.b #0x0,d1
-sub_00F8A2:
+ai_cyberdyne_equipment:
 	jsr (ObjScrollX,pc)
 	moveq #-0x20,d0
 	tst.w (0x1a,a6)
