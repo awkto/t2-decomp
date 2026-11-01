@@ -1,0 +1,16 @@
+# PalCycle ($00E9FA) captures (docs/subsystems/vdp.md, "Palettes"): no shipped level turns
+# pal_cycle_on on by itself on the harness route, so force it (poke) and let GameLoop call
+# PalCycle every frame. Two levels/modes so the entry state (palette, VDP, vblank_count) is
+# varied; a 300-frame run walks vblank_count & $18 through all four table offsets.
+load states/gun_05.state
+run 60
+poke FFA0A4 1 FF
+run 150
+load states/pad_03.state
+run 60
+poke FFA0A4 1 FF
+run 150
+load states/2p_gun_07.state
+run 60
+poke FFA0A4 1 FF
+run 150

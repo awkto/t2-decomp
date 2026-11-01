@@ -49,7 +49,9 @@ The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0
 `ReadPad2` ($008908), `ReadInput` ($0003DE), `ReadInputAim` ($0004B6), `PadMoveCrosshair`
 ($0005FC), `QueueCrosshair` ($00071C),
 `AddScoreBcd` ($007376), the `AddScore250..10000` entries
-($0072F8..$007368) and `BcdAdd` ($007A92).
+($0072F8..$007368), `BcdAdd` ($007A92), and the palette path `PalFadeStep` ($008970),
+`Copy32` ($008A7C), `PalCycle` ($00E9FA) and `PalFade` ($008A5E, the loop body after the
+two WaitVBlank calls; see "The palette path" below).
 
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
@@ -138,6 +140,10 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | $007376 | AddScoreBcd | game/score.c | 270/270 states equal (P1=200, P2=70; 63 with a BCD carry; the skip path 270/270 with `--poke W:FF8024=0xFFFF,W:FF8074=0xFFFF`) |
 | $0072F8..$007368 | AddScore250..10000 | game/score.c | 200/200 for 250/500/750; 78/78, 79/79, 12/12, 3/3, 2/2, 1/1 for 1000/5000/4000/2000/1250/10000 (their real call counts; the same 14-byte stub, proven by AddScoreBcd) |
 | $007A92 | BcdAdd | game/score.c | 200/200 states equal (d3 = 1,2,6,7; a deliberate wrong carry fixup is caught) |
+| $008970 | PalFadeStep | game/palette.c | 200/200 states equal (175 moved / 25 nothing-changed, changed entries 13..58; the `pal_fading = 0` early exit 200/200 with `--poke B:FFA246=0`; a deliberate step `2`->`4` is caught) |
+| $008A7C | Copy32 | game/palette.c | 88/88 states equal (a deliberate 7 instead of 8 moves is caught) |
+| $00E9FA | PalCycle | game/palette.c | 200/200 states equal (a deliberate wrong `vblank_count & $18` mask is caught) |
+| $008A5E | PalFade | game/palette.c | 200/200 states equal (loop-back $008A4C 175 / rts $008A7A 25; a deliberate inverted exit is caught) |
 
 `AddScoreBcd`/`AddScore*`/`BcdAdd` are in `game/score.c`. `AddScoreBcd` (`$007376`) adds a 4-byte
 BCD value to `p1_score`/`p2_score` (`$FF9EA8`/`$FF9EB0`); the destination is chosen by the player
@@ -216,3 +222,54 @@ Reproduce the states (each `capture` writes `runs/states/<ADDR>/`):
         --script port/scripts/capture_input_continue.txt --out runs/cont_states
     port/tools/dt ReadInput ReadInputAim PadMoveCrosshair QueueCrosshair
     build/port/difftest run ReadInput --poke B:FF9DF5=2       # mode 2
+
+## The palette path (`game/palette.c`)
+
+`PalFadeStep` ($008970) walks the 64 colours of `pal_target`/`pal_cur`
+(`$FFA134`/`$FFA1B4`), moves each 3-bit channel (B `$E`, G `$E0`, R `$E00`) one CRAM level
+(2) towards the target, flags the changed entries in `pal_changed` (`$FFA0F4`) and clears
+`pal_fading` (`$FFA246`) when nothing changed. It is a plain leaf; the C version mirrors
+every register (d2-d5/d7 written with `move.w`, so their high words survive; d6 from
+`moveq`/`move.w`, high word 0; d1 from `moveq #0`; d0 = `$FFFF` after the dbra) and the
+final CCR (`tst.w d1`, or the closing `sf.b`). Its cost varies 4x with the number of changed
+colours (original min/avg/max 3454/10626/15466 over the 200 states), so the charge is per
+path: `3454 + 172*d1 + 12*ch` (changed entries `d1`, changed channels `ch`), which tracks
+the original to ~25 cycles on every state (charged avg 10570 vs 10626); the early exit
+charges 62.
+
+`Copy32` ($008A7C) is eight `move.l (a0)+,(a1)+`; the C version reproduces the 8th move's
+N/Z (`move.l` sets N/Z, V=C=0) and charges the constant 176.
+
+`PalCycle` ($00E9FA) copies 8 bytes from the 4-step ROM table `$0084FA + (vblank_count &
+$18)` into colours 12..15 of palette line 0 and calls `CramUpload`. It is registered as an
+`HLE_RANGE` that stops right before the `jsr CramUpload` ($00EA1E), so the call runs as real
+68k at the correct raster time: `CramUpload` polls the VDP status and returns its last read
+in d1, and from C the nested call would start ~126 cycles early (the prelude is instant),
+flipping the HBlank status bit in d1. With the split, d1 and the range are exact (200/200);
+the `rts` stays 68k.
+
+`PalFade` ($008A4C) is a blocking loop: `WaitVBlank`, `PalFadeStep`, `WaitVBlank`, a ~1430
+cycle delay, `CramUpload`, until `pal_fading` clears (at most 7 steps). A C function cannot
+wait for an interrupt (scooby-decomp's "Waiting for VBlank"), so the two WaitVBlank calls
+and the `PalFadeStep` call stay 68k; the non-blocking body after the second wait
+(`$008A5E`..`$008A7A`: delay, `CramUpload`, `tst.b pal_fading`, branch) is an `HLE_RANGE`
+with exits `$008A4C` (loop back to the first wait) and `$008A7A` (the `rts`). `CramUpload`
+is run through `hle_call68k`; the range carries only the ~1452 non-nested cycles (the layer
+adds the nested call's ~3443, matching the original's constant 4895).
+
+Captures (`port/scripts/capture_palette.txt`): each `load` of a level-intro state replays
+the level load and its blocking fade-in (`mainloop.md`, NextLevel step 5), so 18 states
+(gun_01..08, pad_01..04, 2p_gun_01..03, 2p_pad_01..02, ending_a) give 268 PalFadeStep /
+PalFade calls. `capture_palcycle.txt` forces `pal_cycle_on` on (`poke FFA0A4 1 FF`) on three
+level states; no shipped level turns it on by itself on the harness route. Path counts from
+`T2_PALETTE_STATS=1`: PalFadeStep moved 175 / nothing-changed 25; PalFade loop-back 175 /
+rts 25; the `pal_fading = 0` early exit is 0 on the route, so it is covered with
+`--poke B:FFA246=0`. Reproduce:
+
+    build/port/difftest capture 008970 200 --script port/scripts/capture_palette.txt
+    build/port/difftest capture 008A5E 200 --script port/scripts/capture_palette.txt
+    build/port/difftest capture 008A7C 200 --script port/scripts/capture.txt \
+        --script port/scripts/capture_palette.txt
+    build/port/difftest capture 00E9FA 200 --script port/scripts/capture_palcycle.txt
+    port/tools/dt PalFadeStep Copy32 PalCycle PalFade
+    build/port/difftest run PalFadeStep --poke B:FFA246=0    # the early exit

@@ -1,0 +1,41 @@
+# PalFadeStep ($008970), PalFade ($008A4C/$008A5E/$008A72) and Copy32 ($008A7C) captures
+# (docs/subsystems/vdp.md, "Palettes"; mainloop.md, NextLevel step 5). A level state is taken
+# at the level change, so `load` + a short run replays the level load and its blocking fade-in:
+# each load runs PalFadeStep and PalFade's loop body ~16 times. All 1P/2P modes and both
+# endings so the fades start from many different palettes.
+load states/gun_01.state
+run 160
+load states/gun_02.state
+run 160
+load states/gun_03.state
+run 160
+load states/gun_04.state
+run 160
+load states/gun_05.state
+run 160
+load states/gun_06.state
+run 160
+load states/gun_07.state
+run 160
+load states/gun_08.state
+run 160
+load states/pad_01.state
+run 160
+load states/pad_02.state
+run 160
+load states/pad_03.state
+run 160
+load states/pad_04.state
+run 160
+load states/2p_gun_01.state
+run 160
+load states/2p_gun_02.state
+run 160
+load states/2p_gun_03.state
+run 160
+load states/2p_pad_01.state
+run 160
+load states/2p_pad_02.state
+run 160
+load states/ending_a.state
+run 160
