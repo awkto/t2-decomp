@@ -88,14 +88,14 @@ def run(binary, script, outdir, hle, hashfile, env):
 
 
 def read_hashes(path):
-    """-> list of (frame, [ram,vram,cram,vsram,vreg,all], cycles)"""
+    """-> list of (frame, [live-RAM,vram,cram,vsram,vreg,all], cycles)"""
     out = []
     with open(path) as f:
         for line in f:
             p = line.split()
-            if len(p) < 7:
+            if len(p) < 9:
                 continue
-            out.append((int(p[0]), p[1:7], p[7] if len(p) > 7 else ""))
+            out.append((int(p[0]), [p[7], p[2], p[3], p[4], p[5], p[6]], p[8]))
     return out
 
 
@@ -120,6 +120,8 @@ def report_addr(ref_path, got_path, maxrep=16):
     a, b = read_memdump(ref_path), read_memdump(got_path)
     n = min(len(a), len(b))
     for name, off, size, base in REGIONS:
+        if name == "RAM":
+            size = 0xFC00                 # exclude the system stack (see emu.c T2_LIVE_RAM_END)
         diffs = [(off + i, a[off + i], b[off + i]) for i in range(off, min(off + size, n))
                  if a[i] != b[i]]
         if diffs:

@@ -551,23 +551,32 @@ static uint64_t fnv1a(const void *p, size_t n, uint64_t h)
 }
 #define FNV_INIT 0xcbf29ce484222325ULL
 
+/* Live work RAM: everything below the system stack at the top of work RAM. The game's
+ * initial SP is $FFFF9C and the deepest call observed reaches ~$FFFEB6, so the top 1 KiB is
+ * stack scratch. It must be excluded: the HLE layer itself writes there (hle_call68k's
+ * sentinel return address, the STALL_PC continuation push), so dead stack bytes differ
+ * between --hle none and --hle SPEC even when the game state is identical. */
+#define T2_LIVE_RAM_END 0xFC00
+
 void emu_frame_hash(FILE *f, long frame)
 {
 	uint64_t hr = fnv1a(work_ram, sizeof work_ram, FNV_INIT);
+	uint64_t hl = fnv1a(work_ram, T2_LIVE_RAM_END, FNV_INIT);
 	uint64_t hv = fnv1a(gx_vram(), 0x10000, FNV_INIT);
 	uint64_t hc = fnv1a(gx_cram(), 0x80, FNV_INIT);
 	uint64_t hs = fnv1a(gx_vsram(), 0x80, FNV_INIT);
 	uint64_t hg = fnv1a(gx_vdp_reg(), 0x20, FNV_INIT);
-	uint64_t ha = hr;
+	uint64_t ha = hl;                          /* the gate compares live RAM + video memories */
 	ha = fnv1a(gx_vram(), 0x10000, ha);
 	ha = fnv1a(gx_cram(), 0x80, ha);
 	ha = fnv1a(gx_vsram(), 0x80, ha);
 	ha = fnv1a(gx_vdp_reg(), 0x20, ha);
-	/* m68k.cycles is not compared by the gate; it is there to see a charge drift early. */
-	fprintf(f, "%ld %016llx %016llx %016llx %016llx %016llx %016llx %d\n", frame,
+	/* columns: frame, full-RAM, VRAM, CRAM, VSRAM, VDPREG, ALL(live), live-RAM, 68k cycles.
+	 * m68k.cycles is diagnostic only (not compared): it shows a charge drift early. */
+	fprintf(f, "%ld %016llx %016llx %016llx %016llx %016llx %016llx %016llx %d\n", frame,
 	        (unsigned long long)hr, (unsigned long long)hv, (unsigned long long)hc,
 	        (unsigned long long)hs, (unsigned long long)hg, (unsigned long long)ha,
-	        gx_m68k_cycles());
+	        (unsigned long long)hl, gx_m68k_cycles());
 }
 
 bool emu_write_memdump(const char *path)
