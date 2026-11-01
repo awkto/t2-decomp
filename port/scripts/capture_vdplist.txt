@@ -1,0 +1,52 @@
+# VdpListRun / VDP command-list captures (docs/subsystems/vdp.md). Every `load` of a level
+# state replays that level's load (LoadTiles -> command 1, plane fills -> 2, HUD/background
+# rectangles -> 6, HScrollClear -> 7), and the mouse play afterwards runs the per-frame list
+# (sprite-table copy -> 1, background columns -> 6, hscroll -> 7, single-word HUD writes -> 3).
+# Used with `difftest capture-multi ... --script capture_vdplist.txt` (and the tally/ending
+# routes, which also reach commands 4 and 8).
+load states/gun_01.state
+run 240
+load states/gun_02.state
+run 240
+load states/gun_03.state
+run 240
+load states/gun_04.state
+run 240
+load states/gun_05.state
+run 240
+load states/gun_06.state
+run 240
+load states/gun_07.state
+run 240
+load states/gun_08.state
+run 240
+load states/pad_01.state
+run 240
+load states/pad_02.state
+run 240
+load states/2p_gun_01.state
+run 240
+load states/2p_gun_02.state
+run 240
+load states/2p_pad_01.state
+run 240
+load states/ending_a.state
+run 240
+load states/ending_b.state
+run 240
+load states/gun_05.state
+run 900
+mouse 60 60
+run 20
+hold U
+run 20
+hold D
+run 20
+hold L
+run 20
+hold R
+run 20
+hold -
+run 20
+mouse 120 120
+run 120

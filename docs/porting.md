@@ -52,7 +52,11 @@ The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0
 ($0072F8..$007368), `BcdAdd` ($007A92), and the palette path `PalFadeStep` ($008970),
 `Copy32` ($008A7C), `PalCycle` ($00E9FA), `PalFade` ($008A5E, the loop body after the
 two WaitVBlank calls; see "The palette path" below),
-and the sprite queue `QueueSprite` ($013240), `ObjQueueSprite` ($013228) and `BuildSpriteTable` ($013272).
+and the sprite queue `QueueSprite` ($013240), `ObjQueueSprite` ($013228) and `BuildSpriteTable` ($013272),
+and the VDP command list `VdpListRun` ($011D32) with its handlers `VdpCmd0End` ($011D64),
+`VdpCmd1CopyWords` ($012068), `VdpCmd2FillZero` ($011D70), `VdpCmd3WriteWord` ($011D90),
+`VdpCmd4CramLine` ($011D9E), `VdpCmd5FillValue` ($011D80), `VdpCmd6TileRect` ($0120BA),
+`VdpCmd7HScroll` ($011E48), `VdpCmd8VScroll` ($011F6E).
 
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
@@ -148,6 +152,16 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | $013240 | QueueSprite | game/sprite.c | 600/600 states equal (180 cycles, constant) |
 | $013228 | ObjQueueSprite | game/sprite.c | 600/600 states equal (278 cycles; calls the C `QueueSprite`) |
 | $013272 | BuildSpriteTable | game/sprite.c | 1300/1300 states equal (a deliberate descending sort is caught; exact per-path cycle charge) |
+| $011D32 | VdpListRun | game/vdplist.c | 200/200 states equal (runs the whole list; a deliberate command-6 row stride $80->$40 is caught by 1/1 and by VdpListRun 2/3) |
+| $011D64 | VdpCmd0End | game/vdplist.c | 200/200 states equal |
+| $012068 | VdpCmd1CopyWords | game/vdplist.c | 200/200 states equal |
+| $011D70 | VdpCmd2FillZero | game/vdplist.c | 200/200 states equal (calls the 68k VramFillWords) |
+| $011D90 | VdpCmd3WriteWord | game/vdplist.c | 200/200 states equal (calls the 68k VramWriteWord) |
+| $011D9E | VdpCmd4CramLine | game/vdplist.c | 9/9 states equal (rare: only the tally screens queue it; a deliberate wrong loop count is caught) |
+| $011D80 | VdpCmd5FillValue | game/vdplist.c | 200/200 states equal (unreachable in play, so `--entry` states captured at command 2) |
+| $0120BA | VdpCmd6TileRect | game/vdplist.c | 200/200 states equal (the row-stride bug above is caught) |
+| $011E48 | VdpCmd7HScroll | game/vdplist.c | 200/200 states equal |
+| $011F6E | VdpCmd8VScroll | game/vdplist.c | 200/200 states equal |
 
 `QueueSprite`/`ObjQueueSprite`/`BuildSpriteTable` are in `game/sprite.c` (docs/subsystems/sprite.md).
 `QueueSprite` (`$013240`) appends one entry to `spr_queue_args` `$FFA318` and an (index, priority)
@@ -307,3 +321,70 @@ rts 25; the `pal_fading = 0` early exit is 0 on the route, so it is covered with
     build/port/difftest capture 00E9FA 200 --script port/scripts/capture_palcycle.txt
     port/tools/dt PalFadeStep Copy32 PalCycle PalFade
     build/port/difftest run PalFadeStep --poke B:FFA246=0    # the early exit
+
+## The VDP command list (`game/vdplist.c`)
+
+`VdpListRun` ($011D32, `src/t2.s`) is the interpreter of the RAM command list that the frame
+builds during gameplay and runs right after the VBlank wait (`docs/subsystems/vdp.md`). It sets
+`a6 = vdp_list` ($FFB252) and then loops: `move.w (a6)+,d0; asl.w #2,d0; jmp VdpListJump(pc,d0.w)`.
+The nine handlers read their arguments from `(a6)+` and either tail-`bra.w` back to `VdpListNext`
+($011D38) or, for command 0, rewind `vdp_list_ptr` ($FF80BC) and `rts`. The C `VdpListRun` is an
+`HLE_FUNC` that runs the whole list, calling the shared handler bodies directly; each handler is
+also registered on its own: command 0 as an `HLE_FUNC` (it ends in the `rts`), 1..8 as
+`HLE_RANGE`s whose single exit is `VdpListNext` (the handlers never touch the stack). Enabling a
+handler alone still works: the 68k `VdpListRun` jumps to it, the hook runs the C range and it
+`hle_jump()`s back to `VdpListNext`.
+
+Commands 2/5 (`VramFillWords` $008782) and 3 (`VramWriteWord` $0087C4) are not ported, so the C
+bodies reach them through `hle_call68k` (the nested 68k is exactly the original `jsr`); the other
+commands' VDP writes are inline and reproduced with `vdp_ctrl_w`/`vdp_data_w` in the original order
+and width (status poll, `bset`/`bclr` of the DMA-enable shadow bit `$FFA0DD` bit 4 around the copy
+where the original does it, autoincrement `$8F02`/`$8F20`, the 14-bit address + CD bits, and for
+command 4 the 32-bit CRAM command). Every register write mirrors its width (`move.w` = `set_w`,
+`moveq`/`lea`/`movea` = full) and the final CCR of the last flag-setting instruction (command 6:
+the closing `addi.w #$80,d3`; command 4/8: the closing `move.w`; command 7: the last data write).
+
+**The status poll is timing-sensitive.** The handlers' `move.w (4,a5),d0` reads the VDP status and
+its value ends up in d0/d1/d2, so it must be read at the same raster time as the original. From C
+the CPU clock is frozen, so the prologue (and, for command 4, each per-iteration poll) is run as
+68k with `hle_run68k_until` up to the read, then the C continues; `hle_call68k` also skips the
+`jsr`'s 20 cycles, so `jsr_tick()` adds them before the call. A 68k control-port word read also ORs
+in bits 10-15 of the prefetched instruction word (`mem68k.c` `vdp_read_word`), and from C
+`m68k.pc` is the read instruction itself, so `vdp_status_word()` rebuilds that part from
+`ROM16(read_addr+4)`.
+
+**Sandbox determinism.** `sb_begin()` (port/hle/sandbox.c) now pins the VDP raster line base to
+the restored CPU clock and clamps the FIFO read-out stamps (`gx_vdp_fifo_clamp`) to it. The
+savestate does not carry either, so before this a status read's FIFO/VBLANK/VINT bits leaked in
+from whatever ran before (the reference side or the previous state) and differed between the
+reference and the C side. This is a difftest-only change (the sandbox is not used by `t2port`); the
+already-ported functions still pass.
+
+Cycles: each translated instruction adds its GPGX 68000 cost as it executes, so the per-command and
+whole-list charges track the original. Commands 2/3/5 charge only their own arg reads (the nested
+VramFillWords/VramWriteWord time is added by the layer); their difftest "C charged" line reads 0
+because the prologue and callee are nested and the sandbox does not count nested time. Captures
+(`port/scripts/capture_vdplist.txt`, level loads + mouse play, and `capture_bcdadd.txt`, the tally
+screens): `T2_VDP_STATS=1` reports the per-command call counts. Command 4 (CRAM line) is rare — the
+tally screens queue it 9 times over all routes — and command 5 is never queued by the shipped game
+(its queuers `$00BE94`/`$00BF1E`/`$00C20A` are unreachable), so its states are captured at command
+2 and replayed with `--entry`:
+
+    build/port/difftest capture-multi 200 v 011D32 011D64 012068 011D70 011D80 011D90 011D9E \
+        0120BA 011E48 011F6E --script port/scripts/capture_vdplist.txt \
+        --script port/scripts/capture_bcdadd.txt --out runs/vdp
+    build/port/difftest capture-multi 100 s 011D9E --script port/scripts/capture_bcdadd.txt \
+        --script port/scripts/capture.txt --script port/scripts/capture_score.txt \
+        --script port/scripts/capture_score2p.txt --out runs/vdp_end   # the 9 command-4 states
+    port/tools/dt VdpListRun VdpCmd0End VdpCmd1CopyWords VdpCmd2FillZero VdpCmd3WriteWord \
+        VdpCmd4CramLine VdpCmd6TileRect VdpCmd7HScroll VdpCmd8VScroll
+    build/port/difftest run VdpCmd5FillValue --states runs/vdp/011D70_v --entry   # cmd 5
+
+`port/tools/mousetest.sh runs/t2port-hle-all.sh` (the wrapper enables `--hle all`) passes flow,
+twop, continue, missile, grid and lag. Screenshots at the same frame of a busy scene are
+byte-identical between `--hle all` and `--hle all,-<the ten VDP entries>` (my functions add nothing),
+but `--hle all` vs `--hle none` drift apart after ~80 frames: the game's `vblank_count` ends 4-7
+frames higher, so animated objects are at a different frame. That drift is pre-existing — it is
+already present with the ten VDP entries disabled, and the palette path (`PalFade`) alone produces
+the same small pixel differences — so it is the approximate cycle charges of the earlier functions,
+not the command list. The first ~60 frames after a load are byte-identical.
