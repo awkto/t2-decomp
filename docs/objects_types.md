@@ -91,6 +91,31 @@ Evidence: `gun_04` state; frames 1080/1410 (`N4_3`, `N4_4`), 3600 (`G4_3`), 6000
 | `$1E` | ? | hp 0, depth 14 | 0 | `$00597A` | `$00D90E`, `$00D93E` | low |
 | `$26` | endoskeleton | one-off appearance on the base approach | - | `$0068CA` | `$00F24C` | low |
 
+## Level 5 - Cyberdyne lab, 1995 ("EQUIPMENT INTACT: NNN")
+
+Evidence: `gun_05` state; frames 3000 (`G5_3`), 15000 (`G5_10`); screenshots `G5_3_an.png`,
+`G5_10_an.png`.
+
+| type | name | description | hp | hit routine | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$0F` | Cyberdyne equipment | the lab equipment (wall racks at Y 16-96 depth 128, and floor units); destroying them pays the destruction bonus; the HUD "EQUIPMENT INTACT" counts them | 5 | `$0069EE` | `$00F8A2` | high |
+| `$28` | lab equipment / T-800 model | the big equipment on the floor (hp 400) - the bench with the half-built endoskeleton (`G5_3`/`G5_10`) | 400 | `$006B96`, `$006BE2` | `$010238`, `$01036E`, `$01031E`, `$0104B6`, `$010532`, `$010582` | medium |
+| `$27` | endoskeleton | silver endoskeleton walking in the lab (`spawn_t27a/b`, from X<0 or X>320) | 10 | `$006AE0`, `$006B68` | `$00FBAA`, `$00FC78`, `$00FCC2`, `$00FC24`, `$00FBFE`, `$010122`, `$01014A` | high |
+| `$01` | endoskeleton (foot soldier) | foot soldier variant | - | `$006AE0` | `$00FD98`, `$00FD40` | medium |
+| `$20` | ceiling lamp / fixture | top-of-screen fixture | 4 | `$0063C0` | `$00FB60` | low |
+
+## Level 6 - Cyberdyne, second part (white lab)
+
+Evidence: `gun_06` state; frames 5000 (`G6_5`) and 1500-4500 (`G6_*`); screenshots `G6_3_an.png`,
+`G6_5_an.png`.
+
+| type | name | description | hp | hit routine | AI routine(s) | confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `$0F` | Cyberdyne equipment | same destructible lab equipment (wall racks, `spawn_t0ff`) | 5 | `$0069EE` | `$00F8A2` | high |
+| `$28` | lab equipment | same big floor equipment (frame/machine) | 400 | `$006BE2` | `$0104B6`, `$010532`, `$010582` | medium |
+| `$27` | endoskeleton | silver endoskeleton walking through the lab (`spawn_t27b`) | 10 | `$006B32` | `$00FF12`, `$00FF6C`, `$01003A`, `$0100FE`, `$0100D0` | high |
+| `$0A` | ceiling light / wall fixture | hp 0, hit `$006004`; a shootable fixture (ceiling/wall) in the white lab | 0 | `$006004` | `$00C348`, `$00C3AC` | low |
+
 ## Summary table
 
 Filled in level by level below.
