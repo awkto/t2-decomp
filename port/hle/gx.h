@@ -22,6 +22,8 @@ void gx_m68k_set_pc(uint32_t pc);
 uint32_t gx_m68k_other_sp(void); /* inactive stack pointer */
 void gx_m68k_set_usp(uint32_t v);      /* move An,usp */
 int gx_m68k_cycles(void);        /* master clocks (7 per 68k cycle) */
+int gx_m68k_refresh_cycles(void);        /* 68k bus refresh threshold (mcycles) */
+void gx_m68k_set_refresh_cycles(int c);
 void gx_vdp_fifo_clamp(void);    /* FIFO read-out stamps <= CPU clock (after a rewind) */
 void gx_m68k_set_cycles(int c);  /* rewind the CPU clock (hle.c, after nested calls) */
 void gx_m68k_clear_irq(void);

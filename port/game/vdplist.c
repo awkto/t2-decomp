@@ -131,14 +131,20 @@ static uint16_t vdp_status_word(uint32_t read_addr)
 	return (uint16_t)((vdp_status_r() & 0x3FF) | (ROM16(read_addr + 4) & 0xFC00));
 }
 
-/* poll the VDP status until DMA is not busy, as `move.w (4,a5),d0; btst.b #1,d0; bne` */
+/* poll the VDP status until DMA is not busy, as `move.w (4,a5),d0; btst.b #1,d0; bne`.
+ * move.w (d16,An),Dn = 12, btst.b #imm,Dn = 10, bne.s = 10 taken / 8 not taken. */
 static void poll_status(hle_ctx *ctx, int reg, uint32_t read_addr)
 {
 	uint16_t st;
-	do {
+	for (;;) {
 		st = vdp_status_word(read_addr);
 		set_w(&ctx->d[reg], st);
-	} while (st & 2);
+		if (!(st & 2)) {
+			ctx->cycles += 12 + 10 + 8;
+			break;
+		}
+		ctx->cycles += 12 + 10 + 10;
+	}
 }
 
 /* The original `jsr (target).l` costs 20 cycles before the callee runs; hle_call68k pushes a
@@ -179,7 +185,7 @@ static void cmd_end(hle_ctx *ctx)
 {
 	count_cmd(0);
 	RAM32_W(VDP_LIST_PTR, VDP_LIST);            /* move.l #vdp_list,(vdp_list_ptr).l */
-	ctx->cycles += 20 + 16;                     /* move.l Dn,(abs).l + rts */
+	ctx->cycles += 28 + 16;                     /* move.l #imm,(abs).l = 28 + rts = 16 */
 	/* final flags from the move.l: N from $FFFFB252 bit 31 (=1), Z=0, V=C=0, X unchanged */
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_N);
 }
@@ -191,17 +197,15 @@ static void cmd_copy_words(hle_ctx *ctx)
 	run_to(ctx, 0x012068, 0x012074);            /* prologue (arg reads) as 68k: the status poll
 	                                             * below must see the real raster time */
 	uint16_t count = ctx->d[4] & 0xFFFF;
-	uint32_t src = ctx->a[1];
 	uint16_t addr = ctx->d[2] & 0xFFFF;
 
 	poll_status(ctx, 0, 0x012074);              /* loc_012074: move.w (4,a5),d0 / btst / bne */
-	ctx->cycles += 12 + 6 + 10;                 /* (one poll iteration) */
 	RAM8(VDP_REG01_DMA) |= 0x10;                /* bset.b #4,(vdp_reg01+1).l */
-	ctx->cycles += 20;
+	ctx->cycles += 24;
 	vdp_ctrl_w(RAM16(VDP_REG01));               /* move.w (vdp_reg01).l,(4,a5) */
 	ctx->cycles += 28;
 	vdp_ctrl_w(0x8F02);                         /* move.w #$8f02,(4,a5) */
-	ctx->cycles += 12;
+	ctx->cycles += 16;
 	vram_addr(ctx, addr, 1, 2);                 /* move.w d2,d1 / andi / ori / rol / andi */
 	ctx->cycles += 4 + 8 + 8 + 10 + 8;
 	vdp_ctrl_w(ctx->d[2] & 0xFFFF);             /* move.w d2,(4,a5) */
@@ -217,13 +221,14 @@ static void cmd_copy_words(hle_ctx *ctx)
 		vdp_data_w(last);
 		d4 = (uint16_t)(d4 - 1);
 		if (d4 == 0xFFFF) {
-			ctx->cycles += 8 + 14;      /* move.w + dbra expire */
+			ctx->cycles += 12 + 14;     /* move.w (An)+,(An)=12 + dbra expire */
 			break;
 		}
-		ctx->cycles += 8 + 10;              /* move.w + dbra continue */
+		ctx->cycles += 12 + 10;             /* move.w + dbra continue */
 	}
 	set_w(&ctx->d[4], 0xFFFF);
 	cc_logic16(ctx, last);                      /* final flags: the last move.w */
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 }
 
 /* cmd 2 ($011D70): fill `bytes` bytes at VRAM addr with 0 (VramFillWords). */
@@ -234,6 +239,7 @@ static void cmd_fill_zero(hle_ctx *ctx)
 	                                             * status poll must see the real raster time */
 	jsr_tick();                                 /* the jsr itself */
 	hle_call68k(ctx, VRAM_FILL_WORDS);          /* jsr (VramFillWords).l (not ported) */
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 }
 
 /* cmd 3 ($011D90): write one word to VRAM (VramWriteWord). */
@@ -243,6 +249,7 @@ static void cmd_write_word(hle_ctx *ctx)
 	run_to(ctx, 0x011D90, 0x011D94);            /* prologue (arg reads) as 68k */
 	jsr_tick();                                 /* the jsr itself */
 	hle_call68k(ctx, VRAM_WRITE_WORD);          /* jsr (VramWriteWord).l (not ported) */
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 }
 
 /* cmd 4 ($011D9E): 16 CRAM words from src to the CRAM line at `addr`. */
@@ -252,13 +259,12 @@ static void cmd_cram_line(hle_ctx *ctx)
 	run_to(ctx, 0x011D9E, 0x011DB0);            /* prologue (CRAM address setup) as 68k: the
 	                                             * status poll below must see the real raster time */
 	poll_status(ctx, 0, 0x011DB0);              /* loc_011DB0 */
-	ctx->cycles += 12 + 6 + 10;
 	RAM8(VDP_REG01_DMA) |= 0x10;                /* bset.b #4,(vdp_reg01+1).l */
-	ctx->cycles += 20;
+	ctx->cycles += 24;
 	vdp_ctrl_w(RAM16(VDP_REG01));               /* move.w (vdp_reg01).l,(4,a5) */
 	ctx->cycles += 28;
 	vdp_ctrl_w(0x8F02);                         /* move.w #$8f02,(4,a5) */
-	ctx->cycles += 12;
+	ctx->cycles += 16;
 	vdp_ctrl_w32(ctx->d[1]);                    /* move.l d1,(4,a5) */
 	ctx->cycles += 16;
 	ctx->d[0] = 15;                             /* moveq #$f,d0 */
@@ -281,9 +287,10 @@ static void cmd_cram_line(hle_ctx *ctx)
 	set_w(&ctx->d[0], 0xFFFF);
 
 	RAM8(VDP_REG01_DMA) &= (uint8_t)~0x10;      /* bclr.b #4,(vdp_reg01+1).l */
-	ctx->cycles += 20;
+	ctx->cycles += 24;
 	vdp_ctrl_w(RAM16(VDP_REG01));               /* move.w (vdp_reg01).l,(4,a5) */
 	ctx->cycles += 28;
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 	/* final flags from the closing move.w (N/Z from the shadow word, V=C=0) */
 	cc_logic16(ctx, RAM16(VDP_REG01));
 }
@@ -296,6 +303,7 @@ static void cmd_fill_value(hle_ctx *ctx)
 	                                             * status poll must see the real raster time */
 	jsr_tick();                                 /* the jsr itself */
 	hle_call68k(ctx, VRAM_FILL_WORDS);          /* jsr (VramFillWords).l (not ported) */
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 }
 
 /* cmd 6 ($0120BA): tilemap rectangle: `cols` words per row, `rows-1` rows, rows $80 bytes
@@ -306,13 +314,11 @@ static void cmd_tile_rect(hle_ctx *ctx)
 	run_to(ctx, 0x0120BA, 0x0120C8);            /* prologue (arg reads) as 68k: the poll below
 	                                             * must see the real raster time */
 	uint16_t cols = ctx->d[4] & 0xFFFF;
-	uint16_t addr = ctx->d[3] & 0xFFFF;
 	uint16_t rows1 = ctx->d[6] & 0xFFFF;
 
 	poll_status(ctx, 0, 0x0120C8);              /* loc_0120C8 */
-	ctx->cycles += 12 + 6 + 10;
 	vdp_ctrl_w(0x8F02);                         /* move.w #$8f02,(4,a5) */
-	ctx->cycles += 12;
+	ctx->cycles += 16;
 	uint16_t d4 = (uint16_t)(cols - 1);         /* subq.w #1,d4 */
 	set_w(&ctx->d[4], d4);
 	ctx->cycles += 4;
@@ -334,10 +340,10 @@ static void cmd_tile_rect(hle_ctx *ctx)
 			vdp_data_w(w);
 			d5 = (uint16_t)(d5 - 1);
 			if (d5 == 0xFFFF) {
-				ctx->cycles += 8 + 14;
+				ctx->cycles += 12 + 14;
 				break;
 			}
-			ctx->cycles += 8 + 10;
+			ctx->cycles += 12 + 10;
 		}
 		set_w(&ctx->d[5], 0xFFFF);
 		d3 = add_w(ctx, d3, 0x0080);        /* addi.w #$80,d3 (sets the final flags) */
@@ -351,6 +357,7 @@ static void cmd_tile_rect(hle_ctx *ctx)
 		ctx->cycles += 10;
 	}
 	set_w(&ctx->d[6], 0xFFFF);
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 }
 
 /* cmd 7 ($011E48): hscroll: 28 words with source stride $20 and autoincrement $20 for plane A,
@@ -369,13 +376,14 @@ static void cmd_hscroll(hle_ctx *ctx)
 	set_w(&ctx->d[2], addr);                    /* move.w d5,d2 (d2 is NOT modified) */
 	ctx->cycles += 4;
 	vdp_ctrl_w(0x8F20);                         /* move.w #$8f20,(4,a5) */
-	ctx->cycles += 12;
+	ctx->cycles += 16;
 	/* move.w d2,d3 / andi.w #$3fff / ori.w #$4000 / move.w d3,(4,a5) */
 	vdp_ctrl_w((uint16_t)((addr & 0x3FFF) | 0x4000));
 	/* move.w d2,d3 / rol.w #2,d3 / andi.w #3 / move.w d3,(4,a5) */
 	set_w(&ctx->d[3], rol_w(ctx, addr, 2) & 3);
 	vdp_ctrl_w(ctx->d[3] & 0xFFFF);
 	ctx->cycles += 4 + 8 + 8 + 12 + 4 + 10 + 8 + 12;
+	ctx->cycles += 4 + 4;                       /* movea.l a1,a2 + moveq #$1b,d1 */
 
 	/* plane A: 28 words from src, stride $20 */
 	uint16_t last = 0;
@@ -385,27 +393,29 @@ static void cmd_hscroll(hle_ctx *ctx)
 		vdp_data_w(last);
 		ctx->cycles += 8 + 8 + 8;
 	}
-	ctx->cycles += 28 * 10 + 14;                /* the dbra of the loop (27 continue + 1 expire) */
+	ctx->cycles += 27 * 10 + 14;                /* the dbra of the loop (27 continue + 1 expire) */
 
 	/* plane B: addr + 2, from src + 2 */
 	uint16_t addr2 = (uint16_t)(addr + 2);
 	set_w(&ctx->d[2], addr2);                   /* move.w d5,d2 / addq.w #2,d2 */
 	ctx->cycles += 4 + 4;
 	vdp_ctrl_w(0x8F20);
-	ctx->cycles += 12;
+	ctx->cycles += 16;
 	vdp_ctrl_w((uint16_t)((addr2 & 0x3FFF) | 0x4000));
 	set_w(&ctx->d[3], rol_w(ctx, addr2, 2) & 3);
 	vdp_ctrl_w(ctx->d[3] & 0xFFFF);
 	ctx->cycles += 4 + 8 + 8 + 12 + 4 + 10 + 8 + 12;
+	ctx->cycles += 8 + 4;                       /* lea (0x2,a1),a2 + moveq #$1b,d1 */
 	for (int i = 0; i < 28; i++) {              /* loc_011EB4 */
 		last = bus_r16(src + 2 + (uint32_t)i * 0x20);
 		set_w(&ctx->d[2], last);
 		vdp_data_w(last);
 		ctx->cycles += 8 + 8 + 8;
 	}
-	ctx->cycles += 28 * 10 + 14;
+	ctx->cycles += 27 * 10 + 14;
 	ctx->d[1] = 0x0000FFFF;                     /* moveq #$1b,d1 (clears the high word) / dbra */
 	ctx->a[2] = src + 2 + 28 * 0x20;            /* lea (a1),a2 / lea (a1+2),a2 / 28x lea $20(a2) */
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 	cc_logic16(ctx, last);                      /* final flags: the last move.w d2,(a5) */
 }
 
@@ -416,13 +426,13 @@ static void cmd_vscroll(hle_ctx *ctx)
 	run_to(ctx, 0x011F6E, 0x011F82);            /* prologue (lea + ctrl writes) as 68k: the poll
 	                                             * below must see the real raster time */
 	poll_status(ctx, 2, 0x011F82);              /* loc_011F82: move.w (4,a5),d2 / btst / bne */
-	ctx->cycles += 12 + 6 + 10;
 	uint16_t a = RAM16(ctx->a[6]); ctx->a[6] += 2;   /* move.w (a6)+,(a5) */
 	vdp_data_w(a);
-	ctx->cycles += 8;
+	ctx->cycles += 12;
 	uint16_t b = RAM16(ctx->a[6]); ctx->a[6] += 2;   /* move.w (a6)+,(a5) */
 	vdp_data_w(b);
-	ctx->cycles += 8;
+	ctx->cycles += 12;
+	ctx->cycles += 10;                          /* bra.w VdpListNext */
 	cc_logic16(ctx, b);                         /* final flags: the second move.w */
 }
 
@@ -490,7 +500,8 @@ HLE_FUNC(0x011D32, VdpListRun, 0)
 		set_w(&ctx->d[0], cmd);
 		ctx->cycles += 8;
 		set_w(&ctx->d[0], asl_w(ctx, cmd, 2));  /* asl.w #2,d0 */
-		ctx->cycles += 8 + 12;                  /* asl.w + jmp (d8,pc,d0.w) */
+		/* asl.w #2,Dn = 10 + jmp (d8,pc,Xn) = 14 + the jump table's `bra.w handler` = 10 */
+		ctx->cycles += 10 + 14 + 10;
 		switch (cmd) {
 		case 0: cmd_end(ctx); return;
 		case 1: cmd_copy_words(ctx); break;

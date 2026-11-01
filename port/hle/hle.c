@@ -305,6 +305,28 @@ static int sess_end(void)
 
 static const hle_def *g_cur_def;   /* innermost C function running (NULL at 68k top level) */
 
+/* T2_HLE_ORIG=name[,name...]: run these replacements as the ORIGINAL 68k code (like difftest
+ * --passthrough) and log the real cycle cost next to the C charge. Debugging aid for the
+ * lockstep gate: it shows how far a charge is from the original in the full frame loop. */
+static char g_orig[1024];
+static bool def_is_orig(const hle_def *d)
+{
+	if (!g_orig[0] || !d->name)
+		return false;
+	const char *p = g_orig;
+	size_t l = strlen(d->name);
+	while (*p) {
+		const char *e = strpbrk(p, ",");
+		size_t n = e ? (size_t)(e - p) : strlen(p);
+		if (n == l && !strncmp(p, d->name, l))
+			return true;
+		if (!e)
+			break;
+		p = e + 1;
+	}
+	return false;
+}
+
 int hle_nest_depth(void) { return g_nest; }
 const hle_def *hle_current_def(void) { return g_cur_def; }
 /* would the CPU hand this pc to a C function instead of executing the instruction? (profilers) */
@@ -334,7 +356,20 @@ static int run_def(const hle_def *def, entry *e)
 		e->calls++;
 	g_frame_calls++;
 	g_cur_def = def;
-	def->fn(&c);
+	if (def_is_orig(def)) {
+		/* passthrough: run the original 68k and log its real cost vs the C charge */
+		long c0 = gx_m68k_cycles();
+		if (def->exits)
+			hle_run68k_until(&c, def->exits);
+		else
+			hle_call68k_orig(&c, c.pc);
+		long d = (gx_m68k_cycles() - c0) / 7;
+		fprintf(stderr, "orig %-18s real %ld cyc  (C charge %d, delta %ld)\n",
+		        def->name, d, def->cycles, d - def->cycles);
+		c.cycles = (int)(d > 0 ? d : 0);
+	} else {
+		def->fn(&c);
+	}
 	g_cur_def = outer_def;
 	if (def->exits) {
 		/* HLE_RANGE: must leave through a declared exit */
@@ -353,6 +388,24 @@ static int run_def(const hle_def *def, entry *e)
 		g_top = false;
 	}
 	long total = (c.cycles > 0 ? c.cycles : 0) + nested;
+	/* The original 68k adds 2 bus-refresh cycles every 128 cycles while executing
+	 * instructions (m68kcpu.c, `refresh_cycles`); the lump charge for the C part does not,
+	 * so the CPU clock ends short and the frame phase drifts. Add the refresh the C part
+	 * would have accrued (the gap after each refresh is 896-14 = 882 mcycles) and advance
+	 * refresh_cycles so the next real instruction keeps the right phase. Nested 68k ran for
+	 * real, so its refresh is already inside `nested`. */
+	if (!def_is_orig(def) && c.cycles > 0 && !hle_post_access) {
+		int delta = c.cycles * 7;
+		int R = gx_m68k_refresh_cycles(), C = gx_m68k_cycles();
+		int gap = R - C;
+		int n = delta >= gap ? 1 + (delta - gap) / 882 : 0;
+		if (n > 0) {
+			total += 2 * n;
+			gx_m68k_set_refresh_cycles(R + 896 * n);
+		}
+	}
+	if (getenv("T2_HLE_CHARGE"))
+		fprintf(stderr, "charge %-18s %ld (ctx %d + nested %ld)\n", def->name, total, c.cycles, nested);
 	if (unmasked && total > STALL_SLICE && !hle_post_access && g_nest == 0 && !g_stall_debt) {
 		/* Long function entered with VBlank unmasked: the original would have been
 		 * interrupted along the way. Spend the cost in slices at STALL_PC, a trap that
@@ -412,6 +465,9 @@ int hle_invoke(const hle_def *def)
 
 void hle_install(void)
 {
+	const char *o = getenv("T2_HLE_ORIG");
+	if (o)
+		snprintf(g_orig, sizeof g_orig, "%s", o);
 	hle_rom = gx_rom();
 	m68k_hle_handler = dispatch;
 	m68k_hle_bitmap = g_bitmap;
