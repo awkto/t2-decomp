@@ -99,7 +99,11 @@ plays ~6800 frames with the mouse, which calls `Random` ~210 times. `dt` first c
 on the route and keeps every k-th so the captured states are spread out, then captures 200.
 The capture loop feeds the scripted mouse through `mouse_frame()` as the real frame loop does, so
 the Menacer actually latches and `MenacerReadXY` sees gun-on states (both the 8-sample moving and
-16-sample still branches: 13/187 of the 200).
+16-sample still branches: 13/187 of the 200). `port/scripts/capture_menacer_off.txt` alternates
+aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count == 0`):
+
+    build/port/difftest capture 01E442 200 --script port/scripts/capture_menacer_off.txt --out runs/states/01E442_off
+    build/port/difftest run MenacerReadXY --states runs/states/01E442_off      # and --aim fast
 
 ## Result so far
 

@@ -1,0 +1,17 @@
+# supplementary capture: alternate aiming and pointing the gun away (mouse leave)
+# so MenacerReadXY's gun-off early exit (gun_latch_count == 0) is captured too
+load states/gun_05.state
+run 60
+mouse 80 80
+run 30
+mouse leave
+run 30
+mouse 160 120
+run 30
+mouse leave
+run 30
+mouse 240 160
+run 30
+mouse leave
+run 30
+run 3000
