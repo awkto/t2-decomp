@@ -88,8 +88,15 @@
 008B3C ClearObjectPools       # all object pools and counts, scroll accumulators, flags
 00881C Random                 # rng_state LFSR-ish step -> d0
 008FA8 SetPlayerState         # a4 = player, d0 = state (6 = shot a human, ...), timer 200
-0072F8 AddScore250            # a4 = player; AddScore500 $007306, 750 $007314, 1000 $007322, 1250 $007330,
-00733E AddScore2000           # 4000 $00734C, 5000 $00735A, 10000 $007368
+0072F8 AddScore250            # a4 = player; add a BCD amount to the player's score (AddScoreBcd)
+007306 AddScore500            # 14-byte stub: movem d0/a0-a1, move.l #$500,d0, bra AddScoreBcd (never called)
+007314 AddScore750            #
+007322 AddScore1000           #
+007330 AddScore1250           #
+00733E AddScore2000           #
+00734C AddScore4000           #
+00735A AddScore5000           #
+007368 AddScore10000          #
 007376 AddScoreBcd            # d0 = BCD amount, added to p1_score / p2_score by a4+$24 (player index)
 00E9FA PalCycle               # when pal_cycle_on: 8 bytes of palette line 0 rotate every 8 frames, CRAM upload
 # objects

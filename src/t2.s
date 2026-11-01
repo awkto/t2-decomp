@@ -4103,7 +4103,7 @@ loc_005B84:
 loc_005BBC:
 	rts
 sub_005BBE:
-	jsr (sub_007322,pc)
+	jsr (AddScore1000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.w #0x20,(0x24,a6)
@@ -4174,7 +4174,7 @@ sub_005D9C:
 	lea.l (sub_005DA2,pc),a0
 	rts
 sub_005DA2:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.w #0x4,(0x24,a6)
@@ -4189,7 +4189,7 @@ sub_005DCC:
 	lea.l (sub_005DD2,pc),a0
 	rts
 sub_005DD2:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xbd22,(0x20,a6)
@@ -4203,7 +4203,7 @@ sub_005DF6:
 	lea.l (sub_005DFC,pc),a0
 	rts
 sub_005DFC:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xbf8e,(0x20,a6)
@@ -4221,7 +4221,7 @@ sub_005E28:
 	lea.l (sub_005E36,pc),a0
 	rts
 sub_005E36:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	addq.w #0x1,(0x34,a4)
@@ -4239,7 +4239,7 @@ sub_005E62:
 	lea.l (sub_005E70,pc),a0
 	rts
 sub_005E70:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	addq.w #0x1,(0x34,a4)
@@ -4257,7 +4257,7 @@ sub_005E9C:
 	lea.l (sub_005EAA,pc),a0
 	rts
 sub_005EAA:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	addq.w #0x1,(0x34,a4)
@@ -4275,7 +4275,7 @@ sub_005ED6:
 	lea.l (sub_005EE4,pc),a0
 	rts
 sub_005EE4:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	addq.w #0x1,(0x34,a4)
@@ -4412,7 +4412,7 @@ sub_006146:
 	lea.l (sub_006154,pc),a0
 	rts
 sub_006154:
-	jsr (sub_007368,pc)
+	jsr (AddScore10000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xcc98,(0x20,a6)
@@ -4438,7 +4438,7 @@ sub_006194:
 	lea.l (sub_0061A2,pc),a0
 	rts
 sub_0061A2:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xce0c,(0x20,a6)
@@ -4459,7 +4459,7 @@ sub_0061D6:
 	lea.l (sub_0061E4,pc),a0
 	rts
 sub_0061E4:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xcec4,(0x20,a6)
@@ -4477,7 +4477,7 @@ sub_006214:
 	lea.l (sub_00621E,pc),a0
 	rts
 sub_00621E:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xcfde,(0x20,a6)
@@ -4568,7 +4568,7 @@ sub_006332:
 	lea.l (sub_006346,pc),a0
 	rts
 sub_006346:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	move.l #0xdb0c,(0x20,a6)
 	rts
 | data 0x006354-0x00635C
@@ -4633,7 +4633,7 @@ sub_0063FE:
 	lea.l (sub_006404,pc),a0
 	rts
 sub_006404:
-	jsr (sub_007322,pc)
+	jsr (AddScore1000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xfb76,(0x20,a6)
@@ -4650,7 +4650,7 @@ sub_006430:
 	lea.l (sub_006436,pc),a0
 	rts
 sub_006436:
-	jsr (sub_00734C,pc)
+	jsr (AddScore4000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xdd64,(0x20,a6)
@@ -4667,7 +4667,7 @@ sub_006462:
 	lea.l (sub_006468,pc),a0
 	rts
 sub_006468:
-	jsr (sub_00734C,pc)
+	jsr (AddScore4000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xe174,(0x20,a6)
@@ -4688,7 +4688,7 @@ sub_0064A0:
 	lea.l (sub_0064A6,pc),a0
 	rts
 sub_0064A6:
-	jsr (sub_007322,pc)
+	jsr (AddScore1000,pc)
 	subq.w #0x1,(0xffffa23c).l
 	bne.s loc_0064BC
 	movea.l (0xffff9eda).l,a1
@@ -4712,7 +4712,7 @@ sub_0064EC:
 	lea.l (sub_0064F2,pc),a0
 	rts
 sub_0064F2:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xe2c6,(0x20,a6)
@@ -4860,7 +4860,7 @@ sub_0066B4:
 	lea.l (sub_0066BA,pc),a0
 	rts
 sub_0066BA:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0x151cc,(0x20,a6)
@@ -4906,7 +4906,7 @@ sub_006730:
 	lea.l (sub_00673E,pc),a0
 	rts
 sub_00673E:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xe314,(0x20,a6)
@@ -4927,7 +4927,7 @@ sub_006770:
 	lea.l (sub_00677E,pc),a0
 	rts
 sub_00677E:
-	jsr (sub_00735A,pc)
+	jsr (AddScore5000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xe7c0,(0x20,a6)
@@ -4944,7 +4944,7 @@ sub_0067D2:
 	lea.l (sub_0067D8,pc),a0
 	rts
 sub_0067D8:
-	jsr (sub_007314,pc)
+	jsr (AddScore750,pc)
 	move.l #0xf65a,(0x20,a6)
 	addq.w #0x1,(0x3c,a4)
 	rts
@@ -4961,7 +4961,7 @@ sub_006806:
 	lea.l (sub_00680C,pc),a0
 	rts
 sub_00680C:
-	jsr (sub_007322,pc)
+	jsr (AddScore1000,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xed2e,(0x20,a6)
@@ -5081,7 +5081,7 @@ loc_00699C:
 	lea.l (sub_0069A2,pc),a0
 	rts
 sub_0069A2:
-	jsr (sub_007314,pc)
+	jsr (AddScore750,pc)
 	move.l #0xe0a4,(0x20,a6)
 	addq.w #0x1,(0x3c,a4)
 	rts
@@ -5096,7 +5096,7 @@ sub_0069C8:
 	lea.l (sub_0069CE,pc),a0
 	rts
 sub_0069CE:
-	jsr (sub_007330,pc)
+	jsr (AddScore1250,pc)
 	bclr.b #0xf,d5
 	move.w d5,(a6)
 	move.l #0xf436,(0x20,a6)
@@ -5175,7 +5175,7 @@ sub_006B74:
 	lea.l (sub_006B7A,pc),a0
 	rts
 sub_006B7A:
-	jsr (sub_007314,pc)
+	jsr (AddScore750,pc)
 	tst.l (0xffff9eda).l
 	bne.s loc_006B8C
 	jsr (sub_01016C).l
@@ -5324,7 +5324,7 @@ sub_006E52:
 	lea.l (dat_006E88,pc),a3
 	jmp (HitBox,pc)
 sub_006E66:
-	jsr (sub_007322,pc)
+	jsr (AddScore1000,pc)
 	move.l #0x10be4,(0x20,a6)
 	addq.w #0x1,(0xffffa23c).l
 	lea.l (sub_006E7E,pc),a0
@@ -5382,7 +5382,7 @@ sub_006F04:
 	beq.s loc_006F54
 	sub.w (0xffffa0ca).l,d1
 	bgt.s loc_006F50
-	jsr (sub_007314,pc)
+	jsr (AddScore750,pc)
 	clr.w (0x0,a0,d0.w)
 	cmpi.w #0x14,(0xffff80da).l
 	bge.s loc_006F50
@@ -5719,19 +5719,19 @@ AddScore250:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x250,d0
 	bra.w AddScoreBcd
-sub_007306:
+AddScore500:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x500,d0
 	bra.w AddScoreBcd
-sub_007314:
+AddScore750:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x750,d0
 	bra.w AddScoreBcd
-sub_007322:
+AddScore1000:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x1000,d0
 	bra.w AddScoreBcd
-sub_007330:
+AddScore1250:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x1250,d0
 	bra.w AddScoreBcd
@@ -5739,15 +5739,15 @@ AddScore2000:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x2000,d0
 	bra.w AddScoreBcd
-sub_00734C:
+AddScore4000:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x4000,d0
 	bra.w AddScoreBcd
-sub_00735A:
+AddScore5000:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x5000,d0
 	bra.w AddScoreBcd
-sub_007368:
+AddScore10000:
 	movem.l d0/a0-a1,-(sp)
 	move.l #0x10000,d0
 	bra.w AddScoreBcd
