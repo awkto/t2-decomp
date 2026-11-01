@@ -49,7 +49,8 @@ The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0
 `ReadPad2` ($008908), `ReadInput` ($0003DE), `ReadInputAim` ($0004B6), `PadMoveCrosshair`
 ($0005FC), `QueueCrosshair` ($00071C),
 `AddScoreBcd` ($007376), the `AddScore250..10000` entries
-($0072F8..$007368) and `BcdAdd` ($007A92).
+($0072F8..$007368), `BcdAdd` ($007A92), `QueueSprite` ($013240),
+`ObjQueueSprite` ($013228) and `BuildSpriteTable` ($013272).
 
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
@@ -138,6 +139,39 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | $007376 | AddScoreBcd | game/score.c | 270/270 states equal (P1=200, P2=70; 63 with a BCD carry; the skip path 270/270 with `--poke W:FF8024=0xFFFF,W:FF8074=0xFFFF`) |
 | $0072F8..$007368 | AddScore250..10000 | game/score.c | 200/200 for 250/500/750; 78/78, 79/79, 12/12, 3/3, 2/2, 1/1 for 1000/5000/4000/2000/1250/10000 (their real call counts; the same 14-byte stub, proven by AddScoreBcd) |
 | $007A92 | BcdAdd | game/score.c | 200/200 states equal (d3 = 1,2,6,7; a deliberate wrong carry fixup is caught) |
+| $013240 | QueueSprite | game/sprite.c | 600/600 states equal (180 cycles, constant) |
+| $013228 | ObjQueueSprite | game/sprite.c | 600/600 states equal (278 cycles; calls the C `QueueSprite`) |
+| $013272 | BuildSpriteTable | game/sprite.c | 1300/1300 states equal (a deliberate descending sort is caught; exact per-path cycle charge) |
+
+`QueueSprite`/`ObjQueueSprite`/`BuildSpriteTable` are in `game/sprite.c` (docs/subsystems/sprite.md).
+`QueueSprite` (`$013240`) appends one entry to `spr_queue_args` `$FFA318` and an (index, priority)
+pair to `spr_queue` `$FFA250`; `ObjQueueSprite` (`$013228`) is the object form (X/Y from `(a6)`,
+priority = depth `(a6+7)`) and, since the C `QueueSprite` is proven equivalent, calls it directly
+(the nested call's registers/flags/RAM are exactly the `jsr`'s). `BuildSpriteTable` (`$013272`)
+reproduces the stable bubble sort of the pairs by the priority byte (equal priorities are NOT
+swapped), the `SpriteMappings` `$0152A8` expansion, the `bset.b #7`/`bclr.b #7` priority-bit rules
+(`sprite_prio_depth` `$FF9EB8`, Y >= `$141`), the 79-piece cap and the list command 1
+(count `d6*4` words, `spr_table` -> VRAM `$F400`) queued at `vdp_list_ptr` `$FF80BC`; an empty queue
+writes one dummy entry (Y and link only). It mirrors every clobbered register (a0-a5, the high words
+of d2/d3/d5, GPGX's `movem.w` sign-extension into the whole register) and the final flags
+(`move.l a5,(vdp_list_ptr).l`: N/Z from a5, V=C=0; X from the `asl.w #2,d6`).
+
+Cycles: `QueueSprite`/`ObjQueueSprite` are straight-line (180/278). `BuildSpriteTable`'s cost varies
+by path (258 empty .. 58618 on the captures), so its charge is summed per instruction as it executes
+(GPGX 68000 table + movem/shift/bcc/dbcc extras; `T2_SPRITE_STATS=1` prints the split). It matches the
+sandbox-measured original exactly on 1298/1300 states and within -112/-18 cycles on the other two
+(GPGX's memory-refresh `+2` every 128 cycles, which depends on the absolute cycle phase). Captures:
+the default `capture.txt`, `capture_score.txt`/`capture_score2p.txt` (the busy pad-bot runs; 2P hits
+the 79-piece cap) and `capture_bcdadd.txt` (the level-skip run reaches the empty-queue path), merged
+into `runs/states/013272`; `port/scripts/capture_sprite_prio.txt` forces `sprite_prio_depth = 1` so a
+crosshair piece (priority 1) sits exactly on the `<= depth` boundary, which normal play (depth 14..16)
+never reaches. A deliberate `<=` -> `<` bug there is caught only with that capture; a descending-sort
+bug is caught by 902/1200 of the default states. `hle.c`'s `STALL_SLICE` is 256 (below the ~488-cycle
+scanline): a 1000-cycle slice overshoots the line boundary, so the next `m68k_run()` returns early
+(`cycles >= cycle_end`) and skips its interrupt check - with `BuildSpriteTable`'s large charge that
+dropped the Menacer TH latch on the gun's line and broke `mousetest grid`'s aim (the same slicing
+problem `game/menacer.c` works around for `MenacerReadXY`). difftest is unaffected (the sandbox never
+slices).
 
 `AddScoreBcd`/`AddScore*`/`BcdAdd` are in `game/score.c`. `AddScoreBcd` (`$007376`) adds a 4-byte
 BCD value to `p1_score`/`p2_score` (`$FF9EA8`/`$FF9EB0`); the destination is chosen by the player
