@@ -45,8 +45,9 @@ must use `+` (as above); the ini form is the same (`hle = all` or `hle = Random+
 `~/.config/t2-decomp/t2.ini`. At startup t2port prints the active set on stderr, e.g.
 `hle: 2 active: MenacerReadXY ($01E442), Random ($00881C)` (or `hle: 0 active: (none)`).
 
-The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0088A0) and
-`ReadPad2` ($008908).
+The registry holds `Random` ($00881C), `MenacerReadXY` ($01E442), `ReadPad1` ($0088A0),
+`ReadPad2` ($008908), `AddScoreBcd` ($007376), the `AddScore250..10000` entries
+($0072F8..$007368) and `BcdAdd` ($007A92).
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
 before the CPU is hooked, so it agrees with the in-memory ROM patch) it runs the $01E460 patch
@@ -127,6 +128,39 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 | $01E442 | MenacerReadXY | game/menacer.c | 200/200 states equal, `--aim game` and `--aim fast` (a deliberate wrong divisor is caught) |
 | $0088A0 | ReadPad1 | game/pads.c | 200/200 states equal (a deliberate missing `not.b` is caught) |
 | $008908 | ReadPad2 | game/pads.c | 200/200 states equal (a deliberate missing `not.b` is caught) |
+| $007376 | AddScoreBcd | game/score.c | 270/270 states equal (P1=200, P2=70; 63 with a BCD carry; the skip path 270/270 with `--poke W:FF8024=0xFFFF,W:FF8074=0xFFFF`) |
+| $0072F8..$007368 | AddScore250..10000 | game/score.c | 200/200 for 250/500/750; 78/78, 79/79, 12/12, 3/3, 2/2, 1/1 for 1000/5000/4000/2000/1250/10000 (their real call counts; the same 14-byte stub, proven by AddScoreBcd) |
+| $007A92 | BcdAdd | game/score.c | 200/200 states equal (d3 = 1,2,6,7; a deliberate wrong carry fixup is caught) |
+
+`AddScoreBcd`/`AddScore*`/`BcdAdd` are in `game/score.c`. `AddScoreBcd` (`$007376`) adds a 4-byte
+BCD value to `p1_score`/`p2_score` (`$FF9EA8`/`$FF9EB0`); the destination is chosen by the player
+index at `(a4+$24)` (negative = skip, zero = P1, else P2). The four `abcd -(a1),-(a0)` bytes
+reproduce GPGX's `m68k_op_abcd_8_mm` exactly: X=C=decimal carry, Z only ever cleared, and the core's
+"undefined" N/V formulas (`V = (~r2) & r3`, N from bit 7 of the result). Note the frame: the 14-byte
+entry stubs (`$0072F8`..`$007368`: `movem.l d0/a0-a1,-(sp)` + `move.l #VALUE,d0` + `bra.w
+AddScoreBcd`) push d0/a0/a1 and `AddScoreBcd` pops them, so a state captured at `$007376` has the
+stubs' frame at SP and the routine leaves with SP = entry+16. difftest's plain-function model (return
+at `[SP]`, exit SP = entry+4) does not fit, so `AddScoreBcd` is an `HLE_RANGE` that stops at `$00739A`
+(just before the epilogue `movem/rts`, which then runs as 68k); the stubs call the shared C body
+directly. `$007306` (AddScore500) is referenced nowhere in the ROM (data/functions.txt, xref): it is
+dead code, so no state can be captured at its address. Its `runs/states/007306` dir holds the
+`$0072F8` captures with the saved entry PC redirected to `$007306` (the GPGX m68k PC is at byte
+offset 144468 of the state blob, little-endian; the same redirection `--entry` performs), so a plain
+`dt AddScore500` works; the calling context is identical and only the immediate differs.
+
+`BcdAdd` (`$007A92`) is not BCD addition: it converts d4 into `d3+1` ASCII decimal digits at
+`$FFA0BA` (most significant first, NUL-terminated), calling the helper `sub_007AD4` (`d0 *= 10`)
+`d3` times; that helper is inlined in the C version. Only `$FFA0BA..` and the flags are observable
+(d0-d7/a1 are saved/restored), and the last flag-setting instruction is `clr.b` (N=0,Z=1,V=C=0).
+
+Captures. `port/scripts/capture_score.txt` (level 5, 1P joypad `pad_05`) and
+`port/scripts/capture_score2p.txt` (2P mode 0, `2p_gun_05`, P1 mouse off + the P2 pad replayed) are
+the recorded input of the headless harness' pad-bot (`botcfg p1 pad1` / `p2 pad1` with `GUN=1` on
+port 2), replayed through the port's `press` commands; both runs score many kills. The two pad-bot
+routes give AddScoreBcd 312 (1P) and 70 (2P, all the a4=P2 branch) calls. `port/scripts/capture_bcdadd.txt`
+is a level-skip run through levels 1..8 whose end-of-level tally screens call BcdAdd 208 times
+(d3 = 1,2,6,7). The `T2_SCORE_STATS=1` env prints the P1/P2/skip/carry and d3 counts of a run.
+
 
 `ReadPad1`/`ReadPad2` share `read_pad()` in `game/pads.c`: the Z80 bus request/BUSACK spin, the
 TH=0 and TH=1 reads of the port data register, the active-low invert, the button word/previous
