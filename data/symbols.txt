@@ -194,3 +194,32 @@
 00E9C4 MillEndFade            # last object of level 8: fade, then level_exit = 1 (-> Ending)
 010E82 HeliPassCheck          # level 7: helicopter at X >= $88 with <= 4 hits this pass ($FFA23E) -> the run fails
 011B10 T1000FrozenCheck       # level 8: t1000_frozen set -> frozen AI $011A90 (he shatters, script $020DB2)
+
+# --- object types (opencode). Evidence: docs/objects_types.md (level-by-level screenshot + RAM-dump match)
+0059AC hit_endoskeleton        # type $01/$1D foot soldier: head box (instant kill) + body box
+00B586 ai_endoskeleton_walk    # type $01 endoskeleton walk state (level 1)
+00C564 ai_endoskeleton_walk2   # type $01 endoskeleton walk state (spawn_t01d, level 1)
+005BEC hit_endoskeleton2       # type $01 hit test used with ai_endoskeleton_walk2
+00597C hit_destructible_prop   # type $0F crate / generic destructible prop
+00C886 ai_crate                # type $0F crate (level 1)
+005F56 hit_wall_section        # type $14 destructible wall section (multi-box by +$2A)
+00CA0A ai_wall_section         # type $14 idle state; kill state $00CA12 writes replacement tiles
+00C9A2 ai_human_soldier        # type $13 level-1 human resistance soldier (hit = HitHumanSoldier)
+006126 hit_hk_tank_body        # type $16 HK tank boss body (hp 1120)
+00CB9E ai_hk_tank_body         # type $16 HK tank boss body
+006174 hit_hk_tank_hull        # type $17 HK tank boss hull (hp 900)
+00CDFE ai_hk_tank_hull         # type $17 HK tank boss hull
+0061CA hit_hk_tank_turret      # type $18 HK tank boss turret (hp 635)
+00CE46 ai_hk_tank_turret       # type $18 HK tank boss turret
+006208 hit_hk_tank_arm         # type $19 HK tank boss arm (hp 750)
+00CF9E ai_hk_tank_arm          # type $19 HK tank boss arm
+005CEE hit_flying_hk           # type $0E flying HK (aerial), level 3
+00C0E8 ai_flying_hk            # type $0E flying HK (aerial)
+0067F2 hit_endoskeleton_popup  # type $29 endoskeleton that rises out of the floor
+00EC58 ai_endoskeleton_popup   # type $29 rise-from-floor state (-> $00EC82 fire)
+006894 hit_infiltrator         # type $26 endoskeleton infiltrator (level 2 hideout)
+00EFA4 ai_infiltrator          # type $26 infiltrator walk state
+0069EE hit_cyberdyne_equipment # type $0F Cyberdyne lab equipment (level 5/6)
+00F8A2 ai_cyberdyne_equipment  # type $0F Cyberdyne lab equipment
+00675E hit_skynet_cpu          # type $25 Skynet CPU parts
+00E746 ai_skynet_cpu           # type $25 Skynet CPU parts

@@ -119,10 +119,10 @@
 005892 ShotHitTest -> -
 005940 HitBox -> -
 00597a sub_00597A -> -
-00597c sub_00597C -> HitBox^
+00597c hit_destructible_prop -> HitBox^
 005988 sub_005988 -> -
 00598e sub_00598E -> -
-0059ac sub_0059AC -> HitBox
+0059ac hit_endoskeleton -> HitBox
 0059e6 sub_0059E6 -> AddScore250
 005a00 sub_005A00 -> -
 005a02 sub_005A02 -> -
@@ -142,13 +142,13 @@
 005b2e sub_005B2E -> sub_01275A
 005b56 sub_005B56 -> sub_005BBE sub_012A46
 005bbe sub_005BBE -> sub_007322
-005bec sub_005BEC -> HitBox^
+005bec hit_endoskeleton2 -> HitBox^
 005c0a sub_005C0A -> -
 005c10 sub_005C10 -> sub_005A24 AddScore250
 005cc6 sub_005CC6 -> HitBox^
 005cd2 sub_005CD2 -> -
 005cd8 sub_005CD8 -> sub_005DA2
-005cee sub_005CEE -> HitBox^
+005cee hit_flying_hk -> HitBox^
 005d9c sub_005D9C -> -
 005da2 sub_005DA2 -> sub_00735A
 005dc0 sub_005DC0 -> HitBox^
@@ -173,7 +173,7 @@
 005f1a sub_005F1A -> sub_013DA8
 005f32 sub_005F32 -> -
 005f34 sub_005F34 -> SetPlayerState
-005f56 sub_005F56 -> HitBox HitBox^
+005f56 hit_wall_section -> HitBox HitBox^
 005f7a sub_005F7A -> -
 005f80 sub_005F80 -> -
 005fde sub_005FDE -> -
@@ -186,16 +186,16 @@
 0060f4 sub_0060F4 -> HitBox^
 006100 sub_006100 -> -
 006106 sub_006106 -> AddScore2000
-006126 sub_006126 -> HitBox^
+006126 hit_hk_tank_body -> HitBox^
 006146 sub_006146 -> sub_006252 sub_0072B2
 006154 sub_006154 -> sub_007368
-006174 sub_006174 -> HitBox^
+006174 hit_hk_tank_hull -> HitBox^
 006194 sub_006194 -> sub_006252 sub_0072B2
 0061a2 sub_0061A2 -> sub_00735A
-0061ca sub_0061CA -> HitBox^
+0061ca hit_hk_tank_turret -> HitBox^
 0061d6 sub_0061D6 -> sub_006252 sub_0072B2
 0061e4 sub_0061E4 -> sub_00735A
-006208 sub_006208 -> HitBox^
+006208 hit_hk_tank_arm -> HitBox^
 006214 sub_006214 -> sub_006252
 00621e sub_00621E -> sub_00735A
 006252 sub_006252 -> sub_0124EC
@@ -271,20 +271,20 @@
 006724 sub_006724 -> HitBox^
 006730 sub_006730 -> sub_006252 sub_0072B2
 00673e sub_00673E -> sub_00735A
-00675e sub_00675E -> HitBox^
+00675e hit_skynet_cpu -> HitBox^
 006770 sub_006770 -> sub_006252 sub_0072B2
 00677e sub_00677E -> sub_00735A
 0067c6 sub_0067C6 -> HitBox^
 0067d2 sub_0067D2 -> -
 0067d8 sub_0067D8 -> sub_007314
-0067f2 sub_0067F2 -> HitBox HitBox^
+0067f2 hit_endoskeleton_popup -> HitBox HitBox^
 006806 sub_006806 -> -
 00680c sub_00680C -> sub_007322
 00683a sub_00683A -> HitBox^
 006846 sub_006846 -> -
 00684c sub_00684C -> sub_006870 AddScore250
 006870 sub_006870 -> -
-006894 sub_006894 -> HitBox^
+006894 hit_infiltrator -> HitBox^
 0068a0 sub_0068A0 -> -
 0068a6 sub_0068A6 -> sub_006870 AddScore250
 0068ca sub_0068CA -> HitBox^
@@ -296,7 +296,7 @@
 0069bc sub_0069BC -> HitBox^
 0069c8 sub_0069C8 -> -
 0069ce sub_0069CE -> sub_007330
-0069ee sub_0069EE -> HitBox^
+0069ee hit_cyberdyne_equipment -> HitBox^
 006a00 sub_006A00 -> -
 006a06 sub_006A06 -> sub_0072CE
 006ae0 sub_006AE0 -> HitBox^
@@ -644,7 +644,7 @@
 00b4de sub_00B4DE -> ObjNext^ ObjScrollX ObjQueueSprite
 00b504 sub_00B504 -> sub_01277C
 00b52e sub_00B52E -> ObjNext^ ObjKillIfLeftOf QueueSprite
-00b586 sub_00B586 -> ObjMoveX sub_00B5E8^ ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
+00b586 ai_endoskeleton_walk -> ObjMoveX sub_00B5E8^ ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
 00b5c2 sub_00B5C2 -> sub_00B5E8^
 00b5e8 sub_00B5E8 -> ObjNext^
 00b5ec sub_00B5EC -> sub_009054 ObjNext^ sub_00C652 ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite sub_013D04
@@ -697,7 +697,7 @@
 00c05a sub_00C05A -> -
 00c080 sub_00C080 -> -
 00c0aa sub_00C0AA -> sub_009078 ObjNext^ ObjQueueSprite
-00c0e8 sub_00C0E8 -> sub_009078 ObjNext^ VdpQueueTileRect sub_01227A sub_013D04
+00c0e8 ai_flying_hk -> sub_009078 ObjNext^ VdpQueueTileRect sub_01227A sub_013D04
 00c1e6 sub_00C1E6 -> VdpQueueTileRect
 00c20a sub_00C20A -> -
 00c242 sub_00C242 -> ObjNext^ sub_00C1E6
@@ -714,7 +714,7 @@
 00c4ea sub_00C4EA -> -
 00c4f4 sub_00C4F4 -> Random ObjNext^ sub_012560 ObjQueueSprite
 00c54a sub_00C54A -> ObjNext^ sub_01254E
-00c564 sub_00C564 -> ObjNext^ sub_00C48E ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
+00c564 ai_endoskeleton_walk2 -> ObjNext^ sub_00C48E ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
 00c5e2 sub_00C5E2 -> ObjNext^ sub_00B5C2^ sub_00C652 ObjQueueSprite
 00c652 sub_00C652 -> Random
 00c66c sub_00C66C -> ObjScrollX
@@ -724,7 +724,7 @@
 00c802 sub_00C802 -> sub_00C8A8^
 00c826 sub_00C826 -> sub_00C8A8^
 00c846 sub_00C846 -> sub_00C8A8^
-00c886 sub_00C886 -> sub_00C8A8^
+00c886 ai_crate -> sub_00C8A8^
 00c8a8 sub_00C8A8 -> ObjNext^ ObjScrollX ObjKillIfLeftOf ObjQueueSprite
 00c8ba sub_00C8BA -> sub_00C8A8^ sub_012A16
 00c8f0 sub_00C8F0 -> sub_00C8A8^
@@ -732,17 +732,17 @@
 00c95e sub_00C95E -> sub_00C99A^
 00c968 sub_00C968 -> sub_00C9B8^ sub_00C9E6^ ObjScrollX
 00c99a sub_00C99A -> sub_00C9C2^
-00c9a2 sub_00C9A2 -> sub_00C9E6^ ObjScrollX
+00c9a2 ai_human_soldier -> sub_00C9E6^ ObjScrollX
 00c9b8 sub_00C9B8 -> -
 00c9c2 sub_00C9C2 -> VdpQueueTileRect
 00c9e6 sub_00C9E6 -> ObjNext^
 00c9ea sub_00C9EA -> -
-00ca0a sub_00CA0A -> ObjNext^ ObjScrollX
+00ca0a ai_wall_section -> ObjNext^ ObjScrollX
 00ca12 sub_00CA12 -> ObjNext^ VdpQueueTileRect sub_01254E sub_01276C sub_012772
 00caba sub_00CABA -> sub_009A02 ObjNext^ ObjScrollX ObjKillIfLeftOf ObjQueueSprite
 00cafc sub_00CAFC -> ObjNext^ sub_01253C
 00cb34 sub_00CB34 -> sub_0081B6 Random sub_00CBE8^ sub_00CD66
-00cb9e sub_00CB9E -> Random sub_00CBE8^ sub_00CD66
+00cb9e ai_hk_tank_body -> Random sub_00CBE8^ sub_00CD66
 00cbe8 sub_00CBE8 -> ObjNext^ sub_00CC3C sub_00CC6A
 00cc3c sub_00CC3C -> VdpQueueTileRect
 00cc6a sub_00CC6A -> sub_01227A
@@ -754,14 +754,14 @@
 00cdb0 sub_00CDB0 -> -
 00cdc2 sub_00CDC2 -> sub_009A02 sub_00CD88^ sub_00CDFC^
 00cdfc sub_00CDFC -> -
-00cdfe sub_00CDFE -> ObjNext^
+00cdfe ai_hk_tank_hull -> ObjNext^
 00ce0c sub_00CE0C -> ObjNext^ VdpQueueTileRect
 00ce42 sub_00CE42 -> ObjNext^
-00ce46 sub_00CE46 -> ObjNext^ sub_00CF58 VdpQueueTileRect sub_01227A
+00ce46 ai_hk_tank_turret -> ObjNext^ sub_00CF58 VdpQueueTileRect sub_01227A
 00cec4 sub_00CEC4 -> ObjNext^ VdpQueueTileRect
 00cefa sub_00CEFA -> ObjNext^ VdpQueueFillRows sub_012494
 00cf58 sub_00CF58 -> Random sub_0099D4
-00cf9e sub_00CF9E -> ObjNext^ ObjQueueSprite
+00cf9e ai_hk_tank_arm -> ObjNext^ ObjQueueSprite
 00cfde sub_00CFDE -> ObjNext^ VdpQueueTileRect sub_01227A
 00d024 sub_00D024 -> ObjNext^
 00d028 sub_00D028 -> ObjNext^ sub_00C48E ObjQueueSprite
@@ -849,7 +849,7 @@
 00e546 sub_00E546 -> ObjNext^ QueueSprite sub_013D04
 00e5a6 sub_00E5A6 -> ObjAlloc ObjNext^
 00e72e sub_00E72E -> ObjNext^ sub_013DD4
-00e746 sub_00E746 -> ObjNext^
+00e746 ai_skynet_cpu -> ObjNext^
 00e74a sub_00E74A -> Random sub_009A02 ObjNext^
 00e79e sub_00E79E -> Random ObjNext^
 00e7c0 sub_00E7C0 -> ObjNext^ VdpQueueTileRect sub_01227A sub_01253C
@@ -883,7 +883,7 @@
 00ebfe sub_00EBFE -> sub_00EC16^
 00ec16 sub_00EC16 -> ObjNext^ ObjScrollX ObjKillIfLeftOf ObjQueueSprite
 00ec28 sub_00EC28 -> ObjNext^ sub_01274E
-00ec58 sub_00EC58 -> ObjNext^ ObjQueueSprite
+00ec58 ai_endoskeleton_popup -> ObjNext^ ObjQueueSprite
 00ec82 sub_00EC82 -> sub_009054 ObjNext^ sub_00ED04 ObjScrollX ObjKillIfLeftOf ObjQueueSprite sub_013D04
 00ece8 sub_00ECE8 -> ObjNext^ sub_00ED04
 00ed04 sub_00ED04 -> ObjQueueSprite
@@ -895,7 +895,7 @@
 00eeb0 sub_00EEB0 -> ObjNext^ ObjScrollX ObjQueueSprite
 00eed4 sub_00EED4 -> -
 00ef0a sub_00EF0A -> ObjNext^ sub_00D236 ObjScrollX ObjQueueSprite
-00efa4 sub_00EFA4 -> ObjNext^ ObjMoveX ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
+00efa4 ai_infiltrator -> ObjNext^ ObjMoveX ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
 00effe sub_00EFFE -> sub_009054 ObjNext^ sub_00F170 ObjScrollX ObjQueueSprite sub_013D04
 00f066 sub_00F066 -> sub_00F0FA^ ObjScrollX
 00f094 sub_00F094 -> -
@@ -935,7 +935,7 @@
 00f83e sub_00F83E -> ObjNext^ ObjQueueSprite
 00f86c sub_00F86C -> ObjNext^ ObjScrollX ObjQueueSprite
 00f89e sub_00F89E -> -
-00f8a2 sub_00F8A2 -> ObjNext^ ObjScrollX ObjKillIfLeftOf ObjQueueSprite
+00f8a2 ai_cyberdyne_equipment -> ObjNext^ ObjScrollX ObjKillIfLeftOf ObjQueueSprite
 00f8e2 sub_00F8E2 -> -
 00f8ea sub_00F8EA -> Random sub_0092A8 ObjNext^ VdpQueueTileRect sub_0124EC sub_01277C sub_012A46
 00fb52 sub_00FB52 -> -
