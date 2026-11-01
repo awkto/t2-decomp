@@ -34,6 +34,54 @@ AS = ["m68k-linux-gnu-as", "-m68000", "--register-prefix-optional"]
 
 END_MNEMONICS = {"rts", "rte", "rtr", "bra", "jmp", "illegal"}
 
+BCD_MNEMONICS = {"sbcd", "abcd"}
+
+
+class FixedInsn:
+    """A capstone CsInsn with size/mnemonic/operands overridden.
+
+    Used for capstone's SBCD -(An),-(An) mis-decode (see fix_bcd); size and
+    mnemonic are read-only on CsInsn, so delegate everything else to it.
+    """
+
+    def __init__(self, insn, size, mnemonic, operands, op_str):
+        self._insn = insn
+        self._size = size
+        self._mnemonic = mnemonic
+        self._operands = operands
+        self._op_str = op_str
+
+    def __getattr__(self, name):
+        return getattr(self._insn, name)
+
+    size = property(lambda self: self._size)
+    mnemonic = property(lambda self: self._mnemonic)
+    operands = property(lambda self: self._operands)
+    op_str = property(lambda self: self._op_str)
+
+
+def fix_bcd(insn):
+    """Correct capstone's SBCD -(An),-(An) mis-decode.
+
+    On the 68000 SBCD/ABCD are always 2 bytes, but capstone decodes the
+    memory-to-memory SBCD form as 4 bytes and appends a bogus immediate
+    operand.  Drop the extra operand and force size 2, so the next
+    instruction is decoded from address+2.
+    """
+    if insn.mnemonic.split(".")[0] in BCD_MNEMONICS and insn.size != 2:
+        mnemonic = insn.mnemonic if "." in insn.mnemonic else insn.mnemonic + ".b"
+        return FixedInsn(insn, 2, mnemonic, insn.operands[:2], insn.op_str.rsplit(",", 1)[0])
+    return insn
+
+
+def decode(md, rom, pc):
+    """Decode one instruction at pc, or None; applies fix_bcd."""
+    try:
+        insn = next(md.disasm(rom[pc:pc + 10], pc, 1))
+    except StopIteration:
+        return None
+    return fix_bcd(insn)
+
 
 def load_seeds():
     seeds = {}
@@ -62,9 +110,8 @@ def trace(rom, md, entries, quiet=()):
         while pc < len(rom) and pc not in insns:
             if pc & 1:
                 break
-            try:
-                insn = next(md.disasm(rom[pc:pc + 10], pc, 1))
-            except StopIteration:
+            insn = decode(md, rom, pc)
+            if insn is None:
                 break
             if insn.mnemonic == "dc.w":
                 print(f"warning: invalid opcode traced at 0x{pc:06x}", file=sys.stderr)
@@ -90,9 +137,8 @@ def try_block(rom, md, start, end, dataread):
     while pc < end:
         if dataread[pc] or dataread[pc + 1]:
             return False
-        try:
-            insn = next(md.disasm(rom[pc:pc + 10], pc, 1))
-        except StopIteration:
+        insn = decode(md, rom, pc)
+        if insn is None:
             return False
         if insn.mnemonic == "dc.w":   # capstone's marker for an invalid opcode
             return False

@@ -392,10 +392,10 @@
 007c10     8 sub_007C10  # 2 insns
 007c18     6 sub_007C18  # 1 insns
 007c1e    14 sub_007C1E  # 6 insns
-007c2c    20 sub_007C2C  # 5 insns
+007c2c    20 sub_007C2C  # 6 insns
 007c40    20 sub_007C40  # 6 insns
 007c54    20 sub_007C54  # 5 insns
-007c68    20 sub_007C68  # 6 insns
+007c68    20 sub_007C68  # 7 insns
 007c7c    10 sub_007C7C  # 4 insns
 007c86    10 sub_007C86  # 3 insns
 007c90    10 sub_007C90  # 4 insns

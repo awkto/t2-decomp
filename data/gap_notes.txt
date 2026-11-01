@@ -18,5 +18,5 @@
 #       only via MenuModeTable row 4: unreachable in normal play
 #   $012108, $0129B0, $011EC4 VramFillDma, $00BE94,    not reached by any run; why (which situation calls
 #   $008C8E parts, $00807C, $0046C6                    them) is not worked out yet: classified "unknown"
-#   $007C10 (8 bytes), $007C3E/$007C78               BCD helpers; the two "stray" starts are rts after an
-#       sbcd that capstone decodes as 4 bytes (disassembler issue, the bytes still round-trip)
+#   $007C10 (8 bytes)                                 BCD helper entry; never reached (it falls into the
+#       shared abcd sequence at $007C1E)
