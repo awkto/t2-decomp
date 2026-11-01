@@ -1,0 +1,104 @@
+# ReadPad1 ($0088A0) capture: 1P joypad (control_mode 5) at the start of level 5, then hold
+# pad 1 in many combinations so the TH read sees changing U/D/L/R/B/C/A/Start bits. ReadPad1 is
+# called from the game loop (ReadInputAim) and from the pause loop every frame. Each `peek pad1
+# FF8050 2` logs the button word the game just read (peek.log in the capture output dir).
+load states/pad_05.state
+run 20
+hold U
+run 6
+peek pad1 FF8000 2
+hold D
+run 6
+peek pad1 FF8000 2
+hold L
+run 6
+peek pad1 FF8000 2
+hold R
+run 6
+peek pad1 FF8000 2
+hold A
+run 6
+peek pad1 FF8000 2
+hold B
+run 6
+peek pad1 FF8000 2
+hold C
+run 6
+peek pad1 FF8000 2
+hold UDLR
+run 6
+peek pad1 FF8000 2
+hold ABC
+run 6
+peek pad1 FF8000 2
+hold UABC
+run 6
+peek pad1 FF8000 2
+hold DLR
+run 6
+peek pad1 FF8000 2
+hold UDLRABC
+run 8
+peek pad1 FF8000 2
+hold UR
+run 5
+peek pad1 FF8000 2
+hold DL
+run 5
+peek pad1 FF8000 2
+hold AC
+run 5
+peek pad1 FF8000 2
+hold UB
+run 5
+peek pad1 FF8000 2
+hold DC
+run 5
+peek pad1 FF8000 2
+hold LR
+run 5
+peek pad1 FF8000 2
+hold AB
+run 5
+peek pad1 FF8000 2
+hold BC
+run 5
+peek pad1 FF8000 2
+hold S
+run 4
+peek pad1 FF8000 2
+hold -
+run 4
+peek pad1 FF8000 2
+hold UDLRABC
+run 8
+peek pad1 FF8000 2
+hold -
+run 4
+peek pad1 FF8000 2
+hold U
+run 6
+peek pad1 FF8000 2
+hold D
+run 6
+peek pad1 FF8000 2
+hold L
+run 6
+peek pad1 FF8000 2
+hold R
+run 6
+peek pad1 FF8000 2
+hold A
+run 6
+peek pad1 FF8000 2
+hold B
+run 6
+peek pad1 FF8000 2
+hold C
+run 6
+peek pad1 FF8000 2
+hold UDLRABC
+run 8
+peek pad1 FF8000 2
+hold -
+run 200
