@@ -258,14 +258,26 @@ HLE_RANGE(0x00E9FA, PalCycle, 112, 0x00EA1E)
 }
 
 /* ------------------------------------------------------------------ PalFade $008A4C */
-/* The body after the two WaitVBlank calls: the delay (only d0 is observable, and
- * CramUpload overwrites it anyway), CramUpload of pal_cur, then loop back or rts on
- * pal_fading. The original's whole range costs 4895 cycles: the delay is ~1430 and the
- * nested CramUpload ~3443, so ctx->cycles carries only the ~1452 non-nested part (the
- * layer adds the nested call's time to the charge, hle.h "Cycle accounting"). */
-HLE_RANGE(0x008A5E, PalFade, 1452, 0x008A4C, 0x008A7A)
+/* Run the original 68k from `start` up to `stop` (a timing-sensitive point: the delay and
+ * then CramUpload must happen at the real raster time), then leave ctx at `stop` for C. */
+static void pal_run_to(hle_ctx *ctx, uint32_t start, uint32_t stop)
 {
-	ctx->d[0] = 0x0000FFFF;              /* moveq #$64,d0 + the nop/dbra delay */
+	uint32_t exits[2] = { stop, 0 };
+	ctx->pc = start;
+	hle_run68k_until(ctx, exits);
+	ctx->jumped = 0;
+	ctx->pc = stop;
+}
+
+/* The body after the two WaitVBlank calls: the moveq #$64 + 101-iteration nop/dbra delay
+ * (only d0 is observable and CramUpload overwrites it, but its ~1422 cycles are real timing:
+ * CramUpload polls the VDP status and must run after them, so the delay is run as 68k with
+ * hle_run68k_until), then lea.l (abs).l,a0 (12), jsr (CramUpload).l (20, its own time added
+ * by the layer), tst.b (abs).l (16) and the bne.s (10 back to $008A4C / 8 not taken, falling
+ * to the rts at $008A7A): 58 or 56 non-nested cycles. */
+HLE_RANGE(0x008A5E, PalFade, 58, 0x008A4C, 0x008A7A)
+{
+	pal_run_to(ctx, 0x008A5E, 0x008A66); /* moveq #$64,d0 + the nop/dbra delay, as 68k */
 	ctx->a[0] = PAL_CUR;                 /* lea.l (pal_cur).l,a0 */
 	hle_call68k(ctx, CRAM_UPLOAD);       /* jsr (CramUpload).l */
 	uint8_t f = RAM8(PAL_FADING);
@@ -273,10 +285,12 @@ HLE_RANGE(0x008A5E, PalFade, 1452, 0x008A4C, 0x008A7A)
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C,
 	       ((f & 0x80) ? CC_N : 0) | (f ? 0 : CC_Z));
 	if (f) {
+		ctx->cycles = 12 + 20 + 16 + 10;   /* bne.s taken */
 		if (palette_stats_on())
 			g_pf_loop++;
 		hle_jump(ctx, 0x008A4C);     /* bne.w PalFade: back to the first WaitVBlank */
 	} else {
+		ctx->cycles = 12 + 20 + 16 + 8;    /* bne.s not taken */
 		if (palette_stats_on())
 			g_pf_done++;
 		hle_jump(ctx, 0x008A7A);     /* fall through to rts */

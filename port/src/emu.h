@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define T2_ROM_SHA1 "85cc1cf3379d3ce23ca3c03d84fe6e2b3adc9c56"
 
@@ -66,6 +67,15 @@ bool emu_state_load_file(const char *path);
 
 bool emu_write_ppm(const char *path);         /* current frame */
 bool emu_write_ram(const char *path);         /* 64 KiB work RAM, 68k byte order */
+
+/* Lockstep gate (port/tools/lockstep.sh): one line per emulated frame with an FNV-1a hash of
+ * work RAM, VRAM, CRAM, VSRAM, VDP registers and a combined hash, plus the raw 68k cycle
+ * counter (diagnostic only, not compared). Two runs from the same savestate with the same
+ * input must produce identical memory hashes every frame. */
+void emu_frame_hash(FILE *f, long frame);
+/* RAM(64K, 68k byte order) | VRAM(64K) | CRAM(128) | VSRAM(128) | VDPREG(32), concatenated.
+ * Used to report the differing addresses once the gate found the first bad frame. */
+bool emu_write_memdump(const char *path);
 
 /* 68k bus-event hook fan-out (cpu_hook of the patched core; tools/difftest, HLE sandbox).
  * type: EMU_HOOK_* (matching core/debug/cpuhook.h's HOOK_M68K_*). */

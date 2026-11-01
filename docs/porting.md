@@ -109,6 +109,9 @@ HLE_FUNC(0x00881C, Random, 192)
 4. **Play-test it:** run a route with `--hle all` and with `--hle none` and check the game still
    behaves (e.g. `port/tools/mousetest.sh build/port/t2port flow`, and the same flow with
    `--hle all`).
+5. **Lockstep gate (required).** difftest only proves one call's *state* equal; it does not check
+   the cycle charge, which is what makes a long run drift. Run the gate on the function alone
+   (below) and require "3000 frames identical" from the default states before trusting it.
 
 `dt` / `difftest` options: `--states DIR`, `--max N`, `--n N` (states to capture),
 `--script FILE` (capture route), `--every K`/`--skip K`, `--ignore-regs d1,a0` and
@@ -130,6 +133,61 @@ aiming and `mouse leave` to also cover the gun-off early exit (`gun_latch_count 
 
     build/port/difftest capture 01E442 200 --script port/scripts/capture_menacer_off.txt --out runs/states/01E442_off
     build/port/difftest run MenacerReadXY --states runs/states/01E442_off      # and --aim fast
+
+## The lockstep gate (`port/tools/lockstep.sh`)
+
+difftest compares the *state* after one call and is blind to the cycle charge; a charge that is
+a few cycles off still shifts when the game finishes its frame relative to VBlank, and after
+~20-80 frames `--hle all` no longer matches `--hle none` (the game's `vblank_count`, and then
+its whole frame, is at a different point). The gate closes that gap:
+
+    port/tools/lockstep.sh                          # --hle all, 3000 frames, six states
+    port/tools/lockstep.sh --hle PalFade            # one function
+    port/tools/lockstep.sh --hle Random --frames 600 --addr
+
+It loads each state under `states/`, plays the same deterministic input (mouse aim/clicks + pad
+buttons) for N frames with `--hle none` and with `--hle SPEC`, and compares, every frame, an
+FNV-1a hash of **live work RAM** (everything below `$FFFFFC00`, i.e. excluding the system stack)
+plus VRAM, CRAM, VSRAM and the VDP registers. `t2port --framehash FILE` writes the per-frame
+hashes (`emu_frame_hash`, port/src/emu.c); two runs are deterministic, so the first line whose
+combined hash differs is the first frame the builds diverge. `--addr` then re-runs both up to
+exactly that frame with `--memdump FILE` and lists the differing bytes by region and address.
+
+The stack is excluded because the HLE layer itself writes below SP (`hle_call68k`'s sentinel
+return address, the `STALL_PC` continuation push): those dead-stack bytes differ between the two
+runs even when the game state is identical, and without the exclusion every function "diverges"
+at frame 1. The six default states are `gun_01 gun_02 gun_04 gun_05 gun_07 title`; the whole gate
+(6 states × 3000 frames × 2 runs) takes ~30 s.
+
+**Cycle charges and the bus refresh.** The charge is the sum of the original instructions' GPGX
+68000 costs. Two systematic errors were found and fixed with the gate:
+
+- **Wrong per-instruction costs.** `game/vdplist.c` had several: `move.w (An)+,(An)` is 12 (not
+  8), `bset/bclr.b #n,(abs).l` is 24 (not 20), `move.w #imm,(d16,An)` is 16 (not 12), `asl.w #2,Dn`
+  is 10 and `jmp (d8,pc,Xn)` is 14 (not 8/12); the jump-table `bra.w` and each handler's closing
+  `bra.w VdpListNext` were not charged; and hscroll's `dbra` loop charged one iteration too many.
+- **The 68k bus refresh.** The original adds 2 cycles every 128 cycles while executing
+  instructions (`refresh_cycles`, m68kcpu.c); a lump C charge did not, so the clock ended short
+  and the frame phase drifted. `run_def` now adds the refresh the C part would have accrued
+  (period 882 mcycles after the first trigger) and advances `refresh_cycles`; `sess_end` rewinds
+  the phase with the clock and returns the nested *base* cycles so refresh is counted once. The
+  model is fine-grained (it assumes the instruction costs are added in arbitrarily small steps),
+  so it can be ±2 cycles off at a refresh boundary - the main residual below.
+
+**Result.** With these fixes `--hle PalFade` alone is identical for 3000 frames from `gun_01` and
+`gun_04` (its delay is now run as 68k so `CramUpload` polls the status at the real raster time);
+on `gun_02`/`gun_05`/`gun_07` a single VRAM byte differs around frames 16-20 (the game state, live
+RAM, stays identical) and on `title` at frame 863. `--hle all` still diverges, now at frames 16-80
+depending on the state. The remaining drift is the VDP command-list path (`VdpListRun`,
+`VdpCmd1CopyWords`, `VdpCmd6TileRect`, `VdpCmd7HScroll`) and, on `gun_02`, a handful of
+input/sprite functions at frames ~670+. `T2_HLE_ORIG=name` runs a
+replacement as the original 68k inside the full frame loop and logs its real cost next to the C
+charge (`T2_HLE_CHARGE=1` logs the charge); for the first two `VdpCmd7HScroll` calls of a level
+load the original costs ~3008 cycles but the C charges 2204 - the level load runs the list
+during **active display**, where the VDP FIFO stalls the original's data writes (~14 cycles/word)
+while the C's writes go through the "untimed" path (`gx_vdp_untimed_begin`, needed because a C
+loop cannot advance the raster) and skip the stall. Modelling that stall (or advancing the clock
+and the VDP line base per write) is what is left to make the VDP list exact.
 
 ## Result so far
 
@@ -385,13 +443,11 @@ tally screens queue it 9 times over all routes — and command 5 is never queued
     build/port/difftest run VdpCmd5FillValue --states runs/vdp/011D70_v --entry   # cmd 5
 
 `port/tools/mousetest.sh runs/t2port-hle-all.sh` (the wrapper enables `--hle all`) passes flow,
-twop, continue, missile, grid and lag. Screenshots at the same frame of a busy scene are
-byte-identical between `--hle all` and `--hle all,-<the ten VDP entries>` (my functions add nothing),
-but `--hle all` vs `--hle none` drift apart after ~80 frames: the game's `vblank_count` ends 4-7
-frames higher, so animated objects are at a different frame. That drift is pre-existing — it is
-already present with the ten VDP entries disabled, and the palette path (`PalFade`) alone produces
-the same small pixel differences — so it is the approximate cycle charges of the earlier functions,
-not the command list. The first ~60 frames after a load are byte-identical.
+twop, continue, missile, grid and lag. The `--hle all` vs `--hle none` drift this section used to
+describe is now measured and partly fixed by the lockstep gate (above): the palette path is exact
+(`--hle PalFade` identical for 3000 frames) and the VDP list charges were corrected, but the VDP
+list still drifts because its data writes during active display skip the original's FIFO stalls
+(see "The lockstep gate").
 ## The hit-test path (`game/hittest.c`)
 
 `HitBox` ($005940), `PickupHitBox` ($007086) and `ShotHitTest` ($005892) are in `game/hittest.c`
@@ -434,8 +490,8 @@ mouse play long enough for the type $13 humans and crates, the level-5 pad-bot k
 PickupHitBox hit path is rare (2 of 687 calls), so its captures are taken with `--every 1` over the
 score route to include both hits; a deliberate box-edge bug is caught at state 407. A deliberate
 descending depth sort in ShotHitTest is caught at state 15, and a HitBox box-edge bug at state 67.
-Play-test: `port/tools/mousetest.sh runs/t2port_hle_all.sh` (a wrapper that runs `t2port --hle all`)
-passes all six tests (flow, twop, continue, missile, grid, lag). A busy level-5 scene (a mid-level
-savestate, after the intro fade) is byte-identical between `--hle all` and `--hle none`; the
-level-intro frame differs only because of the pre-existing `PalFade` range, and the three hit-test
-functions alone are identical at that frame.
+Play-test: `port/tools/mousetest.sh runs/t2port-hle-all.sh` (a wrapper that runs `t2port --hle all`)
+passes all six tests (flow, twop, continue, missile, grid, lag). Alone, the three hit-test
+functions pass the lockstep gate far longer than the VDP list: `PickupHitBox` is identical for
+3000 frames from every default state, `ShotHitTest`/`HitBox` still drift late (frames 846-2545 on
+`gun_02`/`gun_05`).
