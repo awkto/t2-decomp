@@ -36,7 +36,8 @@
  * final `sf.b pal_fading` when nothing changed (N=0, Z=1, V=C=0, X from the entry).
  * a0/a1/a2 end one past the three arrays; a3-a7 are untouched.
  *
- * Copy32 (src/t2.s $008A7C): eight `move.l (a0)+,(a1)+` = 32 bytes. No flags, no d regs.
+ * Copy32 (src/t2.s $008A7C): eight `move.l (a0)+,(a1)+` = 32 bytes. `move.l` sets N/Z,
+ * V=C=0 (X unchanged), so the final CCR is the 8th move's; no d regs are touched.
  *
  * PalCycle (src/t2.s $00E9FA), called by GameLoop while pal_cycle_on is set:
  *     move.w  (vblank_count).l,d0
@@ -50,8 +51,9 @@
  *     rts
  * It rotates the 4 colours from the table at $0084FA + (vblank_count & $18) into
  * pal_cur colours 12..15 and uploads the whole palette. CramUpload is not ported: it
- * writes the VDP ports directly (not through the VDP command list, vdp.md), so it is run
- * as 68k through hle_call68k, exactly as the original `jsr` would.
+ * writes the VDP ports directly (not through the VDP command list, vdp.md). The C range
+ * stops right before the `jsr CramUpload` so that call stays 68k (see the HLE_RANGE note
+ * at PalCycle below).
  *
  * PalFade (src/t2.s $008A4C) is a blocking loop: WaitVBlank, PalFadeStep, WaitVBlank,
  * a short delay, CramUpload of pal_cur, until pal_fading is clear (at most 7 steps). A C
@@ -70,7 +72,6 @@
 #include <stdlib.h>
 
 #define VBLANK_COUNT   0xFFFFA0EE
-#define PAL_CYCLE_ON   0xFFFFA0A4
 #define PAL_CHANGED    0xFFFFA0F4
 #define PAL_TARGET     0xFFFFA134
 #define PAL_CUR        0xFFFFA1B4
@@ -193,10 +194,11 @@ HLE_FUNC(0x008970, PalFadeStep, 3200)
 		}
 	}
 
-	/* Cost model from the 50 captured fade states: 64 loop iterations plus, per changed
+	/* Cost model from the captured fade states: 64 loop iterations plus, per changed
 	 * entry, the extra channel masks/steps. A least-squares fit on (changed entries d1,
 	 * changed channels ch) gives 3454 + 172*d1 + 12*ch; the original's min/avg/max over
-	 * those states is 3454/8878/15266 and this model is within ~25 cycles on every one. */
+	 * the 200 states is 3454/10626/15466 and this model is within ~25 cycles on every
+	 * one (charged avg 10570). */
 	ctx->cycles = 3454 + 172 * (int)d1 + 12 * (int)ch;
 
 	if (d1 != 0) {
