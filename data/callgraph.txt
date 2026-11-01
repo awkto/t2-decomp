@@ -141,7 +141,7 @@
 005b10 sub_005B10 -> sub_0072C0
 005b2e sub_005B2E -> sub_01275A
 005b56 sub_005B56 -> sub_005BBE sub_012A46
-005bbe sub_005BBE -> sub_007322
+005bbe sub_005BBE -> AddScore1000
 005bec hit_endoskeleton2 -> HitBox^
 005c0a sub_005C0A -> -
 005c10 sub_005C10 -> sub_005A24 AddScore250
@@ -150,25 +150,25 @@
 005cd8 sub_005CD8 -> sub_005DA2
 005cee hit_flying_hk -> HitBox^
 005d9c sub_005D9C -> -
-005da2 sub_005DA2 -> sub_00735A
+005da2 sub_005DA2 -> AddScore5000
 005dc0 sub_005DC0 -> HitBox^
 005dcc sub_005DCC -> -
-005dd2 sub_005DD2 -> sub_00735A
+005dd2 sub_005DD2 -> AddScore5000
 005dea sub_005DEA -> HitBox^
 005df6 sub_005DF6 -> -
-005dfc sub_005DFC -> sub_00735A
+005dfc sub_005DFC -> AddScore5000
 005e1c sub_005E1C -> HitBox^
 005e28 sub_005E28 -> -
-005e36 sub_005E36 -> sub_00735A
+005e36 sub_005E36 -> AddScore5000
 005e56 sub_005E56 -> HitBox^
 005e62 sub_005E62 -> -
-005e70 sub_005E70 -> sub_00735A
+005e70 sub_005E70 -> AddScore5000
 005e90 sub_005E90 -> HitBox^
 005e9c sub_005E9C -> -
-005eaa sub_005EAA -> sub_00735A
+005eaa sub_005EAA -> AddScore5000
 005eca sub_005ECA -> HitBox^
 005ed6 sub_005ED6 -> -
-005ee4 sub_005EE4 -> sub_00735A
+005ee4 sub_005EE4 -> AddScore5000
 005f04 HitHumanSoldier -> HitBox^ sub_005F32^
 005f1a sub_005F1A -> sub_013DA8
 005f32 sub_005F32 -> -
@@ -188,16 +188,16 @@
 006106 sub_006106 -> AddScore2000
 006126 hit_hk_tank_body -> HitBox^
 006146 sub_006146 -> sub_006252 sub_0072B2
-006154 sub_006154 -> sub_007368
+006154 sub_006154 -> AddScore10000
 006174 hit_hk_tank_hull -> HitBox^
 006194 sub_006194 -> sub_006252 sub_0072B2
-0061a2 sub_0061A2 -> sub_00735A
+0061a2 sub_0061A2 -> AddScore5000
 0061ca hit_hk_tank_turret -> HitBox^
 0061d6 sub_0061D6 -> sub_006252 sub_0072B2
-0061e4 sub_0061E4 -> sub_00735A
+0061e4 sub_0061E4 -> AddScore5000
 006208 hit_hk_tank_arm -> HitBox^
 006214 sub_006214 -> sub_006252
-00621e sub_00621E -> sub_00735A
+00621e sub_00621E -> AddScore5000
 006252 sub_006252 -> sub_0124EC
 00627a HitTruck -> HitBox HitBox^
 00628e sub_00628E -> sub_013D04
@@ -211,7 +211,7 @@
 00630a sub_00630A -> -
 006326 sub_006326 -> HitBox^
 006332 sub_006332 -> -
-006346 sub_006346 -> sub_00735A
+006346 sub_006346 -> AddScore5000
 00635c sub_00635C -> HitBox^
 006368 sub_006368 -> -
 00636e sub_00636E -> sub_0072CE
@@ -223,19 +223,19 @@
 0063d2 sub_0063D2 -> sub_0072CE
 0063f2 sub_0063F2 -> HitBox^
 0063fe sub_0063FE -> -
-006404 sub_006404 -> sub_007322
+006404 sub_006404 -> AddScore1000
 006424 sub_006424 -> HitBox^
 006430 sub_006430 -> -
-006436 sub_006436 -> sub_00734C
+006436 sub_006436 -> AddScore4000
 006456 sub_006456 -> HitBox^
 006462 sub_006462 -> -
-006468 sub_006468 -> sub_00734C
+006468 sub_006468 -> AddScore4000
 006488 sub_006488 -> HitBox^
 0064a0 sub_0064A0 -> -
-0064a6 sub_0064A6 -> sub_007322
+0064a6 sub_0064A6 -> AddScore1000
 0064e0 sub_0064E0 -> HitBox^
 0064ec sub_0064EC -> -
-0064f2 sub_0064F2 -> sub_00735A
+0064f2 sub_0064F2 -> AddScore5000
 006512 sub_006512 -> HitBox^
 00651e sub_00651E -> -
 006524 sub_006524 -> AddScore250
@@ -261,7 +261,7 @@
 006686 sub_006686 -> SetPlayerState
 0066a8 sub_0066A8 -> HitBox^
 0066b4 sub_0066B4 -> -
-0066ba sub_0066BA -> sub_00735A
+0066ba sub_0066BA -> AddScore5000
 0066da sub_0066DA -> sub_0066EA^
 0066e0 sub_0066E0 -> sub_0066EA^
 0066e6 sub_0066E6 -> -
@@ -270,16 +270,16 @@
 0066f8 sub_0066F8 -> -
 006724 sub_006724 -> HitBox^
 006730 sub_006730 -> sub_006252 sub_0072B2
-00673e sub_00673E -> sub_00735A
+00673e sub_00673E -> AddScore5000
 00675e hit_skynet_cpu -> HitBox^
 006770 sub_006770 -> sub_006252 sub_0072B2
-00677e sub_00677E -> sub_00735A
+00677e sub_00677E -> AddScore5000
 0067c6 sub_0067C6 -> HitBox^
 0067d2 sub_0067D2 -> -
-0067d8 sub_0067D8 -> sub_007314
+0067d8 sub_0067D8 -> AddScore750
 0067f2 hit_endoskeleton_popup -> HitBox HitBox^
 006806 sub_006806 -> -
-00680c sub_00680C -> sub_007322
+00680c sub_00680C -> AddScore1000
 00683a sub_00683A -> HitBox^
 006846 sub_006846 -> -
 00684c sub_00684C -> sub_006870 AddScore250
@@ -292,10 +292,10 @@
 0068dc sub_0068DC -> sub_006870 AddScore250
 006900 sub_006900 -> HitBox^
 00690c sub_00690C -> sub_009A5E sub_013D04
-0069a2 sub_0069A2 -> sub_007314
+0069a2 sub_0069A2 -> AddScore750
 0069bc sub_0069BC -> HitBox^
 0069c8 sub_0069C8 -> -
-0069ce sub_0069CE -> sub_007330
+0069ce sub_0069CE -> AddScore1250
 0069ee hit_cyberdyne_equipment -> HitBox^
 006a00 sub_006A00 -> -
 006a06 sub_006A06 -> sub_0072CE
@@ -307,7 +307,7 @@
 006b44 sub_006B44 -> sub_006870 AddScore250
 006b68 sub_006B68 -> HitBox^
 006b74 sub_006B74 -> -
-006b7a sub_006B7A -> sub_007314 sub_01016C
+006b7a sub_006B7A -> AddScore750 sub_01016C
 006b96 sub_006B96 -> HitBox^
 006ba2 sub_006BA2 -> sub_013DBE
 006bd8 sub_006BD8 -> -
@@ -322,14 +322,14 @@
 006cd4 sub_006CD4 -> AddScore2000
 006e32 sub_006E32 -> sub_01253C
 006e52 sub_006E52 -> HitBox HitBox^
-006e66 sub_006E66 -> sub_007322
+006e66 sub_006E66 -> AddScore1000
 006e7e sub_006E7E -> -
 006e90 sub_006E90 -> HitBox HitBox^
 006ea8 sub_006EA8 -> sub_0072CE
 006eca sub_006ECA -> sub_0072CE
 006ee6 sub_006EE6 -> -
 006ef8 sub_006EF8 -> HitBox^
-006f04 sub_006F04 -> sub_007314 sub_00B192 sub_013D04
+006f04 sub_006F04 -> AddScore750 sub_00B192 sub_013D04
 006f5a sub_006F5A -> -
 006f64 sub_006F64 -> HitBox^
 006f78 sub_006F78 -> HitBox^
@@ -363,14 +363,14 @@
 0072dc sub_0072DC -> AddScoreBcd^
 0072ea sub_0072EA -> AddScoreBcd^
 0072f8 AddScore250 -> AddScoreBcd^
-007306 sub_007306 -> AddScoreBcd^
-007314 sub_007314 -> AddScoreBcd^
-007322 sub_007322 -> AddScoreBcd^
-007330 sub_007330 -> AddScoreBcd^
+007306 AddScore500 -> AddScoreBcd^
+007314 AddScore750 -> AddScoreBcd^
+007322 AddScore1000 -> AddScoreBcd^
+007330 AddScore1250 -> AddScoreBcd^
 00733e AddScore2000 -> AddScoreBcd^
-00734c sub_00734C -> AddScoreBcd^
-00735a sub_00735A -> AddScoreBcd^
-007368 sub_007368 -> AddScoreBcd^
+00734c AddScore4000 -> AddScoreBcd^
+00735a AddScore5000 -> AddScoreBcd^
+007368 AddScore10000 -> AddScoreBcd^
 007376 AddScoreBcd -> -
 0073a0 MissileFindTarget -> sub_013D04
 00745c GameStart -> ReadInput ReadInputAim PlayersButtons sub_0015A2 Ending sub_001C4A sub_001D3A sub_002B5C sub_003360 SortHiScores ScrollRows BgStreamL6 BgStreamL5 BgStreamL2 BgStreamL4 BgStreamL1 sub_007AFE sub_007C9A sub_007CD8 WaitFrames WaitVBlank InitPort2 PalFade LevelResetPlayers ClearObjectPools sub_008C52 sub_008C68 SetPlayerState EnergyHud GunpowerHud ScriptStart ScriptTick ObjRunAll PalCycle VdpListReset VdpListEnd VdpListRun MissilesRun EffectsRun SparksRun DebrisRun PickupsRun sub_0131F2 BuildSpriteTable SpriteQueueReset sub_013D04 sub_013E1A sub_013F7E MenacerInit sub_0FBAD2 sub_0FBAE2 sub_0FBB6C
