@@ -41,6 +41,7 @@
 #include "capture.h"
 #include "emu.h"
 #include "hle.h"
+#include "mouse.h"
 #include "sandbox.h"
 #include "script.h"
 
@@ -145,7 +146,11 @@ static int play_scripts(const opts *o, const char *outdir)
 			return 1;
 		unsigned pad;
 		while (!capture_done() && script_step(s, &pad)) {
-			emu_set_pad(0, pad);
+			/* feed the host mouse to the core exactly as the real frame loop does
+			 * (main.c): the script's `mouse` moves only move the host state, and
+			 * mouse_frame() is what hands the aim/buttons to the Menacer. Without it
+			 * the gun never latches and MenacerReadXY only ever takes the early exit. */
+			emu_set_pad(0, pad | mouse_frame());
 			emu_run_frame();
 		}
 		script_close(s);
