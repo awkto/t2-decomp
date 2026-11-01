@@ -159,6 +159,41 @@
 004872 BgStreamL2             #
 0048C4 BgStreamL4             #
 004916 BgStreamL1             # selects the layer tables for level 1, then BgStreamLayers
+# Level background maps (issue #maps). Format: docs/formats.md
+004A88 ScrollTab_4A88         # data: (rows.w, speed 8.8) groups, 0 = plane A/B switch, -1 end; all static
+004A94 ScrollTab_4A94         # data: level 1 scrolling phases
+004BB4 ScrollTab_4BB4         # data: level 4
+004C64 ScrollTab_4C64         # data: level 2
+004F08 BgMapsL1A              # data: level 1 plane A map pointers ($FFA236 == -1)
+004EE8 BgMapsL1Aalt           # data: level 1 plane A map pointers ($FFA236 == 1)
+004DA4 BgMapsL1B              # data: level 1 plane B map pointers
+004F48 BgBlocksL1             # data: level 1 block tilemap pointers (map byte -> pointer)
+004FDC BgBasesL1              # data: level 1 block tile-base RAM word addresses
+00522E BgMapsL2A              # data: level 2 plane A map pointers
+005256 BgMapsL2B              # data: level 2 plane B map pointers
+0052C0 BgBlocksL2             # data: level 2 block tilemap pointers
+0052EC BgBasesL2              # data: level 2 block tile-base RAM word addresses
+005026 BgMapsL4A              # data: level 4 plane A map pointers
+0050C8 BgMapsL4B              # data: level 4 plane B map pointers
+0051A4 BgBlocksL4             # data: level 4 block tilemap pointers
+005200 BgBasesL4              # data: level 4 block tile-base RAM word addresses
+005302 BgMapsL5A              # data: level 5 plane A map pointers
+0053A6 BgMapsL5B              # data: level 5 plane B map pointers
+0053FE BgBlocksL5             # data: level 5 block tilemap pointers
+00542A BgBasesL5              # data: level 5 block tile-base RAM word addresses
+005440 BgMapsL6A              # data: level 6 plane A map pointers
+00548A BgMapsL6B              # data: level 6 plane B map pointers
+0054D0 BgBlocksL6             # data: level 6 block tilemap pointers
+00553C BgBasesL6              # data: level 6 block tile-base RAM word addresses
+01227A VdpQueueTileRectMirror # command 6 like VdpQueueTileRect but reversed tile order and XOR $800
+002980 LevelLoad1             # level 1: tiles, plane fill, palettes
+00241E LevelLoad2             # level 2: tiles, plane fill, palettes
+00281E LevelLoad3             #
+002632 LevelLoad4             # level 4: tiles, plane fill, palettes
+00229E LevelLoad5             #
+002154 LevelLoad6             #
+001FB2 LevelLoad7             #
+001DB4 LevelLoad8             #
 # VDP command list (built during the frame, run after the vblank wait)
 011D12 VdpListReset           # vdp_list_ptr = vdp_list ($FFB252), vdp_list_data = $FFB452
 011D28 VdpListEnd             # writes command 0

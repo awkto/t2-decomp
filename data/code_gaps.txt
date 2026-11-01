@@ -18,7 +18,7 @@
 003f3c  003f98     92  string   refs 003f3c; used by 003ede; 88 bytes read at runtime
 004084  0041e6    354  string   refs 004084,004087,004093; used by 004008,00402e,0041f4; 353 bytes read at runtime
 00460c  004650     68  string   68 bytes read at runtime
-004a64  0056fa   3222  data     refs 004da4,004ee8,004f08,004f48,004fdc,005026...; used by 0047da,0047de,0047e2,004802...; 2297 bytes read at runtime
+004a64  0056fa   3222  data     refs 004a88,004a94,004bb4,004c64,004da4,004ee8...; used by 0047da,0047de,0047e2,004802...; 2297 bytes read at runtime
 00571a  0057ba    160  data     refs 00571a,00576a; used by 000912,0009b0,000cd8,000d88...; 80 bytes read at runtime
 0059a4  0059ac      8  data     refs 0059a4; used by 005980; 8 bytes read at runtime
 0059c6  0059e6     32  data     refs 0059c6,0059ce; used by 0059b0,0059bc; 16 bytes read at runtime

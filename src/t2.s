@@ -1531,48 +1531,48 @@ sub_001D3A:
 	move.w (0xffff80cc).l,d0
 	cmpi.w #0x1,d0
 	bne.s loc_001D4E
-	jsr (sub_002980).l
+	jsr (LevelLoad1).l
 	bra.s loc_001DB2
 loc_001D4E:
 	cmpi.w #0x2,d0
 	bne.s loc_001D5C
-	jsr (sub_00241E).l
+	jsr (LevelLoad2).l
 	bra.s loc_001DB2
 loc_001D5C:
 	cmpi.w #0x3,d0
 	bne.s loc_001D6A
-	jsr (sub_00281E).l
+	jsr (LevelLoad3).l
 	bra.s loc_001DB2
 loc_001D6A:
 	cmpi.w #0x4,d0
 	bne.s loc_001D78
-	jsr (sub_002632).l
+	jsr (LevelLoad4).l
 	bra.s loc_001DB2
 loc_001D78:
 	cmpi.w #0x5,d0
 	bne.s loc_001D86
-	jsr (sub_00229E).l
+	jsr (LevelLoad5).l
 	bra.s loc_001DB2
 loc_001D86:
 	cmpi.w #0x6,d0
 	bne.s loc_001D94
-	jsr (sub_002154).l
+	jsr (LevelLoad6).l
 	bra.s loc_001DB2
 loc_001D94:
 	cmpi.w #0x7,d0
 	bne.s loc_001DA2
-	jsr (sub_001FB2).l
+	jsr (LevelLoad7).l
 	bra.s loc_001DB2
 loc_001DA2:
 	cmpi.w #0x8,d0
 	bne.s loc_001DB0
-	jsr (sub_001DB4).l
+	jsr (LevelLoad8).l
 	bra.s loc_001DB2
 loc_001DB0:
 	nop
 loc_001DB2:
 	rts
-sub_001DB4:
+LevelLoad8:
 	jsr (sub_0032AC,pc)
 	sf.b (0xffff9ec2).l
 	sf.b (0xffff9ec3).l
@@ -1670,7 +1670,7 @@ sub_001DB4:
 	move.w #0x4a,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_001FB2:
+LevelLoad7:
 	jsr (sub_0032AC,pc)
 	move.w #0xffff,(0xffff80b6).l
 	clr.w (0xffffa23c).l
@@ -1756,7 +1756,7 @@ sub_001FB2:
 	move.w #0x40,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_002154:
+LevelLoad6:
 	jsr (sub_0032AC,pc)
 	clr.w (0xffff9ec6).l
 	lea.l (dat_08CE50).l,a0
@@ -1819,7 +1819,7 @@ sub_002154:
 	move.w #0x40,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_00229E:
+LevelLoad5:
 	jsr (sub_0032AC,pc)
 	lea.l (0xffff8000).l,a4
 	bsr.w sub_00240E
@@ -1894,7 +1894,7 @@ sub_00240E:
 	move.w #0x25,(0x18,a4)
 loc_00241C:
 	rts
-sub_00241E:
+LevelLoad2:
 	jsr (sub_0032AC,pc)
 	move.w #0xffff,(0xffff80b6).l
 	lea.l (dat_06F4D0).l,a0
@@ -1995,7 +1995,7 @@ sub_00241E:
 	move.w #0x19,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_002632:
+LevelLoad4:
 	jsr (sub_0032AC,pc)
 	move.w #0xffff,(0xffff80b6).l
 	lea.l (dat_025DFC).l,a0
@@ -2079,7 +2079,7 @@ sub_002632:
 	move.w #0x28,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_00281E:
+LevelLoad3:
 	jsr (sub_0032AC,pc)
 	lea.l (dat_0433E2).l,a0
 	move.w #0x1,d1
@@ -2146,7 +2146,7 @@ sub_00281E:
 	move.w #0x2,d0
 	jsr (sub_0FBB6C).l
 	rts
-sub_002980:
+LevelLoad1:
 	jsr (sub_0032AC,pc)
 	clr.w (0xffffa236).l
 	lea.l (dat_02585A).l,a0
@@ -2402,7 +2402,7 @@ sub_003360:
 	moveq #0x15,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e26).l,d7
-	jsr (sub_01227A).l
+	jsr (VdpQueueTileRectMirror).l
 	jsr (VdpListEnd).l
 	jsr (VdpListRun).l
 	st.b (0xffffa246).l
@@ -2427,7 +2427,7 @@ loc_003434:
 	moveq #0x13,d3
 	move.l #0x2000,d6
 	move.w (0xffff9e26).l,d7
-	jsr (sub_01227A).l
+	jsr (VdpQueueTileRectMirror).l
 	jsr (WaitVBlank,pc)
 	jsr (VdpListEnd).l
 	jsr (VdpListRun).l
@@ -3289,7 +3289,7 @@ loc_00442A:
 	moveq #0xc,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e38).l,d7
-	jsr (sub_01227A).l
+	jsr (VdpQueueTileRectMirror).l
 	move.w (sp)+,d7
 	addi.l #0x1,(0xffff9e9c).l
 	move.w #0xeb04,(0xffff9ea0).l
@@ -3527,16 +3527,16 @@ loc_0047AE:
 BgStreamL6:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
-	lea.l (dat_005440,pc),a2
-	lea.l (dat_0054D0,pc),a4
-	lea.l (dat_00553C,pc),a5
+	lea.l (BgMapsL6A,pc),a2
+	lea.l (BgBlocksL6,pc),a4
+	lea.l (BgBasesL6,pc),a5
 	lea.l (0xffffae5c).l,a6
 	move.w #0xe000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
 	bsr.w BgStreamLayers
-	lea.l (dat_00548A,pc),a2
+	lea.l (BgMapsL6B,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x40,d1
@@ -3546,16 +3546,16 @@ BgStreamL6:
 BgStreamL5:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
-	lea.l (dat_005302,pc),a2
-	lea.l (dat_0053FE,pc),a4
-	lea.l (dat_00542A,pc),a5
+	lea.l (BgMapsL5A,pc),a2
+	lea.l (BgBlocksL5,pc),a4
+	lea.l (BgBasesL5,pc),a5
 	lea.l (0xffffae5c).l,a6
 	move.w #0xe000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0xe000,(0xffffa0aa).l
 	bsr.w BgStreamLayers
-	lea.l (dat_0053A6,pc),a2
+	lea.l (BgMapsL5B,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x80,d1
@@ -3565,16 +3565,16 @@ BgStreamL5:
 BgStreamL2:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
-	lea.l (dat_00522E,pc),a2
-	lea.l (dat_0052C0,pc),a4
-	lea.l (dat_0052EC,pc),a5
+	lea.l (BgMapsL2A,pc),a2
+	lea.l (BgBlocksL2,pc),a4
+	lea.l (BgBasesL2,pc),a5
 	lea.l (0xffffae5c).l,a6
 	move.w #0xe000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
 	bsr.w BgStreamLayers
-	lea.l (dat_005256,pc),a2
+	lea.l (BgMapsL2B,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x40,d1
@@ -3584,16 +3584,16 @@ BgStreamL2:
 BgStreamL4:
 	movea.l (0xffff9e98).l,a0
 	lea.l (0xffffafd2).l,a1
-	lea.l (dat_005026,pc),a2
-	lea.l (dat_0051A4,pc),a4
-	lea.l (dat_005200,pc),a5
+	lea.l (BgMapsL4A,pc),a2
+	lea.l (BgBlocksL4,pc),a4
+	lea.l (BgBasesL4,pc),a5
 	lea.l (0xffffae5c).l,a6
 	move.w #0xe000,d0
 	move.w #0x40,d1
 	moveq #0x8,d2
 	move.w #0x8000,(0xffffa0aa).l
 	bsr.w BgStreamLayers
-	lea.l (dat_0050C8,pc),a2
+	lea.l (BgMapsL4B,pc),a2
 	lea.l (0xffffb00a).l,a1
 	move.w #0xc000,d0
 	move.w #0x40,d1
@@ -3602,16 +3602,16 @@ BgStreamL4:
 	bra.w BgStreamLayers
 BgStreamL1:
 	movea.l (0xffff9e98).l,a0
-	lea.l (dat_004F48,pc),a4
-	lea.l (dat_004FDC,pc),a5
+	lea.l (BgBlocksL1,pc),a4
+	lea.l (BgBasesL1,pc),a5
 	tst.w (0xffffa236).l
 	beq.s loc_004962
 	lea.l (0xffffae5c).l,a6
 	lea.l (0xffffafd2).l,a1
-	lea.l (dat_004F08,pc),a2
+	lea.l (BgMapsL1A,pc),a2
 	cmpi.w #0x1,(0xffffa236).l
 	bne.s loc_00494A
-	lea.l (dat_004EE8,pc),a2
+	lea.l (BgMapsL1Aalt,pc),a2
 loc_00494A:
 	move.w #0xe000,d0
 	move.w #0x40,d1
@@ -3627,7 +3627,7 @@ loc_004962:
 loc_00496A:
 	lea.l (0xffffae66).l,a6
 	lea.l (0xffffb00a).l,a1
-	lea.l (dat_004DA4,pc),a2
+	lea.l (BgMapsL1B,pc),a2
 	move.w #0xc000,d0
 	move.w #0x80,d1
 	moveq #0x10,d2
@@ -3683,7 +3683,7 @@ loc_0049FA:
 	move.w (a3),d7
 	add.w d5,d5
 	movea.l (0x0,a4,d5.w),a0
-	jsr (sub_01227A).l
+	jsr (VdpQueueTileRectMirror).l
 	bra.s loc_004A4E
 loc_004A16:
 	add.w d5,d5
@@ -3714,48 +3714,56 @@ loc_004A52:
 loc_004A62:
 	rts
 | data 0x004A64-0x0056FA
-	.incbin "baserom.md",0x4A64,0x340
-dat_004DA4:
+	.incbin "baserom.md",0x4A64,0x24
+ScrollTab_4A88:
+	.incbin "baserom.md",0x4A88,0xC
+ScrollTab_4A94:
+	.incbin "baserom.md",0x4A94,0x120
+ScrollTab_4BB4:
+	.incbin "baserom.md",0x4BB4,0xB0
+ScrollTab_4C64:
+	.incbin "baserom.md",0x4C64,0x140
+BgMapsL1B:
 	.incbin "baserom.md",0x4DA4,0x144
-dat_004EE8:
+BgMapsL1Aalt:
 	.incbin "baserom.md",0x4EE8,0x20
-dat_004F08:
+BgMapsL1A:
 	.incbin "baserom.md",0x4F08,0x40
-dat_004F48:
+BgBlocksL1:
 	.incbin "baserom.md",0x4F48,0x94
-dat_004FDC:
+BgBasesL1:
 	.incbin "baserom.md",0x4FDC,0x4A
-dat_005026:
+BgMapsL4A:
 	.incbin "baserom.md",0x5026,0xA2
-dat_0050C8:
+BgMapsL4B:
 	.incbin "baserom.md",0x50C8,0xDC
-dat_0051A4:
+BgBlocksL4:
 	.incbin "baserom.md",0x51A4,0x5C
-dat_005200:
+BgBasesL4:
 	.incbin "baserom.md",0x5200,0x2E
-dat_00522E:
+BgMapsL2A:
 	.incbin "baserom.md",0x522E,0x28
-dat_005256:
+BgMapsL2B:
 	.incbin "baserom.md",0x5256,0x6A
-dat_0052C0:
+BgBlocksL2:
 	.incbin "baserom.md",0x52C0,0x2C
-dat_0052EC:
+BgBasesL2:
 	.incbin "baserom.md",0x52EC,0x16
-dat_005302:
+BgMapsL5A:
 	.incbin "baserom.md",0x5302,0xA4
-dat_0053A6:
+BgMapsL5B:
 	.incbin "baserom.md",0x53A6,0x58
-dat_0053FE:
+BgBlocksL5:
 	.incbin "baserom.md",0x53FE,0x2C
-dat_00542A:
+BgBasesL5:
 	.incbin "baserom.md",0x542A,0x16
-dat_005440:
+BgMapsL6A:
 	.incbin "baserom.md",0x5440,0x4A
-dat_00548A:
+BgMapsL6B:
 	.incbin "baserom.md",0x548A,0x46
-dat_0054D0:
+BgBlocksL6:
 	.incbin "baserom.md",0x54D0,0x6C
-dat_00553C:
+BgBasesL6:
 	.incbin "baserom.md",0x553C,0x1BE
 sub_0056FA:
 	jsr (sub_005708,pc)
@@ -10204,7 +10212,7 @@ sub_00B86A:
 	moveq #0x3,d3
 	move.w #0x0,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	move.l #0xb8c2,(0x20,a6)
 	bra.w ObjNext
@@ -10234,7 +10242,7 @@ sub_00B8C2:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
@@ -10350,7 +10358,7 @@ sub_00BA62:
 	moveq #0x6,d3
 	move.w #0x0,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	move.l #0xbad6,(0x20,a6)
 	bra.w ObjNext
@@ -10390,7 +10398,7 @@ sub_00BAD6:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	jsr (ObjScrollX,pc)
 	subq.w #0x1,(0x24,a6)
@@ -10705,7 +10713,7 @@ sub_00BF60:
 	moveq #0x6,d3
 	dc.w 0x2c3c,0x0000,0x0000	| move.l #$0, d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	move.l #0xbfc0,(0x20,a6)
 	bra.w ObjNext
@@ -10738,7 +10746,7 @@ sub_00BFD8:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	move.w #0x6,d2
 	move.w #0x2,d3
@@ -10746,7 +10754,7 @@ sub_00BFD8:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	subq.w #0x1,(0x24,a6)
 	lea.l (0xffffaa9e).l,a0
@@ -10855,7 +10863,7 @@ loc_00C118:
 	move.w #0x0,d6
 	move.w d7,-(sp)
 	move.w (0xffff9e36).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	bra.w ObjNext
 | data 0x00C196-0x00C1E6
@@ -11615,7 +11623,7 @@ sub_00CC6A:
 	moveq #0x3,d3
 	move.w #0x0,d6
 	move.w (0xffff9e48).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d4
 	rts
 | data 0x00CC90-0x00CC98
@@ -11629,7 +11637,7 @@ sub_00CC98:
 	move.w #0x0,d6
 	move.w (0xffff9e48).l,d7
 	move.w #0xe600,d1
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	lea.l (dat_04E696).l,a0
 	moveq #0xd,d2
 	moveq #0x8,d3
@@ -11772,7 +11780,7 @@ sub_00CE46:
 	jsr (VdpQueueTileRect,pc)
 	bra.s loc_00CE9E
 loc_00CE9A:
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 loc_00CE9E:
 	move.w (sp)+,d7
 loc_00CEA0:
@@ -11879,7 +11887,7 @@ sub_00CFDE:
 	btst.b #0x6,(a6)
 	bne.s loc_00D004
 	move.w #0xe300,d1
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	bra.s loc_00D00C
 loc_00D004:
 	move.w #0xe31c,d1
@@ -12361,7 +12369,7 @@ loc_00D60A:
 	bra.w loc_00D636
 loc_00D630:
 	neg.w d3
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 loc_00D636:
 	move.w (sp)+,d7
 	bra.w ObjNext
@@ -13424,7 +13432,7 @@ loc_00E41E:
 	move.w #0x4,d3
 	move.w #0x0,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 	bra.s loc_00E4A0
 loc_00E44A:
@@ -13450,7 +13458,7 @@ loc_00E476:
 	move.w #0xf,d3
 	move.w #0x8000,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w (sp)+,d7
 loc_00E4A0:
 	bra.w ObjNext
@@ -13478,7 +13486,7 @@ loc_00E4A4:
 	move.w #0xe,d3
 	move.w #0x0,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	lea.l (dat_06DCDC).l,a0
 	move.w #0xc79c,d1
 	move.w #0x3,d2
@@ -13618,7 +13626,7 @@ sub_00E7C0:
 	move.w (0x28,a6),d3
 	bpl.s loc_00E808
 	neg.w d3
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	bra.s loc_00E80C
 loc_00E808:
 	jsr (VdpQueueTileRect,pc)
@@ -13690,7 +13698,7 @@ sub_00E8C8:
 	move.w #0xe,d3
 	move.w #0x0,d6
 	move.w (0xffff9e46).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.l #0xe91e,(0x20,a6)
 	move.w #0x1f4,(0x24,a6)
 	move.w (sp)+,d7
@@ -17841,7 +17849,7 @@ loc_012254:
 	move.l a5,(0xffff80bc).l
 	move.l a1,(0xffff80b8).l
 	rts
-sub_01227A:
+VdpQueueTileRectMirror:
 	subq.w #0x1,d3
 	movea.l (0xffff80b8).l,a1
 	movea.l (0xffff80bc).l,a5
@@ -19738,7 +19746,7 @@ loc_014694:
 	moveq #0x18,d3
 	move.l #0xe000,d6
 	move.w (0xffff9e34).l,d7
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 	move.w #0xe120,d1
 	lea.l (dat_03B24A).l,a0
 	bsr.w sub_01477C
@@ -19857,7 +19865,7 @@ sub_01480A:
 loc_014838:
 	move.w #0x8000,d6
 	move.w #0xe2c4,d1
-	jsr (sub_01227A,pc)
+	jsr (VdpQueueTileRectMirror,pc)
 loc_014844:
 	rts
 | data 0x014846-0x014866

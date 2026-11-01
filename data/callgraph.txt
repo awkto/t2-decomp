@@ -47,16 +47,16 @@
 001be8 ReadPort2Id -> -
 001bfa sub_001BFA -> -
 001c4a sub_001C4A -> sub_004212 sub_007F00 PalFade Copy32 ScrSetPlayers VdpListReset VdpListEnd VdpListRun
-001d3a sub_001D3A -> sub_001DB4 sub_001FB2 sub_002154 sub_00229E sub_00241E sub_002632 sub_00281E sub_002980
-001db4 sub_001DB4 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_01320C sub_013394 sub_0FBB6C
-001fb2 sub_001FB2 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_0FBB6C
-002154 sub_002154 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_01320C sub_013394 sub_0FBB6C
-00229e sub_00229E -> sub_00240E sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
+001d3a sub_001D3A -> LevelLoad8 LevelLoad7 LevelLoad6 LevelLoad5 LevelLoad2 LevelLoad4 LevelLoad3 LevelLoad1
+001db4 LevelLoad8 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_01320C sub_013394 sub_0FBB6C
+001fb2 LevelLoad7 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_0FBB6C
+002154 LevelLoad6 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_01320C sub_013394 sub_0FBB6C
+00229e LevelLoad5 -> sub_00240E sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
 00240e sub_00240E -> -
-00241e sub_00241E -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
-002632 sub_002632 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
-00281e sub_00281E -> sub_0032AC Copy32 sub_00BE42 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
-002980 sub_002980 -> sub_0032AC Copy32 sub_00BE42 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
+00241e LevelLoad2 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
+002632 LevelLoad4 -> sub_0032AC Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
+00281e LevelLoad3 -> sub_0032AC Copy32 sub_00BE42 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
+002980 LevelLoad1 -> sub_0032AC Copy32 sub_00BE42 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect LoadTiles sub_013394 sub_0FBB6C
 002b08 sub_002B08 -> sub_002B6C sub_007E08 sub_007EB2
 002b42 sub_002B42 -> sub_002B70 sub_002B8E
 002b5c sub_002B5C -> sub_002B70^ sub_002B8E^
@@ -64,7 +64,7 @@
 002b70 sub_002B70 -> sub_007EB2
 002b8e sub_002B8E -> sub_007EB2
 0032ac sub_0032AC -> sub_002B08 ScrollRows sub_0056FA sub_007C54 VramClearDma VsramClear VdpSetRegs VdpListReset VdpListEnd VdpListRun HScrollClear LoadTiles sub_013D04
-003360 sub_003360 -> sub_001A38 sub_00368C sub_0036D8 sub_003706 sub_003734 sub_003762 sub_003814 sub_00383A sub_003840 sub_003846 sub_00384C sub_003852 sub_003858 sub_00385E sub_003BA6 sub_003BDA sub_0056FA sub_007BF8 sub_007C04 sub_007E08 VsramClear WaitFrames WaitVBlank VramClearAlt sub_00874E PalFade Copy32 VdpListReset VdpListEnd VdpListRun HScrollClear VdpQueueTileRect sub_01227A LoadTiles BuildSpriteTable SpriteQueueReset sub_013D04 sub_013E04 sub_0FBB6C
+003360 sub_003360 -> sub_001A38 sub_00368C sub_0036D8 sub_003706 sub_003734 sub_003762 sub_003814 sub_00383A sub_003840 sub_003846 sub_00384C sub_003852 sub_003858 sub_00385E sub_003BA6 sub_003BDA sub_0056FA sub_007BF8 sub_007C04 sub_007E08 VsramClear WaitFrames WaitVBlank VramClearAlt sub_00874E PalFade Copy32 VdpListReset VdpListEnd VdpListRun HScrollClear VdpQueueTileRect VdpQueueTileRectMirror LoadTiles BuildSpriteTable SpriteQueueReset sub_013D04 sub_013E04 sub_0FBB6C
 00368c sub_00368C -> sub_00388C^ sub_003B1A sub_003B4A sub_003C06 WaitFrames
 0036d8 sub_0036D8 -> sub_00388C^ sub_003AE4 sub_003B4A
 003706 sub_003706 -> sub_00388C^ sub_003A34 sub_003B4A
@@ -100,7 +100,7 @@
 0041e6 sub_0041E6 -> sub_004212 sub_00424E PalFade
 004212 sub_004212 -> sub_0032AC VramClear Copy32 Copy32^ LoadTiles
 00424e sub_00424E -> sub_007F00 WaitVBlank VramClear ReadPad1 VdpListReset VdpListEnd VdpListRun sub_013D04
-0042ce StoryIntro -> sub_0032AC sub_004650 sub_004668 ScrollRows sub_007F00 WaitVBlank VramClear ReadPad1 PalFade Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect sub_01227A LoadTiles sub_013D04
+0042ce StoryIntro -> sub_0032AC sub_004650 sub_004668 ScrollRows sub_007F00 WaitVBlank VramClear ReadPad1 PalFade Copy32 VdpListReset VdpListEnd VdpListRun VdpQueueTileRect VdpQueueTileRectMirror LoadTiles sub_013D04
 004650 sub_004650 -> VdpQueueTileRect
 004668 sub_004668 -> -
 004682 sub_004682 -> DmaToVramSave
@@ -112,7 +112,7 @@
 004872 BgStreamL2 -> BgStreamLayers BgStreamLayers^
 0048c4 BgStreamL4 -> BgStreamLayers BgStreamLayers^
 004916 BgStreamL1 -> BgStreamLayers
-00498a BgStreamLayers -> VdpQueueFillRows VdpQueueTileRect sub_01227A sub_013470 sub_01385A
+00498a BgStreamLayers -> VdpQueueFillRows VdpQueueTileRect VdpQueueTileRectMirror sub_013470 sub_01385A
 0056fa sub_0056FA -> sub_005708 PalFade^
 005708 sub_005708 -> -
 0057ba HitAllShootable -> sub_01253C sub_01254E
@@ -659,9 +659,9 @@
 00b7e4 sub_00B7E4 -> sub_009054 ObjNext^ sub_00B846 ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite sub_013D04
 00b846 sub_00B846 -> Random
 00b860 sub_00B860 -> sub_00C66C^
-00b86a sub_00B86A -> ObjNext^ sub_01227A
+00b86a sub_00B86A -> ObjNext^ VdpQueueTileRectMirror
 00b896 sub_00B896 -> sub_00BABC QueueSprite
-00b8c2 sub_00B8C2 -> sub_009078 ObjNext^ sub_01227A ObjScrollX
+00b8c2 sub_00B8C2 -> sub_009078 ObjNext^ VdpQueueTileRectMirror ObjScrollX
 00b92e sub_00B92E -> sub_00BCC6
 00b932 sub_00B932 -> sub_0098FC ObjNext^ VdpQueueTileRect
 00b962 sub_00B962 -> ObjNext^ VdpQueueTileRect
@@ -669,10 +669,10 @@
 00b9ba sub_00B9BA -> sub_009078 ObjNext^ VdpQueueTileRect ObjScrollX
 00ba26 sub_00BA26 -> sub_00BCC6
 00ba2a sub_00BA2A -> sub_0098FC ObjNext^ VdpQueueTileRect
-00ba62 sub_00BA62 -> ObjNext^ sub_01227A
+00ba62 sub_00BA62 -> ObjNext^ VdpQueueTileRectMirror
 00ba8e sub_00BA8E -> sub_00BABC sub_00BAD6^ QueueSprite
 00babc sub_00BABC -> -
-00bad6 sub_00BAD6 -> sub_009078 ObjNext^ sub_01227A ObjScrollX
+00bad6 sub_00BAD6 -> sub_009078 ObjNext^ VdpQueueTileRectMirror ObjScrollX
 00bb4e sub_00BB4E -> sub_00BCC6
 00bb52 sub_00BB52 -> sub_00998A ObjNext^ VdpQueueTileRect
 00bb82 sub_00BB82 -> ObjNext^ VdpQueueTileRect
@@ -690,14 +690,14 @@
 00be94 sub_00BE94 -> -
 00bf1e sub_00BF1E -> -
 00bf46 sub_00BF46 -> -
-00bf60 sub_00BF60 -> ObjNext^ sub_01227A
+00bf60 sub_00BF60 -> ObjNext^ VdpQueueTileRectMirror
 00bf8e sub_00BF8E -> sub_00BABC sub_00BFD8^ QueueSprite
 00bfc0 sub_00BFC0 -> -
-00bfd8 sub_00BFD8 -> ObjNext^ ObjMoveX sub_01227A
+00bfd8 sub_00BFD8 -> ObjNext^ ObjMoveX VdpQueueTileRectMirror
 00c05a sub_00C05A -> -
 00c080 sub_00C080 -> -
 00c0aa sub_00C0AA -> sub_009078 ObjNext^ ObjQueueSprite
-00c0e8 sub_00C0E8 -> sub_009078 ObjNext^ VdpQueueTileRect sub_01227A sub_013D04
+00c0e8 sub_00C0E8 -> sub_009078 ObjNext^ VdpQueueTileRect VdpQueueTileRectMirror sub_013D04
 00c1e6 sub_00C1E6 -> VdpQueueTileRect
 00c20a sub_00C20A -> -
 00c242 sub_00C242 -> ObjNext^ sub_00C1E6
@@ -745,8 +745,8 @@
 00cb9e sub_00CB9E -> Random sub_00CBE8^ sub_00CD66
 00cbe8 sub_00CBE8 -> ObjNext^ sub_00CC3C sub_00CC6A
 00cc3c sub_00CC3C -> VdpQueueTileRect
-00cc6a sub_00CC6A -> sub_01227A
-00cc98 sub_00CC98 -> VdpQueueTileRect sub_01227A
+00cc6a sub_00CC6A -> VdpQueueTileRectMirror
+00cc98 sub_00CC98 -> VdpQueueTileRect VdpQueueTileRectMirror
 00cce6 sub_00CCE6 -> Random ObjNext^ sub_012494
 00cd1c sub_00CD1C -> ScriptNext ObjNext^ sub_00CCE6^
 00cd66 sub_00CD66 -> sub_00CDC2^ sub_00CDFC^
@@ -757,12 +757,12 @@
 00cdfe sub_00CDFE -> ObjNext^
 00ce0c sub_00CE0C -> ObjNext^ VdpQueueTileRect
 00ce42 sub_00CE42 -> ObjNext^
-00ce46 sub_00CE46 -> ObjNext^ sub_00CF58 VdpQueueTileRect sub_01227A
+00ce46 sub_00CE46 -> ObjNext^ sub_00CF58 VdpQueueTileRect VdpQueueTileRectMirror
 00cec4 sub_00CEC4 -> ObjNext^ VdpQueueTileRect
 00cefa sub_00CEFA -> ObjNext^ VdpQueueFillRows sub_012494
 00cf58 sub_00CF58 -> Random sub_0099D4
 00cf9e sub_00CF9E -> ObjNext^ ObjQueueSprite
-00cfde sub_00CFDE -> ObjNext^ VdpQueueTileRect sub_01227A
+00cfde sub_00CFDE -> ObjNext^ VdpQueueTileRect VdpQueueTileRectMirror
 00d024 sub_00D024 -> ObjNext^
 00d028 sub_00D028 -> ObjNext^ sub_00C48E ObjQueueSprite
 00d08c sub_00D08C -> sub_00908A ObjNext^ ObjQueueSprite
@@ -782,7 +782,7 @@
 00d444 sub_00D444 -> sub_01253C
 00d46e sub_00D46E -> ObjAlloc
 00d4e6 sub_00D4E6 -> ObjNext^ VdpQueueTileRect
-00d56e sub_00D56E -> ObjNext^ VdpQueueFillRows VdpQueueTileRect sub_01227A sub_013DA8
+00d56e sub_00D56E -> ObjNext^ VdpQueueFillRows VdpQueueTileRect VdpQueueTileRectMirror sub_013DA8
 00d674 sub_00D674 -> ObjNext^ ObjMoveX ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite sub_013D04
 00d6ca sub_00D6CA -> sub_009054 ObjNext^ ObjMoveX ObjScrollX ObjKillIfLeftOf ObjKillIfRightOf ObjQueueSprite
 00d712 sub_00D712 -> ObjNext^ sub_010666 ObjQueueSprite
@@ -845,16 +845,16 @@
 00e2c6 sub_00E2C6 -> ObjNext^ sub_01253C
 00e2e6 sub_00E2E6 -> Random sub_009A02 ObjNext^
 00e314 sub_00E314 -> ObjNext^ VdpQueueTileRect sub_01253C sub_01254E
-00e3e2 sub_00E3E2 -> CramUpload Copy32 ObjNext^ VdpQueueTileRect sub_01227A sub_013D04
+00e3e2 sub_00E3E2 -> CramUpload Copy32 ObjNext^ VdpQueueTileRect VdpQueueTileRectMirror sub_013D04
 00e546 sub_00E546 -> ObjNext^ QueueSprite sub_013D04
 00e5a6 sub_00E5A6 -> ObjAlloc ObjNext^
 00e72e sub_00E72E -> ObjNext^ sub_013DD4
 00e746 sub_00E746 -> ObjNext^
 00e74a sub_00E74A -> Random sub_009A02 ObjNext^
 00e79e sub_00E79E -> Random ObjNext^
-00e7c0 sub_00E7C0 -> ObjNext^ VdpQueueTileRect sub_01227A sub_01253C
+00e7c0 sub_00E7C0 -> ObjNext^ VdpQueueTileRect VdpQueueTileRectMirror sub_01253C
 00e864 sub_00E864 -> ObjNext^ sub_0124B8 sub_0124D2 sub_01254E
-00e8c8 sub_00E8C8 -> ObjNext^ VdpQueueTileRect sub_01227A
+00e8c8 sub_00E8C8 -> ObjNext^ VdpQueueTileRect VdpQueueTileRectMirror
 00e91e sub_00E91E -> Copy32 sub_0099C8 sub_009B14 ObjNext^
 00e9c4 MillEndFade -> CramUpload PalFadeStep ObjNext^
 00e9fa PalCycle -> CramUpload
@@ -1097,7 +1097,7 @@
 0121d6 HScrollClear -> VdpListReset VdpListEnd VdpListRun
 012212 VdpQueueFillRows -> -
 012234 VdpQueueTileRect -> -
-01227a sub_01227A -> -
+01227a VdpQueueTileRectMirror -> -
 0122ca sub_0122CA -> -
 012316 ObjScrollX -> -
 012332 ObjKillIfLeftOf -> -
@@ -1201,13 +1201,13 @@
 014544 sub_014544 -> -
 014554 sub_014554 -> sub_007BF8^ sub_007C04^
 0145a0 sub_0145A0 -> sub_00A4B2 ObjNext^ sub_00D0F8 VdpQueueVScroll
-0145fc sub_0145FC -> ObjNext^ VdpQueueTileRect sub_01227A sub_01473A sub_014750 sub_014766 sub_01477C
+0145fc sub_0145FC -> ObjNext^ VdpQueueTileRect VdpQueueTileRectMirror sub_01473A sub_014750 sub_014766 sub_01477C
 01473a sub_01473A -> VdpQueueTileRect
 014750 sub_014750 -> VdpQueueTileRect
 014766 sub_014766 -> VdpQueueTileRect
 01477c sub_01477C -> VdpQueueTileRect
 014792 sub_014792 -> ObjNext^ VdpQueueTileRect sub_01480A
-01480a sub_01480A -> VdpQueueTileRect sub_01227A
+01480a sub_01480A -> VdpQueueTileRect VdpQueueTileRectMirror
 014866 sub_014866 -> ObjNext^ ObjMoveX sub_011616
 0148ae sub_0148AE -> sub_009066 ObjNext^ sub_011616 sub_013D04
 0148e8 sub_0148E8 -> -
