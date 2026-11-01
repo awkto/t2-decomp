@@ -284,17 +284,23 @@ static bool g_top;             /* a top-level C function is running */
  * the 2nd call sees the time the 1st took, as in the original, #33) and are rewound when
  * the C function returns; the time becomes part of its charge (#31). */
 static bool g_sess;
-static int g_sess_c0, g_sess_vc;
+static int g_sess_c0, g_sess_vc, g_sess_r0;
 static unsigned g_sess_line_base;
 
 int hle_nested_cycles(void) { return g_sess ? (gx_m68k_cycles() - g_sess_c0) / 7 : 0; }
 
+/* Nested 68k runs for real, so its measured time includes the 68k bus-refresh cycles the
+ * original adds every 128 cycles; subtract them so the caller can re-account refresh over
+ * the whole function (run_def). Returns the nested BASE cycles and rewinds clock + refresh
+ * phase to the session start. */
 static int sess_end(void)
 {
 	if (!g_sess)
 		return 0;
-	int n = (gx_m68k_cycles() - g_sess_c0) / 7;
+	int n_nested = (gx_m68k_refresh_cycles() - g_sess_r0) / 896;
+	int n = (gx_m68k_cycles() - g_sess_c0) / 7 - 2 * n_nested;
 	gx_m68k_set_cycles(g_sess_c0);
+	gx_m68k_set_refresh_cycles(g_sess_r0);
 	gx_vdp_fifo_clamp();
 	gx_vdp_set_line_base(g_sess_line_base);
 	gx_vdp_set_vcounter(g_sess_vc);
@@ -394,8 +400,8 @@ static int run_def(const hle_def *def, entry *e)
 	 * would have accrued (the gap after each refresh is 896-14 = 882 mcycles) and advance
 	 * refresh_cycles so the next real instruction keeps the right phase. Nested 68k ran for
 	 * real, so its refresh is already inside `nested`. */
-	if (!def_is_orig(def) && c.cycles > 0 && !hle_post_access) {
-		int delta = c.cycles * 7;
+	if (!def_is_orig(def) && total > 0 && !hle_post_access) {
+		int delta = (int)(total * 7);
 		int R = gx_m68k_refresh_cycles(), C = gx_m68k_cycles();
 		int gap = R - C;
 		int n = delta >= gap ? 1 + (delta - gap) / 882 : 0;
@@ -504,6 +510,7 @@ static void nest_begin(void)
 	if (g_nest++ == 0 && !hle_post_access && !g_sess) {   /* the sandbox manages time itself */
 		g_sess = true;
 		g_sess_c0 = gx_m68k_cycles();
+		g_sess_r0 = gx_m68k_refresh_cycles();
 		g_sess_line_base = gx_vdp_line_base();
 		g_sess_vc = gx_vdp_vcounter();
 	}
