@@ -25,6 +25,7 @@
 
 #include "emu.h"
 #include "gun.h"
+#include "hle.h"
 #include "mouse.h"
 #include "options.h"
 #include "overlay.h"
@@ -79,6 +80,9 @@ EMSCRIPTEN_KEEPALIVE int web_gun_state(int which)
 
 /* the screen the mouse logic sees (SCR_* of mouse.h): 0 game, 1 logo, 2 title, 3 menu, 4 options, 5 continue, 6 story intro */
 EMSCRIPTEN_KEEPALIVE int web_screen(void) { return mouse_screen(); }
+
+/* how many C replacements (HLE, docs/porting.md) are active */
+EMSCRIPTEN_KEEPALIVE int web_hle_count(void) { return hle_count_active(); }
 
 /* the page's settings (right button): set an option, keep it in the ini */
 EMSCRIPTEN_KEEPALIVE int web_set_option(const char *key, const char *val)
@@ -538,7 +542,8 @@ static void web_frame(void)
 	}
 }
 
-/* argv[1]: the ROM's path in the page's file system */
+/* argv[1]: the ROM's path in the page's file system; argv[2] (optional): the HLE set from the page's
+ * ?hle= parameter, which overrides the ini's `hle` option for this run (default none) */
 int main(int argc, char **argv)
 {
 	const char *rom = argc > 1 ? argv[1] : WEB_DIR "/rom/baserom.md";
@@ -558,6 +563,12 @@ int main(int argc, char **argv)
 	gun_set_right(options_str("mouse_right")[0]);
 	mouse_set_aim_correct(options_bool("aim_correct"));
 	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));    /* read once: a change needs a reload */
+
+	const char *hle_spec = argc > 2 && argv[2][0] ? argv[2] : options_str("hle");
+	if (!hle_configure(hle_spec)) {
+		fprintf(stderr, "hle: unknown function in '%s', running with none\n", hle_spec);
+		hle_configure("none");
+	}
 
 	if (!emu_init(rom, WEB_SAVES, mouse_on, err, sizeof err)) {
 		fprintf(stderr, "%s\n", err);

@@ -22,10 +22,13 @@ option(T2_DIST "release build: no development-tree ROM lookups" OFF)
 # target (t2.js + t2.wasm; tools/web_build.sh assembles the site) ----
 if(EMSCRIPTEN)
   set(WEB_SDL -sUSE_SDL=2)
+  file(GLOB GAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/game/*.c")
   add_executable(t2_web src/web/main_web.c src/emu.c src/gun.c src/mouse.c src/options.c src/overlay.c src/sha1.c
-    hle/hle.c hle/gx.c)
+    hle/hle.c hle/sandbox.c hle/gx.c ${GAME_SOURCES})
   target_link_libraries(t2_web PRIVATE gpgx_core)
-  target_include_directories(t2_web PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/hle")
+  target_include_directories(t2_web PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/hle"
+    "${CMAKE_CURRENT_SOURCE_DIR}/game")
+  set_source_files_properties(hle/gx.c PROPERTIES COMPILE_DEFINITIONS "${GPGX_DEFINES}")
   target_compile_options(t2_web PRIVATE ${WEB_SDL} -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing)
   target_compile_definitions(t2_web PRIVATE T2_ROOT="." T2_DIST)
   set_target_properties(t2_web PROPERTIES OUTPUT_NAME t2 SUFFIX ".js")
@@ -33,7 +36,7 @@ if(EMSCRIPTEN)
     -sENVIRONMENT=web -sINVOKE_RUN=0 -sEXIT_RUNTIME=0
     -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB -sSTACK_SIZE=1MB
     -sFORCE_FILESYSTEM=1 -lidbfs.js
-    "-sEXPORTED_FUNCTIONS=_main,_web_rom_check,_web_frame_count,_web_ram16,_web_gun_state,_web_set_option,_web_screen"
+    "-sEXPORTED_FUNCTIONS=_main,_web_rom_check,_web_frame_count,_web_ram16,_web_gun_state,_web_set_option,_web_screen,_web_hle_count"
     "-sEXPORTED_RUNTIME_METHODS=FS,IDBFS,callMain,ccall,UTF8ToString,addRunDependency,removeRunDependency")
   return()
 endif()
