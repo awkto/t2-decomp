@@ -2,6 +2,7 @@
 # Headless browser test of build/web (docs/web.md): ROM through the file input, click to play, boot,
 # 1 PLAYER - USE MENACER, mouse aim and fire. Needs node with puppeteer-core (NODE_PATH),
 # CHROME=<chrome or chrome-headless-shell>, and the ROM at rom/baserom.md.
+# WEB_QUERY='?hle=all' tests the page with that URL query (default: none).
 # Results: runs/web/test.json and PNGs (look at them: the game's crosshair must follow the mouse).
 set -u
 cd "$(dirname "$0")/.."
@@ -14,7 +15,7 @@ mkdir -p runs/web
 srv=$!
 trap 'kill $srv 2>/dev/null' EXIT
 sleep 1
-if node tools/web_test.js http://localhost:8765/ runs/web "$PWD/rom/baserom.md" > runs/web/test.json 2>&1; then
+if node tools/web_test.js "http://localhost:8765/${WEB_QUERY:-}" runs/web "$PWD/rom/baserom.md" > runs/web/test.json 2>&1; then
   echo "web: PASS"; rc=0
 else
   echo "web: FAIL"; tail -30 runs/web/test.json; rc=1

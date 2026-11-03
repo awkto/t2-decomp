@@ -2,7 +2,7 @@
 
 `t2port` compiled to WebAssembly with Emscripten and SDL2 (Emscripten's port). It is a static site:
 `index.html`, `app.js`, `style.css` (`web/`) and `t2.js` + `t2.wasm` (`port/src/web/main_web.c` with the
-same `emu.c`, `gun.c`, `options.c` and Genesis Plus GX core as the desktop host, docs/port.md). It
+same `emu.c`, `gun.c`, `options.c`, HLE layer and Genesis Plus GX core as the desktop host, docs/port.md). It
 holds no game data: the player provides the ROM. The mouse is a Menacer, as on the desktop.
 
 ## Building
@@ -20,6 +20,21 @@ notes a different one). No ROM is needed to build. With `rom/baserom.md` present
 Link settings (`port/CMakeLists.txt`): `-O3`, `-sUSE_SDL=2`, `-sINVOKE_RUN=0` (the page calls `main`
 once it has the ROM), `-sEXIT_RUNTIME=0`, memory growth from 64 MB, a 1 MB stack, IDBFS. No ASYNCIFY:
 the browser build has no blocking loop.
+
+## C replacements (HLE)
+
+The page runs the same HLE layer as the desktop (docs/porting.md; `port/hle`, `port/game/*.c`, 39
+replacements at the time of writing, all in the `t2_web` target). Default `none`: the original 68k code
+runs, as on the desktop. Choose the set with the `hle` option (ini line `hle = all` or
+`hle = Random+MenacerReadXY`; `+` separates names; the ini is `/t2/t2.ini` in IndexedDB, read at start)
+or, for one visit, the URL parameter, which wins over the ini:
+
+    index.html?hle=all
+    index.html?hle=none
+    index.html?hle=Random+MenacerReadXY       # a `+` or `,` list; `-name` turns one off (all,-Random)
+
+`app.js` passes the parameter to `main` as `argv[2]`. An unknown name is reported on the console and the
+run falls back to `none`. The console prints `hle: N active`; `web_hle_count()` (exported) returns N.
 
 ## The main loop
 
@@ -127,7 +142,11 @@ the wheel move the main menu cursor, OPTIONS credits are changed with clicks, an
 first row starts the game with no key pressed. Screenshots of the stage go to `runs/web/`: look at them, the game's crosshair must
 sit on the commanded pixel and shots must fire (gunpower drops, impacts and explosions).
 
-`tools/vm/webtest.sh` (run on a VM with emsdk 6.0.13 in `/opt/emsdk`, and node 18 with puppeteer-core 23 and chrome-headless-shell in `/opt/webtest`) builds and runs the whole test. With the menu-by-mouse flow added, all 31 checks pass, with no console errors, at 60 emulated frames/s.
+`tools/vm/webtest.sh` (run on a VM with emsdk 6.0.13 in `/opt/emsdk`, and node 18 with puppeteer-core 23 and chrome-headless-shell in `/opt/webtest`) builds, then runs the whole test twice: default (`hle` none) and `?hle=all` (by hand: `WEB_QUERY='?hle=all' tools/web_test.sh`). The test checks that the number of active replacements matches the URL (0 for none). `tools/vm/web_provision.sh` installs emsdk, node, puppeteer-core and chrome-headless-shell on a fresh VM.
+
+Result with the HLE layer (2026-11-04, 4-vCPU VM, emsdk 6.0.13): 33 checks, all pass, no console errors,
+for default (0 active, 59.4 emulated frames/s) and for `?hle=all` (39 active, 58.9 frames/s).
+`t2.wasm` 3.42 MB (703 kB gzipped), `t2.js` 156 kB; romscan of `build/web` and of the tracked files: CLEAN.
 
 Result (4-vCPU VM, chrome-headless-shell 127, SwiftShader, emsdk 6.0.13): all checks pass, no console
 errors, 59.6 emulated frames/s, game running about 2.4 s after navigation; the crosshair sat on each
