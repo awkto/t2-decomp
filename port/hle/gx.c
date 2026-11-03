@@ -85,12 +85,43 @@ void gx_vdp_untimed_end(void)
 }
 
 unsigned gx_vdp_line_base(void) { return mcycles_vdp; }
+/* Clock (mclks) of the start of the next line at which the frame loop (not the CPU) changes
+ * state that VDP port timing or an interrupt depends on: the VBLANK flag set (line
+ * viewport.h; the V-Int rises just after it starts), cleared (last line) and the frame wrap
+ * (fifo reset, clock rebase); the light gun's lines (input_refresh: HV latch, external interrupt, on its line and the next one);
+ * every line when the H-Int is enabled. A C replacement that runs across one of them cannot
+ * be interleaved with it the way the real CPU is. */
+int gx_vdp_next_toggle_clock(void)
+{
+	int l = v_counter, h = bitmap.viewport.h, last = lines_per_frame - 1;
+	int t = l < h ? h : (l < last ? last : last + 1);
+	if (l == h)                      /* the V-Int is raised a little after this line starts */
+		return (int)mcycles_vdp;
+	if (reg[0] & 0x10)
+		t = l + 1;
+	for (int port = 4; port < 6; port++) {
+		int y = input.analog[port][1] + input.y_offset;
+		if (y > l && y < t)
+			t = y;
+		if (y + 1 > l && y + 1 < t)
+			t = y + 1;
+	}
+	return (int)mcycles_vdp + (t - l) * MCYCLES_PER_LINE;
+}
 int gx_vdp_vcounter(void) { return v_counter; }
 void gx_vdp_set_vcounter(int v) { v_counter = v; }
 /* nested 68k inside C (#33): the raster advances with the CPU, V counter included */
+static int g_follow_z80;
+/* exact sessions (hle_exact_session): also run the Z80 line by line like the frame loop does
+ * after each m68k_run() slice. A Z80 access to the 68k bus (sound driver reading samples from
+ * the ROM bank) delays the 68k by ~10 cycles, so a 68k running across a line start must see
+ * those delays where the real CPU would. */
+void gx_follow_z80(int on) { g_follow_z80 = on; }
 void gx_vdp_follow_cpu_lines(void)
 {
 	while (m68k.cycles >= (int)(mcycles_vdp + MCYCLES_PER_LINE)) {
+		if (g_follow_z80 && zstate == 1)
+			z80_run(mcycles_vdp + MCYCLES_PER_LINE);
 		mcycles_vdp += MCYCLES_PER_LINE;
 		v_counter = (v_counter + 1) % lines_per_frame;
 	}
