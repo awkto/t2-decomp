@@ -27,12 +27,11 @@
  * register. Final flags: the last flag-setting instruction is `move.l a5,(vdp_list_ptr).l`
  * (N/Z from a5, V=C=0); X is the carry shifted out by the `asl.w #2,d6` before it.
  *
- * Cycles. QueueSprite and ObjQueueSprite are straight-line: 180 and 278 cycles (measured;
- * QueueSprite's few 184-cycle states are the addq.b carry path). BuildSpriteTable's cost
- * varies hugely by path (measured 634..27768 on the capture route), so it is charged exactly:
- * every translated instruction adds its GPGX 68000 cost (the m68kops cycle table, plus the
- * MUL-scaled extras for movem/shift/bcc/dbcc) as it executes, so the empty, single-sprite,
- * sorted, busy and 79-piece-capped paths each get their real cost.
+ * Cycles. Every translated instruction is charged on the instruction timeline (hle_insn, hle.h) with
+ * its 68000 cost (the m68kops table; movem.w, shifts and the taken/not-taken branches included), so
+ * the empty, single-sprite, sorted, busy and 79-piece-capped paths each get their real cost and the
+ * bus-refresh phase stays exact. `port/tools/seqcmp.py` diffs the timeline against the original.
+ * The HLE_FUNC cycle count is only the interrupt window (docs/porting.md).
  */
 #include "hle.h"
 
