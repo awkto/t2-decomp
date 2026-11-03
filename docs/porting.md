@@ -177,17 +177,13 @@ at frame 1. The six default states are `gun_01 gun_02 gun_04 gun_05 gun_07 title
 **Result.** With these fixes `--hle PalFade` alone is identical for 3000 frames from `gun_01` and
 `gun_04` (its delay is now run as 68k so `CramUpload` polls the status at the real raster time);
 on `gun_02`/`gun_05`/`gun_07` a single VRAM byte differs around frames 16-20 (the game state, live
-RAM, stays identical) and on `title` at frame 863. `--hle all` still diverges, now at frames 16-80
-depending on the state. The remaining drift is the VDP command-list path (`VdpListRun`,
-`VdpCmd1CopyWords`, `VdpCmd6TileRect`, `VdpCmd7HScroll`) and, on `gun_02`, a handful of
-input/sprite functions at frames ~670+. `T2_HLE_ORIG=name` runs a
-replacement as the original 68k inside the full frame loop and logs its real cost next to the C
-charge (`T2_HLE_CHARGE=1` logs the charge); for the first two `VdpCmd7HScroll` calls of a level
-load the original costs ~3008 cycles but the C charges 2204 - the level load runs the list
-during **active display**, where the VDP FIFO stalls the original's data writes (~14 cycles/word)
-while the C's writes go through the "untimed" path (`gx_vdp_untimed_begin`, needed because a C
-loop cannot advance the raster) and skip the stall. Modelling that stall (or advancing the clock
-and the VDP line base per write) is what is left to make the VDP list exact.
+RAM, stays identical) and on `title` at frame 863. `T2_HLE_ORIG=name` runs a replacement as the
+original 68k inside the full frame loop and logs its real cost next to the C charge
+(`T2_HLE_CHARGE=1` logs the charge); it double counts after the first call (see hle.c), so only
+the first call of a run is trustworthy. The VDP command list is now exact: see "Exact timing"
+in the VDP command list section below (`--hle VdpListRun,VdpCmd0End,...` identical to `--hle
+none` for 3000 frames from all six default states, and from 17 more states). `--hle all` still
+diverges (frames 16-385), from the non-VDP functions only.
 
 ## Result so far
 
@@ -211,16 +207,16 @@ and the VDP line base per write) is what is left to make the VDP list exact.
 | $013240 | QueueSprite | game/sprite.c | 600/600 states equal (180 cycles, constant) |
 | $013228 | ObjQueueSprite | game/sprite.c | 600/600 states equal (278 cycles; calls the C `QueueSprite`) |
 | $013272 | BuildSpriteTable | game/sprite.c | 1300/1300 states equal (a deliberate descending sort is caught; exact per-path cycle charge) |
-| $011D32 | VdpListRun | game/vdplist.c | 200/200 states equal (runs the whole list; a deliberate command-6 row stride $80->$40 is caught by 1/1 and by VdpListRun 2/3) |
-| $011D64 | VdpCmd0End | game/vdplist.c | 200/200 states equal |
-| $012068 | VdpCmd1CopyWords | game/vdplist.c | 200/200 states equal |
-| $011D70 | VdpCmd2FillZero | game/vdplist.c | 200/200 states equal (calls the 68k VramFillWords) |
-| $011D90 | VdpCmd3WriteWord | game/vdplist.c | 200/200 states equal (calls the 68k VramWriteWord) |
-| $011D9E | VdpCmd4CramLine | game/vdplist.c | 9/9 states equal (rare: only the tally screens queue it; a deliberate wrong loop count is caught) |
-| $011D80 | VdpCmd5FillValue | game/vdplist.c | 200/200 states equal (unreachable in play, so `--entry` states captured at command 2) |
-| $0120BA | VdpCmd6TileRect | game/vdplist.c | 200/200 states equal (the row-stride bug above is caught) |
-| $011E48 | VdpCmd7HScroll | game/vdplist.c | 200/200 states equal |
-| $011F6E | VdpCmd8VScroll | game/vdplist.c | 200/200 states equal |
+| $011D32 | VdpListRun | game/vdplist.c | 200/200 states equal (runs the whole list; a deliberate command-6 row stride $80->$40 is caught by 1/1 and by VdpListRun 2/3); lockstep: 3000 frames identical (6 default states) |
+| $011D64 | VdpCmd0End | game/vdplist.c | 200/200 states equal; lockstep: 3000 frames identical (6 default states) |
+| $012068 | VdpCmd1CopyWords | game/vdplist.c | 200/200 states equal; lockstep: 3000 frames identical (6 default states) |
+| $011D70 | VdpCmd2FillZero | game/vdplist.c | 200/200 states equal (calls the 68k VramFillWords); lockstep: 3000 frames identical (6 default states) |
+| $011D90 | VdpCmd3WriteWord | game/vdplist.c | 200/200 states equal (calls the 68k VramWriteWord); lockstep: 3000 frames identical (6 default states) |
+| $011D9E | VdpCmd4CramLine | game/vdplist.c | 9/9 states equal (rare: only the tally screens queue it; a deliberate wrong loop count is caught); lockstep: 3000 frames identical (6 default states) |
+| $011D80 | VdpCmd5FillValue | game/vdplist.c | 200/200 states equal (unreachable in play, so `--entry` states captured at command 2); lockstep: 3000 frames identical (6 default states) |
+| $0120BA | VdpCmd6TileRect | game/vdplist.c | 200/200 states equal (the row-stride bug above is caught); lockstep: 3000 frames identical (6 default states) |
+| $011E48 | VdpCmd7HScroll | game/vdplist.c | 200/200 states equal; lockstep: 3000 frames identical (6 default states) |
+| $011F6E | VdpCmd8VScroll | game/vdplist.c | 200/200 states equal; lockstep: 3000 frames identical (6 default states) |
 | $005940 | HitBox | game/hittest.c | 600/600 states equal (21 hit / 579 miss; a deliberate box edge `<`->`<=` is caught at state 67) |
 | $007086 | PickupHitBox | game/hittest.c | 687/687 states equal (2 hit / 685 miss; a deliberate box edge `<`->`<=` is caught at state 407) |
 | $005892 | ShotHitTest | game/hittest.c | 200/200 states equal (no-hit 69 / hit 131, multi-hit sort 27, kill 55, front-not-shootable 7, human objects 4; a deliberate descending depth sort is caught at state 15) |
@@ -422,12 +418,12 @@ from whatever ran before (the reference side or the previous state) and differed
 reference and the C side. This is a difftest-only change (the sandbox is not used by `t2port`); the
 already-ported functions still pass.
 
-Cycles: each translated instruction adds its GPGX 68000 cost as it executes, so the per-command and
-whole-list charges track the original. Commands 2/3/5 charge only their own arg reads (the nested
-VramFillWords/VramWriteWord time is added by the layer); their difftest "C charged" line reads 0
-because the prologue and callee are nested and the sandbox does not count nested time. Captures
+Cycles: each translated instruction advances the real CPU clock as it executes (next section).
+Commands 2/3/5's nested VramFillWords/VramWriteWord run as real 68k. `T2_VDP_STATS=1` reports the
+per-command call counts of a run (used to show every command is exercised by the captures).
+Captures
 (`port/scripts/capture_vdplist.txt`, level loads + mouse play, and `capture_bcdadd.txt`, the tally
-screens): `T2_VDP_STATS=1` reports the per-command call counts. Command 4 (CRAM line) is rare — the
+screens). Command 4 (CRAM line) is rare — the
 tally screens queue it 9 times over all routes — and command 5 is never queued by the shipped game
 (its queuers `$00BE94`/`$00BF1E`/`$00C20A` are unreachable), so its states are captured at command
 2 and replayed with `--entry`:
@@ -443,11 +439,54 @@ tally screens queue it 9 times over all routes — and command 5 is never queued
     build/port/difftest run VdpCmd5FillValue --states runs/vdp/011D70_v --entry   # cmd 5
 
 `port/tools/mousetest.sh runs/t2port-hle-all.sh` (the wrapper enables `--hle all`) passes flow,
-twop, continue, missile, grid and lag. The `--hle all` vs `--hle none` drift this section used to
-describe is now measured and partly fixed by the lockstep gate (above): the palette path is exact
-(`--hle PalFade` identical for 3000 frames) and the VDP list charges were corrected, but the VDP
-list still drifts because its data writes during active display skip the original's FIFO stalls
-(see "The lockstep gate").
+twop, continue, missile, grid and lag.
+
+### Exact timing (lockstep-identical)
+
+A lump cycle charge cannot be exact here. During active display every VDP data-port write can
+stall the CPU (GPGX `vdp_68k_data_w_m5`: FIFO full / access slots, ~60 cycles per VRAM word, the
+cost of a copy depends on the clock at each write), and the frame loop does work between lines
+that a running C function never sees. The original's cost of a `VdpCmd7HScroll` call is ~3008
+cycles at a level load; the old lump charge was 2204. What makes the C version identical:
+
+- **Real clock.** Every translated instruction advances the CPU clock (`pre()` / `post()` /
+  `tick()` / `wr_data()` in vdplist.c) in the core's order: line step, bus refresh check
+  (`refresh_cycles`, +2 cycles every 128), the access at that clock, then the instruction's
+  cost. Runs of several instructions are ticked one instruction at a time (`TICKS`), because the
+  refresh check belongs before each one. The functions open an *exact session* (`sess_begin`:
+  `hle_dma_begin` + `hle_exact_session`): hle.c then keeps the refresh phase and the FIFO
+  read-out stamps, returns the elapsed time (stalls and refresh included) as the charge together
+  with its sub-cycle remainder (a stall ends on a 7-mclk boundary), and skips its refresh model.
+- **Timed data writes.** `wr_data()` brackets the write with `hle_vdp_timed(1)`, so `bus_w16`
+  does not take the "untimed" path of gx.c and GPGX applies its FIFO stall to the clock. The VDP
+  line base and V counter follow the clock (`gx_vdp_follow_cpu_lines`) as in a nested call.
+- **The Z80 per line.** In an exact session the line step also runs the Z80 (`gx_follow_z80`,
+  like the frame loop after each `m68k_run` slice): a Z80 read of the 68k bus (the sound driver
+  streaming samples from the ROM bank) delays the 68k by ~10 cycles, so a 68k that crosses a line
+  start must see those delays where the real CPU does. This was the last big source of drift
+  (a 70-mclk step at a line start).
+- **The timing guard (`safe_run`, `gx_vdp_next_toggle_clock`).** The frame loop also changes
+  state at some line starts, and interrupts arrive in the middle of a command. A command that
+  might cross one is left to the real 68k: a range handler calls `hle_decline()` (the CPU runs the
+  instruction at the entry normally; ignored in the sandbox), and the C `VdpListRun` hands the
+  rest of the list to the 68k at a command boundary (`hle_jump` to `VdpListNext` with all
+  registers mirrored; the handlers then decide for themselves). The events: VBLANK set (line
+  `viewport.h`; the V-Int rises just after the line starts, so that line is never safe), VBLANK
+  cleared (last line) and the frame wrap (FIFO reset, clock rebase), the light gun's line and the
+  next one (HV latch, external interrupt), every line when H-Int is on, and a DMA in flight (the
+  frame loop halts the CPU for it per line). Whether a command is "safe" is only an upper bound
+  on its duration (`cmd_bound`: ~72 cycles per VDP word, 110 for VramFillWords, plus a one line
+  margin) against the next such line, so a loose bound only means the 68k runs the command; it
+  can never make the result differ. Typical outcome: the short commands in the middle of a frame
+  run as C; the long level-load copies that span VBlank stay 68k.
+
+**Result.** `port/tools/lockstep.sh --hle VdpListRun,VdpCmd0End,VdpCmd1CopyWords,VdpCmd2FillZero,
+VdpCmd3WriteWord,VdpCmd4CramLine,VdpCmd5FillValue,VdpCmd6TileRect,VdpCmd7HScroll,VdpCmd8VScroll`
+is **3000 frames identical** from `gun_01 gun_02 gun_04 gun_05 gun_07 title` (before: diverged at
+frames 20-22 on the level load; first with the clock model only 23-81, then 34/842/1482... until
+the Z80, V-Int and refresh-order fixes above). Each handler alone is also identical. difftest
+(the sandbox never declines) is still all-equal for every VDP function.
+
 ## The hit-test path (`game/hittest.c`)
 
 `HitBox` ($005940), `PickupHitBox` ($007086) and `ShotHitTest` ($005892) are in `game/hittest.c`
