@@ -83,7 +83,9 @@ HLE_FUNC(0x00881C, Random, 192)
 
 - `HLE_FUNC(addr, name, cycles)` defines `void name(hle_ctx *ctx)` and registers it with a
   constructor. A new `.c` file under `port/game/` is picked up automatically (re-run cmake so
-  the glob sees it). `cycles` is the original's average 68k cost (difftest prints it).
+  the glob sees it). `cycles` is the original's average 68k cost (difftest prints it); for a
+  function with an instruction timeline it is instead the longest time the call can take (see
+  "The instruction timeline" and "Interrupts inside a replaced function").
 - The CPU calls the function when it reaches `addr`. Afterwards the layer performs the `rts`
   (pops the return address) unless the function calls `hle_jump(ctx, addr)`.
 - `ctx->d[8]`, `ctx->a[8]` (a[7] = SP), `ctx->sr`. Partial writes: `set_b`/`set_w`.
@@ -172,18 +174,107 @@ at frame 1. The six default states are `gun_01 gun_02 gun_04 gun_05 gun_07 title
   (period 882 mcycles after the first trigger) and advances `refresh_cycles`; `sess_end` rewinds
   the phase with the clock and returns the nested *base* cycles so refresh is counted once. The
   model is fine-grained (it assumes the instruction costs are added in arbitrarily small steps),
-  so it can be ±2 cycles off at a refresh boundary - the main residual below.
+  so it can be off by the overshoot of an instruction at a refresh boundary. Functions that need
+  to be exact keep an instruction timeline instead (next sections); the lump model remains for the
+  rest.
 
-**Result.** With these fixes `--hle PalFade` alone is identical for 3000 frames from `gun_01` and
-`gun_04` (its delay is now run as 68k so `CramUpload` polls the status at the real raster time);
-on `gun_02`/`gun_05`/`gun_07` a single VRAM byte differs around frames 16-20 (the game state, live
-RAM, stays identical) and on `title` at frame 863. `T2_HLE_ORIG=name` runs a replacement as the
-original 68k inside the full frame loop and logs its real cost next to the C charge
-(`T2_HLE_CHARGE=1` logs the charge); it double counts after the first call (see hle.c), so only
-the first call of a run is trustworthy. The VDP command list is now exact: see "Exact timing"
-in the VDP command list section below (`--hle VdpListRun,VdpCmd0End,...` identical to `--hle
-none` for 3000 frames from all six default states, and from 17 more states). `--hle all` still
-diverges (frames 16-385), from the non-VDP functions only.
+**Result (non-VDP replacements).** Every non-VDP replacement is now lockstep-identical:
+
+| spec | gun_01 | gun_02 | gun_04 | gun_05 | gun_07 | title |
+| --- | --- | --- | --- | --- | --- | --- |
+| each of `Random MenacerReadXY ReadPad1 ReadPad2 ReadInput ReadInputAim PadMoveCrosshair QueueCrosshair AddScoreBcd AddScore250..10000 BcdAdd PalFadeStep Copy32 PalCycle PalFade QueueSprite ObjQueueSprite BuildSpriteTable HitBox PickupHitBox ShotHitTest` alone, 3000 frames | identical | identical | identical | identical | identical | identical |
+| `--hle all,-VdpListRun,-VdpCmd0End,...,-VdpCmd8VScroll` (all non-VDP together), 3000 frames | identical | identical | identical | identical | identical | identical |
+| `--hle all` (VDP list included), 3000 frames | identical | identical | identical | identical | identical | identical |
+
+Before (1000 frames): `ReadInputAim`/`PadMoveCrosshair`/`QueueCrosshair`/`MenacerReadXY`/`ReadPad1`/`HitBox`
+diverged on `gun_05` at 845-846 (`ReadPad1` also on `title` at 733); `QueueSprite`/`ObjQueueSprite`
+on `gun_05` at 56 and `BuildSpriteTable` at 963; `PalFade` on `gun_05` at 16 and `title` at 863,
+`PalFadeStep` on `title` at 863, `Copy32` on `title` at 81. `T2_HLE_ORIG=name` runs a replacement
+as the original 68k inside the full frame loop and logs its real cost next to the C charge
+(`T2_HLE_CHARGE=1` logs the charge); it is a distorted environment (nested session), so compare
+timelines with `port/tools/seqcmp.py` (below) instead of its per-call deltas.
+
+## The instruction timeline (exact cycle charges)
+
+A lump charge (`ctx->cycles = N`) is only as good as N: it puts the CPU clock within a few cycles
+of the original, but the clock is not all that has to match. Four things inside a function depend
+on *when* each original instruction would have run, and each broke the gate:
+
+1. **The bus refresh phase.** The core takes the 2-cycle refresh at the start of the first
+   instruction at or after `refresh_cycles` and sets the next one 896 mclk after *that* clock, so
+   where the instruction boundaries fall decides every later refresh. A lump, even with the exact
+   total, assumes the refresh fires exactly at the threshold: the phase drifts by the overshoot (up
+   to the length of an instruction) per refresh, and a few frames later an HV counter read or the
+   VBlank is a few cycles off. `movem.l` (and shifts/rotates by a register count, mul/div) also
+   re-check the threshold *inside* the instruction after their per-register part
+   (`SKIP_BUS_REFRESH`, m68kops.h) and skip one refresh without adding 2 cycles; `movem.w` does not.
+2. **Timing-sensitive accesses.** `ReadPad1/2` request the Z80 bus; GPGX then runs the Z80 up to
+   the 68k clock (`gen_zbusreq_w`), and a Z80 read of 68k ROM stalls the 68k by ~10 cycles
+   (`memz80.c`), so the access times decide the stall.
+3. **Slice ends.** The frame loop runs the 68k in slices (one per line, plus the VINT point) and
+   runs the Z80 up to every slice end (only while the 68k does not hold its bus). A C function runs
+   inside one slice; the Z80 run, and the stall it brings, must happen *between two of its
+   instructions* (which moves the refresh phase) and not after it.
+4. **Interrupts** (next section).
+
+A function can therefore keep an exact **timeline**: it reports each original instruction, in
+order, with its 68000 cost (the m68kops table: `move.w #imm,(abs).l` 20, `move.l (abs).l,Dn` 20,
+`bcc` 10 taken / 8 not taken (`bcc.w` 12 not taken), `dbra` 10 / 14, `movem.l (An)+` 12+8n,
+`move.w #imm,sr` 16, ...), and the layer does the rest:
+
+    hle_insn(ctx, n)    an instruction of n cycles with no timing-sensitive access
+    HLE_SEQ(ctx, ...)   a straight run of them (constants only): HLE_SEQ(ctx, 16, 8, 10)
+    hle_movem_l(ctx, n, regs)   movem.l (the refresh skip above); hle_movem_w is plain hle_insn
+    hle_pre(ctx)        before an instruction that touches I/O (Z80 bus, pad ports, VDP): the
+                        pending time is put on the CPU clock, so bus_r8/bus_w16 happen at the
+                        right time ...
+    hle_post(ctx, n)    ... and then the instruction's n cycles
+    hle_sync(ctx)       before an `hle_call68k` (after the `jsr` was charged with hle_insn): the
+                        callee starts at the original's time
+
+`ctx->cycles` is ignored once a function has used the timeline; the layer charges the part not
+yet on the clock. `hle_insn` does the refresh check the original does at that instruction
+(`tl_refresh`) and processes a slice end (Z80 run, `tl_boundary`) when the timeline crosses one;
+nested 68k stepping does the same after each instruction (`nest_step_done`). Rules: charge the
+`rts` too (the layer's own `rts` is free); charge a `jsr` in the caller and the callee's `rts` in
+the callee (C-to-C calls are direct); list `cmp.w` + `bne` as two instructions (each starts with
+its own refresh check). Nested 68k calls keep real time (`sess_end(exact)` keeps the refresh
+phase they ended with); `PalFade` also opens an exact session (`hle_exact_session`).
+
+`port/tools/seqcmp.py FUNC [--state S] [--frames N]` verifies a timeline: it runs the original
+(`T2_HLE_ORIG=FUNC`) and the C replacement with `T2_HLE_SEQ=1` (one log line per call with the
+cost of every instruction) and diffs them call by call; `0 differ` is exact. Two artifacts are
+expected: a 10-11 cycle Z80 stall on the instruction that requests the bus in `ReadPad`, and
+2-cycle noise on a call that straddles the frame wrap.
+
+## Interrupts inside a replaced function
+
+The original can be interrupted between any two instructions; a C function is atomic. The frame
+loop raises an interrupt at a slice end (VINT at `vint_cycle` of the first line; the Menacer's
+external interrupt at the start of the gun's line, `lightgun_refresh`; HINT is off in this game)
+and the 68k takes it at the first instruction boundary after that. If such a slice end falls
+*inside* a call, the replacement cannot reproduce the order (the handler may clear the sprite queue
+between two of its stores, read the HV counter, ...). So `run_def` runs that call as the original
+68k: it returns -1 and the CPU executes the instruction at the entry address normally (only entry
+addresses are hooked, so the rest is plain 68k code). The same applies to a call that would
+straddle the frame wrap (the frame loop rebases the clocks there).
+
+* A function that touches only work RAM and its registers is declared `HLE_FUNC_PURE` /
+  `HLE_RANGE_PURE`. The layer runs it once dry (no clock, no Z80, RAM restored) to learn its real
+  length and declines if a deliverable interrupt is raised in the span (with a margin for the Z80
+  stalls). No hand-made bound is needed.
+* The others (I/O, or nested 68k) are judged by their `HLE_FUNC` cycle argument, which for them is
+  the longest span the call can take (`ctx->cycles` is ignored): `ReadPad1/2` 330, `ReadInput`
+  1713, `ReadInputAim` 2070, `ShotHitTest` 8000, `PickupHitBox` 6000, `PalFade` 14000 (its nested
+  `CramUpload` polls the VDP and can take much longer than its usual ~4900).
+* `HLE_FUNC_LOWMASK` (`ReadInput`, `ReadInputAim`): the function lowers the interrupt mask itself
+  (`ReadPad` ends with `move.w #$2000,sr`), so an interrupt that is pending or raised during the
+  call is taken in the middle of it even when it was entered inside the VBlank handler (mask 6);
+  such a call also declines when one is already pending.
+* Entered with the mask at 6 or 7, nothing can be delivered, so nothing is checked.
+
+`T2_HLE_DECLINES=1` prints each decline and the total; `T2_HLE_NODECLINE=1` turns the fallback off
+(seqcmp does, to get comparable runs). The difftest sandbox never declines.
 
 ## Result so far
 
@@ -338,13 +429,13 @@ Reproduce the states (each `capture` writes `runs/states/<ADDR>/`):
 every register (d2-d5/d7 written with `move.w`, so their high words survive; d6 from
 `moveq`/`move.w`, high word 0; d1 from `moveq #0`; d0 = `$FFFF` after the dbra) and the
 final CCR (`tst.w d1`, or the closing `sf.b`). Its cost varies 4x with the number of changed
-colours (original min/avg/max 3454/10626/15466 over the 200 states), so the charge is per
-path: `3454 + 172*d1 + 12*ch` (changed entries `d1`, changed channels `ch`), which tracks
-the original to ~25 cycles on every state (charged avg 10570 vs 10626); the early exit
-charges 62.
+colours (original min/avg/max 3454/10626/15466 over the 200 states), so it is charged per
+instruction on the instruction timeline (every colour entry, each channel's branch path, the
+`dbra`; the early exit is 62); `seqcmp.py PalFadeStep` shows 0 differing calls. (The old fit
+`3454 + 172*d1 + 12*ch` was ~25 cycles off, which broke the gate on `title`.)
 
 `Copy32` ($008A7C) is eight `move.l (a0)+,(a1)+`; the C version reproduces the 8th move's
-N/Z (`move.l` sets N/Z, V=C=0) and charges the constant 176.
+N/Z (`move.l` sets N/Z, V=C=0) and charges 8 x 20 + the `rts` 16 = 176 on the timeline.
 
 `PalCycle` ($00E9FA) copies 8 bytes from the 4-step ROM table `$0084FA + (vblank_count &
 $18)` into colours 12..15 of palette line 0 and calls `CramUpload`. It is registered as an
@@ -360,8 +451,10 @@ wait for an interrupt (scooby-decomp's "Waiting for VBlank"), so the two WaitVBl
 and the `PalFadeStep` call stay 68k; the non-blocking body after the second wait
 (`$008A5E`..`$008A7A`: delay, `CramUpload`, `tst.b pal_fading`, branch) is an `HLE_RANGE`
 with exits `$008A4C` (loop back to the first wait) and `$008A7A` (the `rts`). `CramUpload`
-is run through `hle_call68k`; the range carries only the ~1452 non-nested cycles (the layer
-adds the nested call's ~3443, matching the original's constant 4895).
+is run through `hle_call68k`; the `lea`/`jsr` that precede it are charged and put on the clock
+(`hle_sync`) *before* the call, so `CramUpload` polls the VDP at the original's time (the old
+lump charge ran it ~32 cycles early). The range opens an exact session (`hle_exact_session`).
+Its declared window is 14000 cycles (see "Interrupts inside a replaced function").
 
 Captures (`port/scripts/capture_palette.txt`): each `load` of a level-intro state replays
 the level load and its blocking fade-in (`mainloop.md`, NextLevel step 5), so 18 states
