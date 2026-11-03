@@ -57,7 +57,8 @@ and the VDP command list `VdpListRun` ($011D32) with its handlers `VdpCmd0End` (
 `VdpCmd1CopyWords` ($012068), `VdpCmd2FillZero` ($011D70), `VdpCmd3WriteWord` ($011D90),
 `VdpCmd4CramLine` ($011D9E), `VdpCmd5FillValue` ($011D80), `VdpCmd6TileRect` ($0120BA),
 `VdpCmd7HScroll` ($011E48), `VdpCmd8VScroll` ($011F6E),
-and the hit-test path `ShotHitTest` ($005892), `HitBox` ($005940) and `PickupHitBox` ($007086).
+and the hit-test path `ShotHitTest` ($005892), `HitBox` ($005940) and `PickupHitBox` ($007086),
+and the background scroll path `ScrollRows` ($004752) and `BgStreamLayers` ($00498A).
 
 
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
@@ -311,6 +312,13 @@ straddle the frame wrap (the frame loop rebases the clocks there).
 | $005940 | HitBox | game/hittest.c | 600/600 states equal (21 hit / 579 miss; a deliberate box edge `<`->`<=` is caught at state 67) |
 | $007086 | PickupHitBox | game/hittest.c | 687/687 states equal (2 hit / 685 miss; a deliberate box edge `<`->`<=` is caught at state 407) |
 | $005892 | ShotHitTest | game/hittest.c | 200/200 states equal (no-hit 69 / hit 131, multi-hit sort 27, kill 55, front-not-shootable 7, human objects 4; a deliberate descending depth sort is caught at state 15) |
+| $004752 | ScrollRows | game/scroll.c | 200/200 states equal (pure, per-instruction timeline, 3784 cycles avg); lockstep: 3000 frames identical (6 default states) |
+| $00498A | BgStreamLayers | game/scroll.c | 200/200 states equal (nested 68k VdpQueue*/sub_013470/sub_01385A via hle_call68k, all flags mirrored); lockstep: 3000 frames identical (6 default states) |
+
+`ScrollRows`/`BgStreamLayers` are in `game/scroll.c` (docs/subsystems/vdp.md, "Rows" and "Map columns"). The per-level
+wrappers `BgStreamL1/2/4/5/6` stay 68k and enter `BgStreamLayers` by `bsr`/fall-through; the recursion
+`bra BgStreamLayers` is a loop in C, and the register save/restore (`movem.l`) is written to the stack
+as in the original.
 
 `QueueSprite`/`ObjQueueSprite`/`BuildSpriteTable` are in `game/sprite.c` (docs/subsystems/sprite.md).
 `QueueSprite` (`$013240`) appends one entry to `spr_queue_args` `$FFA318` and an (index, priority)
