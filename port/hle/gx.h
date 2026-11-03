@@ -40,9 +40,11 @@ void gx_z80_freeze(void);        /* make bus requests not run the Z80 (sandbox) 
 void gx_vdp_untimed_begin(void); /* bracket a VDP data port write made by C code */
 void gx_vdp_untimed_end(void);
 void gx_vdp_follow_cpu(void);
+int gx_vdp_next_toggle_clock(void);       /* start of the next VBLANK-set / VBLANK-clear / wrap line */
 unsigned gx_vdp_line_base(void);         /* mcycles_vdp */
 int gx_vdp_vcounter(void);
 void gx_vdp_set_vcounter(int v);
+void gx_follow_z80(int on);              /* gx_vdp_follow_cpu_lines also runs the Z80 per line */
 void gx_vdp_follow_cpu_lines(void);      /* like follow_cpu, also advancing the V counter */
 void gx_vdp_set_line_base(unsigned v);    /* sandbox: advance the VDP line base to the CPU time */
 

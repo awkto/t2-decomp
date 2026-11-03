@@ -122,7 +122,7 @@ def report_addr(ref_path, got_path, maxrep=16):
     for name, off, size, base in REGIONS:
         if name == "RAM":
             size = 0xFC00                 # exclude the system stack (see emu.c T2_LIVE_RAM_END)
-        diffs = [(off + i, a[off + i], b[off + i]) for i in range(off, min(off + size, n))
+        diffs = [(i, a[i], b[i]) for i in range(off, min(off + size, n))
                  if a[i] != b[i]]
         if diffs:
             print("    %s: %d byte(s) differ; first %d:" % (name, len(diffs), min(maxrep, len(diffs))))
