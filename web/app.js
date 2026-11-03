@@ -97,7 +97,9 @@ function startNow(path, source) {
   console.log('t2: starting with the ' + source + ' ROM');
   $('canvas').focus();
   try {
-    Module.callMain([path]);
+    // ?hle=all|none|NAME+NAME overrides the ini's hle option for this visit (docs/web.md)
+    const hle = new URLSearchParams(location.search).get("hle");
+    Module.callMain(hle ? [path, hle] : [path]);
   } catch (e) {
     if (e !== 'unwind' && !(e && e.name === 'ExitStatus')) throw e;
   }
