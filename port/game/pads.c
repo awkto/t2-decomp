@@ -46,40 +46,80 @@
 #define PAD1_WORD  0xFF8050
 #define PAD2_WORD  0xFF8000
 
-/* The common TH read. `data` is the port's data register, `dest` the button word. */
+/* The common TH read. `data` is the port's data register, `dest` the button word.
+ *
+ * Timing (docs/porting.md, "The instruction timeline"): the Z80 bus request makes GPGX resync the
+ * Z80 up to the 68k clock, and a Z80 read of 68k ROM then stalls the 68k by ~10 cycles
+ * (memz80.c), so WHEN the I/O accesses happen decides how the two CPUs interleave. Every
+ * access therefore goes through hle_pre()/hle_post() with the original's 68000 instruction
+ * costs: move to SR #imm 16, move.w #imm,(abs).l 20, move.b (abs).l,Dn 16, andi.b/andi.w #imm,Dn 8,
+ * bne.s 10 taken / 8 not, move.b #imm,(abs).l 20, lsl.w #2 10, or.w 4, move.w (abs).l,(abs).l 28,
+ * not.b 4, move.w Dn,(abs).l 16, rts 16 (total 290). */
 static void read_pad(hle_ctx *ctx, uint32_t data, uint32_t dest)
 {
+	hle_insn(ctx, 16);                      /* move.w #$2700,sr */
+	hle_pre(ctx);
 	bus_w16(Z80_BUSREQ, 0x0100);            /* move.w #$100,($A11100).l */
+	hle_post(ctx, 20);
 	uint8_t v;
 	long guard = 0;
-	do {
-		v = bus_r8(Z80_BUSREQ);         /* move.b ($A11100).l,d0 / andi.b #1 / bne */
-	} while ((v & 1) && ++guard < 1000000);
+	for (;;) {
+		hle_pre(ctx);
+		v = bus_r8(Z80_BUSREQ);         /* move.b ($A11100).l,d0 */
+		hle_post(ctx, 16);
+		hle_insn(ctx, 8);               /* andi.b #1,d0 */
+		if (!(v & 1) || ++guard >= 1000000) {
+			hle_insn(ctx, 8);       /* bne.s not taken */
+			break;
+		}
+		hle_insn(ctx, 10);              /* bne.s taken */
+	}
 
+	hle_pre(ctx);
 	bus_w8(data, 0x00);                     /* TH = 0 */
+	hle_post(ctx, 20);
+	hle_pre(ctx);
 	uint8_t b0 = bus_r8(data);              /* read: ..SA..DU */
+	hle_post(ctx, 16);
+	hle_pre(ctx);
 	bus_w8(data, 0x40);                     /* TH = 1 */
+	hle_post(ctx, 20);
+	hle_insn(ctx, 10);                      /* lsl.w #2,d0 */
+	hle_insn(ctx, 8);                       /* andi.w #$C0,d0 */
+	hle_pre(ctx);
 	uint8_t b1 = bus_r8(data);              /* read: ..CBRLDU */
+	hle_post(ctx, 16);
+	hle_insn(ctx, 8);                       /* andi.w #$3F,d1 */
+	hle_insn(ctx, 4);                       /* or.w d1,d0 */
+	hle_pre(ctx);
 	bus_w8(data, 0x00);                     /* TH = 0 again */
+	hle_post(ctx, 20);
 
 	uint32_t low = ((uint32_t)((b0 >> 4) & 0x3) << 6) | (b1 & 0x3F);
 	uint32_t out = (~low) & 0xFF;           /* not.b d0 (bits 8-15 are 0) */
 
+	hle_insn(ctx, 28);                      /* move.w (dest).l,(dest+2).l */
 	RAM16(dest + 2) = RAM16(dest);          /* previous buttons */
+	hle_insn(ctx, 4);                       /* not.b d0 */
+	hle_insn(ctx, 16);                      /* move.w d0,(dest).l */
 	RAM16(dest) = (uint16_t)out;
 
-	set_w(&ctx->d[0], out);                 /* move.w d0,(dest).l */
+	set_w(&ctx->d[0], out);
 	set_w(&ctx->d[1], b1 & 0x3F);           /* d1 low word = TH=1 byte & $3F */
-	ctx->sr = 0x2000;                       /* move.w #$2000,sr: X N Z V C cleared */
+	hle_pre(ctx);
 	bus_w16(Z80_BUSREQ, 0x0000);            /* move.w #$0,($A11100).l */
+	hle_post(ctx, 20);
+	ctx->sr = 0x2000;                       /* move.w #$2000,sr: X N Z V C cleared */
+	hle_insn(ctx, 16);                      /* move.w #$2000,sr */
+	hle_insn(ctx, 16);                      /* rts */
 }
 
-HLE_FUNC(0x0088A0, ReadPad1, 290)
+HLE_FUNC(0x0088A0, ReadPad1, 330)
 {
 	read_pad(ctx, PAD1_DATA, PAD1_WORD);
 }
 
-HLE_FUNC(0x008908, ReadPad2, 290)
+HLE_FUNC(0x008908, ReadPad2, 330)
 {
 	read_pad(ctx, PAD2_DATA, PAD2_WORD);
 }

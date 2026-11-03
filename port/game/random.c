@@ -26,8 +26,15 @@
 
 #define RNG_STATE 0xFFA0F0   /* data/ram.txt: rng_state, ResetCheatsRng sets it to $87654321 */
 
-HLE_FUNC(0x00881C, Random, 192)   /* measured original cost: 192 cycles, constant */
+HLE_FUNC_PURE(0x00881C, Random, 200)
 {
+	/* movem.l d0-d2,-(sp) 32, move.l (abs).l,d0 20, subq.l #1 8, move.w 4, subq.l #1 8, swap 4, move.w 4,
+	 * add.w 4, swap 4, move.w 4, swap 4, sub.l 8, move.l d0,(abs).l 20, movem.l (sp)+,d0-d2 36,
+	 * move.w (abs).l,d0 16, rts 16 */
+	hle_movem_l(ctx, 32, 3);
+	HLE_SEQ(ctx, 20, 8, 4, 8, 4, 4, 4, 4, 4, 4, 8, 20);
+	hle_movem_l(ctx, 36, 3);
+	HLE_SEQ(ctx, 16, 16);
 	uint32_t rng = RAM32(RNG_STATE);
 	uint32_t a = rng - 2;                       /* subq.l #2 in two steps */
 	uint32_t hi = (a >> 16) & 0xFFFF;           /* hi(rng_state - 2) */

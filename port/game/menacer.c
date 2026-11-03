@@ -86,18 +86,36 @@ static int menacer_stats_on(void)
  * first 8 words accumulate table[low byte] into *sx and the high byte into *sy; for the
  * next 8 into *ox / *oy. a0 is the 32-bit register value ($FFFFA0xx), so the wrap compares
  * the full long exactly as `cmpa.l #$FFFFA07E` does. */
-static uint32_t read_ring(uint32_t a0, uint32_t *sx, uint32_t *sy, uint32_t *ox, uint32_t *oy)
+static uint32_t read_ring(hle_ctx *ctx, uint32_t a0, uint32_t *sx, uint32_t *sy, uint32_t *ox, uint32_t *oy)
 {
 	uint32_t d0 = 0, d1 = 0, d3 = 0, d4 = 0;
+	HLE_SEQ(ctx, 8, 4, 4, 4);                      /* move.w #7,d7 / clr.w d0 / d1 / d2 */
 	for (int i = 0; i < 8; i++) {
-		if (a0 == RING_FIRST)
+		hle_insn(ctx, 14);                     /* cmpa.l #$FFFFA07E,a0 */
+		if (a0 == RING_FIRST) {
+			hle_insn(ctx, 12);             /* bne.w not taken */
+			hle_insn(ctx, 12);             /* lea.l ($FFA09E).l,a0 */
 			a0 = RING_END;
+		} else {
+			hle_insn(ctx, 10);             /* bne.w taken */
+		}
+		HLE_SEQ(ctx, 10, 14, 4, 10, 4);        /* move.b -(a0),d2 / move.b (0,a1,d2.w),d2 / add.w / move.b / add.w */
+		hle_insn(ctx, i == 7 ? 14 : 10);       /* dbra */
 		d0 = (d0 + RAM8(GUN_HTABLE + RAM8(--a0))) & 0xFFFF;
 		d1 = (d1 + RAM8(--a0)) & 0xFFFF;
 	}
+	HLE_SEQ(ctx, 8, 4, 4);                         /* move.w #7,d7 / clr.w d3 / d4 */
 	for (int i = 0; i < 8; i++) {
-		if (a0 == RING_FIRST)
+		hle_insn(ctx, 14);
+		if (a0 == RING_FIRST) {
+			hle_insn(ctx, 12);
+			hle_insn(ctx, 12);
 			a0 = RING_END;
+		} else {
+			hle_insn(ctx, 10);
+		}
+		HLE_SEQ(ctx, 10, 14, 4, 10, 4);
+		hle_insn(ctx, i == 7 ? 14 : 10);
 		d3 = (d3 + RAM8(GUN_HTABLE + RAM8(--a0))) & 0xFFFF;
 		d4 = (d4 + RAM8(--a0)) & 0xFFFF;
 	}
@@ -108,22 +126,26 @@ static uint32_t read_ring(uint32_t a0, uint32_t *sx, uint32_t *sy, uint32_t *ox,
 	return a0;
 }
 
-HLE_FUNC(0x01E442, MenacerReadXY, 1588)   /* measured original cost (gun on screen, 164 insns) */
+/* Timing: every original instruction is charged with hle_insn() (docs/porting.md, "The
+ * instruction timeline"), 68000 costs: move.b (abs).l,(abs).l 28, tst.b (abs).l 16, beq.w 10 taken /
+ * 12 not, rts 16 ... (verified against the original with port/tools/seqcmp.py). */
+HLE_FUNC_PURE(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see above */
 {
 	/* common prologue: button byte shift and the gun-off early exit */
 	RAM8(GUN_BTN_PREV) = RAM8(GUN_BTN);
 	RAM8(GUN_BTN) = RAM8(GUN_BTN_RAW);
 	uint8_t latch = RAM8(GUN_LATCH_COUNT);
+	HLE_SEQ(ctx, 28, 28, 16);               /* move.b/move.b (abs).l,(abs).l, tst.b (abs).l */
 	if (!latch) {
-		/* gun off screen: the original returns after 5 insns (98 cycles); charge that,
-		 * not the averaging path's cost, so the emulated timing does not drift. */
-		ctx->cycles = 98;
+		/* gun off screen: the original returns after 5 insns (98 cycles) */
+		HLE_SEQ(ctx, 10, 16);           /* beq.w taken, rts */
 		/* tst.b gun_latch_count: N/Z from the byte, V=C=0, X untouched */
 		cc_set(ctx, CC_N | CC_Z | CC_V | CC_C,
 		       ((latch & 0x80) ? CC_N : 0) | (latch ? 0 : CC_Z));
 		return;
 	}
 
+	hle_insn(ctx, 12);                        /* beq.w not taken */
 	uint32_t a0 = RAM32(GUN_RING_PTR);
 	uint32_t a1 = 0xFFFF0000u | GUN_HTABLE;   /* lea.l (gun_htable).l,a1 */
 
@@ -133,9 +155,17 @@ HLE_FUNC(0x01E442, MenacerReadXY, 1588)   /* measured original cost (gun on scre
 		 * fast path is short enough not to be interrupted, and charging 1588 would cross
 		 * the HLE 1000-cycle slicing threshold (hle.c) and take a TH latch interrupt in
 		 * the middle, corrupting the ring and the next frames' latches. */
-		ctx->cycles = 250;
-		if (a0 == RING_FIRST)
+		HLE_SEQ(ctx, 20, 14);                   /* movea.l (abs).l,a0 / cmpa.l #imm,a0 */
+		if (a0 == RING_FIRST) {
+			hle_insn(ctx, 8);               /* bne.s not taken */
+			hle_insn(ctx, 12);              /* lea.l (abs).l,a0 */
 			a0 = RING_END;
+		} else {
+			hle_insn(ctx, 10);              /* bne.s taken */
+		}
+		/* moveq 4, move.b -(a0),d0 10, lea 12, move.b (0,a1,d0.w),d0 14, add.w 4, move.w d0,(abs).l 16,
+		 * moveq 4, move.b -(a0),d1 10, add.w (abs).l,d1 16, move.w d1,(abs).l 16, rts 16 */
+		HLE_SEQ(ctx, 4, 10, 12, 14, 4, 16, 4, 10, 16, 16, 16);
 		uint32_t d0 = RAM8(GUN_HTABLE + RAM8(--a0));   /* moveq #0,d0; move.b -(a0),d0; table */
 		d0 = (d0 + d0) & 0xFFFF;                       /* add.w d0,d0 */
 		RAM16(GUN_X) = d0;
@@ -157,32 +187,57 @@ HLE_FUNC(0x01E442, MenacerReadXY, 1588)   /* measured original cost (gun on scre
 
 	/* original: 8 newest latches into d0/d1, the 8 before into d3/d4 */
 	uint32_t d0, d1, d3, d4;
-	a0 = read_ring(a0, &d0, &d1, &d3, &d4);
+	HLE_SEQ(ctx, 14, 20, 12);                  /* move.l d7,-(sp) / movea.l (abs).l,a0 / lea.l (abs).l,a1 */
+	a0 = read_ring(ctx, a0, &d0, &d1, &d3, &d4);
 
 	/* X: negated unsigned compare against $28 picks the 16- or 8-sample average */
+	HLE_SEQ(ctx, 4, 4);                        /* move.w d0,d2 / sub.w d3,d2 */
 	uint32_t tx = (d0 - d3) & 0xFFFF;
-	if (!(tx & 0x8000))
+	if (!(tx & 0x8000)) {
+		hle_insn(ctx, 8);                      /* bmi.s not taken */
+		hle_insn(ctx, 4);                      /* neg.w d2 */
 		tx = (0u - tx) & 0xFFFF;               /* neg.w d2 (skipped by bmi when negative) */
+	} else {
+		hle_insn(ctx, 10);                     /* bmi.s taken */
+	}
+	hle_insn(ctx, 8);                          /* cmpi.w #$28,d2 */
 	bool still_x = tx < 0x28;                  /* bcs: unsigned below $28 */
 	if (still_x) {
+		hle_insn(ctx, 10);                     /* bcs.s taken */
+		HLE_SEQ(ctx, 4, 12);                   /* add.w d3,d0 / lsr.w #3,d0 */
 		d0 = (d0 + d3) & 0xFFFF;
 		d0 = (d0 >> 3) & 0xFFFF;
 	} else {
+		hle_insn(ctx, 8);                      /* bcs.s not taken */
+		HLE_SEQ(ctx, 10, 10);                  /* lsr.w #2,d0 / bra.s */
 		d0 = d0 >> 2;
 	}
+	hle_insn(ctx, 16);                         /* move.w d0,(gun_x).l */
 	RAM16(GUN_X) = d0;
 
 	/* Y: same, threshold $14, /16 or /8, then + gun_y_offset */
+	HLE_SEQ(ctx, 4, 4);                        /* move.w d1,d2 / sub.w d4,d2 */
 	uint32_t ty = (d1 - d4) & 0xFFFF;
-	if (!(ty & 0x8000))
+	if (!(ty & 0x8000)) {
+		hle_insn(ctx, 8);
+		hle_insn(ctx, 4);
 		ty = (0u - ty) & 0xFFFF;
+	} else {
+		hle_insn(ctx, 10);
+	}
+	hle_insn(ctx, 8);                          /* cmpi.w #$14,d2 */
 	bool still_y = ty < 0x14;
 	if (still_y) {
+		hle_insn(ctx, 10);
+		HLE_SEQ(ctx, 4, 14);                   /* add.w d4,d1 / lsr.w #4,d1 */
 		d1 = (d1 + d4) & 0xFFFF;
 		d1 = (d1 >> 4) & 0xFFFF;
 	} else {
+		hle_insn(ctx, 8);
+		HLE_SEQ(ctx, 12, 10);                  /* lsr.w #3,d1 / bra.s */
 		d1 = d1 >> 3;
 	}
+	HLE_SEQ(ctx, 16, 16, 12, 16);              /* add.w (abs).l,d1 / move.w d1,(gun_y).l / move.l (sp)+,d7 / rts */
 	uint32_t sum = d1 + RAM16(GUN_Y_OFFSET);
 	uint32_t xf = (sum > 0xFFFF) ? CC_X : 0;   /* add.w (gun_y_offset).l,d1 sets X */
 	d1 = sum & 0xFFFF;

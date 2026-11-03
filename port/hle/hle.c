@@ -258,6 +258,119 @@ static void ctx_load(hle_ctx *c)
 	c->pc = gx_m68k_pc();
 	c->jumped = 0;
 	c->def = NULL;
+	c->tl = 0;
+	c->tl_used = 0;
+	c->tl_last = 0;
+	c->tl_flushed = 0;
+	c->dry = 0;
+}
+
+/* ---- instruction timeline (hle.h) */
+static int g_nest;             /* (defined below) depth of nested 68k execution */
+static bool g_top;             /* (defined below) a top-level C function is running */
+static int g_bnd;              /* the next slice end the frame loop would have processed (tl_boundary) */
+/* T2_HLE_SEQ=1: log, per top-level call, the list of instruction costs (the C side: what was
+ * passed to hle_insn/hle_post; the T2_HLE_ORIG side: what each original instruction cost, without
+ * the 14-mcycle refresh) so a C timeline can be diffed against the original (port/tools/seqcmp.py). */
+static int g_seq_on = -1;
+static int g_seq[1 << 16], g_seq_n;
+static void seq_add(int n)
+{
+	if (g_seq_on > 0 && g_seq_n < (int)(sizeof g_seq / sizeof g_seq[0]))
+		g_seq[g_seq_n++] = n;
+}
+
+/* Put the pending timeline on the CPU clock. */
+static void tl_flush(hle_ctx *c)
+{
+	c->tl_flushed = 1;
+	if (!hle_post_access) {
+		gx_m68k_set_cycles(gx_m68k_cycles() + (int)c->tl);
+		c->tl = 0;
+	}
+}
+
+/* Between two of the original's instructions the frame loop may end the CPU's time slice (a line
+ * end, or the VINT point): it runs the Z80 up to that point, and a Z80 read of 68k ROM then stalls
+ * the 68k (memz80.c), shifting every later instruction - and with it the bus-refresh phase. A C
+ * function that spans a slice end must do that at the same point of its own timeline. (Whether an
+ * interrupt is raised there is decided before the call, see run_def.) Not in a dry run, nested, or
+ * in the sandbox. */
+static void tl_boundary(hle_ctx *c)
+{
+	if (hle_post_access || c->dry || !g_top)
+		return;
+	while (g_bnd <= gx_m68k_cycles() + (int)c->tl) {
+		tl_flush(c);
+		gx_z80_catchup(g_bnd);
+		g_bnd = gx_next_slice_end(g_bnd);
+	}
+}
+
+/* the 68k's bus refresh: 2 cycles when the clock has reached refresh_cycles, checked at the start
+ * of every instruction (m68kcpu.c) */
+static void tl_refresh(hle_ctx *c)
+{
+	if (hle_post_access)
+		return;
+	int v = gx_m68k_cycles() + (int)c->tl;
+	if (v >= gx_m68k_refresh_cycles()) {
+		gx_m68k_set_refresh_cycles(v + 128 * 7);
+		c->tl += 2 * 7;
+	}
+}
+static void tl_start(hle_ctx *c)
+{
+	c->tl_used = 1;
+	tl_boundary(c);
+	tl_refresh(c);
+}
+void hle_insn(hle_ctx *c, int n)
+{
+	tl_start(c);
+	c->tl += (long)n * 7;
+	c->tl_last = (long)n * 7;
+	if (!c->dry)
+		seq_add(n);
+}
+void hle_insn_x(hle_ctx *c, int n, int extra)
+{
+	tl_start(c);
+	if (!hle_post_access && gx_m68k_cycles() + (int)c->tl + extra * 7 >= gx_m68k_refresh_cycles())
+		gx_m68k_set_refresh_cycles(gx_m68k_refresh_cycles() + 128 * 7);   /* SKIP_BUS_REFRESH */
+	c->tl += (long)n * 7;
+	c->tl_last = (long)n * 7;
+	if (!c->dry)
+		seq_add(n);
+}
+static int g_pre_clock;
+void hle_sync(hle_ctx *c)
+{
+	c->tl_used = 1;
+	tl_boundary(c);
+	tl_flush(c);
+	g_pre_clock = gx_m68k_cycles();
+}
+void hle_pre(hle_ctx *c)
+{
+	c->tl_used = 1;
+	tl_boundary(c);
+	tl_refresh(c);
+	tl_flush(c);
+	g_pre_clock = gx_m68k_cycles();
+}
+/* the access itself can stall the CPU (a Z80 ROM read at a bus request, VDP FIFO...): that time is
+ * already on the clock; only the log shows it as part of the instruction */
+void hle_post(hle_ctx *c, int n)
+{
+	c->tl += (long)n * 7;
+	c->tl_last = (long)n * 7;
+	seq_add(n + (hle_post_access ? 0 : (gx_m68k_cycles() - g_pre_clock) / 7));
+}
+void hle_seq(hle_ctx *c, const int *costs, int n)
+{
+	for (int i = 0; i < n; i++)
+		hle_insn(c, costs[i]);
 }
 
 /* Registers and PC are stored before SR: lowering the interrupt mask can take a pending
@@ -299,7 +412,7 @@ int hle_nested_cycles(void) { return g_sess ? (gx_m68k_cycles() - g_sess_c0) / 7
  * phase to the session start. */
 static bool g_exact;           /* the last session's time is exact (refresh and stalls included) */
 
-static int sess_end(void)
+static int sess_end(bool exact)
 {
 	if (!g_sess)
 		return 0;
@@ -322,8 +435,14 @@ static int sess_end(void)
 	}
 	int n_nested = (gx_m68k_refresh_cycles() - g_sess_r0) / 896;
 	int n = (gx_m68k_cycles() - g_sess_c0) / 7 - 2 * n_nested;
+	if (exact) {
+		/* the C function keeps an exact instruction timeline (hle_insn): the nested time, bus
+		 * refresh included, is real; keep the refresh phase it ended with */
+		n = (gx_m68k_cycles() - g_sess_c0) / 7;
+	} else {
+		gx_m68k_set_refresh_cycles(g_sess_r0);
+	}
 	gx_m68k_set_cycles(g_sess_c0);
-	gx_m68k_set_refresh_cycles(g_sess_r0);
 	gx_vdp_fifo_clamp();
 	gx_vdp_set_line_base(g_sess_line_base);
 	gx_vdp_set_vcounter(g_sess_vc);
@@ -332,6 +451,9 @@ static int sess_end(void)
 	return n > 0 ? n : 0;
 }
 
+static bool g_decline_on = true;   /* T2_HLE_NODECLINE=1 turns the interrupt-atomicity fallback off */
+static unsigned long g_declined;
+static uint8_t g_snap[0x10000];
 static const hle_def *g_cur_def;   /* innermost C function running (NULL at 68k top level) */
 
 /* T2_HLE_ORIG=name[,name...]: run these replacements as the ORIGINAL 68k code (like difftest
@@ -374,6 +496,58 @@ static int run_def(const hle_def *def, entry *e)
 	hle_ctx c;
 	const hle_def *outer_def = g_cur_def;
 	bool top = g_nest == 0 && !g_top;
+	/* Interrupt atomicity (docs/porting.md, "Interrupts inside a replaced function"): when the
+	 * original would have been interrupted INSIDE this call, it must run as 68k. A pure function
+	 * (HLE_F_PURE: work RAM only) is run once dry to learn its real length; the others are judged
+	 * by def->cycles, the longest window they take. */
+	int irq_mask = (m68k_hle_get_sr() >> 8) & 7;
+	int clock0 = gx_m68k_cycles();
+	bool lowmask = (def->flags & HLE_F_LOWMASK) != 0;
+	if (top)
+		g_bnd = gx_m68k_cycle_end();
+	if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
+		long window = -1, span = (long)def->cycles * 7;   /* span: how long the call can take */
+		if (def->flags & HLE_F_PURE) {
+			hle_ctx d;
+			int refresh0 = gx_m68k_refresh_cycles();
+			ctx_load(&d);
+			d.def = def;
+			d.dry = 1;
+			memcpy(g_snap, work_ram, sizeof g_snap);
+			def->fn(&d);
+			memcpy(work_ram, g_snap, sizeof g_snap);
+			gx_m68k_set_refresh_cycles(refresh0);
+			/* the dry run has no Z80 stall at slice ends (up to ~80 mcycles each): margin */
+			long margin = 300 + (d.tl / 3420 + 1) * 100;   /* one Z80 stall per slice end crossed */
+			span = d.tl + margin;
+			if (irq_mask < 6)
+				window = d.tl - d.tl_last + margin;
+		} else if (irq_mask < 6 || lowmask) {
+			window = span;
+			if (lowmask) {
+				irq_mask = 0;
+				if (gx_m68k_pending_irq()) {   /* taken as soon as the function's ReadPad drops the mask */
+					g_declined++;
+					return -1;
+				}
+			}
+		}
+		/* The frame loop rebases the clocks at the end of the frame and starts the next one
+		 * (VDP frame work, the VINT slice...): a call that straddles it cannot be a C lump. */
+		if (clock0 + span > gx_frame_end_clock()) {
+			g_declined++;
+			return -1;
+		}
+		if (window >= 0) {
+			int at, lvl = gx_irq_boundary_in(clock0, clock0 + (int)window, &at);
+			if (lvl && irq_mask < lvl) {
+				if (getenv("T2_HLE_DECLINES"))
+					fprintf(stderr, "decline %s: clock %d window %ld lvl %d at %d mask %d\n", def->name, clock0, window, lvl, at, irq_mask);
+				g_declined++;
+				return -1;
+			}
+		}
+	}
 	if (top)
 		g_top = true;
 	ctx_load(&c);
@@ -398,6 +572,8 @@ static int run_def(const hle_def *def, entry *e)
 		c.cycles = (int)(d > 0 ? d : 0);
 	} else {
 		def->fn(&c);
+		if (c.tl_used)
+			c.cycles = (int)(c.tl / 7);
 	}
 	g_cur_def = outer_def;
 	if (g_decline) {
@@ -407,7 +583,15 @@ static int run_def(const hle_def *def, entry *e)
 		if (e)
 			e->calls--;
 		g_frame_calls--;
+		g_seq_n = 0;
 		return -1;
+	}
+	if (g_seq_on > 0 && top) {
+		fprintf(stderr, "seq %s:", def->name);
+		for (int i = 0; i < g_seq_n; i++)
+			fprintf(stderr, " %d", g_seq[i]);
+		fprintf(stderr, "\n");
+		g_seq_n = 0;
 	}
 	if (def->exits) {
 		/* HLE_RANGE: must leave through a declared exit */
@@ -423,7 +607,7 @@ static int run_def(const hle_def *def, entry *e)
 	long nested = 0;
 	g_exact = false;
 	if (top) {
-		nested = sess_end();
+		nested = sess_end(c.tl_used);
 		g_top = false;
 	}
 	long total = (c.cycles > 0 ? c.cycles : 0) + nested;
@@ -433,7 +617,7 @@ static int run_def(const hle_def *def, entry *e)
 	 * would have accrued (the gap after each refresh is 896-14 = 882 mcycles) and advance
 	 * refresh_cycles so the next real instruction keeps the right phase. Nested 68k ran for
 	 * real, so its refresh is already inside `nested`. */
-	if (!def_is_orig(def) && total > 0 && !hle_post_access && !(top && g_exact)) {
+	if (!def_is_orig(def) && total > 0 && !hle_post_access && !c.tl_used && !(top && g_exact)) {
 		int delta = (int)(total * 7);
 		int R = gx_m68k_refresh_cycles(), C = gx_m68k_cycles();
 		int gap = R - C;
@@ -502,12 +686,18 @@ int hle_invoke(const hle_def *def)
 	return run_def(def, find_addr(def->addr));
 }
 
+static void declines_print(void) { fprintf(stderr, "hle: %lu calls ran as 68k (interrupt inside)\n", g_declined); }
+
 void hle_install(void)
 {
 	const char *o = getenv("T2_HLE_ORIG");
 	if (o)
 		snprintf(g_orig, sizeof g_orig, "%s", o);
 	hle_rom = gx_rom();
+	g_seq_on = getenv("T2_HLE_SEQ") != NULL;
+	g_decline_on = getenv("T2_HLE_NODECLINE") == NULL;
+	if (getenv("T2_HLE_DECLINES"))
+		atexit(declines_print);
 	m68k_hle_handler = dispatch;
 	m68k_hle_bitmap = g_bitmap;
 	bitmap_set(STALL_PC, true);
@@ -538,6 +728,16 @@ void hle_install(void)
  *    (an HV read after a nested call sees the time it took, as in the original: #33) and
  *    is rewound when the C function returns; the nested time is added to its charge
  *    (run_def), so a later Z80 bus request doesn't catch the Z80/YM2612 up by frames. */
+static void seq_step(int c0, int r0)
+{
+	if (g_seq_on <= 0)
+		return;
+	int d = gx_m68k_cycles() - c0;
+	if (gx_m68k_refresh_cycles() != r0)
+		d -= 14;                       /* the 2-cycle bus refresh taken before this instruction */
+	seq_add(d / 7);
+}
+
 static void nest_begin(void)
 {
 	if (g_nest++ == 0 && !hle_post_access && !g_sess) {   /* the sandbox manages time itself */
@@ -554,6 +754,13 @@ static void nest_begin(void)
 
 static void nest_step_done(void)
 {
+	/* a slice end of the original's frame loop falls between this instruction and the next:
+	 * run the Z80 up to it (tl_boundary) */
+	if (g_top && !hle_post_access)
+		while (g_bnd <= gx_m68k_cycles()) {
+			gx_z80_catchup(g_bnd);
+			g_bnd = gx_next_slice_end(g_bnd);
+		}
 	gx_m68k_clear_irq();
 	if (g_sess)
 		gx_vdp_follow_cpu_lines();
@@ -564,7 +771,7 @@ static void nest_step_done(void)
 static void nest_end(void)
 {
 	if (--g_nest == 0 && !g_top)    /* nested call made outside a C function (tools) */
-		sess_end();
+		sess_end(false);
 }
 
 static void call68k(hle_ctx *c, uint32_t addr, bool orig)
@@ -581,7 +788,9 @@ static void call68k(hle_ctx *c, uint32_t addr, bool orig)
 		m68k_hle_skip_pc = addr;
 	unsigned long n = 0;
 	while (!(gx_m68k_pc() == SENTINEL_RET && gx_m68k_dar()[15] == sp_done)) {
+		int sc0 = gx_m68k_cycles(), sr0 = gx_m68k_refresh_cycles();
 		int r = m68k_step_one();
+		seq_step(sc0, sr0);
 		nest_step_done();
 		if (r < 0) {
 			fprintf(stderr, "hle_call68k($%06X): address error at pc $%06X\n", addr, gx_m68k_pc());
@@ -600,6 +809,10 @@ static void call68k(hle_ctx *c, uint32_t addr, bool orig)
 	c->def = save.def;
 	c->pc = save.pc;
 	c->jumped = save.jumped;
+	c->tl = save.tl;
+	c->tl_used = save.tl_used;
+	c->tl_last = save.tl_last;
+	c->tl_flushed = save.tl_flushed;
 }
 
 void hle_call68k(hle_ctx *c, uint32_t addr) { call68k(c, addr, false); }
@@ -638,7 +851,9 @@ void hle_run68k_until(hle_ctx *c, const uint32_t *exits)
 	for (unsigned long n = 0;; n++) {
 		if (n && hle_exit_match(exits, gx_m68k_pc(), gx_m68k_dar()[15], sp))
 			break;
+		int sc0 = gx_m68k_cycles(), sr0 = gx_m68k_refresh_cycles();
 		int r = m68k_step_one();
+		seq_step(sc0, sr0);
 		nest_step_done();
 		if (r < 0) {
 			fprintf(stderr, "hle_run68k_until($%06X): address error at pc $%06X\n", start, gx_m68k_pc());
@@ -656,6 +871,10 @@ void hle_run68k_until(hle_ctx *c, const uint32_t *exits)
 	ctx_load(c);
 	c->def = save.def;
 	c->cycles = save.cycles;
+	c->tl = save.tl;
+	c->tl_used = save.tl_used;
+	c->tl_last = save.tl_last;
+	c->tl_flushed = save.tl_flushed;
 	c->jumped = 1;
 }
 void hle_call68k_orig(hle_ctx *c, uint32_t addr) { call68k(c, addr, true); }

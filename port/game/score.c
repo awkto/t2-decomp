@@ -128,7 +128,9 @@ static void addscorebcd_impl(hle_ctx *ctx)
 {
 	ctx->a[0] = 0xFFFF0000u | P1_ADDEND;      /* lea.l ($FFFF9EAC).l,a0 */
 	uint32_t idx = RAM16(ctx->a[4] + 0x24);
+	HLE_SEQ(ctx, 12, 12);                     /* lea.l (abs).l,a0 / tst.w (0x24,a4) */
 	if (idx & 0x8000) {
+		hle_insn(ctx, 10);                /* bmi.s taken */
 		/* tst.w ($24,a4): N/Z from the word, V=C=0, X untouched; a1 unchanged */
 		if (score_stats_on())
 			g_skip++;
@@ -136,16 +138,20 @@ static void addscorebcd_impl(hle_ctx *ctx)
 		return;
 	}
 	uint32_t base;
+	hle_insn(ctx, 8);                         /* bmi.s not taken */
 	if (idx == 0) {
+		hle_insn(ctx, 10);                /* beq.s taken */
 		base = 0xFFFF0000u | P1_ADDEND;   /* beq: keep a0 */
 		if (score_stats_on())
 			g_p1++;
 	} else {
+		HLE_SEQ(ctx, 8, 12);              /* beq.s not taken / lea.l (abs).l,a0 */
 		base = 0xFFFF0000u | P2_ADDEND;   /* else: lea.l ($FFFF9EB4).l,a0 */
 		ctx->a[0] = base;
 		if (score_stats_on())
 			g_p2++;
 	}
+	HLE_SEQ(ctx, 4, 12, 20, 18, 18, 18, 18);  /* movea.l a0,a1 / move.l d0,(a1)+ / andi.b #$ef,ccr / abcd x4 */
 	ctx->a[1] = base;                 /* movea.l a0,a1 */
 	uint32_t addend = ctx->d[0];
 	RAM32_W(base, addend);            /* move.l d0,(a1)+ */
@@ -166,7 +172,7 @@ static void addscorebcd_impl(hle_ctx *ctx)
 
 /* $007376: the body above, stopped just before the movem/rts at $00739A (see the frame
  * note in the header). The 68k epilogue then runs and returns to the wrapper's caller. */
-HLE_RANGE(0x007376, AddScoreBcd, 150, 0x00739A)
+HLE_RANGE_PURE(0x007376, AddScoreBcd, 150, 0x00739A)
 {
 	addscorebcd_impl(ctx);
 	hle_jump(ctx, 0x00739A);
@@ -175,11 +181,15 @@ HLE_RANGE(0x007376, AddScoreBcd, 150, 0x00739A)
 /* The 14-byte stubs. Each saves d0/a0-a1, sets d0, tail-jumps to AddScoreBcd. The C
  * version calls the AddScoreBcd C code directly and restores the three registers. */
 #define ADDSCORE_STUB(ADDR, NAME, VALUE)                     \
-	HLE_FUNC(ADDR, NAME, 256)                             \
+	HLE_FUNC_PURE(ADDR, NAME, 256)                        \
 	{                                                    \
 		uint32_t d0 = ctx->d[0], a0 = ctx->a[0], a1 = ctx->a[1]; \
+		hle_movem_l(ctx, 32, 3);    /* movem.l d0/a0-a1,-(sp) */ \
+		HLE_SEQ(ctx, 12, 10);       /* move.l #imm,d0 / bra.w AddScoreBcd */ \
 		ctx->d[0] = (VALUE);                         \
 		addscorebcd_impl(ctx);                       \
+		hle_movem_l(ctx, 36, 3);    /* movem.l (sp)+,d0/a0-a1 */ \
+		hle_insn(ctx, 16);          /* rts */ \
 		ctx->d[0] = d0;                              \
 		ctx->a[0] = a0;                              \
 		ctx->a[1] = a1;                              \
@@ -195,7 +205,13 @@ ADDSCORE_STUB(0x00734C, AddScore4000, 0x4000)
 ADDSCORE_STUB(0x00735A, AddScore5000, 0x5000)
 ADDSCORE_STUB(0x007368, AddScore10000, 0x10000)
 
-HLE_FUNC(0x007A92, BcdAdd, 7893)
+/* BcdAdd: movem.l d0-d7/a1,-(sp) 80, moveq 4, lea 12; per digit: moveq 4, move.l 4, bra.s 10, d3 x
+ * (dbra taken 10 + jsr sub_007AD4 18 + its body: movem 24, moveq 4 x2, 10 x (add.l 8) with 9 dbra
+ * taken 10 and one expired 14, move.l 4, movem 28, rts 16), dbra expired 14, st.b 6, moveq 4, then per
+ * subtraction (addq.b 4, add.l 8, cmp.l 6, bge.s taken 10 / not taken 8), sub.l 8, sub.l 8, addi.b 8,
+ * move.b d6,(0,a1,d7.w) 14, addq.w 4, dbra 10 taken / 14 expired; clr.b (0,a1,d7.w) 18, movem.l
+ * (sp)+,d0-d7/a1 84, rts 16. */
+HLE_FUNC_PURE(0x007A92, BcdAdd, 16000)
 {
 	uint32_t d4 = ctx->d[4];
 	uint32_t d3 = ctx->d[3] & 0xFFFF;   /* dbra uses the low word */
@@ -205,26 +221,51 @@ HLE_FUNC(0x007A92, BcdAdd, 7893)
 	if (score_stats_on() && d3 < 16)
 		g_d3[d3]++;
 
+	hle_movem_l(ctx, 80, 9);
+	HLE_SEQ(ctx, 4, 12);
 	for (;;) {
 		uint32_t d0 = 1;            /* moveq #1,d0; then mul10 d3 times -> 10^d3 */
-		for (uint32_t i = 0; i < d3; i++)
+		HLE_SEQ(ctx, 4, 4, 10);     /* moveq #1,d0 / move.l d3,d5 / bra.s */
+		for (uint32_t i = 0; i < d3; i++) {
 			d0 *= 10;
+			HLE_SEQ(ctx, 10, 18);                    /* dbra taken / jsr */
+			hle_movem_l(ctx, 24, 2);
+			HLE_SEQ(ctx, 4, 4);                      /* moveq / moveq */
+			for (int k = 0; k < 10; k++) {
+				hle_insn(ctx, 8);                  /* add.l d0,d1 */
+				hle_insn(ctx, k == 9 ? 14 : 10);   /* dbra d2 */
+			}
+			hle_insn(ctx, 4);                        /* move.l d1,d0 */
+			hle_movem_l(ctx, 28, 2);
+			hle_insn(ctx, 16);                       /* rts */
+		}
+		hle_insn(ctx, 14);          /* dbra d5 expired */
+		HLE_SEQ(ctx, 6, 4);         /* st.b d6 / moveq #0,d1 */
 		uint32_t d6 = 0xFF;         /* st.b d6 */
 		uint32_t d1 = 0;
 		do {                        /* count how many d0 fit in d4 (signed cmp) */
 			d6 = (d6 + 1) & 0xFF;
 			d1 += d0;
+			HLE_SEQ(ctx, 4, 8, 6);                   /* addq.b / add.l / cmp.l */
+			hle_insn(ctx, (int32_t)d4 >= (int32_t)d1 ? 10 : 8);   /* bge.s */
 		} while ((int32_t)d4 >= (int32_t)d1);
 		d1 -= d0;
 		d4 -= d1;                   /* the remainder feeds the lower digits */
 		d6 = (d6 + 0x30) & 0xFF;    /* to ASCII */
 		RAM8(BCD_OUT + d7) = (uint8_t)d6;
 		d7 = (d7 + 1) & 0xFFFF;     /* addq.w #1,d7 */
-		if (d3 == 0)                /* dbra d3 */
+		HLE_SEQ(ctx, 8, 8, 8, 14, 4);                /* sub.l / sub.l / addi.b / move.b / addq.w */
+		if (d3 == 0) {              /* dbra d3 */
+			hle_insn(ctx, 14);
 			break;
+		}
+		hle_insn(ctx, 10);
 		d3--;
 	}
 	RAM8(BCD_OUT + d7) = 0;             /* clr.b (a1,d7.w): N=0 Z=1 V=C=0 */
+	hle_insn(ctx, 18);                  /* clr.b */
+	hle_movem_l(ctx, 84, 9);
+	hle_insn(ctx, 16);                  /* rts */
 
 	/* X is left by the final addq.w #1,d7 (d7 was d3_first before it) */
 	uint32_t xf = (d3_first == 0xFFFF) ? CC_X : 0;
