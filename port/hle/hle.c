@@ -386,6 +386,10 @@ static bool g_top;             /* a top-level C function is running */
  * the 2nd call sees the time the 1st took, as in the original, #33) and are rewound when
  * the C function returns; the time becomes part of its charge (#31). */
 static bool g_sess;
+static bool g_sess_timed;      /* the session made timed VDP data writes (hle_vdp_timed) */
+static bool g_vdp_timed;
+static bool g_decline;
+void hle_decline(void) { if (!hle_post_access) g_decline = true; }
 static int g_sess_c0, g_sess_vc, g_sess_r0;
 static unsigned g_sess_line_base;
 
@@ -395,10 +399,29 @@ int hle_nested_cycles(void) { return g_sess ? (gx_m68k_cycles() - g_sess_c0) / 7
  * original adds every 128 cycles; subtract them so the caller can re-account refresh over
  * the whole function (run_def). Returns the nested BASE cycles and rewinds clock + refresh
  * phase to the session start. */
+static bool g_exact;           /* the last session's time is exact (refresh and stalls included) */
+
 static int sess_end(bool exact)
 {
 	if (!g_sess)
 		return 0;
+	g_exact = false;
+	if (g_sess_timed) {
+		/* The C code advanced the real clock instruction by instruction (refresh and VDP
+		 * stalls included): keep the refresh phase and the FIFO stamps, charge the elapsed
+		 * time, and keep its sub-cycle remainder (a stall ends on a 7-mclk boundary) so the
+		 * clock after the frame loop adds the charge is exactly the real one. */
+		int el = gx_m68k_cycles() - g_sess_c0;
+		gx_m68k_set_cycles(g_sess_c0 + el % 7);
+		gx_vdp_set_line_base(g_sess_line_base);
+		gx_vdp_set_vcounter(g_sess_vc);
+		gx_m68k_resync_irq();
+		g_sess = false;
+		g_sess_timed = false;
+		gx_follow_z80(0);
+		g_exact = true;
+		return el / 7;
+	}
 	int n_nested = (gx_m68k_refresh_cycles() - g_sess_r0) / 896;
 	int n = (gx_m68k_cycles() - g_sess_c0) / 7 - 2 * n_nested;
 	if (exact) {
@@ -417,7 +440,7 @@ static int sess_end(bool exact)
 	return n > 0 ? n : 0;
 }
 
-static bool g_decline = true;      /* T2_HLE_NODECLINE=1 turns the interrupt-atomicity fallback off */
+static bool g_decline_on = true;   /* T2_HLE_NODECLINE=1 turns the interrupt-atomicity fallback off */
 static unsigned long g_declined;
 static uint8_t g_snap[0x10000];
 static const hle_def *g_cur_def;   /* innermost C function running (NULL at 68k top level) */
@@ -471,7 +494,7 @@ static int run_def(const hle_def *def, entry *e)
 	bool lowmask = (def->flags & HLE_F_LOWMASK) != 0;
 	if (top)
 		g_bnd = gx_m68k_cycle_end();
-	if (g_decline && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
+	if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
 		long window = -1;
 		if (def->flags & HLE_F_PURE) {
 			if (irq_mask < 6) {
@@ -535,6 +558,16 @@ static int run_def(const hle_def *def, entry *e)
 			c.cycles = (int)(c.tl / 7);
 	}
 	g_cur_def = outer_def;
+	if (g_decline) {
+		g_decline = false;
+		if (top)
+			g_top = false;
+		if (e)
+			e->calls--;
+		g_frame_calls--;
+		g_seq_n = 0;
+		return -1;
+	}
 	if (g_seq_on > 0 && top) {
 		fprintf(stderr, "seq %s:", def->name);
 		for (int i = 0; i < g_seq_n; i++)
@@ -554,6 +587,7 @@ static int run_def(const hle_def *def, entry *e)
 		c.a[7] += 4;
 	}
 	long nested = 0;
+	g_exact = false;
 	if (top) {
 		nested = sess_end(c.tl_used);
 		g_top = false;
@@ -565,7 +599,7 @@ static int run_def(const hle_def *def, entry *e)
 	 * would have accrued (the gap after each refresh is 896-14 = 882 mcycles) and advance
 	 * refresh_cycles so the next real instruction keeps the right phase. Nested 68k ran for
 	 * real, so its refresh is already inside `nested`. */
-	if (!def_is_orig(def) && total > 0 && !hle_post_access && !c.tl_used) {
+	if (!def_is_orig(def) && total > 0 && !hle_post_access && !c.tl_used && !(top && g_exact)) {
 		int delta = (int)(total * 7);
 		int R = gx_m68k_refresh_cycles(), C = gx_m68k_cycles();
 		int gap = R - C;
@@ -592,7 +626,7 @@ static int run_def(const hle_def *def, entry *e)
 	return (int)total;
 }
 
-void hle_state_reset(void) { g_cur_def = NULL; g_stall_debt = 0; g_sess = false; g_top = false; g_nest = 0; }
+void hle_state_reset(void) { g_cur_def = NULL; g_stall_debt = 0; g_sess = false; g_sess_timed = false; g_vdp_timed = false; gx_follow_z80(0); g_top = false; g_nest = 0; }
 
 /* STALL_PC: burn the next slice of g_stall_debt; then rts to the continuation */
 static int stall(void)
@@ -643,7 +677,7 @@ void hle_install(void)
 		snprintf(g_orig, sizeof g_orig, "%s", o);
 	hle_rom = gx_rom();
 	g_seq_on = getenv("T2_HLE_SEQ") != NULL;
-	g_decline = getenv("T2_HLE_NODECLINE") == NULL;
+	g_decline_on = getenv("T2_HLE_NODECLINE") == NULL;
 	if (getenv("T2_HLE_DECLINES"))
 		atexit(declines_print);
 	m68k_hle_handler = dispatch;
@@ -835,9 +869,23 @@ uint16_t bus_r16(uint32_t a) { CHECK_ALIGN(a); return (uint16_t)m68k_bus_read16(
 uint32_t bus_r32(uint32_t a) { CHECK_ALIGN(a); return m68k_bus_read32(a); }
 
 /* VDP data port ($C00000-$C00003): see gx_vdp_untimed_begin() */
+void hle_vdp_timed(int on)
+{
+	g_vdp_timed = on;
+	if (on && g_sess)
+		g_sess_timed = true;
+}
+void hle_exact_session(void)
+{
+	if (g_sess) {
+		g_sess_timed = true;
+		gx_follow_z80(1);
+	}
+}
+
 static bool is_vdp_data(uint32_t a)
 {
-	return (a & 0xFFFFFC) == 0xC00000;
+	return !g_vdp_timed && (a & 0xFFFFFC) == 0xC00000;
 }
 
 void bus_w8(uint32_t a, uint8_t v)

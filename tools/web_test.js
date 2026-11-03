@@ -82,6 +82,10 @@ const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSO
   await input.uploadFile(rom);
   // a ROM the player has just chosen starts the game (the choice was the gesture) ...
   await waitState('running', 30000);
+  // the HLE set (?hle= in the URL; default none): none -> 0 active, anything else -> some active
+  res.hle = new URL(url).searchParams.get('hle') || 'none';
+  res.hle_active = await page.evaluate(() => Module._web_hle_count());
+  check('hle=' + res.hle + ' active count', res.hle === 'none' ? res.hle_active === 0 : res.hle_active > 0, res.hle_active);
   check('ROM from the file input starts the game', true);
   await sleep(1000);                            // the debounced IndexedDB sync
   // ... a later visit finds it in IndexedDB and waits for "Click to play" (the AudioContext gate)

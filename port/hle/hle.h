@@ -220,6 +220,19 @@ int hle_nested_cycles(void);
 void hle_dma_begin(void);
 void hle_dma_complete(void);
 void hle_dma_end(void);
+/* hle_vdp_timed(1): VDP data port writes made by bus_w*() are NOT "untimed" (see gx.c): GPGX
+ * applies its FIFO/access-slot stall to the CPU clock. Only valid while the C code advances
+ * the real clock instruction by instruction inside a session (game/vdplist.c); the FIFO
+ * read-out stamps are then kept when the session rewinds the clock. */
+void hle_vdp_timed(int on);
+/* hle_exact_session(): the C code of this session advances the real clock itself, bus refresh
+ * included (as game/vdplist.c does): charge the elapsed time as is, no refresh model. */
+void hle_exact_session(void);
+/* hle_decline(): call at the very start of a replacement (before any state change, outside a
+ * session) to leave the code to the real 68k this time: the CPU executes the instruction at
+ * the entry address normally. For code whose timing the frame loop must be able to
+ * interleave with (it cannot run while C executes). Ignored in the difftest sandbox. */
+void hle_decline(void);
 /* profiling support (port/src/ipprof.c): depth of nested 68k execution (0 = top level), the
  * innermost running C function (NULL at top level), and whether the CPU is about to hand pc
  * to an enabled C function instead of executing the instruction there */
