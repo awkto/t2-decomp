@@ -201,13 +201,13 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
  * lump refresh model. hle_run_seq runs a straight list of plain instruction costs. In the
  * sandbox (difftest) the clock is not touched and only the plain total is kept. */
 void hle_insn(hle_ctx *ctx, int n);
-/* movem to/from memory: GPGX re-checks the refresh threshold inside the instruction, after the
- * per-register part (count x 4 for .w, x 8 for .l), and then skips one refresh (SKIP_BUS_REFRESH,
- * m68kops.h); the same for shifts and rotates by a register count and for mul/div. n = the
+/* movem.l to/from memory: GPGX re-checks the refresh threshold inside the instruction, after the
+ * per-register part (count x 8), and then skips one refresh (SKIP_BUS_REFRESH, m68kops.h); the
+ * same for shifts and rotates by a register count and for mul/div (movem.w does not). n = the
  * full cost, extra = that per-register part. */
 void hle_insn_x(hle_ctx *ctx, int n, int extra);
 #define hle_movem_l(ctx, n, regs) hle_insn_x((ctx), (n), 8 * (regs))
-#define hle_movem_w(ctx, n, regs) hle_insn_x((ctx), (n), 4 * (regs))
+#define hle_movem_w(ctx, n, regs) hle_insn((ctx), (n))   /* .w has no SKIP_BUS_REFRESH */
 void hle_pre(hle_ctx *ctx);
 void hle_post(hle_ctx *ctx, int n);
 void hle_sync(hle_ctx *ctx);   /* put the pending time on the clock (before hle_call68k, after its jsr was charged) */

@@ -517,9 +517,10 @@ static int run_def(const hle_def *def, entry *e)
 			memcpy(work_ram, g_snap, sizeof g_snap);
 			gx_m68k_set_refresh_cycles(refresh0);
 			/* the dry run has no Z80 stall at slice ends (up to ~80 mcycles each): margin */
-			span = d.tl + 300;
+			long margin = 300 + (d.tl / 3420 + 1) * 100;   /* one Z80 stall per slice end crossed */
+			span = d.tl + margin;
 			if (irq_mask < 6)
-				window = d.tl - d.tl_last + 300;
+				window = d.tl - d.tl_last + margin;
 		} else if (irq_mask < 6 || lowmask) {
 			window = span;
 			if (lowmask) {
