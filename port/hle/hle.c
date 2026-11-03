@@ -662,18 +662,11 @@ static int stall(void)
 
 static int g_trace = -1;   /* T2_HLE_TRACE=1: log every dispatched call to stderr */
 
-static unsigned g_dbgpc;
 static int dispatch(unsigned int pc)
 {
 	if (pc == STALL_PC)
 		return stall();
 	entry *e = find_addr(pc);
-	if (g_dbgpc && pc == g_dbgpc) {
-		int clk = gx_m68k_cycles();
-		if (clk >= gx_m68k_refresh_cycles())
-			clk += 14;
-		fprintf(stderr, "PCLOG clk=%d R=%d en=%d\n", clk, gx_m68k_refresh_cycles(), e && e->enabled);
-	}
 	if (!e || !e->enabled)
 		return -1;
 	if (g_trace < 0)
@@ -703,10 +696,6 @@ void hle_install(void)
 	hle_rom = gx_rom();
 	g_seq_on = getenv("T2_HLE_SEQ") != NULL;
 	g_decline_on = getenv("T2_HLE_NODECLINE") == NULL;
-	if (getenv("T2_HLE_DBGPC")) {
-		g_dbgpc = (unsigned)strtoul(getenv("T2_HLE_DBGPC"), NULL, 16);
-		bitmap_set(g_dbgpc, true);
-	}
 	if (getenv("T2_HLE_DECLINES"))
 		atexit(declines_print);
 	m68k_hle_handler = dispatch;
