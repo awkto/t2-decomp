@@ -314,6 +314,10 @@ straddle the frame wrap (the frame loop rebases the clocks there).
 | $005892 | ShotHitTest | game/hittest.c | 200/200 states equal (no-hit 69 / hit 131, multi-hit sort 27, kill 55, front-not-shootable 7, human objects 4; a deliberate descending depth sort is caught at state 15) |
 | $004752 | ScrollRows | game/scroll.c | 200/200 states equal (pure, per-instruction timeline, 3784 cycles avg); lockstep: 3000 frames identical (6 default states) |
 | $00498A | BgStreamLayers | game/scroll.c | 200/200 states equal (nested 68k VdpQueue*/sub_013470/sub_01385A via hle_call68k, all flags mirrored); lockstep: 3000 frames identical (6 default states) |
+| $009358 | ScriptTick | game/levelscript.c | 200/200 states equal (HLE_RANGE_PURE; the opcode handler stays 68k via the original `jsr (a1)`); lockstep: 3000 frames identical (6 default states) |
+| $009376 | ScriptExec | game/levelscript.c | 68/68 states equal; lockstep: 3000 frames identical (6 default states) |
+| $00933E | ScriptNext | game/levelscript.c | 70/70 states equal; lockstep: 3000 frames identical (6 default states) |
+| $009326 | ScriptStart | game/levelscript.c | 2/2 states equal (level start is rare); lockstep: 3000 frames identical (6 default states) |
 
 `ScrollRows`/`BgStreamLayers` are in `game/scroll.c` (docs/subsystems/vdp.md, "Rows" and "Map columns"). The per-level
 wrappers `BgStreamL1/2/4/5/6` stay 68k and enter `BgStreamLayers` by `bsr`/fall-through; the recursion
