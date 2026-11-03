@@ -255,7 +255,7 @@ loc_0132C4:                                       /* one queued sprite */
 	ctx->a[3] += 2;
 	ctx->d[5] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[3]);
 	ctx->a[3] += 2;
-	hle_insn(ctx, 12 + 4 * 4);                            /* movem.w: 12 + 4 regs * 4 */
+	hle_movem_w(ctx, 12 + 4 * 4, 4);                      /* movem.w: 12 + 4 regs * 4 */
 	set_w(&ctx->d[1], ((ctx->d[1] & 0xFFFF) << 1) & 0xFFFF);   /* asl.w #0x1,d1 */
 	hle_insn(ctx, 6 + 2);
 	ctx->a[4] = SPRITE_MAPPINGS;                  /* lea (SpriteMappings,pc),a4 */

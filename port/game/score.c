@@ -184,10 +184,12 @@ HLE_RANGE_PURE(0x007376, AddScoreBcd, 150, 0x00739A)
 	HLE_FUNC_PURE(ADDR, NAME, 256)                        \
 	{                                                    \
 		uint32_t d0 = ctx->d[0], a0 = ctx->a[0], a1 = ctx->a[1]; \
-		HLE_SEQ(ctx, 32, 12, 10);   /* movem.l d0/a0-a1,-(sp) / move.l #imm,d0 / bra.w AddScoreBcd */ \
+		hle_movem_l(ctx, 32, 3);    /* movem.l d0/a0-a1,-(sp) */ \
+		HLE_SEQ(ctx, 12, 10);       /* move.l #imm,d0 / bra.w AddScoreBcd */ \
 		ctx->d[0] = (VALUE);                         \
 		addscorebcd_impl(ctx);                       \
-		HLE_SEQ(ctx, 36, 16);       /* movem.l (sp)+,d0/a0-a1 / rts */ \
+		hle_movem_l(ctx, 36, 3);    /* movem.l (sp)+,d0/a0-a1 */ \
+		hle_insn(ctx, 16);          /* rts */ \
 		ctx->d[0] = d0;                              \
 		ctx->a[0] = a0;                              \
 		ctx->a[1] = a1;                              \
@@ -219,18 +221,23 @@ HLE_FUNC_PURE(0x007A92, BcdAdd, 16000)
 	if (score_stats_on() && d3 < 16)
 		g_d3[d3]++;
 
-	HLE_SEQ(ctx, 80, 4, 12);
+	hle_movem_l(ctx, 80, 9);
+	HLE_SEQ(ctx, 4, 12);
 	for (;;) {
 		uint32_t d0 = 1;            /* moveq #1,d0; then mul10 d3 times -> 10^d3 */
 		HLE_SEQ(ctx, 4, 4, 10);     /* moveq #1,d0 / move.l d3,d5 / bra.s */
 		for (uint32_t i = 0; i < d3; i++) {
 			d0 *= 10;
-			HLE_SEQ(ctx, 10, 18, 24, 4, 4);          /* dbra taken / jsr / movem / moveq / moveq */
+			HLE_SEQ(ctx, 10, 18);                    /* dbra taken / jsr */
+			hle_movem_l(ctx, 24, 2);
+			HLE_SEQ(ctx, 4, 4);                      /* moveq / moveq */
 			for (int k = 0; k < 10; k++) {
 				hle_insn(ctx, 8);                  /* add.l d0,d1 */
 				hle_insn(ctx, k == 9 ? 14 : 10);   /* dbra d2 */
 			}
-			HLE_SEQ(ctx, 4, 28, 16);                 /* move.l d1,d0 / movem.l (sp)+ / rts */
+			hle_insn(ctx, 4);                        /* move.l d1,d0 */
+			hle_movem_l(ctx, 28, 2);
+			hle_insn(ctx, 16);                       /* rts */
 		}
 		hle_insn(ctx, 14);          /* dbra d5 expired */
 		HLE_SEQ(ctx, 6, 4);         /* st.b d6 / moveq #0,d1 */
@@ -256,7 +263,9 @@ HLE_FUNC_PURE(0x007A92, BcdAdd, 16000)
 		d3--;
 	}
 	RAM8(BCD_OUT + d7) = 0;             /* clr.b (a1,d7.w): N=0 Z=1 V=C=0 */
-	HLE_SEQ(ctx, 18, 84, 16);           /* clr.b / movem.l (sp)+,d0-d7/a1 / rts */
+	hle_insn(ctx, 18);                  /* clr.b */
+	hle_movem_l(ctx, 84, 9);
+	hle_insn(ctx, 16);                  /* rts */
 
 	/* X is left by the final addq.w #1,d7 (d7 was d3_first before it) */
 	uint32_t xf = (d3_first == 0xFFFF) ? CC_X : 0;

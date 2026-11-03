@@ -212,3 +212,4 @@ void gx_z80_catchup(int b)
 	if (zstate == 1)
 		z80_run((unsigned)b);
 }
+int gx_frame_end_clock(void) { return (int)((long)lines_per_frame * MCYCLES_PER_LINE); }

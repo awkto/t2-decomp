@@ -191,7 +191,8 @@ HLE_FUNC_PURE(0x005940, HitBox, 200)
 	/* movem.w (0x2,a6),d2-d3 */
 	ctx->d[2] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 2);
 	ctx->d[3] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 4);
-	HLE_SEQ(ctx, C_MOVEMW_AL_2, C_MOVEMW_DI_2);
+	hle_movem_w(ctx, C_MOVEMW_AL_2, 2);
+	hle_movem_w(ctx, C_MOVEMW_DI_2, 2);
 
 	uint16_t d0 = (uint16_t)ctx->d[0], d1 = (uint16_t)ctx->d[1];
 	uint16_t d2 = (uint16_t)ctx->d[2], d3 = (uint16_t)ctx->d[3];
@@ -259,7 +260,8 @@ HLE_FUNC(0x007086, PickupHitBox, 6000)
 	ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY + 2);
 	ctx->d[2] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 2);
 	ctx->d[3] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 4);
-	HLE_SEQ(ctx, C_MOVEMW_AL_2, C_MOVEMW_DI_2);
+	hle_movem_w(ctx, C_MOVEMW_AL_2, 2);
+	hle_movem_w(ctx, C_MOVEMW_DI_2, 2);
 
 	uint16_t d0 = (uint16_t)ctx->d[0], d1 = (uint16_t)ctx->d[1];
 	uint16_t d2 = (uint16_t)ctx->d[2], d3 = (uint16_t)ctx->d[3];

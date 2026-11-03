@@ -332,6 +332,16 @@ void hle_insn(hle_ctx *c, int n)
 	if (!c->dry)
 		seq_add(n);
 }
+void hle_insn_x(hle_ctx *c, int n, int extra)
+{
+	tl_start(c);
+	if (!hle_post_access && gx_m68k_cycles() + (int)c->tl + extra * 7 >= gx_m68k_refresh_cycles())
+		gx_m68k_set_refresh_cycles(gx_m68k_refresh_cycles() + 128 * 7);   /* SKIP_BUS_REFRESH */
+	c->tl += (long)n * 7;
+	c->tl_last = (long)n * 7;
+	if (!c->dry)
+		seq_add(n);
+}
 static int g_pre_clock;
 void hle_sync(hle_ctx *c)
 {
@@ -495,23 +505,23 @@ static int run_def(const hle_def *def, entry *e)
 	if (top)
 		g_bnd = gx_m68k_cycle_end();
 	if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
-		long window = -1;
+		long window = -1, span = (long)def->cycles * 7;   /* span: how long the call can take */
 		if (def->flags & HLE_F_PURE) {
-			if (irq_mask < 6) {
-				hle_ctx d;
-				int refresh0 = gx_m68k_refresh_cycles();
-				ctx_load(&d);
-				d.def = def;
-				d.dry = 1;
-				memcpy(g_snap, work_ram, sizeof g_snap);
-				def->fn(&d);
-				memcpy(work_ram, g_snap, sizeof g_snap);
-				gx_m68k_set_refresh_cycles(refresh0);
-				/* the dry run has no Z80 stall at slice ends (up to ~80 mcycles each): margin */
+			hle_ctx d;
+			int refresh0 = gx_m68k_refresh_cycles();
+			ctx_load(&d);
+			d.def = def;
+			d.dry = 1;
+			memcpy(g_snap, work_ram, sizeof g_snap);
+			def->fn(&d);
+			memcpy(work_ram, g_snap, sizeof g_snap);
+			gx_m68k_set_refresh_cycles(refresh0);
+			/* the dry run has no Z80 stall at slice ends (up to ~80 mcycles each): margin */
+			span = d.tl + 300;
+			if (irq_mask < 6)
 				window = d.tl - d.tl_last + 300;
-			}
 		} else if (irq_mask < 6 || lowmask) {
-			window = (long)def->cycles * 7;
+			window = span;
 			if (lowmask) {
 				irq_mask = 0;
 				if (gx_m68k_pending_irq()) {   /* taken as soon as the function's ReadPad drops the mask */
@@ -519,6 +529,12 @@ static int run_def(const hle_def *def, entry *e)
 					return -1;
 				}
 			}
+		}
+		/* The frame loop rebases the clocks at the end of the frame and starts the next one
+		 * (VDP frame work, the VINT slice...): a call that straddles it cannot be a C lump. */
+		if (clock0 + span > gx_frame_end_clock()) {
+			g_declined++;
+			return -1;
 		}
 		if (window >= 0) {
 			int at, lvl = gx_irq_boundary_in(clock0, clock0 + (int)window, &at);
@@ -644,11 +660,18 @@ static int stall(void)
 
 static int g_trace = -1;   /* T2_HLE_TRACE=1: log every dispatched call to stderr */
 
+static unsigned g_dbgpc;
 static int dispatch(unsigned int pc)
 {
 	if (pc == STALL_PC)
 		return stall();
 	entry *e = find_addr(pc);
+	if (g_dbgpc && pc == g_dbgpc) {
+		int clk = gx_m68k_cycles();
+		if (clk >= gx_m68k_refresh_cycles())
+			clk += 14;
+		fprintf(stderr, "PCLOG clk=%d R=%d en=%d\n", clk, gx_m68k_refresh_cycles(), e && e->enabled);
+	}
 	if (!e || !e->enabled)
 		return -1;
 	if (g_trace < 0)
@@ -678,6 +701,10 @@ void hle_install(void)
 	hle_rom = gx_rom();
 	g_seq_on = getenv("T2_HLE_SEQ") != NULL;
 	g_decline_on = getenv("T2_HLE_NODECLINE") == NULL;
+	if (getenv("T2_HLE_DBGPC")) {
+		g_dbgpc = (unsigned)strtoul(getenv("T2_HLE_DBGPC"), NULL, 16);
+		bitmap_set(g_dbgpc, true);
+	}
 	if (getenv("T2_HLE_DECLINES"))
 		atexit(declines_print);
 	m68k_hle_handler = dispatch;
