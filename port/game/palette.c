@@ -113,19 +113,27 @@ static int palette_stats_on(void)
 /* One 3-bit channel: target/current already masked, `step` is the base (+2/+$20/+$200).
  * Returns the stepped current value and leaves the effective step in *step_out (the 68k
  * leaves d6 at the last channel's value, +step or -step). */
-static uint32_t pal_channel(uint32_t target, uint32_t current, uint32_t step, uint32_t *step_out)
+static uint32_t pal_channel(hle_ctx *ctx, uint32_t target, uint32_t current, uint32_t step, uint32_t *step_out)
 {
 	uint32_t d6 = step;
 	if (current != target) {
-		if (current < target)          /* cmp.w d4,d5 / bgt keeps +step, else neg.w d6 */
+		hle_insn(ctx, 8);              /* beq.s not taken */
+		if (current < target) {        /* cmp.w d4,d5 / bgt keeps +step, else neg.w d6 */
+			HLE_SEQ(ctx, 8, 4);    /* bgt.s not taken / neg.w d6 */
 			d6 = (uint32_t)(-(int32_t)step) & 0xFFFF;
+		} else {
+			hle_insn(ctx, 10);     /* bgt.s taken */
+		}
+		hle_insn(ctx, 4);              /* sub.w d6,d5 */
 		current = (current - d6) & 0xFFFF;
+	} else {
+		hle_insn(ctx, 10);             /* beq.s taken */
 	}
 	*step_out = d6;
 	return current;
 }
 
-HLE_FUNC(0x008970, PalFadeStep, 3200)
+HLE_FUNC_PURE(0x008970, PalFadeStep, 16000)
 {
 	uint8_t fading = RAM8(PAL_FADING);
 	if (fading == 0) {                  /* tst.b pal_fading / beq loc_0089FE */
@@ -133,13 +141,14 @@ HLE_FUNC(0x008970, PalFadeStep, 3200)
 			g_fs_off++;
 		RAM8(PAL_FADING) = 0;       /* sf.b (already 0): N=0 Z=1 V=C=0, X unchanged */
 		cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
-		ctx->cycles = 62;           /* tst.b + beq + sf.b + rts (measured) */
+		HLE_SEQ(ctx, 16, 10, 20, 16);   /* tst.b (abs).l / beq.w taken / sf.b (abs).l / rts */
 		return;
 	}
 
+	/* tst.b / beq.w not taken / lea.l x3 / moveq x2 */
+	HLE_SEQ(ctx, 16, 12, 12, 12, 12, 4, 4);
 	uint32_t a0 = PAL_TARGET, a1 = PAL_CUR, a2 = PAL_CHANGED;
 	uint32_t d1 = 0;                    /* moveq #0,d1 */
-	uint32_t ch = 0;                    /* changed channels (for the cycle model) */
 	/* d2-d7 keep their entry values until a `move.w`/`moveq` writes them (an entry whose
 	 * colours are all equal never touches d4-d7) */
 	uint32_t d2 = ctx->d[2], d3 = ctx->d[3], d4 = ctx->d[4],
@@ -149,26 +158,35 @@ HLE_FUNC(0x008970, PalFadeStep, 3200)
 		d2 = RAM16(a0); a0 += 2;    /* move.w (a0)+,d2 */
 		d3 = RAM16(a1); a1 += 2;    /* move.w (a1)+,d3 */
 		RAM8(a2) = 0; a2 += 1;      /* sf.b (a2)+ */
-		if (d3 == d2)               /* cmp.w d2,d3 / beq loc_0089F4 */
+		HLE_SEQ(ctx, 8, 8, 12, 4);  /* move.w (a0)+,d2 / move.w (a1)+,d3 / sf.b (a2)+ / cmp.w d2,d3 */
+		if (d3 == d2) {             /* cmp.w d2,d3 / beq loc_0089F4 */
+			hle_insn(ctx, 10);                     /* beq.s taken */
+			hle_insn(ctx, i == 63 ? 14 : 10);      /* dbra */
 			continue;
+		}
+		hle_insn(ctx, 8);           /* beq.s not taken */
 		RAM8(a2 - 1) = 0xFF;        /* st.b (-1,a2) */
+		hle_insn(ctx, 16);
 
 		/* channel 1: mask $E, step 2 (moveq #2,d6) */
 		uint32_t t = d2, c = d3;
 		d4 = t & 0x000E; d5 = c & 0x000E;
-		if (d5 != d4) ch++;
-		d5 = pal_channel(d4, d5, 0x0002, &d6);
+		HLE_SEQ(ctx, 4, 4, 4, 8, 8, 4);   /* move.w d2,d4 / move.w d3,d5 / moveq #2,d6 / andi.w x2 / cmp.w d4,d5 */
+		d5 = pal_channel(ctx, d4, d5, 0x0002, &d6);
 		d7 = d5;                    /* move.w d5,d7 */
 		/* channel 2: mask $E0, step $20 (moveq #$20,d6) */
 		d4 = t & 0x00E0; d5 = c & 0x00E0;
-		if (d5 != d4) ch++;
-		d5 = pal_channel(d4, d5, 0x0020, &d6);
+		HLE_SEQ(ctx, 4, 4, 4, 4, 8, 8, 4);   /* move.w d5,d7 / move.w / move.w / moveq #$20,d6 / andi.w x2 / cmp.w */
+		d5 = pal_channel(ctx, d4, d5, 0x0020, &d6);
 		d7 |= d5;                   /* or.w d5,d7 */
 		/* channel 3: mask $E00, step $200 (move.w #$200,d6) */
 		d4 = t & 0x0E00; d5 = c & 0x0E00;
-		if (d5 != d4) ch++;
-		d5 = pal_channel(d4, d5, 0x0200, &d6);
+		HLE_SEQ(ctx, 4, 4, 4, 8, 8, 8, 4);   /* or.w d5,d7 / move.w / move.w / move.w #$200,d6 / andi.w x2 / cmp.w */
+		d5 = pal_channel(ctx, d4, d5, 0x0200, &d6);
 		d7 |= d5;
+		/* or.w d5,d7 4, move.w d7,(-2,a1) 12, addq.w #1,d1 4, dbra */
+		HLE_SEQ(ctx, 4, 12, 4);
+		hle_insn(ctx, i == 63 ? 14 : 10);       /* dbra */
 
 		RAM16(a1 - 2) = d7 & 0xFFFF;    /* move.w d7,(-2,a1) */
 		d1 = (d1 + 1) & 0xFFFF;         /* addq.w #1,d1 */
@@ -194,17 +212,13 @@ HLE_FUNC(0x008970, PalFadeStep, 3200)
 		}
 	}
 
-	/* Cost model from the captured fade states: 64 loop iterations plus, per changed
-	 * entry, the extra channel masks/steps. A least-squares fit on (changed entries d1,
-	 * changed channels ch) gives 3454 + 172*d1 + 12*ch; the original's min/avg/max over
-	 * the 200 states is 3454/10626/15466 and this model is within ~25 cycles on every
-	 * one (charged avg 10570). */
-	ctx->cycles = 3454 + 172 * (int)d1 + 12 * (int)ch;
-
+	hle_insn(ctx, 4);                       /* tst.w d1 */
 	if (d1 != 0) {
+		HLE_SEQ(ctx, 8, 16);            /* beq.s not taken / rts */
 		/* tst.w d1: N from d1 (<= 64, so 0), Z=0, V=C=0; X = the loop's last addq = 0 */
 		cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C, 0);
 	} else {
+		HLE_SEQ(ctx, 10, 20, 16);       /* beq.s taken / sf.b (abs).l / rts */
 		RAM8(PAL_FADING) = 0;       /* beq loc_0089FE / sf.b */
 		cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
 	}
@@ -213,11 +227,12 @@ HLE_FUNC(0x008970, PalFadeStep, 3200)
 /* ------------------------------------------------------------------ Copy32 $008A7C */
 /* `move.l` sets N/Z from the moved long, V=C=0, X unchanged; the final CCR is the 8th
  * move's. */
-HLE_FUNC(0x008A7C, Copy32, 176)
+HLE_FUNC_PURE(0x008A7C, Copy32, 200)
 {
 	if (palette_stats_on())
 		g_copy32++;
 	uint32_t last = 0;
+	HLE_SEQ(ctx, 20, 20, 20, 20, 20, 20, 20, 20, 16);   /* move.l (a0)+,(a1)+ x8 / rts */
 	for (int i = 0; i < 8; i++) {       /* move.l (a0)+,(a1)+ x8 */
 		uint32_t v = bus_r32(ctx->a[0]);
 		bus_w32(ctx->a[1], v);
@@ -235,10 +250,12 @@ HLE_FUNC(0x008A7C, Copy32, 176)
  * early (the prelude is instant in C) and the VDP HBLANK status bit would differ in d1.
  * Keeping the call in 68k (scooby's "stop in front of the blocking/timed call") makes the
  * range, and the caller's d1, exactly equal. The `rts` at $00EA24 is trivial 68k. */
-HLE_RANGE(0x00E9FA, PalCycle, 112, 0x00EA1E)
+HLE_RANGE_PURE(0x00E9FA, PalCycle, 160, 0x00EA1E)
 {
 	if (palette_stats_on())
 		g_cycle++;
+	/* move.w (abs).l,d0 16, andi.w 8, lea.l x3 12, move.l (a0)+,(a1)+ x2 20, lea.l (pal_cur).l,a0 12 */
+	HLE_SEQ(ctx, 16, 8, 12, 12, 12, 20, 20, 12);
 	uint16_t d0 = RAM16(VBLANK_COUNT) & 0x18;    /* move.w / andi.w #$18 */
 	set_w(&ctx->d[0], d0);
 	uint32_t a0 = PAL_CYCLE_TAB + (int16_t)d0;   /* lea.l (0,a0,d0.w),a0 */
@@ -275,22 +292,25 @@ static void pal_run_to(hle_ctx *ctx, uint32_t start, uint32_t stop)
  * hle_run68k_until), then lea.l (abs).l,a0 (12), jsr (CramUpload).l (20, its own time added
  * by the layer), tst.b (abs).l (16) and the bne.s (10 back to $008A4C / 8 not taken, falling
  * to the rts at $008A7A): 58 or 56 non-nested cycles. */
-HLE_RANGE(0x008A5E, PalFade, 58, 0x008A4C, 0x008A7A)
+HLE_RANGE(0x008A5E, PalFade, 5400, 0x008A4C, 0x008A7A)
 {
 	pal_run_to(ctx, 0x008A5E, 0x008A66); /* moveq #$64,d0 + the nop/dbra delay, as 68k */
 	ctx->a[0] = PAL_CUR;                 /* lea.l (pal_cur).l,a0 */
+	HLE_SEQ(ctx, 12, 20);                /* lea.l (abs).l,a0 / jsr (CramUpload).l: before the call, so it starts on time */
+	hle_sync(ctx);
 	hle_call68k(ctx, CRAM_UPLOAD);       /* jsr (CramUpload).l */
 	uint8_t f = RAM8(PAL_FADING);
+	hle_insn(ctx, 16);                   /* tst.b (abs).l */
 	/* tst.b pal_fading: N/Z from the byte, V=C=0, X unchanged */
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C,
 	       ((f & 0x80) ? CC_N : 0) | (f ? 0 : CC_Z));
 	if (f) {
-		ctx->cycles = 12 + 20 + 16 + 10;   /* bne.s taken */
+		hle_insn(ctx, 10);                 /* bne.s taken */
 		if (palette_stats_on())
 			g_pf_loop++;
 		hle_jump(ctx, 0x008A4C);     /* bne.w PalFade: back to the first WaitVBlank */
 	} else {
-		ctx->cycles = 12 + 20 + 16 + 8;    /* bne.s not taken */
+		hle_insn(ctx, 8);                  /* bne.s not taken */
 		if (palette_stats_on())
 			g_pf_done++;
 		hle_jump(ctx, 0x008A7A);     /* fall through to rts */

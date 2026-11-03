@@ -27,6 +27,11 @@ void gx_m68k_set_refresh_cycles(int c);
 void gx_vdp_fifo_clamp(void);    /* FIFO read-out stamps <= CPU clock (after a rewind) */
 void gx_m68k_set_cycles(int c);  /* rewind the CPU clock (hle.c, after nested calls) */
 void gx_m68k_clear_irq(void);
+int gx_irq_boundary_in(int c0, int c1, int *at);   /* first IRQ-raising slice boundary in (c0,c1], mcycles; returns its level or 0 */
+int gx_m68k_pending_irq(void);   /* interrupt level the CPU has asserted (0 = none) */
+int gx_m68k_cycle_end(void);
+int gx_next_slice_end(int b);
+void gx_z80_catchup(int b);       /* what the frame loop does at a slice end: run the Z80 (if the 68k does not hold its bus) */
 int gx_m68k_slice_left(void);    /* 68k cycles left in the CPU's current frame-loop slice */
 void gx_m68k_resync_irq(void);   /* int level = what the VDP asserts (after holding it off) */
 

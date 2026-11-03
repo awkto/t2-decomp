@@ -35,6 +35,11 @@ typedef struct hle_ctx {
 	uint32_t pc;        /* entry address; becomes the resume address after hle_jump() */
 	int jumped;         /* set by hle_jump(): do not perform the implicit rts */
 	int cycles;         /* 68k cycles to charge; preset to the HLE_FUNC value, may be changed */
+	long tl;            /* instruction timeline (hle_insn/hle_pre/hle_post): pending master cycles */
+	int tl_used;        /* the function keeps an exact per-instruction timeline: ctx->cycles is ignored */
+	long tl_last;       /* master cycles of the last instruction on the timeline */
+	int tl_flushed;     /* the timeline was put on the CPU clock (an access or a slice end happened) */
+	int dry;            /* dry run (HLE_F_PURE): only the length of the timeline is wanted, no clock/Z80 effects */
 	const struct hle_def *def;
 } hle_ctx;
 
@@ -59,7 +64,14 @@ typedef struct hle_def {
 	 * sandbox, which holds interrupts, so difftest skips it (docs/native.md) */
 	unsigned flags;
 } hle_def;
-enum { HLE_F_WAIT = 1 };
+enum { HLE_F_WAIT = 1,
+       /* the function lowers the interrupt mask (SR) in the middle of its own run, e.g. by calling
+        * ReadPad ($2700 ... $2000): an interrupt that is pending or raised during the call is taken
+        * inside it, so it counts as interruptible whatever SR it was entered with */
+       HLE_F_LOWMASK = 2,
+       /* the function touches only 68k work RAM and its registers (no I/O, no nested 68k): the layer
+        * may run it twice, a dry run to learn its length and then the real one */
+       HLE_F_PURE = 4 };
 
 /* Range exit with a declared stack delta (docs/porting.md, "Ranges that push or pop"):
  * the range leaves at ADDR with SP = entry SP + DELTA. DELTA is even, -256..+254: negative
@@ -100,6 +112,32 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
 	void NAME(hle_ctx *ctx);                                                            \
 	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, \
 	                                        (GROUP), 0 };                               \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_PURE / HLE_RANGE_PURE: an HLE_FUNC / HLE_RANGE with HLE_F_PURE (see above) */
+#define HLE_FUNC_PURE(ADDR, NAME, CYCLES)                                               \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_PURE };                               \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+#define HLE_RANGE_PURE(ADDR, NAME, CYCLES, ...)                                         \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const uint32_t hle_exits_##NAME[] = { __VA_ARGS__, 0 };                      \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__,   \
+	                                        hle_exits_##NAME, 0, HLE_F_PURE };          \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_LOWMASK: an HLE_FUNC with HLE_F_LOWMASK (see above) */
+#define HLE_FUNC_LOWMASK(ADDR, NAME, CYCLES)                                            \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_LOWMASK };                            \
 	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
@@ -150,6 +188,26 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
  * and costs more than ~1000 cycles, the layer spends it in slices at a trap address with
  * interrupts taken in between (as the original would have been interrupted); with
  * interrupts masked it is charged at once (the original loses those VBlanks too). */
+/* Exact timing (docs/porting.md, "The instruction timeline"): the original adds the 68k bus
+ * refresh (2 cycles when `cycles >= refresh_cycles`, then every 128) at the START of an instruction,
+ * and a memory access sees the clock at that start. A function that needs this (it touches
+ * timing-sensitive hardware: Z80 bus, I/O ports, VDP status/HV counter) or whose charge must be
+ * bit-exact calls, for each ORIGINAL instruction in the order it would run:
+ *   hle_insn(ctx, n)   an instruction of n cycles with no timing-sensitive access
+ *   hle_pre(ctx)       before an instruction that makes one: refresh check, then the pending time
+ *                      is put on the CPU clock, so the access (bus_r8..) happens at the right time
+ *   hle_post(ctx, n)   after that access: the instruction's n cycles
+ * and leaves ctx->cycles alone; the layer charges the not-yet-flushed remainder and skips its
+ * lump refresh model. hle_run_seq runs a straight list of plain instruction costs. In the
+ * sandbox (difftest) the clock is not touched and only the plain total is kept. */
+void hle_insn(hle_ctx *ctx, int n);
+void hle_pre(hle_ctx *ctx);
+void hle_post(hle_ctx *ctx, int n);
+void hle_sync(hle_ctx *ctx);   /* put the pending time on the clock (before hle_call68k, after its jsr was charged) */
+void hle_seq(hle_ctx *ctx, const int *costs, int n);
+#define HLE_SEQ(ctx, ...) do { static const int s_[] = { __VA_ARGS__ }; \
+	hle_seq((ctx), s_, (int)(sizeof s_ / sizeof s_[0])); } while (0)
+
 /* 68k cycles run by nested calls so far in the current C function (outermost level) */
 int hle_nested_cycles(void);
 /* VDP DMA started from C (#13). A 68k->VDP DMA stalls the CPU for its whole length. The

@@ -31,6 +31,7 @@ void gx_vdp_fifo_clamp(void)
 		if ((int)fifo_cycles[i] > m68k.cycles)
 			fifo_cycles[i] = m68k.cycles;
 }
+int gx_m68k_pending_irq(void) { return (m68k.int_level >> 8) & 7; }
 void gx_m68k_clear_irq(void) { m68k.int_level = 0; }
 /* the interrupt level the VDP is asserting right now (VINT has priority) */
 void gx_m68k_resync_irq(void)
@@ -110,4 +111,73 @@ int gx_m68k_slice_left(void)
 	if (!m68k.cycle_end || (int)m68k.cycle_end <= m68k.cycles)
 		return 0;
 	return ((int)m68k.cycle_end - m68k.cycles + 6) / 7;
+}
+
+/* Interrupt boundaries (the slice boundaries at which the frame loop raises an IRQ).
+ * The frame loop (system.c, system_frame_gen) runs the 68k to a slice end, then raises the
+ * interrupts due at that point and runs the next slice, whose first act is to take them; so
+ * the original takes an interrupt at the first INSTRUCTION boundary after the boundary was
+ * crossed. A C function charged as one lump cannot be interrupted in the middle. This finds
+ * the first IRQ-raising boundary B in (c0, c1] (mcycles, in the 68k clock's own frame-relative
+ * coordinates), so the layer can run the original 68k instead when the interrupt would land
+ * inside a function. Sources, as the game configures the VDP (HINT is off): VINT at
+ * vint_cycle of the first line (level 6), and the Menacer's external interrupt at the start of
+ * the gun's line (level 2, lightgun_refresh). Returns the level (0 = none) and B in *at. */
+static int gun_hit(const int *gy, int v)
+{
+	for (int p = 0; p < MAX_DEVICES; p++)
+		if (gy[p] == v)
+			return 1;
+	return 0;
+}
+
+int gx_irq_boundary_in(int c0, int c1, int *at)
+{
+	int h = bitmap.viewport.h;
+	int lpf = lines_per_frame;
+	int gun_y[MAX_DEVICES];
+	for (int p = 0; p < MAX_DEVICES; p++)
+		gun_y[p] = input.dev[p] == DEVICE_LIGHTGUN ? input.analog[p][1] + input.y_offset : -1;
+	int exint = (reg[11] & 0x08) && (io_reg[5] & 0x80);
+	int vint = (reg[1] & 0x20) != 0;
+	long frame = (long)lpf * MCYCLES_PER_LINE;
+	/* time-order line index of the current line (line h is first in a frame) */
+	long base = (long)mcycles_vdp;
+	for (long f = 0; f < 3; f++) {
+		for (long j = (f == 0 ? base / MCYCLES_PER_LINE : 0); j < lpf; j++) {
+			long t0 = f * frame + j * MCYCLES_PER_LINE;
+			if (j == 0 && vint && t0 + (long)vint_cycle > c0 && t0 + (long)vint_cycle <= c1) {
+				*at = (int)(t0 + vint_cycle);
+				return 6;
+			}
+			long t = t0 + MCYCLES_PER_LINE;          /* end of line j: the IRQs of line j+1 */
+			if (t > c1)
+				return 0;
+			if (t <= c0)
+				continue;
+			if (exint && j + 1 < lpf) {
+				int nv = (int)((h + j + 1) % lpf);
+				if (nv < h && gun_hit(gun_y, nv)) {
+					*at = (int)t;
+					return 2;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+/* The slice end the frame loop gave the 68k, and the one after it: the frame loop runs the Z80
+ * up to every slice end (only while the 68k does not hold the Z80 bus), which a C function that
+ * flushes its timeline across a slice end must do itself (hle_sync). */
+int gx_m68k_cycle_end(void) { return (int)m68k.cycle_end; }
+int gx_next_slice_end(int b)
+{
+	int line_end = (int)(mcycles_vdp + MCYCLES_PER_LINE);
+	return b < line_end ? line_end : b + MCYCLES_PER_LINE;
+}
+void gx_z80_catchup(int b)
+{
+	if (zstate == 1)
+		z80_run((unsigned)b);
 }

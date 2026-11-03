@@ -44,11 +44,11 @@
  *     the two nested calls (which clobber the flags first).
  *   - ShotHitTest: both returns end in `moveq` (d5 = -1 or 0).
  *
- * Cycles. Charged per path, summed instruction by instruction with the GPGX 68000
- * cost (m68kops.h table, plus the movem/shift/dbcc extras), like sprite.c. The
- * nested 68k calls' time is added by the layer (hle.h, "Cycle accounting"), so
- * ctx->cycles carries only the non-nested part (the jsr/jsr.l opcodes included).
- * Measured original vs charged: see docs/porting.md.
+ * Cycles. Charged per instruction on the instruction timeline (hle_insn, hle.h) with the 68000
+ * cost (m68kops.h table, plus the movem/shift/dbcc extras), like sprite.c. Before a nested
+ * 68k call the jsr is charged and the timeline put on the clock (hle_sync), so the callee
+ * starts at the original's time. The HLE_FUNC cycle count is only the window the layer uses to
+ * decide whether an interrupt could land inside the call (hle.c, "Interrupt atomicity").
  */
 #include "hle.h"
 
@@ -183,52 +183,51 @@ static uint16_t asr_w(hle_ctx *ctx, uint16_t v, int n)
 }
 
 /* ---------------------------------------------------------------- HitBox $005940 */
-HLE_FUNC(0x005940, HitBox, 96)
+HLE_FUNC_PURE(0x005940, HitBox, 200)
 {
-	long cyc = 0;
 	/* movem.w (shot_xy).l,d0-d1 : GPGX sign-extends each word into the whole register */
 	ctx->d[0] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY);
 	ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY + 2);
 	/* movem.w (0x2,a6),d2-d3 */
 	ctx->d[2] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 2);
 	ctx->d[3] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 4);
-	cyc += C_MOVEMW_AL_2 + C_MOVEMW_DI_2;
+	HLE_SEQ(ctx, C_MOVEMW_AL_2, C_MOVEMW_DI_2);
 
 	uint16_t d0 = (uint16_t)ctx->d[0], d1 = (uint16_t)ctx->d[1];
 	uint16_t d2 = (uint16_t)ctx->d[2], d3 = (uint16_t)ctx->d[3];
 
 	/* sub.w (a3)+,d2 / cmp.w d2,d0 / blt.w miss */
 	d2 = sub_w(ctx, d2, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_SUBW_PI_D + 4;                             /* sub.w + cmp.w d2,d0 */
+	HLE_SEQ(ctx, C_SUBW_PI_D, 4);                             /* sub.w + cmp.w d2,d0 */
 	if ((int16_t)d0 < (int16_t)d2) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 	/* sub.w (a3)+,d3 / cmp.w d3,d1 / blt.w miss */
 	d3 = sub_w(ctx, d3, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_SUBW_PI_D + 4;
+	HLE_SEQ(ctx, C_SUBW_PI_D, 4);
 	if ((int16_t)d1 < (int16_t)d3) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 	/* add.w (a3)+,d2 / cmp.w d2,d0 / bgt.w miss */
 	d2 = add_w(ctx, d2, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_ADDW_PI_D + 4;
+	HLE_SEQ(ctx, C_ADDW_PI_D, 4);
 	if ((int16_t)d0 > (int16_t)d2) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 	/* add.w (a3)+,d3 / cmp.w d3,d1 / bgt.w miss */
 	d3 = add_w(ctx, d3, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_ADDW_PI_D + 4;
+	HLE_SEQ(ctx, C_ADDW_PI_D, 4);
 	if ((int16_t)d1 > (int16_t)d3) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 
 	set_w(&ctx->d[2], d2);
 	set_w(&ctx->d[3], d3);
@@ -237,9 +236,8 @@ HLE_FUNC(0x005940, HitBox, 96)
 	ctx->a[5] += 4;
 	RAM32_W(ctx->a[5], ctx->a[2]);                /* move.l a2,(a5)+ */
 	ctx->a[5] += 4;
-	cyc += C_MOVEQ + C_MOVE_A_PI + C_MOVE_A_PI + C_RTS;
+	HLE_SEQ(ctx, C_MOVEQ, C_MOVE_A_PI, C_MOVE_A_PI, C_RTS);
 	cc_logic32(ctx, ctx->a[2]);                   /* last flag setter: move.l a2,(a5)+ */
-	ctx->cycles = (int)cyc;
 	if (hittest_stats_on())
 		g_hb_hit++;
 	return;
@@ -248,64 +246,66 @@ miss:
 	set_w(&ctx->d[2], d2);
 	set_w(&ctx->d[3], d3);
 	ctx->d[6] = 0;                                /* moveq #0,d6 */
-	cyc += C_MOVEQ + C_RTS;
+	HLE_SEQ(ctx, C_MOVEQ, C_RTS);
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
-	ctx->cycles = (int)cyc;
 	if (hittest_stats_on())
 		g_hb_miss++;
 }
 
 /* ---------------------------------------------------------- PickupHitBox $007086 */
-HLE_FUNC(0x007086, PickupHitBox, 96)
+HLE_FUNC(0x007086, PickupHitBox, 6000)
 {
-	long cyc = 0;
 	ctx->d[0] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY);
 	ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY + 2);
 	ctx->d[2] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 2);
 	ctx->d[3] = (uint32_t)(int32_t)(int16_t)RAM16(ctx->a[6] + 4);
-	cyc += C_MOVEMW_AL_2 + C_MOVEMW_DI_2;
+	HLE_SEQ(ctx, C_MOVEMW_AL_2, C_MOVEMW_DI_2);
 
 	uint16_t d0 = (uint16_t)ctx->d[0], d1 = (uint16_t)ctx->d[1];
 	uint16_t d2 = (uint16_t)ctx->d[2], d3 = (uint16_t)ctx->d[3];
 
 	d2 = sub_w(ctx, d2, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_SUBW_PI_D + 4;
+	HLE_SEQ(ctx, C_SUBW_PI_D, 4);
 	if ((int16_t)d0 < (int16_t)d2) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 	d3 = sub_w(ctx, d3, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_SUBW_PI_D + 4;
+	HLE_SEQ(ctx, C_SUBW_PI_D, 4);
 	if ((int16_t)d1 < (int16_t)d3) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 	d2 = add_w(ctx, d2, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_ADDW_PI_D + 4;
+	HLE_SEQ(ctx, C_ADDW_PI_D, 4);
 	if ((int16_t)d0 > (int16_t)d2) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 	d3 = add_w(ctx, d3, bus_r16(ctx->a[3])); ctx->a[3] += 2;
-	cyc += C_ADDW_PI_D + 4;
+	HLE_SEQ(ctx, C_ADDW_PI_D, 4);
 	if ((int16_t)d1 > (int16_t)d3) {
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto miss;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 
 	set_w(&ctx->d[2], d2);
 	set_w(&ctx->d[3], d3);
+	hle_insn(ctx, C_JSR_AL);
+	hle_sync(ctx);
 	hle_call68k(ctx, PICKUP_EXPLODE);             /* jsr (sub_012AF4).l */
 	set_w(&ctx->d[0], ctx->d[6]);                 /* move.w d6,d0 (d0's high word survives) */
+	hle_insn(ctx, C_MOVEW_DD);
+	hle_insn(ctx, C_JSR_AL);
+	hle_sync(ctx);
 	hle_call68k(ctx, PICKUP_SOUND);               /* jsr (sub_013E30).l */
 	ctx->d[6] = 0xFFFFFFFF;                       /* moveq #-1,d6 */
-	cyc += C_JSR_AL + C_MOVEW_DD + C_JSR_AL + C_MOVEQ + C_RTS;
+	HLE_SEQ(ctx, C_MOVEQ, C_RTS);
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_N);
-	ctx->cycles = (int)cyc;
 	if (hittest_stats_on())
 		g_phb_hit++;
 	return;
@@ -314,59 +314,58 @@ miss:
 	set_w(&ctx->d[2], d2);
 	set_w(&ctx->d[3], d3);
 	ctx->d[6] = 0;                                /* moveq #0,d6 */
-	cyc += C_MOVEQ + C_RTS;
+	HLE_SEQ(ctx, C_MOVEQ, C_RTS);
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
-	ctx->cycles = (int)cyc;
 	if (hittest_stats_on())
 		g_phb_miss++;
 }
 
 /* --------------------------------------------------------- ShotHitTest $005892 */
-HLE_FUNC(0x005892, ShotHitTest, 500)
+HLE_FUNC(0x005892, ShotHitTest, 8000)
 {
-	long cyc = 0;
 	int free_slots = 0;
 
 	ctx->a[6] = OBJ_TABLE;                        /* lea.l (obj_table).l,a6 */
 	ctx->a[5] = HIT_LIST;                         /* lea.l (hit_list).l,a5 */
 	set_w(&ctx->d[7], RAM16(OBJ_COUNT));          /* move.w (obj_count).l,d7 */
-	cyc += C_LEA_AL + C_LEA_AL + C_MOVEW_AL;
+	HLE_SEQ(ctx, C_LEA_AL, C_LEA_AL, C_MOVEW_AL);
 	set_w(&ctx->d[7], sub_w(ctx, (uint16_t)ctx->d[7], 1));  /* subq.w #1,d7 */
-	cyc += C_SUBQ_W;
+	hle_insn(ctx, C_SUBQ_W);
 	if ((int16_t)(ctx->d[7] & 0xFFFF) < 0) {      /* bmi.w loc_005934 */
-		cyc += C_BCC_W_TAKEN + C_MOVEQ + C_RTS;
+		HLE_SEQ(ctx, C_BCC_W_TAKEN, C_MOVEQ, C_RTS);
 		goto no_hit;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 
 	for (;;) {
 		/* loc_0058AA: */
 		set_w(&ctx->d[5], RAM16(ctx->a[6]));      /* move.w (a6),d5 */
-		cyc += C_MOVEW_AN;
+		hle_insn(ctx, C_MOVEW_AN);
 		if ((ctx->d[5] & 0xFFFF) == 0) {          /* beq.w loc_005938: free slot */
-			cyc += C_BCC_W_TAKEN + C_LEA_D16 + 10; /* beq taken + lea + bra.w */
+			HLE_SEQ(ctx, C_BCC_W_TAKEN, C_LEA_D16, 10); /* beq taken + lea + bra.w */
 			ctx->a[6] += 0x2C;
 			free_slots++;
 			continue;
 		}
-		cyc += C_BCC_W_NOT;
+		hle_insn(ctx, C_BCC_W_NOT);
 		if (hittest_stats_on()) {
 			g_sht_types[ctx->d[5] & 0xFF]++;
 			if ((ctx->d[5] & 0xFF) == 0x13)
 				g_sht_human++;
 		}
 		ctx->a[0] = RAM32(ctx->a[6] + 0x1C);      /* movea.l (0x1c,a6),a0 */
-		cyc += C_MOVEA_D16;
+		hle_insn(ctx, C_MOVEA_D16);
+		hle_insn(ctx, C_JSR_AN);
+		hle_sync(ctx);
 		hle_call68k(ctx, ctx->a[0]);              /* jsr (a0): per-object hit test */
-		cyc += C_JSR_AN;
 		ctx->a[6] += 0x2C;                        /* lea.l (0x2c,a6),a6 */
-		cyc += C_LEA_D16;
+		hle_insn(ctx, C_LEA_D16);
 		set_w(&ctx->d[7], (ctx->d[7] - 1) & 0xFFFF);   /* dbra d7 */
 		if ((ctx->d[7] & 0xFFFF) != 0xFFFF) {
-			cyc += C_DBRA_CONT;
+			hle_insn(ctx, C_DBRA_CONT);
 			continue;
 		}
-		cyc += C_DBRA_EXP;
+		hle_insn(ctx, C_DBRA_EXP);
 		break;
 	}
 
@@ -380,24 +379,24 @@ HLE_FUNC(0x005892, ShotHitTest, 500)
 		       (borrow ? (CC_X | CC_C) : 0) | ((r & 0x80000000u) ? CC_N : 0) |
 		       (r ? 0 : CC_Z) | (ov ? CC_V : 0));
 	}
-	cyc += C_MOVE_A_D + C_SUBI_L;
+	HLE_SEQ(ctx, C_MOVE_A_D, C_SUBI_L);
 	if (ctx->d[5] == 0) {
-		cyc += C_BCC_W_TAKEN + C_MOVEQ + C_RTS;
+		HLE_SEQ(ctx, C_BCC_W_TAKEN, C_MOVEQ, C_RTS);
 		goto no_hit;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 
 	ctx->a[5] = HIT_LIST;                         /* lea.l (hit_list).l,a5 */
-	cyc += C_LEA_AL;
+	hle_insn(ctx, C_LEA_AL);
 	set_w(&ctx->d[5], asr_w(ctx, (uint16_t)ctx->d[5], 3));    /* asr.w #3,d5 */
-	cyc += C_ASR_W3;
+	hle_insn(ctx, C_ASR_W3);
 	set_w(&ctx->d[5], sub_w(ctx, (uint16_t)ctx->d[5], 2));    /* subq.w #2,d5 */
-	cyc += C_SUBQ_W;
+	hle_insn(ctx, C_SUBQ_W);
 	if ((int16_t)(ctx->d[5] & 0xFFFF) < 0) {      /* bmi.w loc_005914 (fewer than 2 hits) */
-		cyc += C_BCC_W_TAKEN;
+		hle_insn(ctx, C_BCC_W_TAKEN);
 		goto front;
 	}
-	cyc += C_BCC_W_NOT;
+	hle_insn(ctx, C_BCC_W_NOT);
 
 	unsigned n_hits = (unsigned)(ctx->d[5] & 0xFFFF) + 2;
 	for (;;) {
@@ -405,52 +404,52 @@ HLE_FUNC(0x005892, ShotHitTest, 500)
 		ctx->d[0] = 0;                            /* moveq #0,d0 */
 		ctx->d[3] = 0;                            /* moveq #0,d3 */
 		set_w(&ctx->d[7], ctx->d[5]);             /* move.w d5,d7 */
-		cyc += C_MOVEQ + C_MOVEQ + C_MOVEW_DD;
+		HLE_SEQ(ctx, C_MOVEQ, C_MOVEQ, C_MOVEW_DD);
 		for (;;) {
 			/* loc_0058DE */
 			uint32_t off = (uint32_t)(int16_t)(ctx->d[0] & 0xFFFF);
 			ctx->a[0] = RAM32(ctx->a[5] + off);           /* movea.l (0,a5,d0.w),a0 */
 			ctx->a[1] = RAM32(ctx->a[5] + off + 8);       /* movea.l (8,a5,d0.w),a1 */
-			cyc += C_MOVEA_IX + C_MOVEA_IX;
+			HLE_SEQ(ctx, C_MOVEA_IX, C_MOVEA_IX);
 			uint8_t depth0 = RAM8(ctx->a[0] + 7);
 			set_b(&ctx->d[1], depth0);                    /* move.b (0x7,a0),d1 */
-			cyc += C_MOVEB_D16;
+			hle_insn(ctx, C_MOVEB_D16);
 			uint8_t depth1 = RAM8(ctx->a[1] + 7);
-			cyc += C_CMPB_D16;
+			hle_insn(ctx, C_CMPB_D16);
 			if ((int8_t)depth0 <= (int8_t)depth1) {       /* cmp.b (0x7,a1),d1 / ble.s */
-				cyc += C_BCC_S_TAKEN;
+				hle_insn(ctx, C_BCC_S_TAKEN);
 			} else {
-				cyc += C_BCC_S_NOT;
+				hle_insn(ctx, C_BCC_S_NOT);
 				uint32_t d2 = RAM32(ctx->a[5] + off + 4); /* move.l (4,a5,d0.w),d2 */
 				ctx->d[2] = d2;
-				cyc += C_MOVE_IX_D;
+				hle_insn(ctx, C_MOVE_IX_D);
 				RAM32_W(ctx->a[5] + off + 4, RAM32(ctx->a[5] + off + 12));  /* move.l (0xc,..),(0x4,..) */
-				cyc += C_MOVE_IX_IX;
+				hle_insn(ctx, C_MOVE_IX_IX);
 				RAM32_W(ctx->a[5] + off + 12, d2);        /* move.l d2,(0xc,a5,d0.w) */
-				cyc += C_MOVE_D_IX;
+				hle_insn(ctx, C_MOVE_D_IX);
 				RAM32_W(ctx->a[5] + off + 8, ctx->a[0]);  /* move.l a0,(0x8,a5,d0.w) */
-				cyc += C_MOVE_A_IX;
+				hle_insn(ctx, C_MOVE_A_IX);
 				RAM32_W(ctx->a[5] + off, ctx->a[1]);      /* move.l a1,(0x0,a5,d0.w) */
-				cyc += C_MOVE_A_IX;
+				hle_insn(ctx, C_MOVE_A_IX);
 				set_b(&ctx->d[3], 0xFF);                  /* st.b d3 */
-				cyc += C_STB_D;
+				hle_insn(ctx, C_STB_D);
 			}
 			set_w(&ctx->d[0], add_w(ctx, (uint16_t)ctx->d[0], 8));  /* addi.w #8,d0 */
-			cyc += C_ADDI_W;
+			hle_insn(ctx, C_ADDI_W);
 			set_w(&ctx->d[7], (ctx->d[7] - 1) & 0xFFFF);  /* dbra d7 */
 			if ((ctx->d[7] & 0xFFFF) != 0xFFFF) {
-				cyc += C_DBRA_CONT;
+				hle_insn(ctx, C_DBRA_CONT);
 				continue;
 			}
-			cyc += C_DBRA_EXP;
+			hle_insn(ctx, C_DBRA_EXP);
 			break;
 		}
-		cyc += C_TSTB_D;                              /* tst.b d3 */
+		hle_insn(ctx, C_TSTB_D);                              /* tst.b d3 */
 		if ((ctx->d[3] & 0xFF) != 0) {                /* bne.s loc_0058D8 */
-			cyc += C_BCC_S_TAKEN;
+			hle_insn(ctx, C_BCC_S_TAKEN);
 			continue;
 		}
-		cyc += C_BCC_S_NOT;
+		hle_insn(ctx, C_BCC_S_NOT);
 		break;
 	}
 	if (hittest_stats_on() && n_hits > 1)
@@ -462,40 +461,41 @@ front:
 	ctx->a[5] += 4;
 	ctx->a[0] = RAM32(ctx->a[5]);                 /* movea.l (a5)+,a0 */
 	ctx->a[5] += 4;
-	cyc += C_MOVEA_PI + C_MOVEA_PI;
+	HLE_SEQ(ctx, C_MOVEA_PI, C_MOVEA_PI);
 	set_w(&ctx->d[5], RAM16(ctx->a[6]));          /* move.w (a6),d5 */
-	cyc += C_MOVEW_AN;
-	cyc += C_BTST;                                /* btst.b #0xf,d5 */
+	hle_insn(ctx, C_MOVEW_AN);
+	hle_insn(ctx, C_BTST);                                /* btst.b #0xf,d5 */
 	if (ctx->d[5] & 0x8000) {                     /* beq.s loc_005930 if clear */
-		cyc += C_BCC_S_NOT;
+		hle_insn(ctx, C_BCC_S_NOT);
+		hle_insn(ctx, C_JSR_AN);
+		hle_sync(ctx);
 		hle_call68k(ctx, ctx->a[0]);              /* jsr (a0): on-hit routine */
-		cyc += C_JSR_AN;
 		set_w(&ctx->d[0], RAM16(SHOT_DAMAGE));    /* move.w (shot_damage).l,d0 */
-		cyc += C_MOVEW_AL;
+		hle_insn(ctx, C_MOVEW_AL);
 		uint16_t hp = RAM16(ctx->a[6] + 8);
 		uint16_t res = sub_w(ctx, hp, (uint16_t)ctx->d[0]);
 		RAM16(ctx->a[6] + 8) = res;               /* sub.w d0,(0x8,a6) */
-		cyc += C_SUBW_D16;
+		hle_insn(ctx, C_SUBW_D16);
 		if (res & 0x8000) {                       /* bpl.s loc_005930 if >= 0 */
-			cyc += C_BCC_S_NOT;
+			hle_insn(ctx, C_BCC_S_NOT);
+			hle_insn(ctx, C_JSR_AN);
+			hle_sync(ctx);
 			hle_call68k(ctx, ctx->a[0]);          /* jsr (a0): kill routine */
-			cyc += C_JSR_AN;
 			if (hittest_stats_on())
 				g_sht_kill++;
 		} else {
-			cyc += C_BCC_S_TAKEN;
+			hle_insn(ctx, C_BCC_S_TAKEN);
 		}
 	} else {
-		cyc += C_BCC_S_TAKEN;
+		hle_insn(ctx, C_BCC_S_TAKEN);
 		if (hittest_stats_on())
 			g_sht_noshoot++;
 	}
 
 	/* loc_005930: moveq #-1,d5 / rts */
 	ctx->d[5] = 0xFFFFFFFF;
-	cyc += C_MOVEQ + C_RTS;
+	HLE_SEQ(ctx, C_MOVEQ, C_RTS);
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_N);
-	ctx->cycles = (int)cyc;
 	if (hittest_stats_on()) {
 		g_sht_calls++;
 		g_sht_hit++;
@@ -506,7 +506,6 @@ front:
 no_hit:
 	ctx->d[5] = 0;                                /* moveq #0,d5 / rts */
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
-	ctx->cycles = (int)cyc;
 	if (hittest_stats_on()) {
 		g_sht_calls++;
 		g_sht_none++;
