@@ -267,6 +267,7 @@ static void ctx_load(hle_ctx *c)
 
 /* ---- instruction timeline (hle.h) */
 static int g_nest;             /* (defined below) depth of nested 68k execution */
+static bool g_top;             /* (defined below) a top-level C function is running */
 static int g_bnd;              /* the next slice end the frame loop would have processed (tl_boundary) */
 /* T2_HLE_SEQ=1: log, per top-level call, the list of instruction costs (the C side: what was
  * passed to hle_insn/hle_post; the T2_HLE_ORIG side: what each original instruction cost, without
@@ -297,7 +298,7 @@ static void tl_flush(hle_ctx *c)
  * in the sandbox. */
 static void tl_boundary(hle_ctx *c)
 {
-	if (hle_post_access || c->dry || g_nest)
+	if (hle_post_access || c->dry || !g_top)
 		return;
 	while (g_bnd <= gx_m68k_cycles() + (int)c->tl) {
 		tl_flush(c);
