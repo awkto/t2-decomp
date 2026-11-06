@@ -1,0 +1,1264 @@
+# Level-7 (freeway chase) capture route for the ai_l7.c states: mouse sweeps (the shot grid of capture_l3.txt) over
+# gun_07, 2p_gun_07 and the bot states l7_chase (T-1000 passes, crash chain, 10E18) and l7_van (van drives off, finale),
+# and pad runs (random aim bursts + A) from pad_07 and 2p_pad_07. l7_* come from tools/harness/scripts/l7/save.txt.
+load states/gun_07.state
+mouse 103 40
+click L 6
+run 90
+mouse 166 77
+click L 6
+run 90
+mouse 229 114
+click L 6
+run 90
+mouse 292 151
+click L 6
+run 90
+mouse 55 188
+click L 6
+run 90
+mouse 118 75
+click L 6
+run 90
+mouse 181 112
+click L 6
+run 90
+mouse 244 149
+click L 6
+run 90
+mouse 307 186
+click L 6
+run 90
+mouse 70 73
+click L 6
+run 90
+mouse 133 110
+click L 6
+run 90
+mouse 196 147
+click L 6
+run 90
+mouse 259 184
+click L 6
+run 90
+mouse 22 71
+click L 6
+run 90
+mouse 85 108
+click L 6
+run 90
+mouse 148 145
+click L 6
+run 90
+mouse 211 182
+click L 6
+run 90
+mouse 274 69
+click L 6
+run 90
+mouse 37 106
+click L 6
+run 90
+mouse 100 143
+click L 6
+run 90
+mouse 163 180
+click L 6
+run 90
+mouse 226 67
+click L 6
+run 90
+mouse 289 104
+click L 6
+run 90
+mouse 52 141
+click L 6
+run 90
+mouse 115 178
+click L 6
+run 90
+mouse 178 65
+click L 6
+run 90
+mouse 241 102
+click L 6
+run 90
+mouse 304 139
+click L 6
+run 90
+mouse 67 176
+click L 6
+run 90
+mouse 130 63
+click L 6
+run 90
+mouse 193 100
+click L 6
+run 90
+mouse 256 137
+click L 6
+run 90
+mouse 19 174
+click L 6
+run 90
+mouse 82 61
+click L 6
+run 90
+load states/2p_gun_07.state
+mouse 103 40
+click L 6
+run 90
+mouse 166 77
+click L 6
+run 90
+mouse 229 114
+click L 6
+run 90
+mouse 292 151
+click L 6
+run 90
+mouse 55 188
+click L 6
+run 90
+mouse 118 75
+click L 6
+run 90
+mouse 181 112
+click L 6
+run 90
+mouse 244 149
+click L 6
+run 90
+mouse 307 186
+click L 6
+run 90
+mouse 70 73
+click L 6
+run 90
+mouse 133 110
+click L 6
+run 90
+mouse 196 147
+click L 6
+run 90
+mouse 259 184
+click L 6
+run 90
+mouse 22 71
+click L 6
+run 90
+mouse 85 108
+click L 6
+run 90
+mouse 148 145
+click L 6
+run 90
+mouse 211 182
+click L 6
+run 90
+mouse 274 69
+click L 6
+run 90
+mouse 37 106
+click L 6
+run 90
+mouse 100 143
+click L 6
+run 90
+mouse 163 180
+click L 6
+run 90
+mouse 226 67
+click L 6
+run 90
+mouse 289 104
+click L 6
+run 90
+mouse 52 141
+click L 6
+run 90
+mouse 115 178
+click L 6
+run 90
+mouse 178 65
+click L 6
+run 90
+mouse 241 102
+click L 6
+run 90
+mouse 304 139
+click L 6
+run 90
+mouse 67 176
+click L 6
+run 90
+mouse 130 63
+click L 6
+run 90
+mouse 193 100
+click L 6
+run 90
+mouse 256 137
+click L 6
+run 90
+mouse 19 174
+click L 6
+run 90
+mouse 82 61
+click L 6
+run 90
+load states/l7_chase.state
+mouse 103 40
+click L 6
+run 90
+mouse 166 77
+click L 6
+run 90
+mouse 229 114
+click L 6
+run 90
+mouse 292 151
+click L 6
+run 90
+mouse 55 188
+click L 6
+run 90
+mouse 118 75
+click L 6
+run 90
+mouse 181 112
+click L 6
+run 90
+mouse 244 149
+click L 6
+run 90
+mouse 307 186
+click L 6
+run 90
+mouse 70 73
+click L 6
+run 90
+mouse 133 110
+click L 6
+run 90
+mouse 196 147
+click L 6
+run 90
+mouse 259 184
+click L 6
+run 90
+mouse 22 71
+click L 6
+run 90
+mouse 85 108
+click L 6
+run 90
+mouse 148 145
+click L 6
+run 90
+mouse 211 182
+click L 6
+run 90
+mouse 274 69
+click L 6
+run 90
+mouse 37 106
+click L 6
+run 90
+mouse 100 143
+click L 6
+run 90
+mouse 163 180
+click L 6
+run 90
+mouse 226 67
+click L 6
+run 90
+mouse 289 104
+click L 6
+run 90
+mouse 52 141
+click L 6
+run 90
+mouse 115 178
+click L 6
+run 90
+mouse 178 65
+click L 6
+run 90
+mouse 241 102
+click L 6
+run 90
+mouse 304 139
+click L 6
+run 90
+mouse 67 176
+click L 6
+run 90
+mouse 130 63
+click L 6
+run 90
+mouse 193 100
+click L 6
+run 90
+mouse 256 137
+click L 6
+run 90
+mouse 19 174
+click L 6
+run 90
+mouse 82 61
+click L 6
+run 90
+load states/l7_van.state
+mouse 103 40
+click L 6
+run 90
+mouse 166 77
+click L 6
+run 90
+mouse 229 114
+click L 6
+run 90
+mouse 292 151
+click L 6
+run 90
+mouse 55 188
+click L 6
+run 90
+mouse 118 75
+click L 6
+run 90
+mouse 181 112
+click L 6
+run 90
+mouse 244 149
+click L 6
+run 90
+mouse 307 186
+click L 6
+run 90
+mouse 70 73
+click L 6
+run 90
+mouse 133 110
+click L 6
+run 90
+mouse 196 147
+click L 6
+run 90
+mouse 259 184
+click L 6
+run 90
+mouse 22 71
+click L 6
+run 90
+mouse 85 108
+click L 6
+run 90
+mouse 148 145
+click L 6
+run 90
+mouse 211 182
+click L 6
+run 90
+mouse 274 69
+click L 6
+run 90
+mouse 37 106
+click L 6
+run 90
+mouse 100 143
+click L 6
+run 90
+mouse 163 180
+click L 6
+run 90
+mouse 226 67
+click L 6
+run 90
+mouse 289 104
+click L 6
+run 90
+mouse 52 141
+click L 6
+run 90
+mouse 115 178
+click L 6
+run 90
+mouse 178 65
+click L 6
+run 90
+mouse 241 102
+click L 6
+run 90
+mouse 304 139
+click L 6
+run 90
+mouse 67 176
+click L 6
+run 90
+mouse 130 63
+click L 6
+run 90
+mouse 193 100
+click L 6
+run 90
+mouse 256 137
+click L 6
+run 90
+mouse 19 174
+click L 6
+run 90
+mouse 82 61
+click L 6
+run 90
+load states/pad_07.state
+mouse 160 112
+press UR 12
+press A 2
+press - 8
+press L 10
+press A 2
+press - 10
+press R 19
+press A 2
+press - 2
+press D 9
+press A 2
+press - 3
+press DL 21
+press A 2
+press - 3
+press D 10
+press A 2
+press - 10
+press DL 9
+press A 2
+press - 3
+press D 28
+press A 2
+press - 2
+press DL 9
+press A 2
+press - 5
+press L 25
+press A 2
+press - 4
+press UL 21
+press A 2
+press - 4
+press R 26
+press A 2
+press - 6
+press U 11
+press A 2
+press - 5
+press UR 11
+press A 2
+press - 10
+press R 26
+press A 2
+press - 2
+press D 23
+press A 2
+press - 10
+press DL 18
+press A 2
+press - 9
+press DR 19
+press A 2
+press - 6
+press D 13
+press A 2
+press - 5
+press R 26
+press A 2
+press - 6
+press DR 18
+press A 2
+press - 9
+press UL 27
+press A 2
+press - 3
+press R 24
+press A 2
+press - 8
+press U 18
+press A 2
+press - 4
+press DR 21
+press A 2
+press - 2
+press R 25
+press A 2
+press - 7
+press UR 30
+press A 2
+press - 7
+press DR 26
+press A 2
+press - 9
+press R 10
+press A 2
+press - 6
+press DR 30
+press A 2
+press - 3
+press L 30
+press A 2
+press - 6
+press DR 17
+press A 2
+press - 8
+press UR 8
+press A 2
+press - 9
+press UR 13
+press A 2
+press - 3
+press DR 9
+press A 2
+press - 5
+press UL 12
+press A 2
+press - 5
+press DL 20
+press A 2
+press - 9
+press R 13
+press A 2
+press - 9
+press DL 25
+press A 2
+press - 6
+press U 21
+press A 2
+press - 10
+press UL 30
+press A 2
+press - 8
+press UR 29
+press A 2
+press - 8
+press D 12
+press A 2
+press - 3
+press U 12
+press A 2
+press - 5
+press D 8
+press A 2
+press - 9
+press U 16
+press A 2
+press - 6
+press L 12
+press A 2
+press - 8
+press UR 27
+press A 2
+press - 7
+press U 30
+press A 2
+press - 10
+press L 22
+press A 2
+press - 10
+press DL 20
+press A 2
+press - 8
+press DL 11
+press A 2
+press - 9
+press DL 9
+press A 2
+press - 5
+press R 14
+press A 2
+press - 9
+press U 11
+press A 2
+press - 7
+press L 11
+press A 2
+press - 2
+press U 25
+press A 2
+press - 3
+press UR 27
+press A 2
+press - 2
+press R 14
+press A 2
+press - 8
+press U 28
+press A 2
+press - 6
+press UR 27
+press A 2
+press - 7
+press DR 11
+press A 2
+press - 3
+press DR 22
+press A 2
+press - 9
+press DR 17
+press A 2
+press - 3
+press U 11
+press A 2
+press - 7
+press UL 23
+press A 2
+press - 4
+press L 14
+press A 2
+press - 10
+press UR 12
+press A 2
+press - 10
+press L 24
+press A 2
+press - 6
+press R 30
+press A 2
+press - 6
+press UR 13
+press A 2
+press - 7
+press D 25
+press A 2
+press - 10
+press UR 28
+press A 2
+press - 5
+press D 15
+press A 2
+press - 8
+press D 14
+press A 2
+press - 10
+press DR 19
+press A 2
+press - 2
+press L 16
+press A 2
+press - 9
+press UL 14
+press A 2
+press - 7
+press DR 19
+press A 2
+press - 7
+press R 15
+press A 2
+press - 3
+press D 23
+press A 2
+press - 5
+press UR 14
+press A 2
+press - 9
+press L 23
+press A 2
+press - 7
+press R 29
+press A 2
+press - 3
+press DL 30
+press A 2
+press - 5
+press DR 13
+press A 2
+press - 8
+press UR 10
+press A 2
+press - 8
+press DR 20
+press A 2
+press - 3
+press U 13
+press A 2
+press - 4
+press L 12
+press A 2
+press - 9
+press U 27
+press A 2
+press - 9
+press UR 12
+press A 2
+press - 10
+press U 8
+press A 2
+press - 2
+press R 24
+press A 2
+press - 4
+press DL 14
+press A 2
+press - 5
+load states/2p_pad_07.state
+mouse 160 112
+press L 16
+press A 2
+press - 5
+press UL 24
+press A 2
+press - 5
+press UR 16
+press A 2
+press - 10
+press DL 12
+press A 2
+press - 2
+press UR 22
+press A 2
+press - 10
+press DL 24
+press A 2
+press - 4
+press U 24
+press A 2
+press - 10
+press L 22
+press A 2
+press - 4
+press L 12
+press A 2
+press - 4
+press U 23
+press A 2
+press - 3
+press L 18
+press A 2
+press - 10
+press DR 11
+press A 2
+press - 10
+press L 15
+press A 2
+press - 5
+press UL 9
+press A 2
+press - 3
+press DR 25
+press A 2
+press - 2
+press R 22
+press A 2
+press - 7
+press D 30
+press A 2
+press - 6
+press DR 24
+press A 2
+press - 10
+press DR 24
+press A 2
+press - 5
+press UL 25
+press A 2
+press - 5
+press DR 12
+press A 2
+press - 8
+press R 20
+press A 2
+press - 9
+press UR 10
+press A 2
+press - 5
+press DL 10
+press A 2
+press - 5
+press UL 11
+press A 2
+press - 4
+press UR 12
+press A 2
+press - 6
+press U 22
+press A 2
+press - 5
+press R 20
+press A 2
+press - 9
+press U 29
+press A 2
+press - 5
+press U 30
+press A 2
+press - 8
+press DL 18
+press A 2
+press - 8
+press D 19
+press A 2
+press - 7
+press R 19
+press A 2
+press - 2
+press UR 25
+press A 2
+press - 9
+press DR 30
+press A 2
+press - 2
+press DL 18
+press A 2
+press - 10
+press UL 24
+press A 2
+press - 3
+press R 15
+press A 2
+press - 3
+press R 16
+press A 2
+press - 6
+press L 13
+press A 2
+press - 6
+press U 21
+press A 2
+press - 6
+press DL 12
+press A 2
+press - 10
+press DR 30
+press A 2
+press - 7
+press R 16
+press A 2
+press - 2
+press U 21
+press A 2
+press - 3
+press UL 8
+press A 2
+press - 3
+press UL 10
+press A 2
+press - 5
+press R 16
+press A 2
+press - 3
+press DR 8
+press A 2
+press - 7
+press DL 16
+press A 2
+press - 4
+press L 24
+press A 2
+press - 5
+press R 13
+press A 2
+press - 6
+press L 13
+press A 2
+press - 5
+press UL 28
+press A 2
+press - 6
+press D 17
+press A 2
+press - 9
+press U 16
+press A 2
+press - 7
+press L 16
+press A 2
+press - 2
+press L 8
+press A 2
+press - 10
+press D 24
+press A 2
+press - 9
+press D 22
+press A 2
+press - 3
+press DL 29
+press A 2
+press - 9
+press DL 24
+press A 2
+press - 6
+press D 15
+press A 2
+press - 7
+press D 30
+press A 2
+press - 4
+press DL 19
+press A 2
+press - 2
+press U 8
+press A 2
+press - 3
+press UL 21
+press A 2
+press - 4
+press L 10
+press A 2
+press - 8
+press UL 27
+press A 2
+press - 5
+press UL 9
+press A 2
+press - 9
+press U 13
+press A 2
+press - 6
+press DR 8
+press A 2
+press - 6
+press UR 18
+press A 2
+press - 10
+press UR 15
+press A 2
+press - 2
+press UL 14
+press A 2
+press - 7
+press U 8
+press A 2
+press - 7
+press DL 10
+press A 2
+press - 9
+press UL 24
+press A 2
+press - 5
+press D 24
+press A 2
+press - 2
+press R 16
+press A 2
+press - 3
+press U 20
+press A 2
+press - 2
+press DL 8
+press A 2
+press - 6
+press UL 28
+press A 2
+press - 5
+press R 26
+press A 2
+press - 10
+press U 29
+press A 2
+press - 8
+press UR 23
+press A 2
+press - 4
+press UL 27
+press A 2
+press - 4
+press L 30
+press A 2
+press - 10
+press DL 30
+press A 2
+press - 10
+press U 24
+press A 2
+press - 10
+press L 29
+press A 2
+press - 5
+press R 8
+press A 2
+press - 2
+press U 28
+press A 2
+press - 7
+load states/pad_07.state
+mouse 160 112
+press R 20
+press A 2
+press - 9
+press L 28
+press A 2
+press - 2
+press D 23
+press A 2
+press - 6
+press L 22
+press A 2
+press - 3
+press R 29
+press A 2
+press - 10
+press R 23
+press A 2
+press - 6
+press R 16
+press A 2
+press - 5
+press D 15
+press A 2
+press - 9
+press DR 20
+press A 2
+press - 3
+press DR 29
+press A 2
+press - 6
+press L 27
+press A 2
+press - 5
+press R 27
+press A 2
+press - 4
+press UR 16
+press A 2
+press - 6
+press U 8
+press A 2
+press - 9
+press L 23
+press A 2
+press - 6
+press R 30
+press A 2
+press - 5
+press DR 17
+press A 2
+press - 10
+press UL 22
+press A 2
+press - 9
+press DR 11
+press A 2
+press - 10
+press D 17
+press A 2
+press - 3
+press DR 8
+press A 2
+press - 6
+press DR 10
+press A 2
+press - 10
+press DR 16
+press A 2
+press - 8
+press D 14
+press A 2
+press - 3
+press R 12
+press A 2
+press - 10
+press UL 19
+press A 2
+press - 4
+press UL 11
+press A 2
+press - 7
+press D 23
+press A 2
+press - 9
+press DL 8
+press A 2
+press - 4
+press L 23
+press A 2
+press - 9
+press DL 17
+press A 2
+press - 4
+press DL 19
+press A 2
+press - 8
+press UR 11
+press A 2
+press - 7
+press L 18
+press A 2
+press - 7
+press DL 11
+press A 2
+press - 5
+press L 17
+press A 2
+press - 6
+press UR 10
+press A 2
+press - 8
+press DL 26
+press A 2
+press - 3
+press UR 21
+press A 2
+press - 6
+press L 16
+press A 2
+press - 3
+press L 29
+press A 2
+press - 6
+press U 15
+press A 2
+press - 6
+press DL 24
+press A 2
+press - 7
+press D 19
+press A 2
+press - 8
+press L 28
+press A 2
+press - 8
+press D 10
+press A 2
+press - 2
+press DL 22
+press A 2
+press - 4
+press UL 23
+press A 2
+press - 2
+press U 13
+press A 2
+press - 9
+press DL 18
+press A 2
+press - 6
+press UL 16
+press A 2
+press - 6
+press DL 28
+press A 2
+press - 5
+press UL 23
+press A 2
+press - 10
+press DL 11
+press A 2
+press - 4
+press U 10
+press A 2
+press - 5
+press DR 25
+press A 2
+press - 5
+press DR 18
+press A 2
+press - 9
+press DL 12
+press A 2
+press - 10
+press D 15
+press A 2
+press - 3
+press U 18
+press A 2
+press - 10
+press R 18
+press A 2
+press - 5
+press UR 16
+press A 2
+press - 5
+press L 21
+press A 2
+press - 8
+press DL 24
+press A 2
+press - 5
+press DL 16
+press A 2
+press - 7
+press L 23
+press A 2
+press - 6
+press UR 12
+press A 2
+press - 10
+press D 10
+press A 2
+press - 6
+press D 20
+press A 2
+press - 8
+press DR 21
+press A 2
+press - 6
+press L 12
+press A 2
+press - 2
+press DL 30
+press A 2
+press - 9
+press DR 8
+press A 2
+press - 3
+press DL 24
+press A 2
+press - 9
+press DR 15
+press A 2
+press - 3
+press D 12
+press A 2
+press - 4
+press R 30
+press A 2
+press - 9
+press R 25
+press A 2
+press - 2
+press L 12
+press A 2
+press - 5
+press L 28
+press A 2
+press - 6
+press U 28
+press A 2
+press - 6
+press DL 30
+press A 2
+press - 3
+press R 10
+press A 2
+press - 6
+press D 20
+press A 2
+press - 6
+press D 27
+press A 2
+press - 2
+press L 25
+press A 2
+press - 6
+press DR 16
+press A 2
+press - 7
+press D 23
+press A 2
+press - 10
+press D 25
+press A 2
+press - 5
+press L 21
+press A 2
+press - 6
+press L 8
+press A 2
+press - 5
+press DR 29
+press A 2
+press - 8
+press R 16
+press A 2
+press - 5

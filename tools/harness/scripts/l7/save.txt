@@ -1,0 +1,14 @@
+# level-7 chase states (ai_l7.c), made by the gun-bot from gun_07 (energy cheat). Run:
+#   GUN=1 GUNMODE=lightgun build/harness ext/gpgx/genesis_plus_gx_libretro.so rom/baserom.md \
+#       tools/harness/scripts/l7/save.txt OUT      (OUT holds gun_07.state; cov.txt lists the frames of each state entry)
+# l7_chase: frame 10940 without protect: the T-1000 pass counter runs out ($010E18 chain at 10965).
+# l7_van:   frame 13230 with protect (hit count kept at 5): the van drives off ($010AE0 at 13254), then the finale ($010FB0).
+load gun_07
+botcfg energy 1
+bot 10940
+save l7_chase
+load gun_07
+botcfg energy 1
+botcfg protect 1
+bot 13230
+save l7_van
