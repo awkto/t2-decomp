@@ -318,6 +318,8 @@ straddle the frame wrap (the frame loop rebases the clocks there).
 | $009376 | ScriptExec | game/levelscript.c | 68/68 states equal; lockstep: 3000 frames identical (6 default states) |
 | $00933E | ScriptNext | game/levelscript.c | 70/70 states equal; lockstep: 3000 frames identical (6 default states) |
 | $009326 | ScriptStart | game/levelscript.c | 2/2 states equal (level start is rare); lockstep: 3000 frames identical (6 default states) |
+| $0099AA, $0099B0, $0099BC, $00A130, $00A138, $009C36, $00B2E6, $00B2F2 | ScrGoto, ScrScrollTab4A88/4A94, ScrPokeWord, ScrPokeLong, ScrEndLevel, ScrGosub, ScrReturn | game/scriptops.c | difftest equal on every captured call (3/3, 2/2, 2/2, 1/1, 2/2, 4/4, 4/4; ScrEndLevel not on the capture route: 2 `--entry` states from ScrPokeLong equal); HLE_FUNC_PURE with exact per-instruction timelines; lockstep: 3000 frames identical (6 default states) |
+| $009C18, $009C30 | ScrText, ScrTextClear | game/scriptops.c | 2/2 states equal each (jsr wrappers, callee via `hle_call68k`; decline bound 60000); lockstep: 3000 frames identical (6 default states) |
 
 `ScrollRows`/`BgStreamLayers` are in `game/scroll.c` (docs/subsystems/vdp.md, "Rows" and "Map columns"). The per-level
 wrappers `BgStreamL1/2/4/5/6` stay 68k and enter `BgStreamLayers` by `bsr`/fall-through; the recursion
