@@ -503,6 +503,10 @@ static void cmd_vscroll(hle_ctx *ctx)
 /* ---------------------------------------------------------------- registrations */
 HLE_FUNC(0x011D64, VdpCmd0End, 0)
 {
+	if (!safe_run(100)) {                       /* ~44 cycles: only a line-start event can land in it */
+		hle_decline();
+		return;
+	}
 	sess_begin();
 	cmd_end(ctx);
 	sess_finish();
