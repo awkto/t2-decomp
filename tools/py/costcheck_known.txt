@@ -32,3 +32,6 @@ menacer.c MenacerReadXY 01E4B8 20
 objects.c ObjNext 00B3C6 10
 scroll.c BgStreamLayers 004A32 10
 scroll.c BgStreamLayers 004A48 10
+# div_w helper: 14 = the overflow path (4+10); the normal path charges 4+76..144 via hle_insn_x
+ai_misc.c TruckMain 00D146 14
+ai_misc.c TruckMain 00D174 14
