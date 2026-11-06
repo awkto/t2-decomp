@@ -344,27 +344,6 @@ HLE_FUNC(0x006066, Onhit3Kill_6066, 2500)
 }
 
 /* ================================================================== Skynet parts */
-/* sub_006252 (after its jsr was charged): debris at the shot unless too many objects. Charges its rts. */
-static void sub_6252(hle_ctx *ctx)
-{
-	push_all(ctx);
-	alu(ctx, OP_SUB, RAM16(OBJ_LIMIT), 12, 16, 0);
-	hle_insn(ctx, 20);                                  /* cmpi.w #12,(abs).l */
-	if (!bs(ctx, c_gt(ctx))) {                          /* bgt.s loc_006274 */
-		ctx->d[0] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY);
-		ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY + 2);
-		hle_movem_w(ctx, 20 + 4 * 2, 2);            /* movem.w (abs).l,d0-d1 */
-		set_w(&ctx->d[2], RAM16(A6 + 6));
-		cc_logic16(ctx, ctx->d[2]);
-		hle_insn(ctx, 12);                          /* move.w (6,a6),d2 */
-		set_w(&ctx->d[2], alu(ctx, OP_SUB, ctx->d[2], 1, 16, 1));
-		hle_insn(ctx, 4);                           /* subq.w #1,d2 */
-		jsr68(ctx, 0x0124EC, 20);                   /* jsr (sub_0124EC).l */
-	}
-	pop_all(ctx);
-	rts_(ctx);
-}
-
 /* $006730 wall gun, $006770 CPU part: 50 points, debris, hand back the kill routine */
 static void sky_hit(hle_ctx *ctx, uint32_t kill)
 {
