@@ -189,7 +189,8 @@ static void bg_call(hle_ctx *c, uint32_t addr)
 
 /* the nested VdpQueue routines and sub_013470/sub_01385A make one call last up to ~50000 cycles (level 5
  * pad_05: 49287), so the decline window must cover that, not 6000 */
-HLE_FUNC(0x00498A, BgStreamLayers, 60000)
+/* observed max 50967 over 38 states x 3000 frames (T2_HLE_BOUNDS, 2p_pad_05) */
+HLE_FUNC(0x00498A, BgStreamLayers, 76500)
 {
 	for (;;) {
 		ctx->a[3] = bus_r32(ctx->a[2]); ctx->a[2] += 4;            /* movea.l (a2)+,a3 */
