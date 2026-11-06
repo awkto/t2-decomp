@@ -7,19 +7,21 @@
  * 0072xx stubs, sounds, SetPlayerState and the object spawners run as 68k through hle_call68k (those
  * entries are plain HLE_FUNC, the rest HLE_FUNC_PURE).
  *
- *   level 2:  on-hit $00651E $006550 $006582 $0065B0 $0065DE $006612 $006668 $0066B4 $006846 $0068A0 $0068D6
- *             kill   $006524 $006556 $006588 $0065B6 $0065E4 $006630 $006686 $0066BA $00684C $0068A6 $0068DC
+ *   level 2:  on-hit $00651E $006550 $006582 $0065B0 $006668 $0066B4 $006846 $0068A0 $0068D6
+ *             kill   $006524 $006556 $006588 $0065B6 $006686 $00684C $0068A6 $0068DC
  *   level 3:  on-hit $005CD2 $005D9C $005DCC $006060   kill $005CD8 $005DA2 $005DD2 $006066
- *   level 4:  on-hit $006332 $00639A $006430 $006462 $0064A0 $0067D2 $006806 $00690C
- *             kill   $006346 $0063A0 $006436 $006468 $0064A6 $0067D8 $00680C $0069A2
- *   Skynet:   on-hit $006730 $006770   kill $00673E $00677E
+ *   level 4:  on-hit $00639A $006430 $006462 $0064A0 $0067D2 $006806 $00690C
+ *             kill   $0063A0 $006436 $006468 $0064A6 $00680C
+ *   Skynet:   on-hit $006770   kill $00677E
+ *
+ * Left out (never reached by the 92 lockstep states, so unproven): $0065DE/$0065E4 $006612/$006630
+ * (human B) $0066BA $006332/$006346 $0067D8 $0069A2 $006730/$00673E (wall gun).
  */
 #include "hle.h"
 
 #include <stdint.h>
 
 void AddScore250(hle_ctx *ctx);
-void AddScore750(hle_ctx *ctx);
 void AddScore1000(hle_ctx *ctx);
 void AddScore4000(hle_ctx *ctx);
 void AddScore5000(hle_ctx *ctx);
@@ -233,25 +235,7 @@ HLE_FUNC_PURE(0x006588, Onhit2Kill_6588, 300) { kill_tail(ctx, 0xEB36, 0x3A); }
 HLE_FUNC_PURE(0x0065B0, Onhit2_65B0, 40) { lea_a0(ctx, 0x0065B6); rts_(ctx); }
 HLE_FUNC_PURE(0x0065B6, Onhit2Kill_65B6, 300) { kill_tail(ctx, 0xEB78, 0x3A); }
 
-HLE_FUNC_PURE(0x0065DE, Onhit2_65DE, 40) { lea_a0(ctx, 0x0065E4); rts_(ctx); }
-HLE_FUNC_PURE(0x0065E4, Onhit2Kill_65E4, 300)
-{
-	bclr_d(ctx, 5, 15);
-	mvw_d5_a6(ctx);
-	mvli_a6(ctx, 0x20, 0xEBD2);
-	rts_(ctx);
-}
 
-/* resistance humans: hit routine, then the kill routine that ends the player's life state */
-HLE_FUNC(0x006612, Onhit2_HumanB, 2500)
-{
-	jsr68(ctx, 0x013DA8, 20);                           /* jsr (sub_013DA8).l */
-	bit_m(ctx, 'c', A6, 7, 16);                         /* bclr.b #15,(a6) */
-	mvli_a6(ctx, 0x20, 0xEAF4);
-	mvwi_a6(ctx, 0x24, 0x1E);
-	lea_a0(ctx, 0x006630);
-	rts_(ctx);                                          /* loc_00662E */
-}
 
 static void human_kill(hle_ctx *ctx, uint32_t state)
 {
@@ -265,7 +249,6 @@ static void human_kill(hle_ctx *ctx, uint32_t state)
 	jsr68(ctx, 0x008FA8, 18);                           /* jsr SetPlayerState */
 	rts_(ctx);
 }
-HLE_FUNC(0x006630, Onhit2Kill_HumanB, 2500) { human_kill(ctx, 0xEAD6); }
 
 HLE_FUNC(0x006668, Onhit2_HumanC, 2500)
 {
@@ -279,11 +262,6 @@ HLE_FUNC(0x006668, Onhit2_HumanC, 2500)
 HLE_FUNC(0x006686, Onhit2Kill_HumanC, 2500) { human_kill(ctx, 0x15208); }
 
 HLE_FUNC_PURE(0x0066B4, Onhit2_66B4, 40) { lea_a0(ctx, 0x0066BA); rts_(ctx); }
-HLE_FUNC_PURE(0x0066BA, Onhit2Kill_66BA, 300)
-{
-	jsr_c(ctx, AddScore5000);
-	kill_tail(ctx, 0x151CC, 0x3A);
-}
 
 /* infiltrators (three variants): 250 points, remember the slot as the live infiltrator */
 static void infil_kill(hle_ctx *ctx, uint32_t state)
@@ -353,33 +331,13 @@ static void sky_hit(hle_ctx *ctx, uint32_t kill)
 	lea_a0(ctx, kill);
 	rts_(ctx);
 }
-HLE_FUNC(0x006730, OnhitSky_Gun, 4000) { sky_hit(ctx, 0x00673E); }
 HLE_FUNC(0x006770, OnhitSky_Part, 4000) { sky_hit(ctx, 0x00677E); }
-HLE_FUNC_PURE(0x00673E, OnhitSkyKill_Gun, 300)
-{
-	jsr_c(ctx, AddScore5000);
-	kill_tail(ctx, 0xE314, 0x3A);
-}
 HLE_FUNC_PURE(0x00677E, OnhitSkyKill_Part, 300)
 {
 	jsr_c(ctx, AddScore5000);
 	kill_tail(ctx, 0xE7C0, 0x3A);
 }
 
-/* ================================================================== level 4 */
-HLE_FUNC_PURE(0x006332, Onhit4_6332, 100)
-{
-	mvli_a6(ctx, 0x20, 0xDAEE);
-	mvwi_a6(ctx, 0x24, 0x14);
-	lea_a0(ctx, 0x006346);
-	rts_(ctx);
-}
-HLE_FUNC_PURE(0x006346, Onhit4Kill_6346, 300)
-{
-	jsr_c(ctx, AddScore5000);
-	mvli_a6(ctx, 0x20, 0xDB0C);
-	rts_(ctx);
-}
 
 HLE_FUNC_PURE(0x00639A, Onhit4_639A, 40) { lea_a0(ctx, 0x0063A0); rts_(ctx); }
 HLE_FUNC(0x0063A0, Onhit4Kill_63A0, 2500)
@@ -417,13 +375,6 @@ HLE_FUNC_PURE(0x0064A6, Onhit4Kill_64A6, 400)
 }
 
 HLE_FUNC_PURE(0x0067D2, Onhit4_67D2, 40) { lea_a0(ctx, 0x0067D8); rts_(ctx); }
-HLE_FUNC_PURE(0x0067D8, Onhit4Kill_67D8, 300)
-{
-	jsr_c(ctx, AddScore750);
-	mvli_a6(ctx, 0x20, 0xF65A);
-	addq_a4(ctx, 0x3C);
-	rts_(ctx);
-}
 
 HLE_FUNC_PURE(0x006806, Onhit4_6806, 40) { lea_a0(ctx, 0x00680C); rts_(ctx); }
 HLE_FUNC_PURE(0x00680C, Onhit4Kill_680C, 400)
@@ -515,12 +466,5 @@ L_6982:
 	mvwi_a6(ctx, 0x24, 0x1E);
 L_699C:
 	lea_a0(ctx, 0x0069A2);
-	rts_(ctx);
-}
-HLE_FUNC_PURE(0x0069A2, Onhit4Kill_69A2, 300)
-{
-	jsr_c(ctx, AddScore750);
-	mvli_a6(ctx, 0x20, 0xE0A4);
-	addq_a4(ctx, 0x3C);
 	rts_(ctx);
 }
