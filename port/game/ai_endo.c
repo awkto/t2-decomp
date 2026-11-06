@@ -748,7 +748,7 @@ static void st_c66c(hle_ctx *ctx)
 	moveb_i_m(ctx, A6 + 0xF, 0xFF);
 	RAM16(A6 + 0x28) = RAM16(A6 + 4);                   /* move.w (4,a6),(0x28,a6) */
 	cc_logic16(ctx, RAM16(A6 + 4));
-	hle_insn(ctx, 24);
+	hle_insn(ctx, 20);                                  /* move.w (d16,a6),(d16,a6) is 20, not 24 */
 	movew_m_d(ctx, 0, A6 + 0x14);
 	set_w(&ctx->d[0], alu(ctx, OP_ADD, ctx->d[0], ctx->d[0], 16, 1));
 	hle_insn(ctx, 4);
@@ -778,7 +778,7 @@ HLE_RANGE_PURE(0x00B4C2, EndoHitDown, 800, EXIT_NEXT)
 {
 	RAM16(A6 + 0x28) = RAM16(A6 + 4);                   /* move.w (4,a6),(0x28,a6) */
 	cc_logic16(ctx, RAM16(A6 + 4));
-	hle_insn(ctx, 24);
+	hle_insn(ctx, 20);                                  /* move.w (d16,a6),(d16,a6) is 20, not 24 */
 	movew_i_m(ctx, A6 + 0x14, 0x11);
 	hle_insn(ctx, 10);                                  /* bra.w sub_00C66C */
 	st_c66c(ctx);
