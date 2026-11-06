@@ -318,6 +318,13 @@ straddle the frame wrap (the frame loop rebases the clocks there).
 | $009376 | ScriptExec | game/levelscript.c | 68/68 states equal; lockstep: 3000 frames identical (6 default states) |
 | $00933E | ScriptNext | game/levelscript.c | 70/70 states equal; lockstep: 3000 frames identical (6 default states) |
 | $009326 | ScriptStart | game/levelscript.c | 2/2 states equal (level start is rare); lockstep: 3000 frames identical (6 default states) |
+| $00B398 | ObjRunAll | game/objects.c | 200/200 states equal (HLE_RANGE_PURE, stops before `jmp (a0)` $00B3B6 / `rts` $00B3C6; the AI states stay 68k); lockstep: 3000 frames identical (6 default states) |
+| $00B3BE | ObjNext | game/objects.c | 200/200 states equal (same exits; AI's `bra ObjNext` re-enters C); lockstep: 3000 frames identical |
+| $00B4A6 | ObjMoveX | game/objects.c | 200/200 states equal; seqcmp 0 differ; lockstep: 3000 frames identical |
+| $012316 | ObjScrollX | game/objects.c | 200/200 states equal; seqcmp 0 differ; lockstep: 3000 frames identical |
+| $012332 / $012342 | ObjKillIfLeftOf / RightOf | game/objects.c | 200/200 states equal each; lockstep: 3000 frames identical |
+| $00930E | ObjAlloc | game/objects.c | 200/200 states equal (a6 = $FFFF87B2: `lea.l (abs).l` sign-extends); seqcmp 0 differ; lockstep: 3000 frames identical |
+| $0092DC | ObjSpawnTemplate | game/objects.c | 65/65 states equal (calls the C ObjAlloc directly; `bset #15,Dn` 10, `move.l (a1)+,(d16,a6)` 24); seqcmp 0 differ; lockstep: 3000 frames identical |
 | $0099AA, $0099B0, $0099BC, $00A130, $00A138, $009C36, $00B2E6, $00B2F2 | ScrGoto, ScrScrollTab4A88/4A94, ScrPokeWord, ScrPokeLong, ScrEndLevel, ScrGosub, ScrReturn | game/scriptops.c | difftest equal on every captured call (3/3, 2/2, 2/2, 1/1, 2/2, 4/4, 4/4; ScrEndLevel not on the capture route: 2 `--entry` states from ScrPokeLong equal); HLE_FUNC_PURE with exact per-instruction timelines; lockstep: 3000 frames identical (6 default states) |
 | $009C18, $009C30 | ScrText, ScrTextClear | game/scriptops.c | 2/2 states equal each (jsr wrappers, callee via `hle_call68k`; decline bound 60000); lockstep: 3000 frames identical (6 default states) |
 
