@@ -240,6 +240,9 @@ void hle_exact_session(void);
  * the entry address normally. For code whose timing the frame loop must be able to
  * interleave with (it cannot run while C executes). Ignored in the difftest sandbox. */
 void hle_decline(void);
+/* T2_HLE_BOUNDS=1 check mode (docs/porting.md): a guard reports the bound (cycles) it just used */
+extern bool hle_chk_on;
+void hle_chk_note(int bound_cycles);
 /* profiling support (port/src/ipprof.c): depth of nested 68k execution (0 = top level), the
  * innermost running C function (NULL at top level), and whether the CPU is about to hand pc
  * to an enabled C function instead of executing the instruction there */

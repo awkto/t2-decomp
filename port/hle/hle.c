@@ -478,6 +478,68 @@ static bool def_is_orig(const hle_def *d)
 	return false;
 }
 
+/* T2_HLE_BOUNDS=1 (check mode): measure every executed top-level non-pure call from entry to return
+ * (C + nested 68k) and compare it with the bound the decline guard uses: HLE_FUNC's cycle argument,
+ * or, for the VDP list commands, the safe_run() bound noted through hle_chk_note (one segment per
+ * noted bound, up to the next note or the end of the call). At exit it prints, per function, the
+ * declared bound, the worst observed span, the calls, and OVER when a call exceeded its bound. */
+bool hle_chk_on;
+typedef struct { const hle_def *def; long calls, over, maxobs, maxbound, wobs, wbound; } chk_ent;
+static chk_ent g_chk[256];
+static int g_chk_n;
+static long g_chk_clock0;      /* entry clock of the running top-level call */
+static const hle_def *g_chk_def;
+static long g_chk_seg_start, g_chk_seg_bound;
+static bool g_chk_seg;
+static hle_ctx *g_chk_ctx;
+
+static chk_ent *chk_find(const hle_def *d)
+{
+	for (int i = 0; i < g_chk_n; i++)
+		if (g_chk[i].def == d)
+			return &g_chk[i];
+	if (g_chk_n == (int)(sizeof g_chk / sizeof g_chk[0]))
+		return &g_chk[g_chk_n - 1];
+	g_chk[g_chk_n].def = d;
+	return &g_chk[g_chk_n++];
+}
+static void chk_record(const hle_def *d, long obs, long bound)
+{
+	chk_ent *e = chk_find(d);
+	e->calls++;
+	if (obs > e->maxobs)
+		e->maxobs = obs;
+	if (bound > e->maxbound)
+		e->maxbound = bound;
+	if (obs > bound)
+		e->over++;
+	if (!e->wbound || obs * e->wbound > e->wobs * bound) {   /* worst obs/bound ratio */
+		e->wobs = obs;
+		e->wbound = bound;
+	}
+}
+void hle_chk_note(int bound_cycles)
+{
+	if (!g_chk_ctx || !g_chk_def)
+		return;
+	long now = (gx_m68k_cycles() + g_chk_ctx->tl - g_chk_clock0) / 7;
+	if (g_chk_seg)
+		chk_record(g_chk_def, now - g_chk_seg_start, g_chk_seg_bound);
+	g_chk_seg = true;
+	g_chk_seg_start = now;
+	g_chk_seg_bound = bound_cycles;
+}
+static void chk_print(void)
+{
+	fprintf(stderr, "hle bounds: %-22s %8s %9s %8s %s\n", "function", "bound", "max obs", "calls", "worst obs/bound");
+	for (int i = 0; i < g_chk_n; i++) {
+		const chk_ent *e = &g_chk[i];
+		const char *flag = e->over ? "OVER" : (e->wbound && e->wobs * 10 > e->wbound * 8) ? "near" : "";
+		fprintf(stderr, "hle bounds: %-22s %8ld %9ld %8ld %ld/%ld %s%s\n", e->def->name, e->maxbound, e->maxobs,
+		        e->calls, e->wobs, e->wbound, flag, e->maxbound ? "" : " NOBOUND");
+	}
+}
+
 int hle_nest_depth(void) { return g_nest; }
 const hle_def *hle_current_def(void) { return g_cur_def; }
 /* would the CPU hand this pc to a C function instead of executing the instruction? (profilers) */
@@ -548,9 +610,16 @@ static int run_def(const hle_def *def, entry *e)
 			}
 		}
 	}
+	bool chk = hle_chk_on && top && !hle_post_access && !(def->flags & HLE_F_PURE) && !def_is_orig(def);
 	if (top)
 		g_top = true;
 	ctx_load(&c);
+	if (chk) {
+		g_chk_clock0 = clock0;
+		g_chk_def = def;
+		g_chk_ctx = &c;
+		g_chk_seg = false;
+	}
 	uint32_t sp0 = c.a[7];
 	bool unmasked = ((c.sr >> 8) & 7) < 6;
 	c.def = def;
@@ -627,6 +696,14 @@ static int run_def(const hle_def *def, entry *e)
 			gx_m68k_set_refresh_cycles(R + 896 * n);
 		}
 	}
+	if (chk) {
+		g_chk_ctx = NULL;
+		g_chk_def = NULL;
+		if (g_chk_seg)
+			chk_record(def, total - g_chk_seg_start, g_chk_seg_bound);
+		else
+			chk_record(def, total, def->cycles);
+	}
 	if (getenv("T2_HLE_CHARGE"))
 		fprintf(stderr, "charge %-18s %ld (ctx %d + nested %ld)\n", def->name, total, c.cycles, nested);
 	if (unmasked && total > STALL_SLICE && !hle_post_access && g_nest == 0 && !g_stall_debt) {
@@ -698,6 +775,10 @@ void hle_install(void)
 	g_decline_on = getenv("T2_HLE_NODECLINE") == NULL;
 	if (getenv("T2_HLE_DECLINES"))
 		atexit(declines_print);
+	if (getenv("T2_HLE_BOUNDS")) {
+		hle_chk_on = true;
+		atexit(chk_print);
+	}
 	m68k_hle_handler = dispatch;
 	m68k_hle_bitmap = g_bitmap;
 	bitmap_set(STALL_PC, true);
