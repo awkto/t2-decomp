@@ -1,0 +1,21 @@
+# Find the level-4 Skynet CPU frames: which AI states run when (bp.log = "frame addr"), from gun_04 with the bot
+# (energy cheat). Run:  GUN=1 GUNMODE=lightgun tools/harness/harness ext/gpgx/genesis_plus_gx_libretro.so rom/baserom.md \
+#   tools/harness/scripts/sky/scan.txt OUT      (OUT holds gun_04.state)
+load gun_04
+bp E2E6
+bp E314
+bp E3E2
+bp E546
+bp E5A6
+bp E72E
+bp E74A
+bp E7C0
+bp E864
+bp E8C8
+bp E91E
+bp E9C4
+peekeach af84 FFAF84 2
+peekeach af86 FFAF86 2
+peekeach level FF80CC 2
+botcfg energy 1
+bot until 5 40000

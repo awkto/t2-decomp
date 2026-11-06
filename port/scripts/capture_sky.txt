@@ -1,0 +1,823 @@
+# Level-4 boss (Skynet CPU, ai_skynet.c) capture route: mouse shots and idle runs over the sky_* states
+# (tools/harness/scripts/sky/: sky_a four wall guns, sky_c the guns just shot, sky_a_p the same with hp 3, sky_b the intro, sky_d the 16 boss parts,
+# sky_d_p with hp 3, sky_e_p the last part with hp 3, sky_f the finish). Not committed: copy them to states/.
+load states/sky_a.state
+mouse 32 56
+click L 6
+run 12
+mouse 288 56
+click L 6
+run 12
+mouse 32 120
+click L 6
+run 12
+mouse 288 120
+click L 6
+run 12
+run 150
+load states/sky_a_p.state
+mouse 32 56
+click L 6
+run 10
+mouse 288 56
+click L 6
+run 10
+mouse 32 120
+click L 6
+run 10
+mouse 288 120
+click L 6
+run 10
+mouse 32 56
+click L 6
+run 10
+mouse 288 56
+click L 6
+run 10
+mouse 32 120
+click L 6
+run 10
+mouse 288 120
+click L 6
+run 10
+mouse 32 56
+click L 6
+run 10
+mouse 288 56
+click L 6
+run 10
+mouse 32 120
+click L 6
+run 10
+mouse 288 120
+click L 6
+run 10
+run 700
+load states/sky_c.state
+run 200
+load states/sky_b.state
+run 900
+load states/sky_d.state
+mouse 76 50
+click L 6
+run 12
+mouse 100 50
+click L 6
+run 12
+mouse 124 50
+click L 6
+run 12
+mouse 148 50
+click L 6
+run 12
+mouse 172 50
+click L 6
+run 12
+mouse 196 50
+click L 6
+run 12
+mouse 220 50
+click L 6
+run 12
+mouse 76 66
+click L 6
+run 12
+mouse 100 66
+click L 6
+run 12
+mouse 124 66
+click L 6
+run 12
+mouse 148 66
+click L 6
+run 12
+mouse 172 66
+click L 6
+run 12
+mouse 196 66
+click L 6
+run 12
+mouse 220 66
+click L 6
+run 12
+mouse 76 82
+click L 6
+run 12
+mouse 100 82
+click L 6
+run 12
+mouse 124 82
+click L 6
+run 12
+mouse 148 82
+click L 6
+run 12
+mouse 172 82
+click L 6
+run 12
+mouse 196 82
+click L 6
+run 12
+mouse 220 82
+click L 6
+run 12
+mouse 76 98
+click L 6
+run 12
+mouse 100 98
+click L 6
+run 12
+mouse 124 98
+click L 6
+run 12
+mouse 148 98
+click L 6
+run 12
+mouse 172 98
+click L 6
+run 12
+mouse 196 98
+click L 6
+run 12
+mouse 220 98
+click L 6
+run 12
+mouse 76 114
+click L 6
+run 12
+mouse 100 114
+click L 6
+run 12
+mouse 124 114
+click L 6
+run 12
+mouse 148 114
+click L 6
+run 12
+mouse 172 114
+click L 6
+run 12
+mouse 196 114
+click L 6
+run 12
+mouse 220 114
+click L 6
+run 12
+mouse 76 130
+click L 6
+run 12
+mouse 100 130
+click L 6
+run 12
+mouse 124 130
+click L 6
+run 12
+mouse 148 130
+click L 6
+run 12
+mouse 172 130
+click L 6
+run 12
+mouse 196 130
+click L 6
+run 12
+mouse 220 130
+click L 6
+run 12
+run 100
+load states/sky_d_p.state
+mouse 76 50
+click L 6
+run 8
+mouse 100 50
+click L 6
+run 8
+mouse 124 50
+click L 6
+run 8
+mouse 148 50
+click L 6
+run 8
+mouse 172 50
+click L 6
+run 8
+mouse 196 50
+click L 6
+run 8
+mouse 220 50
+click L 6
+run 8
+mouse 76 66
+click L 6
+run 8
+mouse 100 66
+click L 6
+run 8
+mouse 124 66
+click L 6
+run 8
+mouse 148 66
+click L 6
+run 8
+mouse 172 66
+click L 6
+run 8
+mouse 196 66
+click L 6
+run 8
+mouse 220 66
+click L 6
+run 8
+mouse 76 82
+click L 6
+run 8
+mouse 100 82
+click L 6
+run 8
+mouse 124 82
+click L 6
+run 8
+mouse 148 82
+click L 6
+run 8
+mouse 172 82
+click L 6
+run 8
+mouse 196 82
+click L 6
+run 8
+mouse 220 82
+click L 6
+run 8
+mouse 76 98
+click L 6
+run 8
+mouse 100 98
+click L 6
+run 8
+mouse 124 98
+click L 6
+run 8
+mouse 148 98
+click L 6
+run 8
+mouse 172 98
+click L 6
+run 8
+mouse 196 98
+click L 6
+run 8
+mouse 220 98
+click L 6
+run 8
+mouse 76 114
+click L 6
+run 8
+mouse 100 114
+click L 6
+run 8
+mouse 124 114
+click L 6
+run 8
+mouse 148 114
+click L 6
+run 8
+mouse 172 114
+click L 6
+run 8
+mouse 196 114
+click L 6
+run 8
+mouse 220 114
+click L 6
+run 8
+mouse 76 130
+click L 6
+run 8
+mouse 100 130
+click L 6
+run 8
+mouse 124 130
+click L 6
+run 8
+mouse 148 130
+click L 6
+run 8
+mouse 172 130
+click L 6
+run 8
+mouse 196 130
+click L 6
+run 8
+mouse 220 130
+click L 6
+run 8
+mouse 76 50
+click L 6
+run 8
+mouse 100 50
+click L 6
+run 8
+mouse 124 50
+click L 6
+run 8
+mouse 148 50
+click L 6
+run 8
+mouse 172 50
+click L 6
+run 8
+mouse 196 50
+click L 6
+run 8
+mouse 220 50
+click L 6
+run 8
+mouse 76 66
+click L 6
+run 8
+mouse 100 66
+click L 6
+run 8
+mouse 124 66
+click L 6
+run 8
+mouse 148 66
+click L 6
+run 8
+mouse 172 66
+click L 6
+run 8
+mouse 196 66
+click L 6
+run 8
+mouse 220 66
+click L 6
+run 8
+mouse 76 82
+click L 6
+run 8
+mouse 100 82
+click L 6
+run 8
+mouse 124 82
+click L 6
+run 8
+mouse 148 82
+click L 6
+run 8
+mouse 172 82
+click L 6
+run 8
+mouse 196 82
+click L 6
+run 8
+mouse 220 82
+click L 6
+run 8
+mouse 76 98
+click L 6
+run 8
+mouse 100 98
+click L 6
+run 8
+mouse 124 98
+click L 6
+run 8
+mouse 148 98
+click L 6
+run 8
+mouse 172 98
+click L 6
+run 8
+mouse 196 98
+click L 6
+run 8
+mouse 220 98
+click L 6
+run 8
+mouse 76 114
+click L 6
+run 8
+mouse 100 114
+click L 6
+run 8
+mouse 124 114
+click L 6
+run 8
+mouse 148 114
+click L 6
+run 8
+mouse 172 114
+click L 6
+run 8
+mouse 196 114
+click L 6
+run 8
+mouse 220 114
+click L 6
+run 8
+mouse 76 130
+click L 6
+run 8
+mouse 100 130
+click L 6
+run 8
+mouse 124 130
+click L 6
+run 8
+mouse 148 130
+click L 6
+run 8
+mouse 172 130
+click L 6
+run 8
+mouse 196 130
+click L 6
+run 8
+mouse 220 130
+click L 6
+run 8
+mouse 76 50
+click L 6
+run 8
+mouse 100 50
+click L 6
+run 8
+mouse 124 50
+click L 6
+run 8
+mouse 148 50
+click L 6
+run 8
+mouse 172 50
+click L 6
+run 8
+mouse 196 50
+click L 6
+run 8
+mouse 220 50
+click L 6
+run 8
+mouse 76 66
+click L 6
+run 8
+mouse 100 66
+click L 6
+run 8
+mouse 124 66
+click L 6
+run 8
+mouse 148 66
+click L 6
+run 8
+mouse 172 66
+click L 6
+run 8
+mouse 196 66
+click L 6
+run 8
+mouse 220 66
+click L 6
+run 8
+mouse 76 82
+click L 6
+run 8
+mouse 100 82
+click L 6
+run 8
+mouse 124 82
+click L 6
+run 8
+mouse 148 82
+click L 6
+run 8
+mouse 172 82
+click L 6
+run 8
+mouse 196 82
+click L 6
+run 8
+mouse 220 82
+click L 6
+run 8
+mouse 76 98
+click L 6
+run 8
+mouse 100 98
+click L 6
+run 8
+mouse 124 98
+click L 6
+run 8
+mouse 148 98
+click L 6
+run 8
+mouse 172 98
+click L 6
+run 8
+mouse 196 98
+click L 6
+run 8
+mouse 220 98
+click L 6
+run 8
+mouse 76 114
+click L 6
+run 8
+mouse 100 114
+click L 6
+run 8
+mouse 124 114
+click L 6
+run 8
+mouse 148 114
+click L 6
+run 8
+mouse 172 114
+click L 6
+run 8
+mouse 196 114
+click L 6
+run 8
+mouse 220 114
+click L 6
+run 8
+mouse 76 130
+click L 6
+run 8
+mouse 100 130
+click L 6
+run 8
+mouse 124 130
+click L 6
+run 8
+mouse 148 130
+click L 6
+run 8
+mouse 172 130
+click L 6
+run 8
+mouse 196 130
+click L 6
+run 8
+mouse 220 130
+click L 6
+run 8
+run 200
+load states/sky_e_p.state
+mouse 76 50
+click L 6
+run 8
+mouse 100 50
+click L 6
+run 8
+mouse 124 50
+click L 6
+run 8
+mouse 148 50
+click L 6
+run 8
+mouse 172 50
+click L 6
+run 8
+mouse 196 50
+click L 6
+run 8
+mouse 220 50
+click L 6
+run 8
+mouse 76 66
+click L 6
+run 8
+mouse 100 66
+click L 6
+run 8
+mouse 124 66
+click L 6
+run 8
+mouse 148 66
+click L 6
+run 8
+mouse 172 66
+click L 6
+run 8
+mouse 196 66
+click L 6
+run 8
+mouse 220 66
+click L 6
+run 8
+mouse 76 82
+click L 6
+run 8
+mouse 100 82
+click L 6
+run 8
+mouse 124 82
+click L 6
+run 8
+mouse 148 82
+click L 6
+run 8
+mouse 172 82
+click L 6
+run 8
+mouse 196 82
+click L 6
+run 8
+mouse 220 82
+click L 6
+run 8
+mouse 76 98
+click L 6
+run 8
+mouse 100 98
+click L 6
+run 8
+mouse 124 98
+click L 6
+run 8
+mouse 148 98
+click L 6
+run 8
+mouse 172 98
+click L 6
+run 8
+mouse 196 98
+click L 6
+run 8
+mouse 220 98
+click L 6
+run 8
+mouse 76 114
+click L 6
+run 8
+mouse 100 114
+click L 6
+run 8
+mouse 124 114
+click L 6
+run 8
+mouse 148 114
+click L 6
+run 8
+mouse 172 114
+click L 6
+run 8
+mouse 196 114
+click L 6
+run 8
+mouse 220 114
+click L 6
+run 8
+mouse 76 130
+click L 6
+run 8
+mouse 100 130
+click L 6
+run 8
+mouse 124 130
+click L 6
+run 8
+mouse 148 130
+click L 6
+run 8
+mouse 172 130
+click L 6
+run 8
+mouse 196 130
+click L 6
+run 8
+mouse 220 130
+click L 6
+run 8
+mouse 76 50
+click L 6
+run 8
+mouse 100 50
+click L 6
+run 8
+mouse 124 50
+click L 6
+run 8
+mouse 148 50
+click L 6
+run 8
+mouse 172 50
+click L 6
+run 8
+mouse 196 50
+click L 6
+run 8
+mouse 220 50
+click L 6
+run 8
+mouse 76 66
+click L 6
+run 8
+mouse 100 66
+click L 6
+run 8
+mouse 124 66
+click L 6
+run 8
+mouse 148 66
+click L 6
+run 8
+mouse 172 66
+click L 6
+run 8
+mouse 196 66
+click L 6
+run 8
+mouse 220 66
+click L 6
+run 8
+mouse 76 82
+click L 6
+run 8
+mouse 100 82
+click L 6
+run 8
+mouse 124 82
+click L 6
+run 8
+mouse 148 82
+click L 6
+run 8
+mouse 172 82
+click L 6
+run 8
+mouse 196 82
+click L 6
+run 8
+mouse 220 82
+click L 6
+run 8
+mouse 76 98
+click L 6
+run 8
+mouse 100 98
+click L 6
+run 8
+mouse 124 98
+click L 6
+run 8
+mouse 148 98
+click L 6
+run 8
+mouse 172 98
+click L 6
+run 8
+mouse 196 98
+click L 6
+run 8
+mouse 220 98
+click L 6
+run 8
+mouse 76 114
+click L 6
+run 8
+mouse 100 114
+click L 6
+run 8
+mouse 124 114
+click L 6
+run 8
+mouse 148 114
+click L 6
+run 8
+mouse 172 114
+click L 6
+run 8
+mouse 196 114
+click L 6
+run 8
+mouse 220 114
+click L 6
+run 8
+mouse 76 130
+click L 6
+run 8
+mouse 100 130
+click L 6
+run 8
+mouse 124 130
+click L 6
+run 8
+mouse 148 130
+click L 6
+run 8
+mouse 172 130
+click L 6
+run 8
+mouse 196 130
+click L 6
+run 8
+mouse 220 130
+click L 6
+run 8
+run 700
+load states/sky_f.state
+run 800

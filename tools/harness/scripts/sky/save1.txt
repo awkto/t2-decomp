@@ -1,0 +1,26 @@
+# Level-4 boss states, phase 1: the bot (energy cheat) plays level 4 from gun_04 (frames are the harness frame counter,
+# the same numbers scan.txt logs). Run like scan.txt; save2.txt then makes the hp-poked copies.
+#   sky_a  11620  four wall guns ($E2E6) alive, firing          sky_b  12221  intro started ($E3E2: tile frames, sweep, spawner)
+#   sky_d  12400  boss parts alive ($E72E/$E74A/$E746)          sky_e  16240  the last parts alive, finish follows
+#   sky_f  16490  finish ($E864 explosions, $E8C8, $E91E countdown, $E9C4 fade)
+load gun_04
+botcfg energy 1
+bot 11620
+echo sky_a
+objs sky_a
+save sky_a
+bot 601
+echo sky_b
+save sky_b
+bot 179
+echo sky_d
+objs sky_d
+save sky_d
+bot 3840
+echo sky_e
+objs sky_e
+save sky_e
+bot 250
+echo sky_f
+objs sky_f
+save sky_f
