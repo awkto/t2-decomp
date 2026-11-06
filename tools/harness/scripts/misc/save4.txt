@@ -1,0 +1,24 @@
+# misc_* states, phase 4: the truck's damage paths (TruckDamage $D322, called from $D112 when the damage counter $FF9E92 has
+# reached the threshold $FF9F6A; the 16 body cells are the bytes $FFAE84..$FFAE93, each decremented by a random hit):
+#   misc_t4  gun_03 frame 2240 (truck in $D112), counter poked to $7FFF and every cell 0: TruckDamage takes the destroy path
+#            (sub_00D46E spawns the 16 debris pieces $D4E6, ScriptNext, truck -> $D0D4)
+#   misc_t5  same with every cell 1: every call removes a cell (tile rect, sub_00D444, random flame flags)
+# Run like save.txt (run.sh save4.txt OUT).
+load gun_03
+botcfg energy 1
+bot 2240
+poke FF9E92 2 7FFF
+poke FFAE84 4 00000000
+poke FFAE88 4 00000000
+poke FFAE8C 4 00000000
+poke FFAE90 4 00000000
+save misc_t4
+load gun_03
+botcfg energy 1
+bot 2240
+poke FF9E92 2 7FFF
+poke FFAE84 4 01010101
+poke FFAE88 4 01010101
+poke FFAE8C 4 01010101
+poke FFAE90 4 01010101
+save misc_t5

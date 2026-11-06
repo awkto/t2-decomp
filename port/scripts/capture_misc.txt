@@ -1,0 +1,331 @@
+# Capture route for ai_misc.c: the misc_* states (tools/harness/scripts/misc/save.txt: crate rise misc_c, endo death misc_e,
+# ground trooper chain misc_g, endo walk/turn + type $11 misc_f, type $0D misc_h, truck misc_t1/t2/t3) played with mouse shots
+# over the whole screen so the hit tests run and the objects die. Not committed: copy the states to states/.
+load states/misc_c.state
+mouse 185 68
+click L 6
+run 60
+mouse 44 48
+click L 6
+run 20
+mouse 207 179
+click L 6
+run 20
+mouse 279 84
+click L 6
+run 20
+mouse 64 141
+click L 6
+run 60
+mouse 55 91
+click L 6
+run 20
+mouse 237 45
+click L 6
+run 20
+mouse 134 179
+click L 6
+run 20
+mouse 223 42
+click L 6
+run 30
+mouse 43 172
+click L 6
+run 30
+mouse 168 137
+click L 6
+run 30
+mouse 296 60
+click L 6
+run 40
+mouse 112 56
+click L 6
+run 30
+run 200
+load states/misc_e.state
+mouse 210 54
+click L 6
+run 20
+mouse 50 188
+click L 6
+run 30
+mouse 274 166
+click L 6
+run 60
+mouse 180 149
+click L 6
+run 60
+mouse 205 106
+click L 6
+run 30
+mouse 112 92
+click L 6
+run 20
+mouse 173 164
+click L 6
+run 60
+mouse 195 144
+click L 6
+run 40
+mouse 57 60
+click L 6
+run 60
+mouse 104 117
+click L 6
+run 30
+mouse 270 137
+click L 6
+run 20
+mouse 59 172
+click L 6
+run 40
+mouse 194 119
+click L 6
+run 60
+run 200
+load states/misc_g.state
+mouse 253 47
+click L 6
+run 20
+mouse 158 151
+click L 6
+run 20
+mouse 51 109
+click L 6
+run 60
+mouse 165 128
+click L 6
+run 40
+mouse 31 148
+click L 6
+run 40
+mouse 106 186
+click L 6
+run 20
+mouse 272 45
+click L 6
+run 30
+mouse 167 63
+click L 6
+run 30
+mouse 223 130
+click L 6
+run 60
+mouse 61 72
+click L 6
+run 60
+mouse 225 170
+click L 6
+run 40
+mouse 90 140
+click L 6
+run 40
+mouse 232 121
+click L 6
+run 60
+run 200
+load states/misc_f.state
+mouse 138 68
+click L 6
+run 20
+mouse 110 68
+click L 6
+run 30
+mouse 139 33
+click L 6
+run 60
+mouse 113 97
+click L 6
+run 40
+mouse 22 67
+click L 6
+run 60
+mouse 293 124
+click L 6
+run 40
+mouse 84 161
+click L 6
+run 20
+mouse 253 173
+click L 6
+run 60
+mouse 223 132
+click L 6
+run 60
+mouse 73 153
+click L 6
+run 60
+mouse 51 78
+click L 6
+run 20
+mouse 126 142
+click L 6
+run 30
+mouse 76 117
+click L 6
+run 20
+run 200
+load states/misc_h.state
+mouse 72 30
+click L 6
+run 30
+mouse 294 55
+click L 6
+run 40
+mouse 33 48
+click L 6
+run 30
+mouse 212 68
+click L 6
+run 40
+mouse 197 184
+click L 6
+run 40
+mouse 262 61
+click L 6
+run 20
+mouse 269 149
+click L 6
+run 60
+mouse 267 109
+click L 6
+run 20
+mouse 93 56
+click L 6
+run 40
+mouse 155 152
+click L 6
+run 30
+mouse 284 35
+click L 6
+run 30
+mouse 290 122
+click L 6
+run 30
+mouse 298 36
+click L 6
+run 40
+run 200
+load states/misc_t1.state
+mouse 66 96
+click L 6
+run 40
+mouse 105 121
+click L 6
+run 30
+mouse 292 168
+click L 6
+run 40
+mouse 134 186
+click L 6
+run 30
+mouse 142 132
+click L 6
+run 30
+mouse 122 162
+click L 6
+run 60
+mouse 202 37
+click L 6
+run 20
+mouse 163 150
+click L 6
+run 40
+mouse 119 184
+click L 6
+run 40
+mouse 248 119
+click L 6
+run 40
+mouse 61 86
+click L 6
+run 20
+mouse 136 150
+click L 6
+run 30
+mouse 192 82
+click L 6
+run 60
+run 200
+load states/misc_t2.state
+mouse 20 152
+click L 6
+run 40
+mouse 63 60
+click L 6
+run 60
+mouse 122 152
+click L 6
+run 30
+mouse 242 115
+click L 6
+run 20
+mouse 222 148
+click L 6
+run 60
+mouse 63 70
+click L 6
+run 30
+mouse 85 37
+click L 6
+run 30
+mouse 258 67
+click L 6
+run 60
+mouse 199 69
+click L 6
+run 30
+mouse 30 33
+click L 6
+run 20
+mouse 289 65
+click L 6
+run 60
+mouse 119 84
+click L 6
+run 20
+mouse 148 84
+click L 6
+run 40
+run 200
+load states/misc_t3.state
+mouse 276 91
+click L 6
+run 40
+mouse 152 169
+click L 6
+run 60
+mouse 87 45
+click L 6
+run 40
+mouse 254 179
+click L 6
+run 60
+mouse 276 63
+click L 6
+run 30
+mouse 288 160
+click L 6
+run 20
+mouse 245 76
+click L 6
+run 20
+mouse 96 74
+click L 6
+run 30
+mouse 262 188
+click L 6
+run 20
+mouse 51 113
+click L 6
+run 60
+mouse 74 173
+click L 6
+run 20
+mouse 147 78
+click L 6
+run 40
+mouse 41 55
+click L 6
+run 60
+run 200
