@@ -1,0 +1,8 @@
+# costcheck.py: original address of C helper functions that have no HLE_* registration and no
+# address in their name or the comment above them.   file  function  address
+ai_endo.c   shoot_mid            00B614
+ai_endo.c   st_c6b0              00C6B0
+ai_l2.c     stand_after_sound    00EE60
+ai_l2.c     drop26               00F69C
+ai_l2.c     fall26               00EF0A
+score.c     addscorebcd_impl     007376

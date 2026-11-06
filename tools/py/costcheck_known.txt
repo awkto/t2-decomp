@@ -1,0 +1,34 @@
+# costcheck.py: findings reviewed by hand against the disassembly and found to be checker limits
+# (a branch arm the C repeats, a path laid out in a different order than the assembler's, the
+# fast-aim patch at $01E460).  Key: file  function  address-of-paired-instruction  charged
+ai_endo.c EndoDeath 00B538 8
+ai_endo.c EndoWalk2 00B6E4 24
+ai_endo.c EndoWalk2 00B6F2 16
+ai_endo.c sub_c48e 00C4E0 14
+ai_hktank.c HkPartDying 00CF24 12
+ai_hktank.c HkPartDying 00CF60 20
+ai_hktank.c sub_c48e 00C4E0 14
+ai_l2.c walk26 00F232 24
+ai_simple.c crate_open2 00C942 20
+ai_simple.c hit_wall_section 006014 14
+ai_simple.c hit_wall_section 006030 4
+hittest.c ShotHitTest 005930 10
+hittest.c ShotHitTest 005932 10
+input.c pad_axis 01461A 10
+input.c PadMoveCrosshair 000604 12
+input.c pad_step 000600 16
+input.c pad_step 00060C 8
+input.c ReadInput 000446 12
+input.c ReadInputAim 0004D0 12
+input.c ReadInputAim 0004DA 16
+input.c ReadInputAim 0004EC 16
+input.c ReadInputAim 0004F2 12
+input.c ReadInputAim 0004FC 10
+menacer.c MenacerReadXY 01E47E 8
+menacer.c MenacerReadXY 01E490 16
+menacer.c MenacerReadXY 01E498 16
+menacer.c MenacerReadXY 01E4B0 16
+menacer.c MenacerReadXY 01E4B8 20
+objects.c ObjNext 00B3C6 10
+scroll.c BgStreamLayers 004A32 10
+scroll.c BgStreamLayers 004A48 10
