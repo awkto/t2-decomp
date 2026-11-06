@@ -266,7 +266,7 @@ straddle the frame wrap (the frame loop rebases the clocks there).
   stalls). No hand-made bound is needed.
 * The others (I/O, or nested 68k) are judged by their `HLE_FUNC` cycle argument, which for them is
   the longest span the call can take (`ctx->cycles` is ignored): `ReadPad1/2` 330, `ReadInput`
-  1713, `ReadInputAim` 2070, `ShotHitTest` 8000, `PickupHitBox` 6000, `PalFade` 14000 (its nested
+  1713, `ReadInputAim` 2070, `ShotHitTest` 24000, `PickupHitBox` 6000, `PalFade` 14000 (its nested
   `CramUpload` polls the VDP and can take much longer than its usual ~4900).
 * `HLE_FUNC_LOWMASK` (`ReadInput`, `ReadInputAim`): the function lowers the interrupt mask itself
   (`ReadPad` ends with `move.w #$2000,sr`), so an interrupt that is pending or raised during the
