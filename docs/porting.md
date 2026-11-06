@@ -274,6 +274,16 @@ straddle the frame wrap (the frame loop rebases the clocks there).
   such a call also declines when one is already pending.
 * Entered with the mask at 6 or 7, nothing can be delivered, so nothing is checked.
 
+`T2_HLE_BOUNDS=1` is the check mode for those hand-made bounds. For every executed top-level
+non-pure call it measures the real span from entry to return (C plus nested 68k) and, at exit,
+prints per function: the declared bound, the max observed, the call count, the worst
+observed/bound ratio, and `OVER` when a call exceeded its bound (`near` above 80%). The VDP list
+commands declare their bound through `safe_run(n)` (`vdplist.c`); each noted bound is checked
+against the span up to the next note or the end of the call. Zero cost when the variable is unset.
+`port/tools/bounds.py` runs `--hle all` with it from the savestates (lockstep.py's input script)
+and merges the tables; re-run it after changing a bound or adding a non-pure replacement, and
+raise any bound that is OVER or near (observed max x 1.5, with the observed value in a comment).
+
 `T2_HLE_DECLINES=1` prints each decline and the total; `T2_HLE_NODECLINE=1` turns the fallback off
 (seqcmp does, to get comparable runs). The difftest sandbox never declines.
 

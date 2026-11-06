@@ -185,6 +185,8 @@ static void sess_finish(void) { hle_dma_end(); }
 #define W_COST 72
 static int safe_run(int bound_cycles)
 {
+	if (hle_chk_on)
+		hle_chk_note(bound_cycles);
 	if (hle_post_access)
 		return 1;
 	if (gx_dma_length())     /* a DMA in flight: the frame loop halts the CPU for it per line */
