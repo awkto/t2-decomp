@@ -26,6 +26,7 @@
  *   --poke "W:FF06AC=5,L:FF068E=0xFCA0C,D0=7"   run each state once per --poke variant, after patching
  *                         (VC=N sets the V counter, e.g. for HV readers: VC=0xE4)
  *                         work RAM (B/W/L:HEXADDR=VALUE) and registers (D0..D7/A0..A7=VALUE), comma list
+ *                         ("W:@14=5": address relative to A6, e.g. an object slot field)
  *   --strict-stack        compare RAM below the entry SP as well
  *   --stack-window B      bytes below entry SP treated as scratch (default 256)
  *   --with-hle            keep other enabled HLE functions active on both sides
@@ -90,7 +91,10 @@ static void apply_poke(const char *spec)
 			gx_m68k_dar()[(tok[0] == 'A' ? 8 : 0) + (tok[1] - '0')] = (uint32_t)strtoul(eq + 1, NULL, 0);
 			continue;
 		}
-		uint32_t addr = (uint32_t)strtoul(tok, NULL, 16), v = (uint32_t)strtoul(eq + 1, NULL, 0);
+		/* slot-relative address: "W:@14=5" writes at A6 + $14 (object slot fields) */
+		uint32_t addr = tok[0] == '@' ? gx_m68k_dar()[14] + (uint32_t)strtoul(tok + 1, NULL, 16)
+		                              : (uint32_t)strtoul(tok, NULL, 16);
+		uint32_t v = (uint32_t)strtoul(eq + 1, NULL, 0);
 		if (sz == 'B') RAM8(addr) = (uint8_t)v;
 		else if (sz == 'L') RAM32_W(addr, v);
 		else RAM16(addr) = (uint16_t)v;
