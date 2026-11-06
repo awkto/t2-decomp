@@ -1,0 +1,242 @@
+load gun_04
+botcfg energy 1
+bot 300
+objs o00
+save s00
+peek lv FF80CC 2
+bot 300
+objs o01
+save s01
+peek lv FF80CC 2
+bot 300
+objs o02
+save s02
+peek lv FF80CC 2
+bot 300
+objs o03
+save s03
+peek lv FF80CC 2
+bot 300
+objs o04
+save s04
+peek lv FF80CC 2
+bot 300
+objs o05
+save s05
+peek lv FF80CC 2
+bot 300
+objs o06
+save s06
+peek lv FF80CC 2
+bot 300
+objs o07
+save s07
+peek lv FF80CC 2
+bot 300
+objs o08
+save s08
+peek lv FF80CC 2
+bot 300
+objs o09
+save s09
+peek lv FF80CC 2
+bot 300
+objs o10
+save s10
+peek lv FF80CC 2
+bot 300
+objs o11
+save s11
+peek lv FF80CC 2
+bot 300
+objs o12
+save s12
+peek lv FF80CC 2
+bot 300
+objs o13
+save s13
+peek lv FF80CC 2
+bot 300
+objs o14
+save s14
+peek lv FF80CC 2
+bot 300
+objs o15
+save s15
+peek lv FF80CC 2
+bot 300
+objs o16
+save s16
+peek lv FF80CC 2
+bot 300
+objs o17
+save s17
+peek lv FF80CC 2
+bot 300
+objs o18
+save s18
+peek lv FF80CC 2
+bot 300
+objs o19
+save s19
+peek lv FF80CC 2
+bot 300
+objs o20
+save s20
+peek lv FF80CC 2
+bot 300
+objs o21
+save s21
+peek lv FF80CC 2
+bot 300
+objs o22
+save s22
+peek lv FF80CC 2
+bot 300
+objs o23
+save s23
+peek lv FF80CC 2
+bot 300
+objs o24
+save s24
+peek lv FF80CC 2
+bot 300
+objs o25
+save s25
+peek lv FF80CC 2
+bot 300
+objs o26
+save s26
+peek lv FF80CC 2
+bot 300
+objs o27
+save s27
+peek lv FF80CC 2
+bot 300
+objs o28
+save s28
+peek lv FF80CC 2
+bot 300
+objs o29
+save s29
+peek lv FF80CC 2
+bot 300
+objs o30
+save s30
+peek lv FF80CC 2
+bot 300
+objs o31
+save s31
+peek lv FF80CC 2
+bot 300
+objs o32
+save s32
+peek lv FF80CC 2
+bot 300
+objs o33
+save s33
+peek lv FF80CC 2
+bot 300
+objs o34
+save s34
+peek lv FF80CC 2
+bot 300
+objs o35
+save s35
+peek lv FF80CC 2
+bot 300
+objs o36
+save s36
+peek lv FF80CC 2
+bot 300
+objs o37
+save s37
+peek lv FF80CC 2
+bot 300
+objs o38
+save s38
+peek lv FF80CC 2
+bot 300
+objs o39
+save s39
+peek lv FF80CC 2
+bot 300
+objs o40
+save s40
+peek lv FF80CC 2
+bot 300
+objs o41
+save s41
+peek lv FF80CC 2
+bot 300
+objs o42
+save s42
+peek lv FF80CC 2
+bot 300
+objs o43
+save s43
+peek lv FF80CC 2
+bot 300
+objs o44
+save s44
+peek lv FF80CC 2
+bot 300
+objs o45
+save s45
+peek lv FF80CC 2
+bot 300
+objs o46
+save s46
+peek lv FF80CC 2
+bot 300
+objs o47
+save s47
+peek lv FF80CC 2
+bot 300
+objs o48
+save s48
+peek lv FF80CC 2
+bot 300
+objs o49
+save s49
+peek lv FF80CC 2
+bot 300
+objs o50
+save s50
+peek lv FF80CC 2
+bot 300
+objs o51
+save s51
+peek lv FF80CC 2
+bot 300
+objs o52
+save s52
+peek lv FF80CC 2
+bot 300
+objs o53
+save s53
+peek lv FF80CC 2
+bot 300
+objs o54
+save s54
+peek lv FF80CC 2
+bot 300
+objs o55
+save s55
+peek lv FF80CC 2
+bot 300
+objs o56
+save s56
+peek lv FF80CC 2
+bot 300
+objs o57
+save s57
+peek lv FF80CC 2
+bot 300
+objs o58
+save s58
+peek lv FF80CC 2
+bot 300
+objs o59
+save s59
+peek lv FF80CC 2

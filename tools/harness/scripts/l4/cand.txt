@@ -1,0 +1,46 @@
+# l4 candidate states: the bot (energy cheat) plays gun_04; save + object dump at the frames where
+# the $22 panel / $23 orb / $24 mover / box / lamp kill states are about to run (see bp.txt)
+load gun_04
+botcfg energy 1
+bot 1105
+save c1105
+objs c1105
+bot 310
+save c1415
+objs c1415
+bot 1115
+save c2530
+objs c2530
+bot 690
+save c3220
+objs c3220
+bot 150
+save c3370
+objs c3370
+bot 470
+save c3840
+objs c3840
+bot 1680
+save c5520
+objs c5520
+bot 120
+save c5640
+objs c5640
+bot 160
+save c5800
+objs c5800
+bot 155
+save c5955
+objs c5955
+bot 55
+save c6010
+objs c6010
+bot 4430
+save c10440
+objs c10440
+bot 55
+save c10495
+objs c10495
+bot 675
+save c11170
+objs c11170

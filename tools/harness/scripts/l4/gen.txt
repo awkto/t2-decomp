@@ -1,0 +1,68 @@
+# l4_* states: copies of the bot's candidate states (cand.txt) and, as l4_*_p, copies with the hp (+8) of the
+# listed $22/$23/$24 slots poked to 3 so that the lockstep/capture input kills them (like hk_p3).
+# run in a dir holding the c*.state files of cand.txt
+load c1105
+save l4_lamp
+load c1415
+save l4_box_a
+load c2530
+save l4_box_b
+load c3370
+save l4_mv_a
+load c3370
+poke FF87E6 2 0003
+save l4_mv_a_p
+load c3840
+save l4_mv_b
+load c3840
+poke FF87E6 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+save l4_mv_b_p
+load c5640
+save l4_pan_a
+load c5640
+poke FF87E6 2 0003
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+poke FF88EE 2 0003
+poke FF891A 2 0003
+poke FF8972 2 0003
+save l4_pan_a_p
+load c5800
+save l4_pan_b
+load c5800
+poke FF87E6 2 0003
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF88C2 2 0003
+poke FF88EE 2 0003
+poke FF891A 2 0003
+poke FF8972 2 0003
+save l4_pan_b_p
+load c5955
+save l4_orb_a
+load c5955
+poke FF87E6 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF88C2 2 0003
+poke FF88EE 2 0003
+poke FF8946 2 0003
+poke FF8972 2 0003
+save l4_orb_a_p
+load c10495
+save l4_orb_b
+load c10495
+poke FF87E6 2 0003
+save l4_orb_b_p
+load c11170
+save l4_orb_c
+load c11170
+poke FF87E6 2 0003
+poke FF886A 2 0003
+save l4_orb_c_p

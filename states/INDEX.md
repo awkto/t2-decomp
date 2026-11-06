@@ -32,6 +32,14 @@ steel mill yet. Level contents and the bot's results: `docs/levels.md`.
 - `hk_a`: tank spawned (frame ~18903). `hk_d`: after the turret died.
 - `hk_p3`, `hk_p5`: copies with the five boss slots' hp poked to 3, so the lockstep input kills the parts (death states).
 
+## Level-4 objects (panels, orbs, movers), made by the gun-bot from gun_04 (tools/harness/scripts/l4/)
+`cand.txt` plays gun_04 with the energy cheat and saves/dumps at chosen frames; `gen.txt` renames them and makes the `_p` copies.
+- `l4_lamp`, `l4_box_a`, `l4_box_b`: ceiling lamps about to be shot / supply box (flash, kill states $DAEE, $DB0C, $DBC4).
+- `l4_mv_a`, `l4_mv_b`: $24 background movers (kill states $E174, $E1CA).
+- `l4_pan_a`, `l4_pan_b`: $22 wall panels with the controllers; `l4_orb_a`, `l4_orb_b`, `l4_orb_c`: $23 orbs (attack, kill $F65A, $E0A4).
+- `*_p`: copies with the hp (+8) of the $22/$23/$24 slots poked to 3, so the lockstep input kills them.
+Used by port/scripts/capture_l4b.txt and capture_l4c.txt (ai_l4.c difftests).
+
 ## Level-8 steel mill (T-1000 / tanker), made by the gun-bot from gun_08 (tools/harness/scripts/l8/save.txt)
 - `l8_frz`: frame 1501 with the T-1000 frozen flag `$FF9EC2` set (frozen countdown, gone, meter off follow).
 - `l8_shat`: frame 2500, the T-1000's state pointer poked to `$011580` (shatter, fall, get up).

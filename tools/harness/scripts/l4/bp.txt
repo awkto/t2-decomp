@@ -1,0 +1,35 @@
+# which unverified level-4 states run when the bot plays gun_04 (bp.log: "<frame> <addr>")
+load gun_04
+botcfg energy 1
+bp DAEE
+bp DB0C
+bp DBC4
+bp DBE0
+bp E166
+bp DBF6
+bp DC06
+bp DC5E
+bp DC7E
+bp DCDC
+bp DCE4
+bp DD64
+bp DD96
+bp F540
+bp F560
+bp F584
+bp F5AC
+bp F5D2
+bp F65A
+bp E0A4
+bp DDBA
+bp DE08
+bp DEBA
+bp DF30
+bp DF46
+bp DF9C
+bp DFF0
+bp E026
+bp E05C
+bp E174
+bp E1CA
+bot 18000
