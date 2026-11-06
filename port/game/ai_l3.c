@@ -635,7 +635,7 @@ HLE_RANGE(0x00D674, Endo1dWalk, 2500, EXIT_NEXT)
 }
 
 /* $00D6CA: fires (sub_009054 hurts the player), timer 0 -> back to $D674 */
-HLE_RANGE(0x00D6CA, Endo1dFire, 4000, EXIT_NEXT)
+HLE_RANGE(0x00D6CA, Endo1dFire, 15300, EXIT_NEXT)   /* T2_HLE_BOUNDS max 10143 (misc_t5) x 1.5 */
 {
 	endo_head(ctx);
 	mvw_m(ctx, 1, A6 + 0x24);
