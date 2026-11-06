@@ -1,0 +1,2959 @@
+# (energy of P1 poked back to full after every shot so the bot survives the whole level)
+# Level-4 (Skynet base approach) capture route for the ai_l4.c states: the capture_l2 input replayed from gun_04,
+# pad_04 (pad-bot input) and 2p_gun_04.
+load states/gun_04.state
+poke FF801E 2 0200
+mouse 63 57
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 116 94
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 169 131
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 222 168
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 275 25
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 28 62
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 81 99
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 134 136
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 187 173
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 240 30
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 293 67
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 46 104
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 99 141
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 152 178
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 205 35
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 258 72
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 11 109
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 64 146
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 117 183
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 170 40
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 223 77
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 276 114
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 29 151
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 82 188
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 135 45
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 188 82
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 241 119
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 294 156
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 47 193
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 100 50
+click L 6
+poke FF801E 2 0200
+run 90
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 3000
+# script jumped to $01FC4A: the panels ($22) and their orbs ($23)
+load states/gun_04.state
+poke FF80CE 4 0001FC4C
+poke FF801E 2 0200
+mouse 63 57
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 116 94
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 169 131
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 222 168
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 275 25
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 28 62
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 81 99
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 134 136
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 187 173
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 240 30
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 293 67
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 46 104
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 99 141
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 152 178
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 205 35
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 258 72
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 11 109
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 64 146
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 117 183
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 170 40
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 223 77
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 276 114
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 29 151
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 82 188
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 135 45
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 188 82
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 241 119
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 294 156
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 47 193
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 100 50
+click L 6
+poke FF801E 2 0200
+run 90
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 3000
+# script jumped to $01F9B0: the $24 movers, infiltrators
+load states/gun_04.state
+poke FF80CE 4 0001F9B2
+poke FF801E 2 0200
+mouse 63 57
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 116 94
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 169 131
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 222 168
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 275 25
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 28 62
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 81 99
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 134 136
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 187 173
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 240 30
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 293 67
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 46 104
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 99 141
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 152 178
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 205 35
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 258 72
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 11 109
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 64 146
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 117 183
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 170 40
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 223 77
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 276 114
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 29 151
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 82 188
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 135 45
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 188 82
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 241 119
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 294 156
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 47 193
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 100 50
+click L 6
+poke FF801E 2 0200
+run 90
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 3000
+# script jumped to $020314 (level-2 script block): orbs ($23) spawned directly
+load states/gun_04.state
+poke FF80CE 4 00020316
+poke FF801E 2 0200
+mouse 63 57
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 116 94
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 169 131
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 222 168
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 275 25
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 28 62
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 81 99
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 134 136
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 187 173
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 240 30
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 293 67
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 46 104
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 99 141
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 152 178
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 205 35
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 258 72
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 11 109
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 64 146
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 117 183
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 170 40
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 223 77
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 276 114
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 29 151
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 82 188
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 135 45
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 188 82
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 241 119
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 294 156
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 47 193
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 100 50
+click L 6
+poke FF801E 2 0200
+run 90
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 3000
+load states/pad_04.state
+poke FF801E 2 0200
+mouse 160 112
+mouse 160 112
+press - 699
+press DL 4
+press L 1
+press DL 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press UL 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press D 1
+press A 1
+press L 5
+press - 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 7
+press AL 1
+press L 1
+press A 1
+press L 1
+press A 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press U 1
+press A 1
+press - 1
+press A 1
+press U 3
+press - 1
+press U 1
+press - 1
+press U 1
+press - 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press D 1
+press AD 1
+press D 1
+press A 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press UL 1
+press AU 1
+press DR 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press R 5
+press - 1
+press R 1
+press - 1
+press U 5
+press AU 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press DR 1
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press D 7
+press - 1
+press UL 1
+press A 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press UR 5
+press AR 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 5
+press L 1
+press UL 1
+press L 1
+press UL 1
+press DL 2
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DR 11
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press BA 1
+press BUR 1
+press UR 4
+press R 1
+press UR 1
+press R 1
+press UR 1
+press - 1
+press UR 1
+press - 1
+press U 1
+press - 1
+press U 1
+press - 1
+press UR 1
+press A 1
+press U 1
+press A 1
+press U 1
+press A 1
+press UR 1
+press L 1
+press DL 1
+press A 1
+press UR 1
+press - 1
+press UR 1
+press - 1
+press UR 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press UR 1
+press U 6
+press A 1
+press U 1
+press A 1
+press U 1
+press A 1
+press UL 1
+press DL 2
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 4
+press A 1
+press UR 5
+press R 1
+press UR 1
+press - 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press AD 1
+press DL 1
+press AD 1
+press D 1
+press AD 1
+press D 1
+press AD 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press - 1
+press U 4
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 2
+press AD 1
+press UR 7
+press R 1
+press U 7
+press A 1
+press DR 7
+press ADL 1
+press DL 3
+press L 1
+press DL 1
+press A 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 5
+press U 1
+press UL 1
+press U 1
+press UL 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press DR 10
+press D 1
+press DR 1
+press D 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press A 1
+press UL 7
+press L 1
+press UL 5
+press U 2
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 2
+press ADR 1
+press DR 3
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 6
+press UL 13
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press A 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press D 1
+press AD 1
+press D 3
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press UL 1
+press U 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 5
+press U 1
+press UL 1
+press A 1
+press D 3
+press - 1
+press D 1
+press - 1
+press D 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press U 5
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press - 1
+press DR 1
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 12
+press - 1
+press R 1
+press - 1
+press R 1
+press A 1
+press DR 3
+press AD 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press - 1
+press D 1
+press - 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press A 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press D 2
+press L 1
+press A 1
+press DL 1
+press D 1
+press DL 1
+press AD 1
+press D 1
+press AD 1
+press D 1
+press A 1
+press D 1
+press - 1
+press D 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DR 1
+press BA 1
+press BDR 1
+press R 1
+press DR 1
+press R 6
+press - 1
+press R 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press UR 1
+press - 1
+press UR 1
+press - 1
+press R 1
+press - 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press DR 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press UL 1
+press AU 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DR 1
+press R 1
+press DR 1
+press AR 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press DL 15
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press BA 1
+press BUR 1
+press UR 6
+press U 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press U 4
+press A 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press DL 8
+press D 1
+press DL 7
+press D 1
+press DL 1
+press D 1
+press DL 1
+press - 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press - 1
+press DL 1
+press L 1
+press DL 1
+press L 3
+press BL 1
+press BR 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 32
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 3
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 3
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 3
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press R 1
+press A 1
+press U 1
+press AU 1
+press U 1
+press AUL 1
+press UL 1
+press AUL 1
+press UL 1
+press A 1
+press L 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press R 1
+press A 1
+press L 8
+press DL 1
+press D 1
+press DL 1
+press D 4
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press DL 7
+press A 1
+press UL 1
+press AU 1
+press UL 1
+press AUL 1
+press UL 1
+press AL 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 3
+press DR 7
+press R 1
+press DR 1
+press A 1
+press UR 3
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press DR 3
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press A 1
+press UL 1
+press AU 1
+press UL 1
+press A 1
+press UL 1
+press AL 1
+press UL 1
+press AL 1
+press UL 1
+press A 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press DL 7
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press R 1
+press - 1
+press R 1
+press A 1
+press DR 3
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press U 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 2
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press UR 8
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 2
+press A 1
+press UR 1
+press AU 1
+press UR 1
+press AU 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press U 1
+press A 1
+press R 5
+press - 1
+press R 1
+press - 1
+press UR 1
+press U 4
+press A 1
+press DR 1
+press - 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press D 1
+press - 1
+press D 1
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press R 1
+press - 1
+press R 1
+press - 1
+press R 1
+press - 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press UL 1
+press AU 1
+press D 1
+press - 1
+press D 1
+press - 1
+press D 1
+press - 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press U 7
+press A 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press A 1
+press DL 9
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press DR 1
+press D 1
+press DR 1
+press D 12
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press AR 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press U 1
+press A 1
+press U 1
+press A 1
+press U 1
+press A 1
+press R 8
+press DR 7
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press A 1
+press UR 1
+press AU 1
+press UR 1
+press AU 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press R 1
+press AR 1
+press R 1
+press AR 1
+press R 1
+press AR 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press AR 1
+press R 1
+press AR 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press UL 1
+press L 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press - 1
+press DL 1
+press L 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 3
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 3
+press - 1
+press L 1
+press A 1
+press UL 1
+press AU 1
+press UL 1
+press AU 1
+press U 1
+press A 1
+press U 1
+press A 1
+press U 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press DR 1
+press D 6
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press UR 5
+press R 1
+press UR 1
+press R 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press UR 1
+press U 4
+press A 1
+press U 7
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press UR 1
+press - 1
+press UR 1
+press - 1
+press UR 1
+press - 1
+press UR 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press DR 1
+press D 4
+press A 1
+press DL 1
+press ADL 1
+press DL 1
+press ADL 1
+press DL 7
+press L 1
+press DL 11
+press A 1
+press U 1
+press AU 1
+press UR 1
+press AU 1
+press UR 1
+press AU 1
+press UR 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press AR 1
+press DL 1
+press AL 1
+press L 1
+press AL 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press - 1
+press A 1
+press - 1
+press A 1
+press UR 1
+press AUR 1
+press UR 1
+press AUR 1
+press UR 1
+press AUR 1
+press UR 1
+press AUR 1
+press UR 1
+press AU 1
+press UR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press U 8
+press R 16
+press A 1
+press DR 1
+press R 1
+press DR 1
+press - 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 3
+press UL 1
+press AU 1
+press D 1
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press D 4
+press DL 1
+press AD 1
+press DL 1
+press AD 1
+press DL 1
+press AD 1
+press DR 1
+press A 1
+press - 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press AL 1
+press L 1
+press AL 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 5
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press - 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press R 3
+press - 1
+press R 1
+press - 1
+press R 1
+press A 1
+press DR 1
+press R 1
+press DR 1
+press R 5
+press UR 1
+press U 6
+press A 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press D 2
+press AD 1
+press D 1
+press A 1
+press D 1
+press A 1
+press D 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press U 5
+press A 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press D 1
+press AD 1
+press D 1
+press A 1
+press D 1
+press A 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press U 5
+press - 1
+press U 1
+press A 1
+press U 1
+press A 1
+press U 1
+press A 1
+press UR 1
+press - 1
+press UR 1
+press - 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 2
+press AD 1
+press D 1
+press A 1
+press D 1
+press A 1
+press DR 1
+press R 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press DR 1
+press - 1
+press U 5
+press AU 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press D 2
+press AD 1
+press D 1
+press A 1
+press D 1
+press A 1
+press DR 1
+press R 2
+press - 1
+press R 1
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press - 1
+press U 1
+press - 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press AU 1
+press D 1
+press AD 1
+press D 1
+press AD 1
+press D 3
+press A 1
+press D 1
+press A 1
+press DL 1
+press A 1
+press UL 5
+press - 1
+press UL 1
+press - 1
+press UL 5
+press AU 1
+press D 3
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press A 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 1
+press AU 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press - 1
+press DL 1
+press - 1
+press UL 5
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press UL 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press L 1
+press - 1
+press DL 11
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 4
+press A 1
+press UR 1
+press AU 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press A 1
+press UR 1
+press AR 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press DL 1
+press D 1
+press UR 1
+press R 1
+press UR 1
+press - 1
+press UR 1
+press A 1
+press DR 5
+press D 1
+press DR 1
+press AD 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DL 1
+press L 1
+press DR 5
+press R 1
+press U 1
+press AU 1
+press DR 1
+press R 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 1
+press U 1
+press UL 5
+press U 1
+press UL 1
+press U 1
+press DR 13
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press R 1
+press DR 1
+press A 1
+press UL 1
+press AU 1
+press UL 1
+press AU 1
+press UL 1
+press AL 1
+press UL 1
+press L 1
+press UL 1
+press AL 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press AL 1
+press UL 1
+press L 1
+press UL 1
+press A 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press R 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press U 1
+press UR 1
+press A 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press D 1
+press DR 1
+press AD 1
+press DR 1
+press AD 1
+press DR 1
+press A 1
+press DR 1
+press AR 1
+press DR 1
+press AR 1
+press DR 1
+press AR 1
+press DR 1
+press AR 1
+press DR 1
+press A 1
+press DR 1
+press A 1
+press - 1
+press A 1
+press DL 1
+press AL 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press R 5
+press A 1
+press R 1
+press A 1
+press R 1
+press A 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 1
+press L 1
+press DL 5
+press D 1
+press DL 1
+press AD 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press UL 1
+press A 1
+press D 5
+press A 1
+press D 1
+press A 1
+press D 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press DL 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+press L 1
+press A 1
+load states/2p_gun_04.state
+poke FF801E 2 0200
+mouse 63 57
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 116 94
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 169 131
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 222 168
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 275 25
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 28 62
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 81 99
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 134 136
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 187 173
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 240 30
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 293 67
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 46 104
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 99 141
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 152 178
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 205 35
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 258 72
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 11 109
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 64 146
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 117 183
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 170 40
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 223 77
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 276 114
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 29 151
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 82 188
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 135 45
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 188 82
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 241 119
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 294 156
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 47 193
+click L 6
+poke FF801E 2 0200
+run 90
+mouse 100 50
+click L 6
+poke FF801E 2 0200
+run 90
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 1500
+poke FF801E 2 0200
+run 3000
