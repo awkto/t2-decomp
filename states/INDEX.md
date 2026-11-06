@@ -37,3 +37,12 @@ steel mill yet. Level contents and the bot's results: `docs/levels.md`.
 - `l8_shat`: frame 2500, the T-1000's state pointer poked to `$011580` (shatter, fall, get up).
 - `l8_hit`: frame 2500, pointer poked to `$011514`, timer 12 (the pose after a hit).
 - All three are untracked like the other `.state` files; `cov.sh`/`cov.txt`/`cov2.txt` list which state entries run when.
+
+## Level-4 boss (Skynet CPU), made by the gun-bot from gun_04 (tools/harness/scripts/sky/)
+`scan.txt` logs which AI states run when (guns die 11811..12219, intro 12220..12385, parts 12386..16249, finish 16250..17063); `save1.txt` saves the states, `save2.txt` makes the hp-poked copies (`harness` frame counter; the bot has the energy cheat).
+- `sky_a`: frame 11620, four wall guns (`$E2E6`) alive. `sky_a_p`: same, guns' hp poked to 0 (the lockstep input kills them: `$E314`, intro).
+- `sky_c`: `sky_a` with the four guns already shot (b15 cleared, state pointer poked to `$E314`, `save3.txt`): tile pops and the intro start.
+- `sky_b`: frame 12221, intro running (`$E3E2` tile frames, `$E546` sweep, `$E5A6` spawner of the 16 parts).
+- `sky_d`: frame 12400, boss parts alive (`$E72E`, `$E74A`, `$E746`). `sky_d_p`: parts' hp poked to 3 (`$E7C0` death).
+- `sky_e`, `sky_e_p`: frame 16240, the last part alive (hp 8 / poked to 3): death, then `$E864`.
+- `sky_f`: frame 16490, finish (`$E864` explosions, `$E8C8`, `$E91E` countdown with the fade, `$E9C4`).

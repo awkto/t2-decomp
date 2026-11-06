@@ -1,0 +1,30 @@
+# Level-4 boss states, phase 2: copies with the hp (+8) of the shootable slots poked to 3 (the guns to 0), so that the lockstep input kills
+# them (like hk_p3). Run in the dir holding the sky_*.state files that save1.txt made.
+#   sky_a_p: the four wall guns (slots 0..3)   sky_d_p: the 16 boss parts (slots 0,2..16)   sky_e_p: the last part (slot 4)
+load sky_a
+poke FF87BA 2 0000
+poke FF87E6 2 0000
+poke FF8812 2 0000
+poke FF883E 2 0000
+save sky_a_p
+load sky_d
+poke FF87BA 2 0003
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+poke FF88EE 2 0003
+poke FF891A 2 0003
+poke FF8946 2 0003
+poke FF8972 2 0003
+poke FF899E 2 0003
+poke FF89CA 2 0003
+poke FF89F6 2 0003
+poke FF8A22 2 0003
+poke FF8A4E 2 0003
+poke FF8A7A 2 0003
+save sky_d_p
+load sky_e
+poke FF886A 2 0003
+save sky_e_p
