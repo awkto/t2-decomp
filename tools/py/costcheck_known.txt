@@ -35,3 +35,4 @@ scroll.c BgStreamLayers 004A48 10
 # div_w helper: 14 = the overflow path (4+10); the normal path charges 4+76..144 via hle_insn_x
 ai_misc.c TruckMain 00D146 14
 ai_misc.c TruckMain 00D174 14
+ai_misc.c sub_00BABC 00BAC0 14
