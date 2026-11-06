@@ -5,10 +5,11 @@
  * a0 = the handler's arguments; a handler leaves a0 after them (or at the jump target) and rts's
  * back to `bra.w ScriptNext`.
  *
- * Replaced here: goto $0099AA, nop $0099AE, scroll_script setters $0099B0/$0099BC, poke_word
+ * Replaced here: goto $0099AA, scroll_script setters $0099B0/$0099BC, poke_word
  * $00A130, poke_long $00A138, end_level $009C36, gosub $00B2E6, return $00B2F2, and the thin jsr
- * wrappers text $009C18 (PrintText), $009C2A, $009C30 (tile/text helpers), which call the 68k
- * callee through hle_call68k. Skipped: native $00A140 (jmp into arbitrary 68k) and the spawns.
+ * wrappers text $009C18 (PrintText) and text_clear $009C30, which call the 68k
+ * callee through hle_call68k. Skipped: nop $0099AE and draw_17 $009C2A (no script uses
+ * them), native $00A140 (jmp into arbitrary 68k) and the spawns.
  *
  * Every poke target in the 8 scripts is work RAM ($FF9Exx..$FFAFxx); the pokes go to RAM only.
  * Costs are per instruction (the rts included), as a HLE_SEQ timeline. */
@@ -31,12 +32,6 @@ HLE_FUNC_PURE(0x0099AA, ScrGoto, 28)
 {
 	HLE_SEQ(ctx, 12, 16);
 	ctx->a[0] = rd32(ctx->a[0]);
-}
-
-/* $0099AE: rts */
-HLE_FUNC_PURE(0x0099AE, ScrNop, 16)
-{
-	HLE_SEQ(ctx, 16);
 }
 
 /* move.l #imm,(abs).l ; rts: N=Z=V=C=0 (imm positive, nonzero), X kept */
@@ -105,7 +100,7 @@ HLE_FUNC_PURE(0x00B2F2, ScrReturn, 36)
 
 /* $009C18: movea.l (a0)+,a1 ; move.l a0,-(sp) ; movea.l a1,a0 ; move.w #$c000,d6 ;
  *          jsr (PrintText,pc) ; movea.l (sp)+,a0 ; rts.   PrintText runs as 68k. */
-HLE_FUNC(0x009C18, ScrText, 20000)
+HLE_FUNC(0x009C18, ScrText, 60000)
 {
 	HLE_SEQ(ctx, 12, 12, 4, 8, 18);
 	ctx->a[1] = rd32(ctx->a[0]);
@@ -121,16 +116,8 @@ HLE_FUNC(0x009C18, ScrText, 20000)
 	hle_insn(ctx, 16);
 }
 
-/* $009C2A / $009C30: jsr (callee,pc) ; rts */
-HLE_FUNC(0x009C2A, ScrDraw17, 20000)
-{
-	hle_insn(ctx, 18);
-	hle_sync(ctx);
-	hle_call68k(ctx, 0x00BE42);
-	hle_insn(ctx, 16);
-}
-
-HLE_FUNC(0x009C30, ScrTextClear, 20000)
+/* $009C30: jsr (callee,pc) ; rts */
+HLE_FUNC(0x009C30, ScrTextClear, 60000)
 {
 	hle_insn(ctx, 18);
 	hle_sync(ctx);
