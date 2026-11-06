@@ -323,7 +323,7 @@ miss:
 }
 
 /* --------------------------------------------------------- ShotHitTest $005892 */
-HLE_FUNC(0x005892, ShotHitTest, 8000)
+HLE_FUNC(0x005892, ShotHitTest, 24000)
 {
 	int free_slots = 0;
 
