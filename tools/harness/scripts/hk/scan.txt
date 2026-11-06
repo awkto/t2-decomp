@@ -1,0 +1,6 @@
+load gun_01
+peekeach tank FF9E18 2
+peekeach parts FF9EBC 1
+peekeach level FF80CC 2
+botcfg energy 1
+bot until 2 60000

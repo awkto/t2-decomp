@@ -1,0 +1,71 @@
+# HK tank boss captures (level 1 boss, ai_hktank.c). The states are made by the gun-bot (tools/harness:
+# bot with the energy cheat from gun_01, saved at frame 18905 (tank just spawned), 19425 (after the first
+# arm died), 20691 (second arm), 20931 (turret), 21911 (hull, body dying), 23103 (body dead),
+# 24303 (after the boss)); they are not committed, copy them to states/hk_a.state .. hk_g.state.
+# Every state is played with mouse shots, so the hit tests (every click walks all objects) and the
+# parts' AI/death states run.
+load states/hk_a.state
+mouse 200 70
+click L 6
+run 100
+mouse 120 80
+click L 6
+run 100
+mouse 160 100
+click L 6
+run 100
+mouse 230 60
+click L 6
+run 100
+load states/hk_b.state
+mouse 200 70
+click L 6
+run 100
+mouse 120 80
+click L 6
+run 100
+mouse 160 100
+click L 6
+run 100
+load states/hk_c.state
+mouse 200 70
+click L 6
+run 100
+mouse 120 80
+click L 6
+run 100
+mouse 160 100
+click L 6
+run 100
+load states/hk_d.state
+mouse 200 70
+click L 6
+run 100
+mouse 120 80
+click L 6
+run 100
+mouse 160 100
+click L 6
+run 100
+load states/hk_e.state
+mouse 200 70
+click L 6
+run 100
+mouse 120 80
+click L 6
+run 100
+mouse 160 100
+click L 6
+run 100
+load states/hk_f.state
+mouse 200 70
+click L 6
+run 100
+mouse 120 80
+click L 6
+run 100
+mouse 160 100
+click L 6
+run 100
+load states/hk_g.state
+run 100

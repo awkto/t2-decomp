@@ -1,0 +1,22 @@
+# HK tank boss states (level 1 boss, port/game/ai_hktank.c). Run from a dir holding gun_01.state:
+#   GUN=1 GUNMODE=lightgun build/harness ext/gpgx/genesis_plus_gx_libretro.so rom/baserom.md \
+#       tools/harness/scripts/hk/save.txt OUT      (then gen.txt with the hk_a..hk_e states in OUT)
+# The bot (energy cheat) plays level 1 from gun_01; the tank spawns at frame 18903 and the parts die at
+# 19418 (arm), 20682 (arm), 20920 (turret), 21896 (hull), 23086 (body). scan.txt finds those frames.
+load gun_01
+botcfg energy 1
+peekeach parts FF9EBC 1
+bot 18905
+save hk_a
+bot 520
+save hk_b
+bot 1266
+save hk_c
+bot 240
+save hk_d
+bot 980
+save hk_e
+bot 1192
+save hk_f
+bot 1200
+save hk_g

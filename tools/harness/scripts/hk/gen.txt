@@ -1,0 +1,56 @@
+load hk_a
+run 25
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p1
+load hk_a
+run 60
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p2
+load hk_b
+run 0
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p3
+load hk_b
+run 40
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p4
+load hk_c
+run 0
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p5
+load hk_d
+run 0
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p6
+load hk_e
+run 0
+poke FF8812 2 0003
+poke FF883E 2 0003
+poke FF886A 2 0003
+poke FF8896 2 0003
+poke FF88C2 2 0003
+save hk_p7
