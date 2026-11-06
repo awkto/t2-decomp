@@ -1,0 +1,1562 @@
+# Level-4 object states the default gun_04 route never reaches (the $22 wall panels, $23 orbs, $24 movers, box/lamp kills).
+# l4_* states are made by the gun-bot (tools/harness/scripts/l4/); the _p copies have the hp of those objects poked to 3.
+# Order: aimed shots at the objects first (capture_l4b.txt) / grid of shots first (capture_l4c.txt); play both.
+load states/l4_lamp.state
+poke FF801E 2 0200
+poke FF87BA 2 0003
+poke FF87E6 2 0003
+poke FF883E 2 0003
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 259 22
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 259 30
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 259 38
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 299 22
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 299 30
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 299 38
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_box_a.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 285 124
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 285 132
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 285 140
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_box_b.state
+poke FF801E 2 0200
+poke FF8896 2 0003
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 285 124
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 285 132
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 285 140
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_mv_a.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 92
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 235 100
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 235 108
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_mv_a_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 92
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 235 100
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 235 108
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_mv_b.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 301 102
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 301 110
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 301 118
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_mv_b_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 301 102
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 301 110
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 301 118
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_pan_a.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+run 200
+load states/l4_pan_a_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+run 200
+load states/l4_pan_b.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+run 200
+load states/l4_pan_b_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+run 200
+load states/l4_orb_a.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+run 200
+load states/l4_orb_a_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+run 200
+load states/l4_orb_b.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 256 134
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 256 142
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 256 150
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_orb_b_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 256 134
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 256 142
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 256 150
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_orb_c.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 58 57
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 58 65
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 58 73
+click L 6
+poke FF801E 2 0200
+run 20
+run 200
+load states/l4_orb_c_p.state
+poke FF801E 2 0200
+mouse 32 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 60
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 54 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 96 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 171 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 246 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 288 90
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 43 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 118 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 160 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 235 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 310 120
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 32 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 107 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 182 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 224 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 299 160
+click L 6
+poke FF801E 2 0200
+run 14
+mouse 58 57
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 58 65
+click L 6
+poke FF801E 2 0200
+run 20
+mouse 58 73
+click L 6
+poke FF801E 2 0200
+run 20
+run 200

@@ -1,11 +1,8 @@
 /* AI states and hit routines of the level-4 (Skynet base approach) object types.
  * docs/objects_types.md ("Level 4"), src/t2.s.
  *
- * ENABLED (difftest-exact): $1F box $00DAC4 + hit $006326; $21 lamp $00DB8C + hit $00638E; $29 pop-up
- * endoskeleton $00EC58, $00EC82 (+ $00ECB2), $00ECE8, $00ED2E, kill $00ED5C + hit $0067F2.
- * Everything else below (the $22 panels, the $23 orbs, $24 movers and kill states, box/lamp kill
- * states) is written but not yet difftested (the capture route never reaches it) and is compiled
- * only with -DL4_UNVERIFIED.
+ * All states are difftest-exact (capture_l4.txt, capture_l4b.txt/capture_l4c.txt from the l4_* states made by the
+ * gun-bot, tools/harness/scripts/l4).
  *
  *   type $1F supply container: $00DAC4, $00DAEE, kill $00DB0C; hit $006326
  *   type $21 ceiling fixture:  $00DB8C, $00DBE0, kill $00DBC4; hit $00638E
@@ -74,20 +71,14 @@ static uint32_t alu(hle_ctx *c, int op, uint32_t a, uint32_t b, int bits, int se
 static int c_z(hle_ctx *c) { return (c->sr & CC_Z) != 0; }
 static int c_n(hle_ctx *c) { return (c->sr & CC_N) != 0; }
 static int c_v(hle_ctx *c) { return (c->sr & CC_V) != 0; }
-#ifdef L4_UNVERIFIED
 static int c_c(hle_ctx *c) { return (c->sr & CC_C) != 0; }
-#endif
 static int c_gt(hle_ctx *c) { return !c_z(c) && c_n(c) == c_v(c); }
-#ifdef L4_UNVERIFIED
 static int c_lt(hle_ctx *c) { return c_n(c) != c_v(c); }
 
-#endif
 /* branches: charge and return whether taken */
 static void bs(hle_ctx *c, int taken) { hle_insn(c, taken ? 10 : 8); }   /* Bcc.s */
-#ifdef L4_UNVERIFIED
 static void bw(hle_ctx *c, int taken) { hle_insn(c, taken ? 10 : 12); }  /* Bcc.w */
 
-#endif
 static void jsr(hle_ctx *c, void (*f)(hle_ctx *)) { hle_insn(c, 18); f(c); }
 
 static void exit_next(hle_ctx *c)
@@ -116,7 +107,6 @@ static void movew_m_d(hle_ctx *c, int r, uint32_t a)
 	cc_logic16(c, v);
 	hle_insn(c, 12);
 }
-#ifdef L4_UNVERIFIED
 static void moveb_m_d(hle_ctx *c, int r, uint32_t a)
 {
 	uint8_t v = RAM8(a);
@@ -124,7 +114,6 @@ static void moveb_m_d(hle_ctx *c, int r, uint32_t a)
 	cc_logic8(c, v);
 	hle_insn(c, 12);
 }
-#endif
 static void movew_i_m(hle_ctx *c, uint32_t a, uint16_t v)
 {
 	RAM16(a) = v;
@@ -137,15 +126,12 @@ static void movel_i_m(hle_ctx *c, uint32_t a, uint32_t v)
 	cc_logic32(c, v);
 	hle_insn(c, 24);
 }
-#ifdef L4_UNVERIFIED
 static void moveb_i_m(hle_ctx *c, uint32_t a, uint8_t v)
 {
 	RAM8(a) = v;
 	cc_logic8(c, v);
 	hle_insn(c, 16);
 }
-#endif
-#ifdef L4_UNVERIFIED
 static void extw(hle_ctx *c, int r)
 {
 	uint32_t v = (uint32_t)(int32_t)(int8_t)c->d[r];
@@ -153,7 +139,6 @@ static void extw(hle_ctx *c, int r)
 	cc_logic16(c, v);
 	hle_insn(c, 4);
 }
-#endif
 static void andiw_d(hle_ctx *c, int r, uint16_t m)
 {
 	uint16_t v = (uint16_t)c->d[r] & m;
@@ -173,13 +158,11 @@ static void eoriw_d(hle_ctx *c, int r, uint16_t i)
 	cc_logic16(c, v);
 	hle_insn(c, 8);
 }
-#ifdef L4_UNVERIFIED
 static void cmpiw_d(hle_ctx *c, int r, uint16_t i)
 {
 	alu(c, OP_SUB, c->d[r], i, 16, 0);
 	hle_insn(c, 8);
 }
-#endif
 static void subq1w_m(hle_ctx *c, uint32_t a, int cost)
 {
 	RAM16(a) = (uint16_t)alu(c, OP_SUB, RAM16(a), 1, 16, 1);
@@ -211,7 +194,6 @@ static uint16_t asr16(hle_ctx *c, uint16_t v, int n)
 	hle_insn(c, 6 + 2 * n);
 	return r;
 }
-#ifdef L4_UNVERIFIED
 static uint16_t asl16(hle_ctx *c, uint16_t v, int n)
 {
 	uint16_t r = v;
@@ -233,8 +215,6 @@ static uint16_t asl16(hle_ctx *c, uint16_t v, int n)
 
 
 
-#ifdef L4_UNVERIFIED
-#endif
 /* sub_00D236 (after its jsr was charged) */
 static void sub_d236(hle_ctx *ctx)
 {
@@ -299,7 +279,6 @@ static void sub_d236(hle_ctx *ctx)
 /* ================================================================== helpers of this file */
 
 
-#endif
 static void movew_d_d(hle_ctx *c, int dst, int src)
 {
 	set_w(&c->d[dst], c->d[src] & 0xFFFF);
@@ -352,15 +331,12 @@ static void movew_d_m(hle_ctx *c, int r, uint32_t a)       /* move.w Dn,(d16,a6)
 	cc_logic16(c, c->d[r]);
 	hle_insn(c, 12);
 }
-#ifdef L4_UNVERIFIED
 static void moveb_d_m(hle_ctx *c, int r, uint32_t a)       /* move.b Dn,(d16,a6) */
 {
 	RAM8(a) = (uint8_t)c->d[r];
 	cc_logic8(c, c->d[r]);
 	hle_insn(c, 12);
 }
-#endif
-#ifdef L4_UNVERIFIED
 static void movew_m_dc(hle_ctx *c, int r, uint32_t a, int cost)
 {
 	uint16_t v = RAM16(a);
@@ -368,32 +344,27 @@ static void movew_m_dc(hle_ctx *c, int r, uint32_t a, int cost)
 	cc_logic16(c, v);
 	hle_insn(c, cost);
 }
-#endif
 static void subiw_d(hle_ctx *c, int r, uint16_t i)
 {
 	set_w(&c->d[r], alu(c, OP_SUB, c->d[r], i, 16, 1));
 	hle_insn(c, 8);
 }
-#ifdef L4_UNVERIFIED
 static void addqw_d(hle_ctx *c, int r, int n)
 {
 	set_w(&c->d[r], alu(c, OP_ADD, c->d[r], (uint32_t)n, 16, 1));
 	hle_insn(c, 4);
 }
-#endif
 static void cmpiw_m(hle_ctx *c, uint32_t a, uint16_t i, int cost)
 {
 	alu(c, OP_SUB, RAM16(a), i, 16, 0);
 	hle_insn(c, cost);
 }
-#ifdef L4_UNVERIFIED
 static void tstw_m(hle_ctx *c, uint32_t a, int cost)
 {
 	uint16_t v = RAM16(a);
 	cc_logic16(c, v);
 	hle_insn(c, cost);
 }
-#endif
 static void addiw_m(hle_ctx *c, uint32_t a, uint16_t i)    /* addi.w #i,(d16,a6) */
 {
 	RAM16(a) = (uint16_t)alu(c, OP_ADD, RAM16(a), i, 16, 1);
@@ -409,13 +380,11 @@ static void addqw_m(hle_ctx *c, uint32_t a, int n)         /* addq.w #n,(d16,a6)
 	RAM16(a) = (uint16_t)alu(c, OP_ADD, RAM16(a), (uint32_t)n, 16, 1);
 	hle_insn(c, 16);
 }
-#ifdef L4_UNVERIFIED
 static void negb_m(hle_ctx *c, uint32_t a)                 /* neg.b (d16,a6) */
 {
 	RAM8(a) = (uint8_t)alu(c, OP_SUB, 0, RAM8(a), 8, 1);
 	hle_insn(c, 16);
 }
-#endif
 static void lea_d(hle_ctx *c, int an, uint32_t v, int cost)
 {
 	c->a[an] = v;
@@ -435,48 +404,34 @@ static void lsrw_d(hle_ctx *c, int r, int n)
 	set_w(&c->d[r], res);
 	hle_insn(c, 6 + 2 * n);
 }
-#ifdef L4_UNVERIFIED
 static void aslw_d(hle_ctx *c, int r, int n)
 {
 	set_w(&c->d[r], asl16(c, (uint16_t)c->d[r], n));
 }
-#endif
-#ifdef L4_UNVERIFIED
 static void addw_dd(hle_ctx *c, int dst, int src)          /* add.w Ds,Dd */
 {
 	set_w(&c->d[dst], alu(c, OP_ADD, c->d[dst], c->d[src], 16, 1));
 	hle_insn(c, 4);
 }
-#ifdef L4_UNVERIFIED
-#endif
 static void cmpw_dd(hle_ctx *c, int rs, int rd)            /* cmp.w Ds,Dd */
 {
 	alu(c, OP_SUB, c->d[rd], c->d[rs], 16, 0);
 	hle_insn(c, 4);
 }
-#endif
-#ifdef L4_UNVERIFIED
 static void cmpw_md(hle_ctx *c, uint32_t a, int rd)        /* cmp.w (d16,a6),Dd */
 {
 	alu(c, OP_SUB, c->d[rd], RAM16(a), 16, 0);
 	hle_insn(c, 12);
 }
-#endif
-#ifdef L4_UNVERIFIED
 static void movem_xy23(hle_ctx *ctx)                       /* movem.w (2,a6),d2-d3 */
 {
 	ctx->d[2] = (uint32_t)(int32_t)(int16_t)RAM16(A6 + 2);
 	ctx->d[3] = (uint32_t)(int32_t)(int16_t)RAM16(A6 + 4);
 	hle_insn(ctx, 24);
 }
-#endif
-#ifdef L4_UNVERIFIED
 static int c_le(hle_ctx *c) { return c_z(c) || c_n(c) != c_v(c); }
-#endif
 static int c_pl(hle_ctx *c) { return !c_n(c); }
-#ifdef L4_UNVERIFIED
 static int c_mi(hle_ctx *c) { return c_n(c); }
-#endif
 /* dbf Dn: returns 1 when the loop goes on */
 static int dbf(hle_ctx *c, int r)
 {
@@ -498,7 +453,6 @@ static void call68(hle_ctx *c, uint32_t addr, int cost)
 }
 static void bra(hle_ctx *c) { hle_insn(c, 10); }          /* bra.s / bra.w */
 
-#ifdef L4_UNVERIFIED
 /* ================================================================== shared 68k subroutines */
 /* sub_00E0E8: d1 = frame (+$BF when (+$26) < 0), ObjQueueSprite; rts (the jsr is charged by the caller) */
 static void sub_e0e8(hle_ctx *c)
@@ -513,8 +467,6 @@ static void sub_e0e8(hle_ctx *c)
 	jsr(c, ObjQueueSprite);
 	hle_insn(c, 16);                                    /* rts */
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* sub_00E0F8: same with QueueSprite (d2/d3/d5 carry the position) */
 static void sub_e0f8(hle_ctx *c)
 {
@@ -528,8 +480,6 @@ static void sub_e0f8(hle_ctx *c)
 	jsr(c, QueueSprite);
 	hle_insn(c, 16);                                    /* rts */
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* sub_00E108: X movement by (+$A)/(+$E)/(+$10), 1 step */
 static void sub_e108(hle_ctx *c)
 {
@@ -572,8 +522,6 @@ static void sub_e108(hle_ctx *c)
 	}
 	hle_insn(c, 16);                                    /* rts */
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* sub_00E146: every few frames the sprite step (+8) goes up to 12; bra ObjNext */
 static void sub_e146(hle_ctx *c)
 {
@@ -595,8 +543,7 @@ static void sub_e146(hle_ctx *c)
 	}
 	exit_next(c);
 }
-#endif
-#ifdef L4_UNVERIFIED
+static inline uint16_t rd16(uint32_t a) { return ((a & 0xFFFFFFu) >= 0xFF0000u) ? RAM16(a) : ROM16(a); }
 /* sub_00C48E (after its jsr): path stepper; d4 = 0 counter ran out, 1 path ended, -1 still going */
 static void sub_c48e(hle_ctx *c)
 {
@@ -608,7 +555,7 @@ static void sub_c48e(hle_ctx *c)
 	moveb_m_d(c, 3, c->a[6] + 0xC);
 	c->a[0] = RAM32(c->a[6] + 0x16);
 	hle_insn(c, 16);                                    /* movea.l (0x16,a6),a0 */
-	set_w(&c->d[4], RAM16(c->a[0]));
+	set_w(&c->d[4], rd16(c->a[0]));
 	c->a[0] += 2;
 	cc_logic16(c, c->d[4]);
 	hle_insn(c, 8);                                     /* move.w (a0)+,d4 */
@@ -626,7 +573,7 @@ static void sub_c48e(hle_ctx *c)
 		bs(c, 1);
 	} else {
 		bs(c, 0);
-		RAM16(c->a[6] + 0x1A) = RAM16(c->a[0]);
+		RAM16(c->a[6] + 0x1A) = rd16(c->a[0]);
 		c->a[0] += 2;
 		cc_logic16(c, RAM16(c->a[6] + 0x1A));
 		hle_insn(c, 16);                            /* move.w (a0)+,(0x1a,a6) */
@@ -667,7 +614,6 @@ static void sub_c48e(hle_ctx *c)
 	hle_insn(c, 16);                                    /* rts */
 }
 
-#endif
 /* ================================================================== type $1F supply container */
 /* $00DAC4: after the delay in +$14 the box becomes shootable (hit $006326) */
 HLE_RANGE_PURE(0x00DAC4, L4Box, 500, EXIT_NEXT)
@@ -691,7 +637,6 @@ HLE_RANGE_PURE(0x00DAC4, L4Box, 500, EXIT_NEXT)
 	q(ctx, 0x17F);
 	exit_next(ctx);
 }
-#ifdef L4_UNVERIFIED
 /* $00DAEE: hit flash for +$24 frames, then back to $00DAC4 */
 HLE_RANGE_PURE(0x00DAEE, L4BoxFlash, 500, EXIT_NEXT)
 {
@@ -706,10 +651,8 @@ HLE_RANGE_PURE(0x00DAEE, L4BoxFlash, 500, EXIT_NEXT)
 	q(ctx, 0x180);
 	exit_next(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DB0C: destroyed: debris, free the slot, level script on (ScriptNext stays as it is) */
-HLE_RANGE(0x00DB0C, L4BoxKill, 4000, 0x00DB2E)
+HLE_RANGE(0x00DB0C, L4BoxKill, 1200, 0x00DB2E)   /* observed max 758 x 1.5 */
 {
 	movem_xy(ctx);
 	movew_m_d(ctx, 2, A6 + 6);
@@ -721,7 +664,6 @@ HLE_RANGE(0x00DB0C, L4BoxKill, 4000, 0x00DB2E)
 	hle_jump(ctx, 0x00DB2E);                            /* jsr (ScriptNext,pc) */
 }
 
-#endif
 /* ================================================================== type $21 ceiling fixture */
 /* $00DB8C: blinking lamp, frame $175 + table[(timer >> 2) & 15] */
 HLE_RANGE_PURE(0x00DB8C, L4Lamp, 500, EXIT_NEXT)
@@ -741,20 +683,15 @@ HLE_RANGE_PURE(0x00DB8C, L4Lamp, 500, EXIT_NEXT)
 	jsr(ctx, ObjQueueSprite);
 	exit_next(ctx);
 }
-#ifdef L4_UNVERIFIED
 static void lamp_dead(hle_ctx *ctx)                     /* sub_00DBE0 */
 {
 	scroll_kill(ctx, -0x28);
 	q(ctx, 0x17E);
 	exit_next(ctx);
 }
-#ifdef L4_UNVERIFIED
-#endif
 HLE_RANGE_PURE(0x00DBE0, L4LampDead, 400, EXIT_NEXT) { lamp_dead(ctx); }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DBC4: shot: debris, then the dead lamp */
-HLE_RANGE(0x00DBC4, L4LampKill, 4000, EXIT_NEXT)
+HLE_RANGE(0x00DBC4, L4LampKill, 1900, EXIT_NEXT)   /* observed max 1238 x 1.5 */
 {
 	movem_xy(ctx);
 	movew_m_d(ctx, 2, A6 + 6);
@@ -765,8 +702,6 @@ HLE_RANGE(0x00DBC4, L4LampKill, 4000, EXIT_NEXT)
 	lamp_dead(ctx);
 }
 
-#endif
-#ifdef L4_UNVERIFIED
 /* ================================================================== type $24 invisible mover */
 HLE_RANGE_PURE(0x00E166, L4Mover, 300, EXIT_NEXT)
 {
@@ -774,8 +709,6 @@ HLE_RANGE_PURE(0x00E166, L4Mover, 300, EXIT_NEXT)
 	exit_next(ctx);
 }
 
-#endif
-#ifdef L4_UNVERIFIED
 /* ================================================================== type $22 wall panel */
 /* sub_00DCB2: queue the 6x5 tile rect (a0 = pointer chosen by the caller), up to the real jsr
  * VdpQueueTileRect ($00DCD2); the code after it is the range at $00DCD6 */
@@ -797,8 +730,6 @@ static void panel_rect(hle_ctx *c)
 	movew_m_dc(c, 7, TILE_BASE, 16);
 	hle_jump(c, 0x00DCD2);
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* sub_00DC9E: a0 = $5FA92 + 3 * (d0 & 12) */
 static void panel_pick(hle_ctx *c)
 {
@@ -810,8 +741,6 @@ static void panel_pick(hle_ctx *c)
 	lea_d(c, 0, c->a[0] + (uint32_t)(int32_t)(int16_t)c->d[0], 12);
 	panel_rect(c);
 }
-#ifdef L4_UNVERIFIED
-#endif
 HLE_RANGE_PURE(0x00DCD6, L4PanelRectDone, 100, HLE_EXIT_SP(EXIT_NEXT, 2))
 {
 	set_w(&ctx->d[7], pop16(ctx));
@@ -819,8 +748,6 @@ HLE_RANGE_PURE(0x00DCD6, L4PanelRectDone, 100, HLE_EXIT_SP(EXIT_NEXT, 2))
 	hle_insn(ctx, 8);                                   /* move.w (sp)+,d7 */
 	exit_next(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DBF6: wait */
 HLE_RANGE_PURE(0x00DBF6, L4PanelWait, 300, EXIT_NEXT)
 {
@@ -833,8 +760,6 @@ HLE_RANGE_PURE(0x00DBF6, L4PanelWait, 300, EXIT_NEXT)
 	}
 	exit_next(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DC06: open (not shootable); at timer $C8 a spawn routine (68k) runs after the exits */
 HLE_RANGE_PURE(0x00DC06, L4PanelOpen, 500, HLE_EXIT_SP(0x00DC34, -4), HLE_EXIT_SP(0x00DC54, -4), EXIT_NEXT)
 {
@@ -880,8 +805,6 @@ HLE_RANGE_PURE(0x00DC06, L4PanelOpen, 500, HLE_EXIT_SP(0x00DC34, -4), HLE_EXIT_S
 	hle_insn(ctx, 12);                                  /* move.l a6,-(sp) */
 	hle_jump(ctx, 0x00DC54);                            /* jsr (sub_00A5FA,pc) */
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DC5E: closed, waiting; opens (shootable) when the timer runs out */
 HLE_RANGE_PURE(0x00DC5E, L4PanelClosed, 700, HLE_EXIT_SP(0x00DCD2, -2))
 {
@@ -898,8 +821,6 @@ HLE_RANGE_PURE(0x00DC5E, L4PanelClosed, 700, HLE_EXIT_SP(0x00DCD2, -2))
 	bra(ctx);                                           /* bra.w sub_00DC9E */
 	panel_pick(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DC7E: opening animation */
 HLE_RANGE_PURE(0x00DC7E, L4PanelOpening, 700, HLE_EXIT_SP(0x00DCD2, -2))
 {
@@ -916,8 +837,6 @@ HLE_RANGE_PURE(0x00DC7E, L4PanelOpening, 700, HLE_EXIT_SP(0x00DCD2, -2))
 	eoriw_d(ctx, 0, 0xF);
 	panel_pick(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DCDC / $00DCE4: controller; every $186 frames a random panel (type $22, in the table at a1)
  * is opened; with no panels left the level script goes on (ScriptNext stays 68k) */
 static void panel_ctl(hle_ctx *ctx)
@@ -972,23 +891,17 @@ static void panel_ctl(hle_ctx *ctx)
 	lea_d(ctx, 0, 0x1FCBA, 12);                         /* movea.l #$1FCBA,a0 */
 	hle_jump(ctx, 0x00DD3A);                            /* jsr (ScriptNext,pc) ... */
 }
-#ifdef L4_UNVERIFIED
-#endif
 HLE_RANGE_PURE(0x00DCDC, L4PanelCtl1, 1500, 0x00DD3A, EXIT_NEXT)
 {
 	lea_d(ctx, 1, 0xFFFFAF24, 12);
 	bra(ctx);
 	panel_ctl(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_RANGE_PURE(0x00DCE4, L4PanelCtl2, 1500, 0x00DD3A, EXIT_NEXT)
 {
 	lea_d(ctx, 1, 0xFFFFAF04, 12);
 	panel_ctl(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DD64: shot away: debris (68k), then the empty tiles */
 HLE_RANGE_PURE(0x00DD64, L4PanelKill, 500, 0x00DD90)
 {
@@ -1009,8 +922,6 @@ HLE_RANGE_PURE(0x00DD64, L4PanelKill, 500, 0x00DD90)
 	movew_i_d(ctx, 2, 6);
 	hle_jump(ctx, 0x00DD90);                            /* jsr (sub_01253C).l */
 }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_RANGE_PURE(0x00DD96, L4PanelKill2, 300, HLE_EXIT_SP(0x00DCD2, -2))
 {
 	lea_d(ctx, 0, 0x5FAC2, 12);
@@ -1018,7 +929,6 @@ HLE_RANGE_PURE(0x00DD96, L4PanelKill2, 300, HLE_EXIT_SP(0x00DCD2, -2))
 	panel_rect(ctx);
 }
 
-#endif
 /* ================================================================== type $29 pop-up endoskeleton */
 /* sub_00ED04: body parts by +$8 (the rise counter) */
 static void sub_ed04(hle_ctx *c)
@@ -1175,7 +1085,6 @@ HLE_RANGE(0x00ED5C, L4PopKill, 17500, EXIT_NEXT)   /* observed max 11416 x 1.5 *
 	exit_next(ctx);
 }
 
-#ifdef L4_UNVERIFIED
 /* ================================================================== type $23 orb */
 /* sub_00F648: scroll, kill at -$C, queue d1, ObjNext */
 static void orb_draw(hle_ctx *c)
@@ -1185,8 +1094,6 @@ static void orb_draw(hle_ctx *c)
 	ObjQueueSprite(c);
 	exit_next(c);
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* sub_00F5C0: frame $215, or $249 when (+$26) != 0 */
 static void orb_frame(hle_ctx *c)
 {
@@ -1201,8 +1108,6 @@ static void orb_frame(hle_ctx *c)
 	bra(c);                                             /* bra.w sub_00F648 */
 	orb_draw(c);
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* $00F540: drop to the rest height (+$28) */
 HLE_RANGE_PURE(0x00F540, L4OrbDrop, 500, EXIT_NEXT)
 {
@@ -1220,8 +1125,6 @@ HLE_RANGE_PURE(0x00F540, L4OrbDrop, 500, EXIT_NEXT)
 	bra(ctx);
 	orb_frame(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00F560: rise 2 per frame to 12 above the rest height */
 HLE_RANGE_PURE(0x00F560, L4OrbRise, 500, EXIT_NEXT)
 {
@@ -1240,8 +1143,6 @@ HLE_RANGE_PURE(0x00F560, L4OrbRise, 500, EXIT_NEXT)
 	bra(ctx);
 	orb_frame(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00F584: and back down */
 HLE_RANGE_PURE(0x00F584, L4OrbSettle, 500, EXIT_NEXT)
 {
@@ -1260,8 +1161,6 @@ HLE_RANGE_PURE(0x00F584, L4OrbSettle, 500, EXIT_NEXT)
 	bra(ctx);
 	orb_frame(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00F5AC: wait */
 HLE_RANGE_PURE(0x00F5AC, L4OrbWait, 500, EXIT_NEXT)
 {
@@ -1275,8 +1174,6 @@ HLE_RANGE_PURE(0x00F5AC, L4OrbWait, 500, EXIT_NEXT)
 	}
 	orb_frame(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00F5D2: charging blink; at 0 the shot spawner (sub_009A5E, 68k) and the active orb state */
 HLE_RANGE_PURE(0x00F5D2, L4OrbCharge, 700, HLE_EXIT_SP(0x00F5FA, -2), EXIT_NEXT)
 {
@@ -1313,10 +1210,8 @@ HLE_RANGE_PURE(0x00F5D2, L4OrbCharge, 700, HLE_EXIT_SP(0x00F5FA, -2), EXIT_NEXT)
 	movew_m_d(ctx, 1, A6 + 4);
 	hle_jump(ctx, 0x00F5FA);                            /* bsr.w sub_009A5E, then $00DDBA */
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00F65A: shot: sparks, debris, free the slot (all 68k) */
-HLE_RANGE(0x00F65A, L4OrbKill, 12000, EXIT_NEXT)
+HLE_RANGE(0x00F65A, L4OrbKill, 9300, EXIT_NEXT)   /* observed max 6128 x 1.5 */
 {
 	moveq(ctx, 5, 3);
 	do {
@@ -1340,10 +1235,8 @@ HLE_RANGE(0x00F65A, L4OrbKill, 12000, EXIT_NEXT)
 	clr_obj_slot(ctx);
 	exit_next(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00E0A4: the same for the active orb (sparks 32 up) */
-HLE_RANGE(0x00E0A4, L4OrbKill2, 12000, EXIT_NEXT)
+HLE_RANGE(0x00E0A4, L4OrbKill2, 10600, EXIT_NEXT)   /* observed max 7064 x 1.5 */
 {
 	moveq(ctx, 5, 3);
 	do {
@@ -1370,8 +1263,6 @@ HLE_RANGE(0x00E0A4, L4OrbKill2, 12000, EXIT_NEXT)
 	sub_e146(ctx);
 }
 
-#endif
-#ifdef L4_UNVERIFIED
 /* sub_00DDC8: d1 = (+$14), (+$7) = (d1 >> 4) + $1E, frame $182 + (d1 >> 5), draw */
 static void orb_grow_draw(hle_ctx *c)
 {
@@ -1385,8 +1276,6 @@ static void orb_grow_draw(hle_ctx *c)
 	hle_insn(c, 18);                                    /* jsr (sub_00E0E8,pc) */
 	sub_e0e8(c);
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* $00DDBA: orb after the charge: follows its path (sub_00C48E) */
 HLE_RANGE_PURE(0x00DDBA, L4OrbPath, 800, EXIT_NEXT)
 {
@@ -1420,8 +1309,6 @@ HLE_RANGE_PURE(0x00DDBA, L4OrbPath, 800, EXIT_NEXT)
 	sub_e146(ctx);
 }
 
-#endif
-#ifdef L4_UNVERIFIED
 /* the speed limits of the two bouncing orb states: after sub_00D236 the X position (+$C) and
  * the speed (+$A) are clamped; (hi_c, hi_a) = ($64,$96) idle, ($78,$C8) attacking */
 static void orb_move(hle_ctx *c, uint16_t lim_c, uint8_t fix_c, uint16_t lim_a, uint8_t fix_a)
@@ -1451,8 +1338,6 @@ static void orb_move(hle_ctx *c, uint16_t lim_c, uint8_t fix_c, uint16_t lim_a, 
 		moveb_i_m(c, c->a[6] + 0xA, fix_a);
 	}
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* $00DE08: idle orb */
 HLE_RANGE_PURE(0x00DE08, L4OrbIdle, 900, EXIT_NEXT)
 {
@@ -1473,8 +1358,6 @@ HLE_RANGE_PURE(0x00DE08, L4OrbIdle, 900, EXIT_NEXT)
 	bra(ctx);                                           /* bra.w sub_00E146 */
 	sub_e146(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* sub_00DE6C: 1 in 256 a shot is fired (sub_009A7A / sub_009A5E, 68k: the range ends before them,
  * with the return address of the bsr on the stack). Returns 1 when it jumped away. */
 static int sub_de6c(hle_ctx *c)
@@ -1510,8 +1393,6 @@ static int sub_de6c(hle_ctx *c)
 	hle_jump(c, 0x00DE96);                              /* jsr (sub_009A7A,pc) */
 	return 1;
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* loc_00DF34: draw, a2 = $DFF0, bsr sub_00DE6C, bra sub_00E146 */
 static void orb_attack_end(hle_ctx *c)
 {
@@ -1527,8 +1408,6 @@ static void orb_attack_end(hle_ctx *c)
 	bra(c);                                             /* bra.w sub_00E146 */
 	sub_e146(c);
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* $00DEBA: attacking orb; the warning sound + damage (sub_013D04, sub_009054) run as 68k */
 HLE_RANGE_PURE(0x00DEBA, L4OrbAttack, 1500, HLE_EXIT_SP(0x00DE96, -4), HLE_EXIT_SP(0x00DE9C, -4), 0x00DF26, EXIT_NEXT)
 {
@@ -1562,15 +1441,11 @@ HLE_RANGE_PURE(0x00DEBA, L4OrbAttack, 1500, HLE_EXIT_SP(0x00DE96, -4), HLE_EXIT_
 	movew_i_d(ctx, 0, 0x60);
 	hle_jump(ctx, 0x00DF26);                            /* jsr (sub_013D04).l ; bsr sub_009054 */
 }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_RANGE_PURE(0x00DF30, L4OrbAttackAfterSound, 1000, HLE_EXIT_SP(0x00DE96, -4), HLE_EXIT_SP(0x00DE9C, -4), EXIT_NEXT)
 {
 	movew_i_d(ctx, 1, 0x181);
 	orb_attack_end(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DF46: swelling up (+$14 grows by 8 until $100), then the idle state */
 HLE_RANGE_PURE(0x00DF46, L4OrbGrow, 700, EXIT_NEXT)
 {
@@ -1592,8 +1467,6 @@ HLE_RANGE_PURE(0x00DF46, L4OrbGrow, 700, EXIT_NEXT)
 	bra(ctx);                                           /* bra.w sub_00E146 */
 	sub_e146(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DF9C: shrinking (+$14 down by 8), then the attacking state */
 HLE_RANGE_PURE(0x00DF9C, L4OrbShrink, 700, EXIT_NEXT)
 {
@@ -1615,8 +1488,6 @@ HLE_RANGE_PURE(0x00DF9C, L4OrbShrink, 700, EXIT_NEXT)
 	bra(ctx);
 	sub_e146(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00DFF0 / $00E026: orb after a hit: follows its path, then (path ended: d4 == 0) the next state */
 static void orb_path_state(hle_ctx *ctx, uint16_t frame, uint32_t next)
 {
@@ -1647,14 +1518,8 @@ static void orb_path_state(hle_ctx *ctx, uint16_t frame, uint32_t next)
 	bra(ctx);                                           /* bra.w sub_00E146 */
 	sub_e146(ctx);
 }
-#ifdef L4_UNVERIFIED
-#endif
 HLE_RANGE_PURE(0x00DFF0, L4OrbPathA, 800, EXIT_NEXT) { orb_path_state(ctx, 0x182, 0xDEBA); }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_RANGE_PURE(0x00E026, L4OrbPathB, 800, EXIT_NEXT) { orb_path_state(ctx, 0x189, 0xDE08); }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00E05C: dying-orb flicker (QueueSprite with the +$7 depth) */
 HLE_RANGE_PURE(0x00E05C, L4OrbFlicker, 800, EXIT_NEXT)
 {
@@ -1688,7 +1553,6 @@ HLE_RANGE_PURE(0x00E05C, L4OrbFlicker, 800, EXIT_NEXT)
 	sub_e146(ctx);
 }
 
-#endif
 /* ================================================================== hit routines */
 /* lea box,a3 ; lea onhit,a2 ; jmp HitBox  (the +$1C routines) */
 static void hit_lea(hle_ctx *ctx, uint32_t box, uint32_t onhit)
@@ -1700,18 +1564,10 @@ static void hit_lea(hle_ctx *ctx, uint32_t box, uint32_t onhit)
 }
 HLE_FUNC_PURE(0x006326, L4HitBox, 300)   { hit_lea(ctx, 0x6354, 0x6332); }
 HLE_FUNC_PURE(0x00638E, L4HitLamp, 300)  { hit_lea(ctx, 0x63B8, 0x639A); }
-#ifdef L4_UNVERIFIED
 HLE_FUNC_PURE(0x006424, L4HitPanel, 300) { hit_lea(ctx, 0x644E, 0x6430); }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_FUNC_PURE(0x006456, L4HitMover, 300) { hit_lea(ctx, 0x6480, 0x6462); }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_FUNC_PURE(0x0067C6, L4HitOrbA, 300)  { hit_lea(ctx, 0x67EA, 0x67D2); }
-#endif
-#ifdef L4_UNVERIFIED
 HLE_FUNC_PURE(0x006900, L4HitOrbB, 300)  { hit_lea(ctx, 0x69B4, 0x690C); }
-#endif
 /* $0067F2 pop-up endoskeleton: two boxes (head, body) */
 HLE_FUNC_PURE(0x0067F2, L4HitPop, 600)
 {
@@ -1724,7 +1580,6 @@ HLE_FUNC_PURE(0x0067F2, L4HitPop, 600)
 	HitBox(ctx);
 }
 
-#ifdef L4_UNVERIFIED
 /* ================================================================== type $24 kill states (once each) */
 /* the six debris spawns at the offsets of the table at `tab`, then the slot is freed */
 static void mover_debris(hle_ctx *c, uint32_t tab)
@@ -1745,10 +1600,8 @@ static void mover_debris(hle_ctx *c, uint32_t tab)
 	} while (dbf(c, 5));
 	clr_obj_slot(c);
 }
-#ifdef L4_UNVERIFIED
-#endif
 /* $00E174 ($24 shot, first variant): debris, then 13 rows of fill (VdpQueueFillRows) */
-HLE_RANGE(0x00E174, L4MoverKill1, 12000, EXIT_NEXT)
+HLE_RANGE(0x00E174, L4MoverKill1, 7900, EXIT_NEXT)   /* observed max 5282 x 1.5 */
 {
 	jsr(ctx, ObjScrollX);
 	mover_debris(ctx, 0xE1B2);
@@ -1758,10 +1611,8 @@ HLE_RANGE(0x00E174, L4MoverKill1, 12000, EXIT_NEXT)
 	call68(ctx, 0x012212, 18);
 	exit_next(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $00E1CA ($24 shot, second variant): debris, then new tiles or fill, by +$2A */
-HLE_RANGE(0x00E1CA, L4MoverKill2, 12000, EXIT_NEXT)
+HLE_RANGE(0x00E1CA, L4MoverKill2, 14500, EXIT_NEXT)   /* observed max 9626 x 1.5 */
 {
 	jsr(ctx, ObjScrollX);
 	mover_debris(ctx, 0xE228);
@@ -1796,8 +1647,6 @@ HLE_RANGE(0x00E1CA, L4MoverKill2, 12000, EXIT_NEXT)
 	hle_insn(ctx, 8);                                   /* move.w (sp)+,d7 */
 	exit_next(ctx);
 }
-#endif
-#ifdef L4_UNVERIFIED
 /* $006488 ($24 variant b): box by +$2A */
 HLE_FUNC_PURE(0x006488, L4HitMoverB, 300)
 {
@@ -1817,4 +1666,3 @@ HLE_FUNC_PURE(0x006488, L4HitMoverB, 300)
 	HitBox(ctx);
 }
 
-#endif
