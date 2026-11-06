@@ -110,10 +110,6 @@ def disassemble():
 
 # ----------------------------------------------------------------------------- cost model
 
-def rng(lo, hi):
-    return frozenset(range(lo, hi + 1, 2))
-
-
 def insn_costs(words, T):
     """Set of cycle charges that are correct for this instruction on some path, or None when
     the cost is unknown (table entry 0 / unsupported)."""
@@ -239,11 +235,6 @@ def call_args(code, pos):
             if depth == 0:
                 return split_args(code[pos + 1:k]), k + 1
     return split_args(code[pos + 1:]), len(code)
-
-
-class Env:
-    def __init__(self, macros):
-        self.macros = macros
 
 
 def eval_set(expr, macros, params=None, depth=0):
