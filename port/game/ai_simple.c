@@ -480,7 +480,7 @@ static int dbra_d5(hle_ctx *c)
 }
 
 /* $00CA12: shot away - debris at the wall, then replace the wall tiles and free the slot */
-HLE_RANGE(0x00CA12, wall_kill, 20000, EXIT_NEXT)
+HLE_RANGE(0x00CA12, wall_kill, 24000, EXIT_NEXT)   /* T2_HLE_BOUNDS+NODECLINE max 15923 (misc_c) x 1.5 */
 {
 	uint32_t a6 = ctx->a[6];
 	set_w(&ctx->d[3], RAM16(a6 + 0x2A));
