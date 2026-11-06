@@ -1,0 +1,28 @@
+# coverage of the level-7 AI states (ai_l7.c): the bot (energy cheat) plays level 7 from gun_07;
+# bp.log lists every execution of each state entry
+load gun_07
+botcfg energy 1
+bp 108E8
+bp 10906
+bp 109C8
+bp 10A92
+bp 10AB4
+bp 10AE0
+bp 10AF8
+bp 10B84
+bp 10BE4
+bp 10C1C
+bp 10D46
+bp 10DD6
+bp 10DEE
+bp 10E4A
+bp 10E82
+bp 10EF6
+bp 10F86
+bp 10FB0
+bp 10E18
+bp 10EDC
+peekeach lvl FF80CC 2
+peekeach pass FFA23C 2
+peekeach hits FFA23E 2
+bot 16000

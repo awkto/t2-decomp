@@ -1,0 +1,27 @@
+# misc_* states, phase 2: states saved one frame before a rare AI state first runs in the bot's play of level 1
+# (the numbers scan01.txt logs), so that the lockstep/seqcmp input reaches it:
+#   misc_p1 2798  endoskeleton death debris ($B69A)       misc_p2 4990  type $11 after the hit ($B860)
+#   misc_p3 7488  type $0D after the hit ($B896, then $B8C2 ...)    misc_p4 7515  type $0D killed ($B92E, $B932)
+#   misc_p5 3650  ground trooper (slot 6, $FF88BA) in $D9B2 with its timer +$24 ($FF88DE) poked to 1: leaves ($DA18)
+# Run like save.txt (OUT holds gun_01.state).
+load gun_01
+botcfg energy 1
+bot 2798
+save misc_p1
+load gun_01
+botcfg energy 1
+bot 4990
+save misc_p2
+load gun_01
+botcfg energy 1
+bot 7488
+save misc_p3
+load gun_01
+botcfg energy 1
+bot 7515
+save misc_p4
+load gun_01
+botcfg energy 1
+bot 3650
+poke FF88DE 2 0001
+save misc_p5

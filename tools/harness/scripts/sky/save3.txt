@@ -1,0 +1,12 @@
+# Level-4 boss state sky_c: sky_a with the four wall guns already shot, i.e. what their kill routine ($006730 -> $00673E) leaves:
+# b15 of +0 cleared and the state pointer +$20 = $00E314 (tile pop; the fourth one runs the intro start). Run in the dir holding sky_a.state.
+load sky_a
+poke FF87B2 2 0025
+poke FF87D2 4 0000E314
+poke FF87DE 2 0025
+poke FF87FE 4 0000E314
+poke FF880A 2 0025
+poke FF882A 4 0000E314
+poke FF8836 2 0025
+poke FF8856 4 0000E314
+save sky_c

@@ -1,0 +1,24 @@
+# level-8 steel mill states (ai_l8.c), made by the gun-bot from gun_08 (energy cheat). Run:
+#   GUN=1 GUNMODE=lightgun build/harness ext/gpgx/genesis_plus_gx_libretro.so rom/baserom.md \
+#       tools/harness/scripts/l8/save.txt OUT      (OUT holds gun_08.state; cov.txt/cov2.txt list the state entries by frame)
+# The T-1000 is slot 3 ($FF8836, $FF9ED6), the tanker meter slot 2, the leak spawner slot 1, panels 4..
+# l8_frz:  frame 1501 with the T-1000 frozen flag $FF9EC2 set (what the bot's freeze cheat does): frozen countdown
+#          ($011A90), gone ($011AF8) and the meter off ($011C2C) follow.
+# l8_shat: frame 2500, the T-1000's state pointer ($FF8856) poked to $011580: shatter, fall, get up ($011558, $011448).
+# l8_hit:  frame 2500, pointer poked to $011514 and timer $FF885A to 12 (the pose after a hit).
+load gun_08
+botcfg energy 1
+bot 1501
+poke FF9EC2 1 FF
+save l8_frz
+load gun_08
+botcfg energy 1
+bot 2500
+poke FF8856 4 00011580
+save l8_shat
+load gun_08
+botcfg energy 1
+bot 2500
+poke FF8856 4 00011514
+poke FF885A 2 000C
+save l8_hit

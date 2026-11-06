@@ -1,0 +1,12 @@
+# damage-path captures for TruckMain (ai_misc.c): the truck with TruckDamage poked into its destroy path (misc_t4) and its
+# cell path (misc_t5), see tools/harness/scripts/misc/save4.txt. Not committed: copy the states to states/.
+load states/misc_t4.state
+run 120
+mouse 160 100
+click L 6
+run 120
+load states/misc_t5.state
+run 120
+mouse 160 100
+click L 6
+run 120
