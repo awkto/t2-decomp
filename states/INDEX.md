@@ -31,3 +31,9 @@ steel mill yet. Level contents and the bot's results: `docs/levels.md`.
 ## Level-1 boss (HK tank), made by the gun-bot from gun_01 (tools/harness/scripts/hk/)
 - `hk_a`: tank spawned (frame ~18903). `hk_d`: after the turret died.
 - `hk_p3`, `hk_p5`: copies with the five boss slots' hp poked to 3, so the lockstep input kills the parts (death states).
+
+## Level-8 steel mill (T-1000 / tanker), made by the gun-bot from gun_08 (tools/harness/scripts/l8/save.txt)
+- `l8_frz`: frame 1501 with the T-1000 frozen flag `$FF9EC2` set (frozen countdown, gone, meter off follow).
+- `l8_shat`: frame 2500, the T-1000's state pointer poked to `$011580` (shatter, fall, get up).
+- `l8_hit`: frame 2500, pointer poked to `$011514`, timer 12 (the pose after a hit).
+- All three are untracked like the other `.state` files; `cov.sh`/`cov.txt`/`cov2.txt` list which state entries run when.

@@ -1,0 +1,31 @@
+# coverage of the level-8 AI states (ai_l8.c): the bot (energy cheat) plays level 8 from gun_08;
+# bp.log lists every execution of each state entry
+load gun_08
+botcfg energy 1
+bp 1116A
+bp 111CA
+bp 112FE
+bp 11360
+bp 11394
+bp 113D8
+bp 11448
+bp 114C0
+bp 11514
+bp 11558
+bp 11580
+bp 115AC
+bp 11A44
+bp 11A76
+bp 11A90
+bp 11AF8
+bp 11BF4
+bp 11C2C
+bp 11C44
+bp 11CD8
+bp 6C2E
+bp 6EF8
+
+peekeach lvl FF80CC 2
+peekeach frz FF9EC2 1
+peekeach cool FF9F60 2
+bot 12000
