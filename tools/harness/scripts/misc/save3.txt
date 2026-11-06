@@ -1,0 +1,21 @@
+# misc_* states, phase 3: state-pointer pokes (slot n is at $FF87B2 + $2C*n, state pointer +$20; objs.txt lists the slots) for the
+# AI states the bot only reaches inside the frame of the hit, so no frame-boundary state precedes them:
+#   misc_q1  frame 2770, slot 5 (an endoskeleton in $B586) pointed at $B69A (death debris, kills the slot)
+#   misc_q2  frame 4896, slot 6 (an endoskeleton in $B6D0) pointed at $B860 (type $11 after the hit: down, then $C66C...)
+#   misc_q3  frame 7480, slot 0 (the type $0D object in $B8C2) pointed at $B92E (killed: debris, cleanup)
+# Run like save.txt (run.sh save3.txt OUT).
+load gun_01
+botcfg energy 1
+bot 2770
+poke FF88AE 4 0000B69A
+save misc_q1
+load gun_01
+botcfg energy 1
+bot 4896
+poke FF88DA 4 0000B860
+save misc_q2
+load gun_01
+botcfg energy 1
+bot 7480
+poke FF87D2 4 0000B92E
+save misc_q3

@@ -1,0 +1,29 @@
+# misc_* states for ai_misc.c, made by the gun-bot (energy cheat) from gun_01 and gun_03. Run like scan.sh:
+#   GUN=1 GUNMODE=lightgun build/harness ext/gpgx/genesis_plus_gx_libretro.so rom/baserom.md \
+#       tools/harness/scripts/misc/save.txt OUT      (OUT holds gun_01.state and gun_03.state)
+# Frames are the harness frame counter (the numbers scan01.txt / scan03.txt log), each state is saved shortly before:
+#   misc_c  2290   crate rise ($C802, $C826, $C846)               misc_e  2770  endoskeleton death ($B69A)
+#   misc_g  3560   level-1 ground trooper chain ($D978, $D9B2, $DA48)
+#   misc_f  4870   endo walk/turn ($B796, $B7E4), hit tests $5ABC, $B860     misc_h  7460  type $0D ($5E1C, $B86A, $B896, $B8C2, $B92E, $B932)
+#   misc_t1 1740   level-3 truck start ($D2AC, $D56E, hit $627A)  misc_t2 2160  truck ($D27A, $D112)
+#   misc_t3 5050   truck destroyed ($D0D4, $D4E6 debris)
+load gun_01
+botcfg energy 1
+bot 2290
+save misc_c
+bot 480
+save misc_e
+bot 790
+save misc_g
+bot 1310
+save misc_f
+bot 2590
+save misc_h
+load gun_03
+botcfg energy 1
+bot 1740
+save misc_t1
+bot 420
+save misc_t2
+bot 2890
+save misc_t3

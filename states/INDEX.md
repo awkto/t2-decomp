@@ -46,3 +46,12 @@ steel mill yet. Level contents and the bot's results: `docs/levels.md`.
 - `sky_d`: frame 12400, boss parts alive (`$E72E`, `$E74A`, `$E746`). `sky_d_p`: parts' hp poked to 3 (`$E7C0` death).
 - `sky_e`, `sky_e_p`: frame 16240, the last part alive (hp 8 / poked to 3): death, then `$E864`.
 - `sky_f`: frame 16490, finish (`$E864` explosions, `$E8C8`, `$E91E` countdown with the fade, `$E9C4`).
+
+## Misc AI states (ai_misc.c), made by the gun-bot from gun_01 / gun_03 (tools/harness/scripts/misc/)
+`scan01.txt`/`scan03.txt` (run with `scan.sh`) log which of the ai_misc.c state entries run when; `save.txt` saves the states and `save2.txt` the one-frame-before copies (frames are the harness frame counter, energy cheat).
+- `misc_c` (gun_01, frame 2290): crate rise (`$C802`, `$C826`, `$C846`). `misc_e` (2770): endoskeleton death. `misc_g` (3560): ground trooper chain (`$D978`, `$D9B2`, `$DA48`).
+- `misc_f` (4870): endo walk/shoot variants (`$B796`, `$B7E4`) and the type-$11 hit test `$5ABC`. `misc_h` (7460): type $0D (`$B86A`, `$B896`, `$B8C2`, `$B92E`/`$B932`, hit `$5E1C`).
+- `misc_t1` (gun_03, frame 1740): John Connor's truck starts (`$D2AC`, `$D56E`, hit `$627A`). `misc_t2` (2160): `$D27A`, `$D112`. `misc_t3` (5050): truck destroyed (`$D0D4`, debris `$D4E6`).
+- `misc_q1` (gun_01, 2770): slot 5 (an endoskeleton) pointed at `$B69A`. `misc_q2` (4896): slot 6 pointed at `$B860`. `misc_q3` (7480): the type-$0D slot pointed at `$B92E` (`save3.txt`, pointer pokes; the bot only reaches these inside the hit frame).
+- `misc_t4`, `misc_t5` (gun_03, 2240): the truck with the damage counter `$FF9E92` poked to `$7FFF` and the 16 body cells `$FFAE84..` all 0 (destroy path of TruckDamage, `$D4E6`/`$D0D4` follow) resp. all 1 (cell-removal path) (`save4.txt`).
+- `misc_p1` (gun_01, 2798): `$B69A` runs next frame. `misc_p2` (4990): `$B860`. `misc_p3` (7488): `$B896`. `misc_p4` (7515): `$B92E`/`$B932`. `misc_p5` (3650): the ground trooper in `$D9B2` with its timer poked to 1 (`$DA18` follows).

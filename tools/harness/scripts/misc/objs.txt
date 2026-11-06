@@ -1,0 +1,14 @@
+# object lists (harness `objs`: slot, type word, x, y, ..., +$1C hit, +$20 state, +$24 timer) at three frames of the bot's
+# level-1 play, to pick slots whose state pointer save3.txt pokes. Run like save.txt (OUT holds gun_01.state).
+load gun_01
+botcfg energy 1
+bot 2770
+objs oA
+load gun_01
+botcfg energy 1
+bot 4896
+objs oB
+load gun_01
+botcfg energy 1
+bot 7480
+objs oC

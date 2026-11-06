@@ -1,0 +1,31 @@
+# coverage of the misc AI states (ai_misc.c): the gun-bot (energy cheat) plays level 3 from gun_03;
+# bp.log lists every execution of each state entry as "frame addr"
+load gun_03
+bp D112
+bp D27A
+bp D2AC
+bp D56E
+bp D4E6
+bp D0D4
+bp DA48
+bp D978
+bp D9B2
+bp DA18
+bp B69A
+bp B796
+bp B7E4
+bp B860
+bp B86A
+bp B896
+bp B8C2
+bp B92E
+bp B932
+bp C802
+bp C826
+bp C846
+bp 627A
+bp 5ABC
+bp 5E1C
+peekeach lvl FF80CC 2
+botcfg energy 1
+bot until 4 30000
