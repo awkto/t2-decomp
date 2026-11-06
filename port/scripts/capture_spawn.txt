@@ -1,0 +1,1458 @@
+# Level-script spawn opcode handlers (scriptspawn.c): mouse sweeps (the shot grid of capture_l3.txt) over the start of every level
+# (gun_01..gun_08, 2p_gun_01..gun_08), so the level scripts run for ~3000 frames each and spawn their waves.
+load states/gun_01.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_02.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_03.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_04.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_05.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_06.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_07.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/gun_08.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_01.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_02.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_03.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_04.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_05.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_06.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_07.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+load states/2p_gun_08.state
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
+mouse 103 40
+click L 6
+run 100
+mouse 166 77
+click L 6
+run 100
+mouse 229 114
+click L 6
+run 100
+mouse 292 151
+click L 6
+run 100
+mouse 55 188
+click L 6
+run 100
+mouse 118 75
+click L 6
+run 100
+mouse 181 112
+click L 6
+run 100
+mouse 244 149
+click L 6
+run 100
+mouse 307 186
+click L 6
+run 100
+mouse 70 60
+click L 6
+run 100
+mouse 200 90
+click L 6
+run 100
+mouse 280 130
+click L 6
+run 100
+mouse 150 160
+click L 6
+run 100
+mouse 90 120
+click L 6
+run 100
+mouse 250 70
+click L 6
+run 100
