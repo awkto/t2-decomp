@@ -1,0 +1,209 @@
+# Level 3 captures (ai_l3.c): flying HK, bombs, endoskeleton variant, edge objects, background
+# structure. Plays the level-3 harness states (gun_03, 2p_gun_03) with mouse shots over the sky
+# and the ground so the hit tests and the AI/death states run.
+load states/gun_03.state
+mouse 103 40
+click L 6
+run 90
+mouse 166 77
+click L 6
+run 90
+mouse 229 114
+click L 6
+run 90
+mouse 292 151
+click L 6
+run 90
+mouse 55 188
+click L 6
+run 90
+mouse 118 75
+click L 6
+run 90
+mouse 181 112
+click L 6
+run 90
+mouse 244 149
+click L 6
+run 90
+mouse 307 186
+click L 6
+run 90
+mouse 70 73
+click L 6
+run 90
+mouse 133 110
+click L 6
+run 90
+mouse 196 147
+click L 6
+run 90
+mouse 259 184
+click L 6
+run 90
+mouse 22 71
+click L 6
+run 90
+mouse 85 108
+click L 6
+run 90
+mouse 148 145
+click L 6
+run 90
+mouse 211 182
+click L 6
+run 90
+mouse 274 69
+click L 6
+run 90
+mouse 37 106
+click L 6
+run 90
+mouse 100 143
+click L 6
+run 90
+mouse 163 180
+click L 6
+run 90
+mouse 226 67
+click L 6
+run 90
+mouse 289 104
+click L 6
+run 90
+mouse 52 141
+click L 6
+run 90
+mouse 115 178
+click L 6
+run 90
+mouse 178 65
+click L 6
+run 90
+mouse 241 102
+click L 6
+run 90
+mouse 304 139
+click L 6
+run 90
+mouse 67 176
+click L 6
+run 90
+mouse 130 63
+click L 6
+run 90
+mouse 193 100
+click L 6
+run 90
+mouse 256 137
+click L 6
+run 90
+mouse 19 174
+click L 6
+run 90
+mouse 82 61
+click L 6
+run 90
+load states/2p_gun_03.state
+mouse 103 40
+click L 6
+run 90
+mouse 166 77
+click L 6
+run 90
+mouse 229 114
+click L 6
+run 90
+mouse 292 151
+click L 6
+run 90
+mouse 55 188
+click L 6
+run 90
+mouse 118 75
+click L 6
+run 90
+mouse 181 112
+click L 6
+run 90
+mouse 244 149
+click L 6
+run 90
+mouse 307 186
+click L 6
+run 90
+mouse 70 73
+click L 6
+run 90
+mouse 133 110
+click L 6
+run 90
+mouse 196 147
+click L 6
+run 90
+mouse 259 184
+click L 6
+run 90
+mouse 22 71
+click L 6
+run 90
+mouse 85 108
+click L 6
+run 90
+mouse 148 145
+click L 6
+run 90
+mouse 211 182
+click L 6
+run 90
+mouse 274 69
+click L 6
+run 90
+mouse 37 106
+click L 6
+run 90
+mouse 100 143
+click L 6
+run 90
+mouse 163 180
+click L 6
+run 90
+mouse 226 67
+click L 6
+run 90
+mouse 289 104
+click L 6
+run 90
+mouse 52 141
+click L 6
+run 90
+mouse 115 178
+click L 6
+run 90
+mouse 178 65
+click L 6
+run 90
+mouse 241 102
+click L 6
+run 90
+mouse 304 139
+click L 6
+run 90
+mouse 67 176
+click L 6
+run 90
+mouse 130 63
+click L 6
+run 90
+mouse 193 100
+click L 6
+run 90
+mouse 256 137
+click L 6
+run 90
+mouse 19 174
+click L 6
+run 90
+mouse 82 61
+click L 6
+run 90
