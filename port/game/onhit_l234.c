@@ -450,7 +450,7 @@ L_695A:
 	if (bw(ctx, c_z(ctx)))                              /* beq.w loc_00699C */
 		goto L_699C;
 	tst_26(ctx);
-	if (!bs(ctx, c_n(ctx))) {                           /* bpl.s loc_00698E */
+	if (!bs(ctx, !c_n(ctx))) {                          /* bpl.s loc_00698E */
 		mvwi_a6(ctx, 0x14, 0);
 		mvli_a6(ctx, 0x20, 0xDF46);
 L_6982:
