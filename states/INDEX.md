@@ -27,3 +27,7 @@ state with `GUN=1 GUNMODE=lightgun`, a joypad one (`pad_*`, `2p_pad_*`) with `PA
 
 The endings are forced (`level_exit = 1` poked on level 8, `ending.txt`), because the bot cannot win the
 steel mill yet. Level contents and the bot's results: `docs/levels.md`.
+
+## Level-1 boss (HK tank), made by the gun-bot from gun_01 (tools/harness/scripts/hk/)
+- `hk_a`: tank spawned (frame ~18903). `hk_d`: after the turret died.
+- `hk_p3`, `hk_p5`: copies with the five boss slots' hp poked to 3, so the lockstep input kills the parts (death states).
