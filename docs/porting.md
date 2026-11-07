@@ -61,6 +61,14 @@ and the hit-test path `ShotHitTest` ($005892), `HitBox` ($005940) and `PickupHit
 and the background scroll path `ScrollRows` ($004752) and `BgStreamLayers` ($00498A).
 
 
+`T2_HLE_PROFILE=1` measures how much of the game still runs as 68k (zero cost when unset): the CPU exec
+hook charges the master clocks between instructions to the containing function of `data/functions.txt`
+(run from the repo root), the cycles a C call charges count as "C" (68k run nested inside it, apart), the
+waits (WaitVBlank, FramePaceWait's loop, the $01DC4E VDP wait) as "idle", and a summary with the top 40
+functions is printed at exit. `port/tools/profmerge.py LOG...` merges several runs' `PROF` lines. Replaced
+routines that the layer declined (an interrupt falls inside) show with their decline count. Results:
+`docs/remaining.md`.
+
 `MenacerReadXY` also serves `aim=fast`: when `hle_aim_fast()` is set (by `emu_set_aim_fast`,
 before the CPU is hooked, so it agrees with the in-memory ROM patch) it runs the $01E460 patch
 behaviour (newest latch only) and charges the patch's ~250 cycles; otherwise it runs the original
