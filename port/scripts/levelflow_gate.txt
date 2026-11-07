@@ -1,0 +1,169 @@
+# Level-flow route for NextLevel / LevelEnd / the per-level loaders (port/game/levelflow.c).
+# The lockstep states rarely cross a level end, so this route ends levels on purpose and runs on
+# through the stats screen, NextLevel and the next level's loader. Gate it with
+#   python3 -I port/tools/scriptgate.py port/scripts/levelflow_gate.txt --hle all
+# Needs the vstates (gun_*, pad_*, 2p_gun_*, 2p_pad_*; they have the level-skip cheat on).
+# `poke FFA234 1 FF` sets level_exit like the end_level script op; the joypad parts use the real
+# cheat instead: pause (Start), then B+C. `until FF80CC 2 000N 3000` waits for level N.
+
+# ---- 1 player Menacer: level 1 -> 8 (LevelLoad2..8), level 8 ending, then the initials screen
+load states/gun_01.state
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0002 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0003 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0004 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0005 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0006 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0007 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0008 3000
+run 200
+poke FFA234 1 FF
+run 1500
+load states/gun_08.state
+run 200
+poke FFA234 1 01
+run 1500
+load states/gun_0a.state
+run 100
+poke FFA234 1 FF
+run 600
+
+# ---- 1 player joypad, the real cheat (pause, B+C): levels 2 -> 3, 4 -> 5, 6 -> 7, 8 -> ending
+load states/pad_02.state
+run 150
+press S 3
+run 60
+press BC 3
+until FF80CC 2 0003 3000
+run 100
+load states/pad_04.state
+run 150
+press S 3
+run 60
+press BC 3
+until FF80CC 2 0005 3000
+run 100
+load states/pad_06.state
+run 150
+press S 3
+run 60
+press BC 3
+until FF80CC 2 0007 3000
+run 100
+load states/pad_08.state
+run 150
+press S 3
+run 60
+press BC 3
+run 1500
+load states/pad_0a.state
+run 100
+poke FFA234 1 FF
+run 600
+
+# ---- 2 players, Menacer + pad 2 (control_mode 0): levels 5 -> 6 -> 7, 3 -> 4
+load states/2p_gun_05.state
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0006 3000
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0007 3000
+run 100
+load states/2p_gun_03.state
+run 200
+poke FFA234 1 FF
+until FF80CC 2 0004 3000
+run 100
+load states/2p_gun_0a.state
+run 100
+poke FFA234 1 FF
+run 600
+
+# ---- 2 players, two joypads (control_mode 1): the cheat, levels 1 -> 2, 7 -> 8, then level 8 ends
+load states/2p_pad_01.state
+run 150
+press S 3
+run 60
+press BC 3
+until FF80CC 2 0002 3000
+run 100
+load states/2p_pad_07.state
+run 150
+press S 3
+run 60
+press BC 3
+until FF80CC 2 0008 3000
+run 100
+load states/2p_pad_08.state
+run 150
+press S 3
+run 60
+press BC 3
+run 1500
+
+# ---- game over -> high-score initials by mouse (no credits left, high score poked in)
+load states/gun_03.state
+run 200
+poke FF80CA 1 00
+poke FF9EA8 4 00500000
+poke FF801E 2 0001
+run 2400
+mouse 35 62
+run 10
+click L 4
+run 20
+mouse 67 62
+run 10
+click L 4
+run 20
+mouse 98 62
+run 10
+click L 4
+run 20
+mouse 274 158
+run 10
+click L 4
+run 600
+
+# ---- death with credits left: the continue screen, continue by the gun's Start (middle click)
+load states/gun_04.state
+run 200
+poke FF801E 2 0001
+run 1300
+mouse 160 100
+click M 4
+run 400
+click M 4
+run 600
+
+# ---- attract demo (control_mode 7): Start interrupts it (level_exit, mode 8), a demo level that
+# ends by itself, and the level 8 -> 1 wrap of NextLevel
+load states/pad_02.state
+run 300
+poke FF9DF5 1 07
+press S 3
+run 500
+load states/pad_03.state
+run 100
+poke FF9DF5 1 07
+poke FFA234 1 FF
+run 1500
+load states/pad_08.state
+run 100
+poke FF9DF5 1 07
+poke FFA234 1 FF
+run 1500
