@@ -214,6 +214,10 @@ static int g_nobail = -1; /* T2_NOBAIL=1: decline whole commands as before (A/B 
 static long g_tog;      /* absolute clock of the next event */
 static int due(int slack)
 {
+	/* the frame loop's line step (and the Z80 run, whose bus accesses delay the 68k) comes
+	 * between the instruction that crossed a line start and the loop test of the next one */
+	if (g_armed)
+		gx_vdp_follow_cpu_lines();
 	return g_armed && (long)gx_m68k_cycles() + (long)slack * 7 >= g_tog;
 }
 /* margin-free guard for the fixed-length head of a bail-capable command (cycles) */
@@ -234,6 +238,13 @@ static int head_ok(int head_cycles)
 	return 0;
 }
 #define HEAD_CYCLES 450
+
+static void bail_init(void)
+{
+	if (g_nobail >= 0)
+		return;
+	g_nobail = getenv("T2_NOBAIL") != NULL;
+}
 
 /* flags of `subq.w #1,Dn` on the old word value a */
 static void cc_subq1_w(hle_ctx *ctx, uint16_t a)
@@ -609,16 +620,44 @@ HLE_FUNC(0x011D64, VdpCmd0End, 0)
 	sess_finish();
 }
 
-HLE_RANGE(0x012068, VdpCmd1CopyWords, 0, VDP_LIST_NEXT)
+/* A range handler for a bail-capable command (entered from the 68k's own list walk): same as
+ * VdpListRun, but the bail leaves the range at the instruction where the event is due
+ * (hle_ctx.bail: allowed whatever the declared exits). */
+static void run_bailable(hle_ctx *ctx, int (*body)(hle_ctx *), int cmd)
 {
-	if (!safe_run(cmd_bound(1, ctx->a[6]))) {
+	bail_init();
+	if (g_nobail) {
+		if (!safe_run(cmd_bound(cmd, ctx->a[6]))) {
+			hle_decline_why(sr_why);
+			return;
+		}
+		sess_begin();
+		body(ctx);
+		sess_finish();
+		hle_jump(ctx, VDP_LIST_NEXT);
+		return;
+	}
+	if (!head_ok(HEAD_CYCLES)) {
 		hle_decline_why(sr_why);
 		return;
 	}
 	sess_begin();
-	cmd_copy_words(ctx);
+	g_tog = hle_post_access ? (long)0x7FFFFFFF : (long)gx_vdp_next_toggle_clock();
+	g_armed = 1;
+	int bail = body(ctx);
+	g_armed = 0;
 	sess_finish();
-	hle_jump(ctx, VDP_LIST_NEXT);
+	if (bail) {
+		ctx->bail = 1;
+		hle_jump(ctx, ctx->pc);
+	} else {
+		hle_jump(ctx, VDP_LIST_NEXT);
+	}
+}
+
+HLE_RANGE(0x012068, VdpCmd1CopyWords, 0, VDP_LIST_NEXT)
+{
+	run_bailable(ctx, cmd_copy_words, 1);
 }
 
 HLE_RANGE(0x011D70, VdpCmd2FillZero, 0, VDP_LIST_NEXT)
@@ -683,14 +722,7 @@ HLE_RANGE(0x0120BA, VdpCmd6TileRect, 0, VDP_LIST_NEXT)
 
 HLE_RANGE(0x011E48, VdpCmd7HScroll, 0, VDP_LIST_NEXT)
 {
-	if (!safe_run(cmd_bound(7, ctx->a[6]))) {
-		hle_decline_why(sr_why);
-		return;
-	}
-	sess_begin();
-	cmd_hscroll(ctx);
-	sess_finish();
-	hle_jump(ctx, VDP_LIST_NEXT);
+	run_bailable(ctx, cmd_hscroll, 7);
 }
 
 HLE_RANGE(0x011F6E, VdpCmd8VScroll, 0, VDP_LIST_NEXT)
@@ -710,6 +742,8 @@ HLE_RANGE(0x011F6E, VdpCmd8VScroll, 0, VDP_LIST_NEXT)
  * as a whole */
 static int cmd_ok(int cmd, uint32_t args)
 {
+	if (cmd == 0)                       /* the end command: dispatch + rewind + rts, about 120 cycles */
+		return g_nobail ? safe_run(100) : head_ok(200);
 	if ((cmd == 1 || cmd == 7) && !g_nobail)
 		return head_ok(HEAD_CYCLES);
 	return safe_run(cmd_bound(cmd, args));
@@ -718,11 +752,10 @@ static int cmd_ok(int cmd, uint32_t args)
 HLE_FUNC(0x011D32, VdpListRun, 0)
 {
 	int first = 1;
-	if (g_nobail < 0)
-		g_nobail = getenv("T2_NOBAIL") != NULL;
+	bail_init();
 	{
 		uint16_t c0 = RAM16(VDP_LIST);
-		if (c0 && c0 < 9 && !cmd_ok(c0, VDP_LIST + 2)) {
+		if (c0 < 9 && !cmd_ok(c0, VDP_LIST + 2)) {
 			hle_decline_why(sr_why);
 			return;
 		}
@@ -734,7 +767,7 @@ HLE_FUNC(0x011D32, VdpListRun, 0)
 	tick(12);
 	for (;;) {
 		uint16_t cmd = RAM16(ctx->a[6]);        /* move.w (a6)+,d0 */
-		if (!first && cmd && cmd < 9 && !cmd_ok(cmd, ctx->a[6] + 2)) {
+		if (!first && cmd < 9 && !cmd_ok(cmd, ctx->a[6] + 2)) {
 			g_armed = 0;
 			sess_finish();                  /* hand the rest of the list to the 68k */
 			hle_jump(ctx, VDP_LIST_NEXT);
@@ -764,6 +797,7 @@ HLE_FUNC(0x011D32, VdpListRun, 0)
 		if (bail) {                             /* the event is due: the 68k continues the command */
 			g_armed = 0;
 			sess_finish();
+			ctx->bail = 1;
 			hle_jump(ctx, ctx->pc);
 			return;
 		}

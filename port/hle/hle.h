@@ -41,6 +41,7 @@ typedef struct hle_ctx {
 	int tl_flushed;     /* the timeline was put on the CPU clock (an access or a slice end happened) */
 	int dry;            /* dry run (HLE_F_PURE): only the length of the timeline is wanted, no clock/Z80 effects */
 	const struct hle_def *def;
+	int bail;           /* HLE_RANGE: hle_jump() went to an instruction in the middle of the range (a bail, game/vdplist.c); not checked against the exits */
 } hle_ctx;
 
 typedef void (*hle_fn)(hle_ctx *ctx);

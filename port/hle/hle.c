@@ -264,6 +264,7 @@ static void ctx_load(hle_ctx *c)
 	c->tl_last = 0;
 	c->tl_flushed = 0;
 	c->dry = 0;
+	c->bail = 0;
 }
 
 /* ---- instruction timeline (hle.h) */
@@ -693,7 +694,7 @@ static int run_def(const hle_def *def, entry *e)
 	}
 	if (def->exits) {
 		/* HLE_RANGE: must leave through a declared exit */
-		if (!c.jumped || !hle_exit_match(def->exits, c.pc, c.a[7], sp0)) {
+		if (!c.jumped || !(hle_exit_match(def->exits, c.pc, c.a[7], sp0) || (c.bail && c.a[7] == sp0))) {
 			fprintf(stderr, "hle: range %s ($%06X) left via $%06X with SP %+d%s, not a declared exit\n",
 			        def->name, def->addr, c.pc, (int)(c.a[7] - sp0), c.jumped ? "" : " (no hle_jump)");
 			abort();
@@ -735,7 +736,10 @@ static int run_def(const hle_def *def, entry *e)
 	}
 	if (getenv("T2_HLE_CHARGE"))
 		fprintf(stderr, "charge %-18s %ld (ctx %d + nested %ld)\n", def->name, total, c.cycles, nested);
-	if (unmasked && total > STALL_SLICE && !hle_post_access && g_nest == 0 && !g_stall_debt) {
+	/* A bail (game/vdplist.c) ends at the very instruction boundary where the original's slice ends and
+	 * the frame loop raises the interrupt: the lump must not be cut in slices (an interrupt would be
+	 * taken before its last few cycles, which belong in front of it). */
+	if (unmasked && total > STALL_SLICE && !c.bail && !hle_post_access && g_nest == 0 && !g_stall_debt) {
 		/* Long function entered with VBlank unmasked: the original would have been
 		 * interrupted along the way. Spend the cost in slices at STALL_PC, a trap that
 		 * "returns" to the real continuation (pushed like a jsr, so a savestate taken
