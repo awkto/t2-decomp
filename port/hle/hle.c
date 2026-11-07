@@ -401,7 +401,27 @@ static bool g_sess;
 static bool g_sess_timed;      /* the session made timed VDP data writes (hle_vdp_timed) */
 static bool g_vdp_timed;
 static bool g_decline;
-void hle_decline(void) { if (!hle_post_access) g_decline = true; }
+static int g_why = 15;
+void hle_decline_why(int why) { if (!hle_post_access) { g_decline = true; g_why = why; } }
+void hle_decline(void) { hle_decline_why(15); }
+/* decline statistics: per replaced function and reason (1 frame end, 2 interrupt window, 3 pending irq, 10.. see hle.h) */
+#define DWHY 20
+static struct { const char *name; unsigned long n[DWHY]; } g_dstat[256];
+static unsigned long g_dcalls[256];
+static int g_dn;
+static void dstat(const hle_def *d, int why)
+{
+	int i;
+	for (i = 0; i < g_dn; i++)
+		if (g_dstat[i].name == d->name)
+			break;
+	if (i == g_dn) {
+		if (g_dn == 256)
+			return;
+		g_dstat[g_dn++].name = d->name;
+	}
+	g_dstat[i].n[why]++;
+}
 static int g_sess_c0, g_sess_vc, g_sess_r0;
 static unsigned g_sess_line_base;
 
@@ -590,6 +610,7 @@ static int run_def(const hle_def *def, entry *e)
 			if (lowmask) {
 				irq_mask = 0;
 				if (gx_m68k_pending_irq()) {   /* taken as soon as the function's ReadPad drops the mask */
+					dstat(def, 3);
 					g_declined++;
 					return -1;
 				}
@@ -598,6 +619,7 @@ static int run_def(const hle_def *def, entry *e)
 		/* The frame loop rebases the clocks at the end of the frame and starts the next one
 		 * (VDP frame work, the VINT slice...): a call that straddles it cannot be a C lump. */
 		if (clock0 + span > gx_frame_end_clock()) {
+			dstat(def, 1);
 			g_declined++;
 			return -1;
 		}
@@ -606,6 +628,7 @@ static int run_def(const hle_def *def, entry *e)
 			if (lvl && irq_mask < lvl) {
 				if (getenv("T2_HLE_DECLINES"))
 					fprintf(stderr, "decline %s: clock %d window %ld lvl %d at %d mask %d\n", def->name, clock0, window, lvl, at, irq_mask);
+				dstat(def, 2);
 				g_declined++;
 				return -1;
 			}
@@ -648,6 +671,11 @@ static int run_def(const hle_def *def, entry *e)
 	g_cur_def = outer_def;
 	if (g_decline) {
 		g_decline = false;
+		if (top) {
+			dstat(def, g_why);
+			g_declined++;
+		}
+		g_why = 15;
 		if (top)
 			g_top = false;
 		if (e)
@@ -984,7 +1012,16 @@ int hle_invoke(const hle_def *def)
 	return run_def(def, find_addr(def->addr));
 }
 
-static void declines_print(void) { fprintf(stderr, "hle: %lu calls ran as 68k (interrupt inside)\n", g_declined); }
+static void declines_print(void)
+{
+	fprintf(stderr, "hle: %lu calls ran as 68k (interrupt inside)\n", g_declined);
+	fprintf(stderr, "declines: function  frameend irqwin pendirq | dma vint vclr hint gun other\n");
+	for (int i = 0; i < g_dn; i++) {
+		unsigned long *n = g_dstat[i].n;
+		fprintf(stderr, "declines: %-20s %lu %lu %lu | %lu %lu %lu %lu %lu %lu\n", g_dstat[i].name,
+		        n[1], n[2], n[3], n[10], n[11], n[12], n[13], n[14], n[15]);
+	}
+}
 
 void hle_install(void)
 {
