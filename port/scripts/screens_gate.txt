@@ -1,0 +1,384 @@
+# Front-end screen route for port/game/screens.c: power-on logos, story, title (with the cheat code),
+# main menu, options (every row changed), 1P/2P starts, the continue countdown expiring and taken,
+# the high-score initials screen, the ending, and the attract/hi-score loop. Gate it with
+#   python3 -I port/tools/scriptgate.py port/scripts/screens_gate.txt --hle all
+# Needs the vstates (states/gun_08.state, gun_0a.state); the rest is saved by the route itself.
+# Pad letters: U D L R A B C S (Start).
+
+# ---- A. power-on, pad only: Start before / inside / after the logo window, story with Start, title
+untilscreen logo 600
+run 150
+press S 3
+run 60
+press S 3
+untilscreen intro 1500
+run 100
+press S 3
+untilscreen title 600
+run 20
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 3
+press U 3
+run 3
+press D 3
+run 3
+press L 3
+run 3
+press R 3
+run 3
+press S 3
+untilscreen menu 600
+run 40
+save menu
+# menu: down to every row and back up, then OPTIONS (row 4)
+press D 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press U 3
+run 10
+press U 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press S 3
+untilscreen options 300
+run 40
+screen
+press D 3
+run 6
+press D 3
+run 6
+press U 3
+run 6
+press U 3
+run 6
+# options: every row right, right, left, left, A, B, C, then down
+press R 3
+run 6
+press R 3
+run 6
+press L 3
+run 6
+press L 3
+run 6
+press A 3
+run 20
+press B 3
+run 20
+press C 3
+run 20
+press D 3
+run 6
+press R 3
+run 6
+press L 3
+run 6
+press A 3
+run 20
+press B 3
+run 20
+press C 3
+run 20
+press D 3
+run 6
+press R 3
+run 6
+press R 3
+run 6
+press L 3
+run 6
+press A 3
+run 20
+press B 3
+run 20
+press C 3
+run 20
+press D 3
+run 6
+press R 3
+run 6
+press L 3
+run 6
+press A 3
+run 20
+press B 3
+run 20
+press C 3
+run 20
+press D 3
+run 6
+press R 3
+run 6
+press L 3
+run 6
+press A 3
+run 20
+press B 3
+run 20
+press C 3
+run 20
+press D 3
+run 6
+press D 3
+run 6
+press U 3
+run 6
+press U 3
+run 6
+press S 3
+untilscreen menu 300
+run 40
+screen
+save menu2
+
+# ---- B. 1 player Menacer (row 0): continue taken by the trigger, then the countdown runs out ->
+#         game over -> hi-score initials entered with the mouse -> hi-score table -> ColdStart
+load menu
+run 5
+press S 3
+untilscreen game 600
+mouse 160 100
+run 2000
+save l1
+poke FF9EA8 4 00500000
+poke FF801E 2 0200
+untilscreen continue 900
+run 30
+screen
+click L 6
+run 120
+poke FF801E 2 0000
+untilscreen continue 900
+peek level FF80CC 2
+run 700
+peek level FF80CC 2
+run 600
+peek level FF80CC 2
+mouse 35 62
+run 10
+click L 4
+run 20
+mouse 67 62
+run 10
+click L 4
+run 20
+mouse 98 62
+run 10
+click L 4
+run 20
+mouse 130 62
+run 10
+click L 4
+run 20
+mouse 20 140
+run 10
+click L 4
+run 20
+mouse 274 158
+run 10
+click L 4
+run 600
+screen
+peek level FF80CC 2
+peek hs1 FFFF9E 4
+peek hs1s FFFFA2 4
+shot b_end
+
+# ---- C. nothing pressed: the table screen, then the logos and story time out, the title times out
+#         into the attract demo, the demo ends on the hi-score table, and ColdStart again
+run 600
+screen
+run 600
+screen
+run 600
+screen
+run 600
+screen
+run 600
+screen
+run 600
+screen
+run 600
+screen
+run 1200
+screen
+peek mode FF9DF5 1
+peek level FF80CC 2
+run 1200
+screen
+peek mode FF9DF5 1
+peek level FF80CC 2
+run 1200
+screen
+peek mode FF9DF5 1
+peek level FF80CC 2
+run 1200
+screen
+peek mode FF9DF5 1
+peek level FF80CC 2
+
+# ---- D. 1 player joypad (row 1): continue taken with Start, then the countdown runs out and the
+#         initials are picked with the joypad crosshair
+load menu
+run 5
+press D 3
+run 10
+press S 3
+untilscreen game 600
+run 2000
+poke FF9EA8 4 00300000
+poke FF801E 2 0200
+untilscreen continue 900
+run 30
+screen
+press S 3
+run 120
+poke FF801E 2 0000
+untilscreen continue 900
+run 1400
+peek level FF80CC 2
+poke FF8004 2 0023
+poke FF8006 2 003E
+run 5
+press A 3
+run 20
+poke FF8004 2 0043
+run 5
+press A 3
+run 20
+poke FF8004 2 0062
+run 5
+press A 3
+run 20
+poke FF8004 2 0116
+poke FF8006 2 009E
+run 5
+press A 3
+run 400
+peek level FF80CC 2
+peek hs FFFF9E 4
+
+# ---- E. 2 players, Menacer + joypad 1 (row 2): player 2 dies and continues with Start on the pad,
+#         then both run out of energy; 2 players with two joypads (row 3) the same way
+load menu
+run 5
+press D 3
+run 10
+press D 3
+run 10
+press S 3
+untilscreen game 600
+mouse 160 100
+run 2000
+poke FF9EA8 4 00200000
+poke FF9EB0 4 00400000
+poke FF806E 2 0200
+untilscreen continue 900
+screen
+peek credits FF80CA 1
+run 30
+press S 3
+run 200
+poke FF801E 2 0000
+poke FF806E 2 0000
+run 400
+screen
+peek level FF80CC 2
+peek credits FF80CA 1
+run 1500
+screen
+peek level FF80CC 2
+peek credits FF80CA 1
+shot e_end
+# initials: player 1 with the mouse, player 2 with the joypad crosshair
+mouse 35 62
+run 10
+click L 4
+run 20
+mouse 67 62
+run 10
+click L 4
+run 20
+poke FF8054 2 0023
+poke FF8056 2 007E
+run 5
+press A 3
+run 20
+poke FF8054 2 0062
+run 5
+press A 3
+run 20
+poke FF8054 2 0083
+run 5
+press A 3
+run 20
+shot e_hs
+mouse 274 158
+run 10
+click L 4
+run 20
+poke FF8054 2 0116
+poke FF8056 2 009E
+run 5
+press A 3
+run 400
+peek level FF80CC 2
+peek hs1 FFFF9E 4
+
+# ---- F. 2 players with two joypads (row 3)
+load menu
+run 5
+press D 3
+run 10
+press D 3
+run 10
+press D 3
+run 10
+press S 3
+untilscreen game 600
+run 2000
+poke FF9EA8 4 00250000
+poke FF9EB0 4 00450000
+poke FF801E 2 0000
+run 600
+poke FF806E 2 0000
+run 1500
+peek level FF80CC 2
+
+# ---- G. the ending after level 8 (level_exit = 1: the win), then the initials screen from a saved state
+load states/gun_08.state
+run 200
+poke FFA234 1 01
+run 3000
+screen
+peek level FF80CC 2
+load states/gun_0a.state
+run 100
+mouse 35 62
+run 10
+click L 4
+run 20
+mouse 67 62
+run 10
+click L 4
+run 20
+mouse 274 158
+run 10
+click L 4
+run 600
+peek level FF80CC 2
