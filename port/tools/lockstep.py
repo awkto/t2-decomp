@@ -140,12 +140,15 @@ def main():
     ap.add_argument("--addr", action="store_true", help="on the first differing frame, dump and diff memories")
     ap.add_argument("--keep", action="store_true", help="keep runs/lockstep/<state> outputs")
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--z80", action="store_true", help="include Z80 RAM (the sound state) in the compared hash")
     a = ap.parse_args()
 
     if not os.path.exists(a.bin):
         sys.stderr.write("%s: not built (run port/tools/build.sh)\n" % a.bin)
         return 2
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
+    if a.z80:
+        env["T2_HASH_Z80"] = "1"
     states = a.states.split()
     os.makedirs(RUNS, exist_ok=True)
 

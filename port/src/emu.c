@@ -571,6 +571,12 @@ void emu_frame_hash(FILE *f, long frame)
 	ha = fnv1a(gx_cram(), 0x80, ha);
 	ha = fnv1a(gx_vsram(), 0x80, ha);
 	ha = fnv1a(gx_vdp_reg(), 0x20, ha);
+	/* T2_HASH_Z80=1 (lockstep.py --z80): the sound state is in the combined hash too (Z80 RAM) */
+	static int z80 = -1;
+	if (z80 < 0)
+		z80 = getenv("T2_HASH_Z80") != NULL;
+	if (z80)
+		ha = fnv1a(gx_zram(), 0x2000, ha);
 	/* columns: frame, full-RAM, VRAM, CRAM, VSRAM, VDPREG, ALL(live), live-RAM, 68k cycles.
 	 * m68k.cycles is diagnostic only (not compared): it shows a charge drift early. */
 	fprintf(f, "%ld %016llx %016llx %016llx %016llx %016llx %016llx %016llx %d\n", frame,
