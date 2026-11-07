@@ -1,0 +1,41 @@
+# Entry captures for the pause pieces of port/game/gameloop.c ($0076E8..$007780, GameLoopPauseCheck taken)
+# and the vblank_count sign-wrap path of the frame pacing ($0078A4). Joypad states: Start pauses.
+load states/pad_01.state
+run 1200
+press S 3
+run 60
+press A 6
+run 20
+press S 3
+run 30
+press S 3
+run 60
+press S 3
+run 40
+press S 3
+run 60
+press S 3
+run 30
+press S 3
+run 40
+press BC 3
+run 100
+load states/pad_02.state
+run 300
+poke FF9DF5 1 07
+press S 3
+run 100
+load states/pad_03.state
+run 200
+poke FFA0EE 2 FFF8
+poke FFA0AE 2 FFF9
+run 40
+poke FFA0EE 2 7FF8
+poke FFA0AE 2 7FF9
+run 40
+poke FFA0EE 2 FFFC
+poke FFA0AE 2 0001
+run 20
+poke FFA0EE 2 FFFC
+poke FFA0AE 2 FFFF
+run 20

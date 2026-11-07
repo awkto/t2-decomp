@@ -1,0 +1,44 @@
+# Pause / unpause / pause-cheat route for GameLoopPauseCheck and the pause loop (port/game/gameloop.c).
+# The lockstep input never presses Start, so this script drives it. Run both builds on it and compare
+# the per-frame hashes: python3 -I port/tools/scriptgate.py port/scripts/pause_gate.txt [--hle all]
+# Needs states/pad_01.state, pad_02.state (joypad, level-skip cheat on) and 2p_pad_01.state.
+load states/pad_01.state
+run 1200
+press S 3
+run 90
+press A 6
+run 40
+press S 3
+run 60
+press S 3
+run 30
+press S 3
+run 120
+press S 3
+run 40
+press S 3
+run 200
+# pause, then the level-skip cheat B+C (ends the level)
+press S 3
+run 60
+press S 3
+run 20
+press S 3
+run 60
+press BC 3
+run 400
+# attract-demo interrupt: control_mode 7, Start pauses -> level_exit, control_mode 8
+load states/pad_02.state
+run 1200
+poke FF9DF5 1 07
+press S 3
+run 500
+# two-player joypad state: P1 pause, then a long run
+load states/2p_pad_01.state
+run 1200
+press S 3
+run 40
+press S 3
+run 30
+press S 3
+run 400
