@@ -115,7 +115,8 @@ const hle_def *hle_get(int i) { return i >= 0 && i < g_n ? &g_ent[i].def : NULL;
 bool hle_is_enabled(int i) { return i >= 0 && i < g_n && g_ent[i].enabled; }
 unsigned long hle_calls(int i) { return i >= 0 && i < g_n ? g_ent[i].calls : 0; }
 unsigned long hle_calls_this_frame(void) { return g_frame_calls; }
-void hle_frame_begin(void) { g_frame_calls = 0; }
+static long g_frames_run;      /* frames started (T2_HLE_PROFILE) */
+void hle_frame_begin(void) { g_frame_calls = 0; g_frames_run++; }
 
 static entry *lookup(const char *s)
 {
@@ -737,17 +738,237 @@ static int stall(void)
 	return (int)(n > 0 ? n : 4);
 }
 
+/* ------------------------------------------------------------------ T2_HLE_PROFILE */
+/* T2_HLE_PROFILE=1: where does the 68k time go? The CPU exec hook attributes the master clocks
+ * elapsed since the previous instruction to that instruction's function (data/functions.txt);
+ * the cycles an HLE call charges are counted as "C". Wait loops (WaitVBlank, FramePaceWait's
+ * loop) are "idle". 68k run nested inside a C call (hle_call68k...) is part of that call's
+ * charge: it is counted in C and listed apart as "nested". Summary at exit; the "PROF" lines
+ * are read by port/tools/profmerge.py. Off by default: no hook is installed, no cost. */
+extern void emu_add_hook(void (*fn)(int type, int width, unsigned int addr, unsigned int value));
+typedef struct { uint32_t lo, hi; int fn; } prof_rng;
+typedef struct { uint32_t addr; char name[48]; long long mclk, nmclk; unsigned long calls, decl; } prof_fn;
+static prof_rng *g_prng;
+static int g_nprng;
+static prof_fn *g_pfn;
+static int g_npfn, g_fpw = -1;
+static long long g_p_real, g_p_nested, g_p_idle, g_p_c, g_p_other;
+static long long g_p_unm[0x1001];   /* real time at PCs outside data/functions.txt, per 256 bytes */
+static int g_p_last_pc = -1, g_p_last_clk, g_p_last_nest;
+
+static int prof_cmp(const void *a, const void *b)
+{
+	uint32_t x = ((const prof_rng *)a)->lo, y = ((const prof_rng *)b)->lo;
+	return x < y ? -1 : x > y;
+}
+
+static void prof_add_rng(uint32_t lo, uint32_t sz, int fi)
+{
+	g_prng = realloc(g_prng, (g_nprng + 1) * sizeof *g_prng);
+	g_prng[g_nprng++] = (prof_rng){ lo, lo + sz, fi };
+}
+
+static void prof_load(void)
+{
+	FILE *f = fopen("data/functions.txt", "r");
+	if (!f) {
+		fprintf(stderr, "hle profile: data/functions.txt not found (run from the repo root); no names\n");
+		return;
+	}
+	char line[512];
+	int cap = 0;
+	while (fgets(line, sizeof line, f)) {
+		unsigned a, sz;
+		char name[64];
+		if (line[0] == '#' || sscanf(line, "%x %u %63s", &a, &sz, name) != 3)
+			continue;
+		if (g_npfn == cap) {
+			cap = cap ? cap * 2 : 512;
+			g_pfn = realloc(g_pfn, cap * sizeof *g_pfn);
+		}
+		prof_fn *pf = &g_pfn[g_npfn];
+		memset(pf, 0, sizeof *pf);
+		pf->addr = a;
+		snprintf(pf->name, sizeof pf->name, "%s", name);
+		int fi = g_npfn++;
+		prof_add_rng(a, sz, fi);
+		for (char *q = strchr(line, '#'); q && (q = strchr(q, '+')); q++) {
+			unsigned a2, s2;
+			if (sscanf(q + 1, "%x:%x", &a2, &s2) == 2)
+				prof_add_rng(a2, s2, fi);
+		}
+	}
+	fclose(f);
+	/* FramePaceWait's loop sits inside GameStart's range in functions.txt: its own entry */
+	g_pfn = realloc(g_pfn, (g_npfn + 1) * sizeof *g_pfn);
+	memset(&g_pfn[g_npfn], 0, sizeof *g_pfn);
+	g_pfn[g_npfn].addr = 0x0078A6;
+	snprintf(g_pfn[g_npfn].name, sizeof g_pfn->name, "FramePaceWait");
+	g_fpw = g_npfn++;
+	qsort(g_prng, g_nprng, sizeof *g_prng, prof_cmp);
+	/* an HLE entry that is a piece of another function (a bra.w target, say) gets its own
+	 * bucket, so its declined calls (run as 68k) show under the replaced routine's name */
+	for (int i = 0; i < g_n; i++) {
+		uint32_t a = g_ent[i].def.addr;
+		int j = -1, ex = -1;
+		for (int k = 0; k < g_nprng; k++) {
+			if (g_prng[k].lo <= a && a < g_prng[k].hi)
+				j = k;
+			if (g_prng[k].lo == a)
+				ex = k;
+		}
+		if ((ex >= 0 && g_pfn[g_prng[ex].fn].addr == a) || (ex < 0 && j < 0))
+			continue;
+		g_pfn = realloc(g_pfn, (g_npfn + 1) * sizeof *g_pfn);
+		memset(&g_pfn[g_npfn], 0, sizeof *g_pfn);
+		g_pfn[g_npfn].addr = a;
+		snprintf(g_pfn[g_npfn].name, sizeof g_pfn->name, "%s", g_ent[i].def.name);
+		if (ex >= 0) {
+			g_prng[ex].fn = g_npfn++;
+		} else {
+			uint32_t hi = g_prng[j].hi;
+			g_prng[j].hi = a;
+			prof_add_rng(a, hi - a, g_npfn++);
+			qsort(g_prng, g_nprng, sizeof *g_prng, prof_cmp);
+		}
+	}
+}
+
+static int prof_find(uint32_t pc)
+{
+	int lo = 0, hi = g_nprng - 1, r = -1;
+	while (lo <= hi) {
+		int m = (lo + hi) / 2;
+		if (g_prng[m].lo <= pc) {
+			r = m;
+			lo = m + 1;
+		} else
+			hi = m - 1;
+	}
+	return r >= 0 && pc < g_prng[r].hi ? g_prng[r].fn : -1;
+}
+
+/* WaitVBlank, the compare/branch loop at the top of FramePaceWait, the $01DC4E VDP wait */
+static bool prof_idle(uint32_t pc)
+{
+	return (pc >= 0x0086E2 && pc < 0x0086E2 + 20) || (pc >= 0x0078A6 && pc < 0x0078AE) ||
+	       (pc >= 0x01DC4E && pc < 0x01DC68);   /* spin on the VDP status / HV counter */
+}
+
+static void prof_hook(int type, int width, unsigned addr, unsigned value)
+{
+	(void)width;
+	(void)value;
+	if (type != 1)
+		return;
+	int now = gx_m68k_cycles();
+	if (g_p_last_pc >= 0 && now >= g_p_last_clk && now - g_p_last_clk < 2000000) {
+		long long d = now - g_p_last_clk;
+		int fi = prof_find((uint32_t)g_p_last_pc);
+		if (g_fpw >= 0 && g_p_last_pc >= 0x0078A6 && g_p_last_pc < 0x0078AE)
+			fi = g_fpw;
+		if (g_p_last_nest) {
+			g_p_nested += d;
+			if (fi >= 0)
+				g_pfn[fi].nmclk += d;
+		} else {
+			if (prof_idle((uint32_t)g_p_last_pc))
+				g_p_idle += d;
+			else
+				g_p_real += d;
+			if (fi >= 0)
+				g_pfn[fi].mclk += d;
+			else {
+				g_p_other += d;
+				g_p_unm[(uint32_t)g_p_last_pc < 0x100000 ? (uint32_t)g_p_last_pc >> 8 : 0x1000] += d;
+			}
+		}
+	}
+	g_p_last_pc = (int)addr;
+	g_p_last_clk = now;
+	g_p_last_nest = g_nest > 0 || g_top;
+	if (!g_p_last_nest) {
+		int fi = prof_find(addr);
+		if (fi >= 0 && g_pfn[fi].addr == addr)
+			g_pfn[fi].calls++;
+	}
+}
+
+static int prof_rank(const void *a, const void *b)
+{
+	long long x = ((const prof_fn *)a)->mclk, y = ((const prof_fn *)b)->mclk;
+	return x < y ? 1 : x > y ? -1 : 0;
+}
+
+static void prof_print(void)
+{
+	long long tot = g_p_real + g_p_idle + g_p_c;
+	double t = tot ? (double)tot : 1, busy = (double)(g_p_c + g_p_real) + 1;
+	fprintf(stderr, "hle profile: %ld frames, %lld 68k cycles: 68k real %lld, idle %lld, C %lld (incl. nested 68k %lld)\n",
+	        g_frames_run, tot / 7, g_p_real / 7, g_p_idle / 7, g_p_c / 7, g_p_nested / 7);
+	fprintf(stderr, "hle profile: C %.2f%%  68k real %.2f%%  idle %.2f%%   (busy only: C %.2f%%  68k %.2f%%)\n",
+	        100 * g_p_c / t, 100 * g_p_real / t, 100 * g_p_idle / t, 100 * g_p_c / busy, 100 * g_p_real / busy);
+	fprintf(stderr, "PROF tot %ld %lld %lld %lld %lld %lld\n", g_frames_run, g_p_real, g_p_idle, g_p_c, g_p_nested, g_p_other);
+	for (int i = 0; i < g_npfn; i++)
+		if (g_pfn[i].mclk || g_pfn[i].nmclk)
+			{
+			entry *he = find_addr(g_pfn[i].addr);   /* 1: replaced by C, so this is the declined-call (ran as 68k) time */
+			fprintf(stderr, "PROF fn %06X %s %lld %lld %lu %d %lu\n", g_pfn[i].addr, g_pfn[i].name, g_pfn[i].mclk, g_pfn[i].nmclk,
+			        g_pfn[i].calls, he && he->enabled, g_pfn[i].decl);
+		}
+	for (int n = 0; n < 6; n++) {
+		int b = 0;
+		for (int i = 1; i <= 0x1000; i++)
+			if (g_p_unm[i] > g_p_unm[b])
+				b = i;
+		if (!g_p_unm[b])
+			break;
+		fprintf(stderr, "PROF unm %s%05X %lld\n", b == 0x1000 ? ">=" : "", b == 0x1000 ? 0x100000 : b << 8, g_p_unm[b]);
+		g_p_unm[b] = 0;
+	}
+	qsort(g_pfn, g_npfn, sizeof *g_pfn, prof_rank);
+	for (int i = 0; i < 40 && i < g_npfn && g_pfn[i].mclk; i++)
+		fprintf(stderr, "  %06X %-26s %12lld %6.2f%% %9lu calls\n", g_pfn[i].addr, g_pfn[i].name,
+		        g_pfn[i].mclk / 7, 100 * g_pfn[i].mclk / t, g_pfn[i].calls);
+}
+
+static void prof_install(void)
+{
+	prof_load();
+	emu_add_hook(prof_hook);
+	atexit(prof_print);
+}
+
+static bool g_prof;        /* T2_HLE_PROFILE */
 static int g_trace = -1;   /* T2_HLE_TRACE=1: log every dispatched call to stderr */
 
 static int dispatch(unsigned int pc)
 {
-	if (pc == STALL_PC)
-		return stall();
+	if (pc == STALL_PC) {
+		int n = stall();
+		if (g_prof) {
+			g_p_c += (long long)n * 7;   /* the rest of a long C function's charge */
+			g_p_last_pc = -1;
+		}
+		return n;
+	}
 	entry *e = find_addr(pc);
 	if (!e || !e->enabled)
 		return -1;
 	if (g_trace < 0)
 		g_trace = getenv("T2_HLE_TRACE") ? atoi(getenv("T2_HLE_TRACE")) : 0;
+	if (g_prof) {
+		int r = run_def(&e->def, e);
+		if (r >= 0) {
+			g_p_c += (long long)r * 7;   /* nested 68k is inside r */
+			g_p_last_pc = -1;
+		} else {
+			int fi = prof_find(e->def.addr);   /* declined: the original runs as 68k */
+			if (fi >= 0)
+				g_pfn[fi].decl++;
+		}
+		return r;
+	}
 	if (!g_trace)
 		return run_def(&e->def, e);
 	int c0 = gx_m68k_cycles();
@@ -778,6 +999,10 @@ void hle_install(void)
 	if (getenv("T2_HLE_BOUNDS")) {
 		hle_chk_on = true;
 		atexit(chk_print);
+	}
+	if (getenv("T2_HLE_PROFILE")) {
+		g_prof = true;
+		prof_install();
 	}
 	m68k_hle_handler = dispatch;
 	m68k_hle_bitmap = g_bitmap;
