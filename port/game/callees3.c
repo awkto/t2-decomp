@@ -192,10 +192,7 @@ L_00902E:
 	hle_insn(ctx, 16); return;  /* 009052 rts */
 }
 
-/* TruckDamage $00D322 is not registered as a yielding whole-function port: with the 60000-cycle event window it ran as a
- * coroutine in misc_t3 and diverged at frame 433 (not root-caused); the generated pieces of auto2.c (bt_Auto_00D322 ..)
- * serve it instead, as before the yielding work. The generated body is kept under #if 0 for the next attempt. */
-#if 0
+/* TruckDamage $00D322 (the yielding whole-function port). */
 HLE_FUNC_YIELD(0x00D322, TruckDamage, 4000)
 {
 L_00D322:
@@ -264,7 +261,6 @@ L_00D3E0:
 L_00D3E2:
 	hle_insn(ctx, 16); return;  /* 00D3E2 rts */
 }
-#endif
 
 HLE_FUNC_YIELD(0x010666, Sub010666, 4000)
 {

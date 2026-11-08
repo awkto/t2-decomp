@@ -291,7 +291,7 @@ static void sub_0098FC(hle_ctx *ctx)
 
 /* $00D112 John Connor truck (level 3): damage check, tail/front sprites, bounce, then the shared sprite part */
 /* bound 30200 = 1.5 x the T2_HLE_BOUNDS max observed 20088 (the destroy path with TruckDamage; dt max 17136) */
-HLE_RANGE(0x00D112, TruckMain, 30200, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D112, TruckMain, 30200, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16(0xFFFF9E92u); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 00D112 movew 0xffff9e92,%d0 */
 	{ uint32_t _s = ld16(0xFFFF9F6Au); uint32_t _d = (ctx->d[0] & 0xFFFFu); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 16); } /* 00D118 cmpw 0xffff9f6a,%d0 */
