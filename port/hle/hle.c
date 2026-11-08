@@ -758,6 +758,16 @@ static void cor_check(hle_ctx *c)
 	if (g_cor && c == &g_cor->c && !g_cor_block && gx_m68k_cycles() + (int)c->tl >= gx_m68k_cycle_end())
 		cor_do_yield(g_cor);
 }
+/* call after a coroutine has lowered the mask in ctx->sr (and charged that instruction): an interrupt that is
+ * pending above the new mask is taken at this boundary, as the core does after a move to SR */
+void hle_irq_poll(hle_ctx *c)
+{
+	if (g_cor && c == &g_cor->c && !g_cor_block && !c->dry) {
+		int lvl = gx_m68k_pending_irq();
+		if (lvl && lvl > ((c->sr >> 8) & 7))
+			cor_do_yield(g_cor);
+	}
+}
 void hle_yield_point(void)
 {
 	if (g_cor && !g_cor_block && gx_m68k_cycles() + (int)g_cor->c.tl >= gx_m68k_cycle_end())
@@ -862,8 +872,16 @@ static int run_def(const hle_def *def, entry *e)
 			 * event that falls inside makes it a coroutine. */
 			if (span < YIELD_SPAN)
 				span = YIELD_SPAN;
-			if (irq_mask < 6)
+			if (lowmask) {
+				/* the function lowers the mask itself (ReadPad: $2700 ... $2000): what is pending or raised
+				 * after that point is taken inside it, whatever SR it was entered with */
+				irq_mask = 0;
 				window = span;
+				if (gx_m68k_pending_irq())
+					cor = true;
+			} else if (irq_mask < 6) {
+				window = span;
+			}
 		} else if (irq_mask < 6 || lowmask) {
 			window = span;
 			if (lowmask) {
@@ -1125,7 +1143,8 @@ static int g_callc_nfb;
  * plain function does)? */
 static bool callc_exact(entry *e, hle_ctx *c)
 {
-	if (!e || !e->enabled || (e->def.flags & (HLE_F_WAIT | HLE_F_LOWMASK)))
+	if (!e || !e->enabled || (e->def.flags & HLE_F_WAIT) ||
+	    ((e->def.flags & HLE_F_LOWMASK) && !(e->def.flags & HLE_F_YIELD)))
 		return false;
 	if (e->def.exits)                  /* a range: only if every exit leaves with the stack as it was */
 		for (const uint32_t *x = e->def.exits; *x; x++)

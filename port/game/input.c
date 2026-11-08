@@ -96,8 +96,9 @@ static void menacer_btn_map(hle_ctx *ctx)
 {
 	/* move.b (abs).l,d0 16, not.b 4, move.w d0,d1/d2 4+4, andi.w #2/#4 8+8, lsr.w #1 8, lsl.w #1 8,
 	 * andi.w #9 8, or.w 4+4, lsl.w #4 14 */
+	uint8_t gb = RAM8(GUN_BTN);                      /* move.b (gun_btn).l,d0 (read first, then the charges) */
 	HLE_SEQ(ctx, 16, 4, 4, 4, 8, 8, 8, 8, 8, 4, 4, 14);
-	set_b(&ctx->d[0], (uint8_t)~RAM8(GUN_BTN));      /* move.b (gun_btn).l,d0 / not.b d0 */
+	set_b(&ctx->d[0], (uint8_t)~gb);                 /* not.b d0 */
 	f_nz(ctx, ctx->d[0] & 0xFF, 8);
 	set_w(&ctx->d[1], ctx->d[0]);                    /* move.w d0,d1 */
 	f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
@@ -311,23 +312,28 @@ HLE_FUNC_PURE(0x0005FC, PadMoveCrosshair, 640)
 static void read_input_two_pad(hle_ctx *ctx)
 {
 	uint32_t d0 = RAM32(P1_BASE);            /* move.l (p1).l,d0 */
+	hle_insn(ctx, 20);
 	RAM32_W(P1_BASE, RAM32(P2_BASE));        /* move.l (p2).l,(p1).l */
+	hle_insn(ctx, 36);
 	RAM32_W(P2_BASE, d0);                    /* move.l d0,(p2).l */
 	f_nz(ctx, d0, 32);
-	HLE_SEQ(ctx, 20, 36, 20, 20);            /* move.l (abs).l,d0 / (abs).l,(abs).l / d0,(abs).l / jsr ReadPad2 */
+	hle_insn(ctx, 20);
+	hle_insn(ctx, 20);                       /* jsr ReadPad2 */
 	ReadPad2(ctx);
 	hle_insn(ctx, 20);                       /* jsr (ReadPad1).l */
 	ReadPad1(ctx);
 	uint32_t e = RAM32(P1_BASE);             /* move.l (p1).l,d0 */
 	ctx->d[0] = e;
 	f_nz(ctx, e, 32);
+	hle_insn(ctx, 20);
 	RAM32_W(P1_BASE, RAM32(P2_BASE));        /* move.l (p2).l,(p1).l */
+	hle_insn(ctx, 36);
 	RAM32_W(P2_BASE, e);                     /* move.l d0,(p2).l */
 	f_nz(ctx, e, 32);
-	HLE_SEQ(ctx, 20, 36, 20);                /* the swap back (the caller adds the rts) */
+	hle_insn(ctx, 20);                       /* (the caller adds the rts) */
 }
 
-HLE_FUNC_LOWMASK(0x0003DE, ReadInput, 1713)
+HLE_FUNC_LOWMASK_YIELD(0x0003DE, ReadInput, 1713)
 {
 	uint8_t mode = RAM8(CONTROL_MODE);
 	set_b(&ctx->d[0], mode);                 /* move.b (control_mode).l,d0 */
@@ -338,10 +344,11 @@ HLE_FUNC_LOWMASK(0x0003DE, ReadInput, 1713)
 		HLE_SEQ(ctx, 10, 20);            /* beq.s taken / jsr (MenacerReadXY).l */
 		MenacerReadXY(ctx);
 		ctx->a[4] = P1_BASE;             /* lea.l (0xffff8000).l,a4 */
-		HLE_SEQ(ctx, 12, 20);            /* lea.l (abs).l,a4 / move.w $0(a4),$2(a4) */
+		hle_insn(ctx, 12);               /* lea.l (abs).l,a4 */
 		uint16_t cur = RAM16(P1_BASE);
 		RAM16(P1_BASE + 2) = cur;        /* move.w $0(a4),$2(a4) */
 		f_nz(ctx, cur, 16);
+		hle_insn(ctx, 20);
 		menacer_btn_map(ctx);
 		RAM16(P1_BASE) = ctx->d[0] & 0xFFFF;   /* move.w d0,$0(a4) */
 		f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
@@ -365,23 +372,26 @@ HLE_FUNC_LOWMASK(0x0003DE, ReadInput, 1713)
 	HLE_SEQ(ctx, 12, 20);                    /* lea.l (abs).l,a4 / jsr (MenacerReadXY).l */
 	MenacerReadXY(ctx);
 	ctx->a[4] = P1_BASE;                     /* lea.l (0xffff8000).l,a4 */
-	HLE_SEQ(ctx, 12, 24, 20);                /* lea / move.w (2,a4),(abs).l / move.w $0(a4),$2(a4) */
+	hle_insn(ctx, 12);                       /* lea */
 	uint16_t prev = RAM16(P1_BASE + 2);
 	RAM16(BTN_PREV2) = prev;                 /* move.w (0x2,a4),(btn_prev2).l */
 	f_nz(ctx, prev, 16);
+	hle_insn(ctx, 24);
 	uint16_t cur = RAM16(P1_BASE);
 	RAM16(P1_BASE + 2) = cur;                /* move.w $0(a4),$2(a4) */
 	f_nz(ctx, cur, 16);
+	hle_insn(ctx, 20);
 	menacer_btn_map(ctx);
 	set_w(&ctx->d[0], ctx->d[0] & 0xF0);     /* andi.w #$f0,d0 */
 	f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
+	hle_insn(ctx, 8);
 	RAM16(P1_BASE) = ctx->d[0] & 0xFFFF;     /* move.w d0,$0(a4) */
 	f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
-	HLE_SEQ(ctx, 8, 12, 16);                 /* andi.w #$f0,d0 / move.w d0,$0(a4) / rts */
+	HLE_SEQ(ctx, 12, 16);                    /* move.w d0,$0(a4) / rts */
 }
 
 /* ------------------------------------------------------------------ ReadInputAim $0004B6 */
-HLE_FUNC_LOWMASK(0x0004B6, ReadInputAim, 2070)
+HLE_FUNC_LOWMASK_YIELD(0x0004B6, ReadInputAim, 2070)
 {
 	uint8_t mode = RAM8(CONTROL_MODE);
 	set_b(&ctx->d[0], mode);                 /* move.b (control_mode).l,d0 */
@@ -392,26 +402,29 @@ HLE_FUNC_LOWMASK(0x0004B6, ReadInputAim, 2070)
 		HLE_SEQ(ctx, 10, 20);            /* beq.s taken / jsr (MenacerReadXY).l */
 		MenacerReadXY(ctx);
 		ctx->a[4] = P1_BASE;
-		HLE_SEQ(ctx, 12, 20);            /* lea.l (abs).l,a4 / move.w $0(a4),$2(a4) */
+		hle_insn(ctx, 12);               /* lea.l (abs).l,a4 */
 		uint16_t cur = RAM16(P1_BASE);
 		RAM16(P1_BASE + 2) = cur;        /* move.w $0(a4),$2(a4) */
 		f_nz(ctx, cur, 16);
+		hle_insn(ctx, 20);
 		menacer_btn_map(ctx);
 		RAM16(P1_BASE) = ctx->d[0] & 0xFFFF;
 		f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
+		hle_insn(ctx, 12);               /* move.w d0,$0(a4) */
 		uint16_t gx = RAM16(GUN_X);      /* move.w (gun_x).l,d0 */
 		set_w(&ctx->d[0], gx);
 		f_nz(ctx, gx, 16);
+		hle_insn(ctx, 16);
 		RAM16(P1_BASE + 4) = gx;         /* move.w d0,(0x4,a4) */
 		f_nz(ctx, gx, 16);
+		hle_insn(ctx, 12);
 		uint16_t gy = RAM16(GUN_Y);      /* move.w (gun_y).l,d0 */
 		set_w(&ctx->d[0], gy);
 		f_nz(ctx, gy, 16);
+		hle_insn(ctx, 16);
 		RAM16(P1_BASE + 6) = gy;         /* move.w d0,(0x6,a4) */
 		f_nz(ctx, gy, 16);
-		/* move.w d0,$0(a4) 12, move.w (abs).l,d0 16, move.w d0,(4,a4) 12, move.w (abs).l,d0 16,
-		 * move.w d0,(6,a4) 12, bra.w QueueCrosshair 10 */
-		HLE_SEQ(ctx, 12, 16, 12, 16, 12, 10);
+		HLE_SEQ(ctx, 12, 10);            /* move.w d0,(6,a4) / bra.w QueueCrosshair */
 		QueueCrosshair(ctx);             /* bra.w QueueCrosshair */
 		return;
 	}
@@ -441,13 +454,15 @@ HLE_FUNC_LOWMASK(0x0004B6, ReadInputAim, 2070)
 	hle_insn(ctx, 20);                       /* jsr (MenacerReadXY).l */
 	MenacerReadXY(ctx);
 	ctx->a[4] = P1_BASE;
-	HLE_SEQ(ctx, 12, 24, 20);                /* lea / move.w (2,a4),(abs).l / move.w $0(a4),$2(a4) */
+	hle_insn(ctx, 12);                       /* lea */
 	uint16_t prev = RAM16(P1_BASE + 2);
-	RAM16(BTN_PREV2) = prev;
+	RAM16(BTN_PREV2) = prev;                 /* move.w (0x2,a4),(btn_prev2).l */
 	f_nz(ctx, prev, 16);
+	hle_insn(ctx, 24);
 	uint16_t cur = RAM16(P1_BASE);
-	RAM16(P1_BASE + 2) = cur;
+	RAM16(P1_BASE + 2) = cur;                /* move.w $0(a4),$2(a4) */
 	f_nz(ctx, cur, 16);
+	hle_insn(ctx, 20);
 	menacer_btn_map(ctx);
 	set_w(&ctx->d[0], ctx->d[0] & 0xF0);     /* andi.w #$f0,d0 */
 	f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
@@ -462,15 +477,18 @@ HLE_FUNC_LOWMASK(0x0004B6, ReadInputAim, 2070)
 	}
 	RAM16(P1_BASE) = ctx->d[0] & 0xFFFF;     /* move.w d0,$0(a4) */
 	f_nz(ctx, ctx->d[0] & 0xFFFF, 16);
+	hle_insn(ctx, 12);
 	uint16_t gx = RAM16(GUN_X);
 	set_w(&ctx->d[0], gx);                   /* move.w (gun_x).l,d0 */
 	f_nz(ctx, gx, 16);
+	hle_insn(ctx, 16);
 	RAM16(P1_BASE + 4) = gx;                 /* move.w d0,(0x4,a4) */
 	f_nz(ctx, gx, 16);
+	hle_insn(ctx, 12);
 	uint16_t gy = RAM16(GUN_Y);
 	set_w(&ctx->d[2], gy);                   /* move.w (gun_y).l,d2 */
 	f_nz(ctx, gy, 16);
-	HLE_SEQ(ctx, 12, 16, 12, 16, 8);         /* move.w d0,$0(a4) / (gun_x),d0 / d0,(4,a4) / (gun_y),d2 / cmpi.w #$c8,d2 */
+	HLE_SEQ(ctx, 16, 8);                     /* move.w (gun_y).l,d2 / cmpi.w #$c8,d2 */
 	int16_t sy = (int16_t)gy;
 	if (sy > 0xC8) {
 		HLE_SEQ(ctx, 8, 8);              /* ble.s not taken / move.w #$c8,d2 */

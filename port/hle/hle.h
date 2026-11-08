@@ -189,6 +189,15 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
 
+/* HLE_FUNC_LOWMASK_YIELD: a coroutine that also lowers the interrupt mask itself (ReadPad) */
+#define HLE_FUNC_LOWMASK_YIELD(ADDR, NAME, CYCLES)                                      \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_LOWMASK | HLE_F_YIELD };              \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
 /* HLE_WAIT_FUNC / HLE_WAIT_RANGE: like HLE_FUNC / HLE_RANGE, for code that spins until an
  * interrupt changes something (wait_vblank, the countdown and flag spins). The spin itself is
  * hle_idle(ctx) followed by hle_jump to the spin's own address: the block runs again in the next
@@ -281,6 +290,8 @@ void hle_bail_to(hle_ctx *ctx, uint32_t pc);
  * itself; hle_insn/hle_pre/hle_post do it on their own). */
 bool hle_yielding(void);
 void hle_yield_point(void);
+/* a coroutine that lowered the mask in ctx->sr: yield now if an interrupt is pending above it (after the charge) */
+void hle_irq_poll(hle_ctx *ctx);
 void hle_pre(hle_ctx *ctx);
 void hle_post(hle_ctx *ctx, int n);
 void hle_sync(hle_ctx *ctx);   /* put the pending time on the clock (before hle_call68k, after its jsr was charged) */

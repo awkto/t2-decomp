@@ -54,10 +54,15 @@
  * access therefore goes through hle_pre()/hle_post() with the original's 68000 instruction
  * costs: move to SR #imm 16, move.w #imm,(abs).l 20, move.b (abs).l,Dn 16, andi.b/andi.w #imm,Dn 8,
  * bne.s 10 taken / 8 not, move.b #imm,(abs).l 20, lsl.w #2 10, or.w 4, move.w (abs).l,(abs).l 28,
- * not.b 4, move.w Dn,(abs).l 16, rts 16 (total 290). */
+ * not.b 4, move.w Dn,(abs).l 16, rts 16 (total 290).
+ *
+ * Interrupt-exact (docs/porting.md, "Yielding"): a coroutine. Each instruction's effect comes first, then its
+ * charge; SR is $2700 from the first instruction on (a yield at a slice end inside the call leaves the
+ * interrupt pending, as on the 68k) and $2000 after `move.w #$2000,sr`, where a pending interrupt is taken. */
 static void read_pad(hle_ctx *ctx, uint32_t data, uint32_t dest)
 {
-	hle_insn(ctx, 16);                      /* move.w #$2700,sr */
+	ctx->sr = 0x2700;                       /* move.w #$2700,sr */
+	hle_insn(ctx, 16);
 	hle_pre(ctx);
 	bus_w16(Z80_BUSREQ, 0x0100);            /* move.w #$100,($A11100).l */
 	hle_post(ctx, 20);
@@ -98,28 +103,29 @@ static void read_pad(hle_ctx *ctx, uint32_t data, uint32_t dest)
 	uint32_t low = ((uint32_t)((b0 >> 4) & 0x3) << 6) | (b1 & 0x3F);
 	uint32_t out = (~low) & 0xFF;           /* not.b d0 (bits 8-15 are 0) */
 
-	hle_insn(ctx, 28);                      /* move.w (dest).l,(dest+2).l */
-	RAM16(dest + 2) = RAM16(dest);          /* previous buttons */
+	RAM16(dest + 2) = RAM16(dest);          /* move.w (dest).l,(dest+2).l: previous buttons */
+	hle_insn(ctx, 28);
 	hle_insn(ctx, 4);                       /* not.b d0 */
-	hle_insn(ctx, 16);                      /* move.w d0,(dest).l */
-	RAM16(dest) = (uint16_t)out;
+	RAM16(dest) = (uint16_t)out;            /* move.w d0,(dest).l */
+	hle_insn(ctx, 16);
 
 	set_w(&ctx->d[0], out);
 	set_w(&ctx->d[1], b1 & 0x3F);           /* d1 low word = TH=1 byte & $3F */
 	hle_pre(ctx);
 	bus_w16(Z80_BUSREQ, 0x0000);            /* move.w #$0,($A11100).l */
 	hle_post(ctx, 20);
-	ctx->sr = 0x2000;                       /* move.w #$2000,sr: X N Z V C cleared */
-	hle_insn(ctx, 16);                      /* move.w #$2000,sr */
+	ctx->sr = 0x2000;                       /* move.w #$2000,sr: X N Z V C cleared, mask 0 */
+	hle_insn(ctx, 16);
+	hle_irq_poll(ctx);                      /* a pending interrupt is taken here */
 	hle_insn(ctx, 16);                      /* rts */
 }
 
-HLE_FUNC(0x0088A0, ReadPad1, 330)
+HLE_FUNC_LOWMASK_YIELD(0x0088A0, ReadPad1, 330)
 {
 	read_pad(ctx, PAD1_DATA, PAD1_WORD);
 }
 
-HLE_FUNC(0x008908, ReadPad2, 330)
+HLE_FUNC_LOWMASK_YIELD(0x008908, ReadPad2, 330)
 {
 	read_pad(ctx, PAD2_DATA, PAD2_WORD);
 }

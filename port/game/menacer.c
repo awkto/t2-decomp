@@ -85,95 +85,101 @@ static int menacer_stats_on(void)
 /* The two 68k loops: 16 backwards byte-pairs from a0 (wrapping at the ring start). For the
  * first 8 words accumulate table[low byte] into *sx and the high byte into *sy; for the
  * next 8 into *ox / *oy. a0 is the 32-bit register value ($FFFFA0xx), so the wrap compares
- * the full long exactly as `cmpa.l #$FFFFA07E` does. */
+ * the full long exactly as `cmpa.l #$FFFFA07E` does.
+ * Interrupt-exact (docs/porting.md, "Yielding"): the ring is written by the light-gun interrupt, so each
+ * `move.b -(a0),Dn` reads it before its own charge and not before the previous instruction's. */
 static uint32_t read_ring(hle_ctx *ctx, uint32_t a0, uint32_t *sx, uint32_t *sy, uint32_t *ox, uint32_t *oy)
 {
-	uint32_t d0 = 0, d1 = 0, d3 = 0, d4 = 0;
+	uint32_t acc[2][2] = { { 0, 0 }, { 0, 0 } };
 	HLE_SEQ(ctx, 8, 4, 4, 4);                      /* move.w #7,d7 / clr.w d0 / d1 / d2 */
-	for (int i = 0; i < 8; i++) {
-		hle_insn(ctx, 14);                     /* cmpa.l #$FFFFA07E,a0 */
-		if (a0 == RING_FIRST) {
-			hle_insn(ctx, 12);             /* bne.w not taken */
-			hle_insn(ctx, 12);             /* lea.l ($FFA09E).l,a0 */
-			a0 = RING_END;
-		} else {
-			hle_insn(ctx, 10);             /* bne.w taken */
-		}
-		HLE_SEQ(ctx, 10, 14, 4, 10, 4);        /* move.b -(a0),d2 / move.b (0,a1,d2.w),d2 / add.w / move.b / add.w */
-		hle_insn(ctx, i == 7 ? 14 : 10);       /* dbra */
-		d0 = (d0 + RAM8(GUN_HTABLE + RAM8(--a0))) & 0xFFFF;
-		d1 = (d1 + RAM8(--a0)) & 0xFFFF;
-	}
-	HLE_SEQ(ctx, 8, 4, 4);                         /* move.w #7,d7 / clr.w d3 / d4 */
-	for (int i = 0; i < 8; i++) {
-		hle_insn(ctx, 14);
-		if (a0 == RING_FIRST) {
-			hle_insn(ctx, 12);
-			hle_insn(ctx, 12);
-			a0 = RING_END;
-		} else {
+	for (int pass = 0; pass < 2; pass++) {
+		if (pass)
+			HLE_SEQ(ctx, 8, 4, 4);         /* move.w #7,d7 / clr.w d3 / d4 */
+		for (int i = 0; i < 8; i++) {
+			hle_insn(ctx, 14);             /* cmpa.l #$FFFFA07E,a0 */
+			if (a0 == RING_FIRST) {
+				hle_insn(ctx, 12);     /* bne.w not taken */
+				a0 = RING_END;         /* lea.l ($FFA09E).l,a0 */
+				hle_insn(ctx, 12);
+			} else {
+				hle_insn(ctx, 10);     /* bne.w taken */
+			}
+			uint32_t d2 = RAM8(--a0);      /* move.b -(a0),d2 */
 			hle_insn(ctx, 10);
+			acc[pass][0] = (acc[pass][0] + RAM8(GUN_HTABLE + d2)) & 0xFFFF;   /* move.b (0,a1,d2.w),d2 / add.w d2,d0 */
+			HLE_SEQ(ctx, 14, 4);
+			d2 = RAM8(--a0);               /* move.b -(a0),d2 */
+			hle_insn(ctx, 10);
+			acc[pass][1] = (acc[pass][1] + d2) & 0xFFFF;                      /* add.w d2,d1 */
+			hle_insn(ctx, 4);
+			hle_insn(ctx, i == 7 ? 14 : 10);   /* dbra */
 		}
-		HLE_SEQ(ctx, 10, 14, 4, 10, 4);
-		hle_insn(ctx, i == 7 ? 14 : 10);
-		d3 = (d3 + RAM8(GUN_HTABLE + RAM8(--a0))) & 0xFFFF;
-		d4 = (d4 + RAM8(--a0)) & 0xFFFF;
 	}
-	*sx = d0;
-	*sy = d1;
-	*ox = d3;
-	*oy = d4;
+	*sx = acc[0][0];
+	*sy = acc[0][1];
+	*ox = acc[1][0];
+	*oy = acc[1][1];
 	return a0;
 }
 
 /* Timing: every original instruction is charged with hle_insn() (docs/porting.md, "The
  * instruction timeline"), 68000 costs: move.b (abs).l,(abs).l 28, tst.b (abs).l 16, beq.w 10 taken /
- * 12 not, rts 16 ... (verified against the original with port/tools/seqcmp.py). */
-HLE_FUNC_PURE(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see above */
+ * 12 not, rts 16 ... (verified against the original with port/tools/seqcmp.py).
+ * A coroutine (HLE_F_YIELD): each instruction's effect comes first, then its charge. */
+HLE_FUNC_YIELD(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see above */
 {
 	/* common prologue: button byte shift and the gun-off early exit */
 	RAM8(GUN_BTN_PREV) = RAM8(GUN_BTN);
-	RAM8(GUN_BTN) = RAM8(GUN_BTN_RAW);
+	hle_insn(ctx, 28);                      /* move.b (gun_btn).l,(gun_btn_prev).l */
+	RAM8(GUN_BTN) = RAM8(GUN_BTN_RAW);      /* the raw byte is written by the gun interrupt */
+	hle_insn(ctx, 28);                      /* move.b (gun_btn_raw).l,(gun_btn).l */
 	uint8_t latch = RAM8(GUN_LATCH_COUNT);
-	HLE_SEQ(ctx, 28, 28, 16);               /* move.b/move.b (abs).l,(abs).l, tst.b (abs).l */
 	if (!latch) {
 		/* gun off screen: the original returns after 5 insns (98 cycles) */
-		HLE_SEQ(ctx, 10, 16);           /* beq.w taken, rts */
 		/* tst.b gun_latch_count: N/Z from the byte, V=C=0, X untouched */
 		cc_set(ctx, CC_N | CC_Z | CC_V | CC_C,
 		       ((latch & 0x80) ? CC_N : 0) | (latch ? 0 : CC_Z));
+		HLE_SEQ(ctx, 16, 10, 16);       /* tst.b (abs).l, beq.w taken, rts */
 		return;
 	}
-
-	hle_insn(ctx, 12);                        /* beq.w not taken */
-	uint32_t a0 = RAM32(GUN_RING_PTR);
+	hle_insn(ctx, 16);                      /* tst.b (gun_latch_count).l */
+	hle_insn(ctx, 12);                      /* beq.w not taken */
+	uint32_t a0;
 	uint32_t a1 = 0xFFFF0000u | GUN_HTABLE;   /* lea.l (gun_htable).l,a1 */
 
 	if (hle_aim_fast()) {
 		/* the in-memory patch at $01E460: newest latch only, X = 2*table[H].
-		 * Charge the patch's own cost (18 insns / ~250 cycles), not the original's: the
-		 * fast path is short enough not to be interrupted, and charging 1588 would cross
-		 * the HLE 1000-cycle slicing threshold (hle.c) and take a TH latch interrupt in
-		 * the middle, corrupting the ring and the next frames' latches. */
-		HLE_SEQ(ctx, 20, 14);                   /* movea.l (abs).l,a0 / cmpa.l #imm,a0 */
+		 * Charge the patch's own cost (18 insns / ~250 cycles), not the original's. */
+		a0 = RAM32(GUN_RING_PTR);               /* movea.l (abs).l,a0 */
+		hle_insn(ctx, 20);
+		hle_insn(ctx, 14);                      /* cmpa.l #imm,a0 */
 		if (a0 == RING_FIRST) {
 			hle_insn(ctx, 8);               /* bne.s not taken */
-			hle_insn(ctx, 12);              /* lea.l (abs).l,a0 */
 			a0 = RING_END;
+			hle_insn(ctx, 12);              /* lea.l (abs).l,a0 */
 		} else {
 			hle_insn(ctx, 10);              /* bne.s taken */
 		}
 		/* moveq 4, move.b -(a0),d0 10, lea 12, move.b (0,a1,d0.w),d0 14, add.w 4, move.w d0,(abs).l 16,
 		 * moveq 4, move.b -(a0),d1 10, add.w (abs).l,d1 16, move.w d1,(abs).l 16, rts 16 */
-		HLE_SEQ(ctx, 4, 10, 12, 14, 4, 16, 4, 10, 16, 16, 16);
-		uint32_t d0 = RAM8(GUN_HTABLE + RAM8(--a0));   /* moveq #0,d0; move.b -(a0),d0; table */
-		d0 = (d0 + d0) & 0xFFFF;                       /* add.w d0,d0 */
-		RAM16(GUN_X) = d0;
-		uint32_t d1 = RAM8(--a0);                      /* moveq #0,d1; move.b -(a0),d1 */
-		uint32_t sum = d1 + RAM16(GUN_Y_OFFSET);
-		uint32_t xf = (sum > 0xFFFF) ? CC_X : 0;       /* add.w (gun_y_offset).l,d1 */
+		hle_insn(ctx, 4);                       /* moveq #0,d0 */
+		uint32_t d0 = RAM8(--a0);               /* move.b -(a0),d0 */
+		hle_insn(ctx, 10);
+		hle_insn(ctx, 12);                      /* lea.l (gun_htable).l,a1 */
+		d0 = RAM8(GUN_HTABLE + d0);             /* move.b (0,a1,d0.w),d0 */
+		hle_insn(ctx, 14);
+		d0 = (d0 + d0) & 0xFFFF;                /* add.w d0,d0 */
+		hle_insn(ctx, 4);
+		RAM16(GUN_X) = d0;                      /* move.w d0,(gun_x).l */
+		hle_insn(ctx, 16);
+		hle_insn(ctx, 4);                       /* moveq #0,d1 */
+		uint32_t d1 = RAM8(--a0);               /* move.b -(a0),d1 */
+		hle_insn(ctx, 10);
+		uint32_t sum = d1 + RAM16(GUN_Y_OFFSET);   /* add.w (gun_y_offset).l,d1 */
+		uint32_t xf = (sum > 0xFFFF) ? CC_X : 0;
 		d1 = sum & 0xFFFF;
-		RAM16(GUN_Y) = d1;
+		hle_insn(ctx, 16);
+		RAM16(GUN_Y) = d1;                      /* move.w d1,(gun_y).l */
 		/* moveq overwrites the whole register: d0/d1 high words are 0, d2-d7 keep theirs */
 		ctx->d[0] = d0;
 		ctx->d[1] = d1;
@@ -182,12 +188,17 @@ HLE_FUNC_PURE(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see abo
 		/* final CCR from move.w d1,(gun_y).l: N/Z from gun_y, V=C=0, X from the add */
 		cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C,
 		       xf | ((d1 & 0x8000) ? CC_N : 0) | (d1 ? 0 : CC_Z));
+		hle_insn(ctx, 16);
+		hle_insn(ctx, 16);                      /* rts */
 		return;
 	}
 
 	/* original: 8 newest latches into d0/d1, the 8 before into d3/d4 */
 	uint32_t d0, d1, d3, d4;
-	HLE_SEQ(ctx, 14, 20, 12);                  /* move.l d7,-(sp) / movea.l (abs).l,a0 / lea.l (abs).l,a1 */
+	hle_insn(ctx, 14);                         /* move.l d7,-(sp) */
+	a0 = RAM32(GUN_RING_PTR);                  /* movea.l (abs).l,a0 */
+	hle_insn(ctx, 20);
+	hle_insn(ctx, 12);                         /* lea.l (abs).l,a1 */
 	a0 = read_ring(ctx, a0, &d0, &d1, &d3, &d4);
 
 	/* X: negated unsigned compare against $28 picks the 16- or 8-sample average */
@@ -212,8 +223,8 @@ HLE_FUNC_PURE(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see abo
 		HLE_SEQ(ctx, 10, 10);                  /* lsr.w #2,d0 / bra.s */
 		d0 = d0 >> 2;
 	}
-	hle_insn(ctx, 16);                         /* move.w d0,(gun_x).l */
-	RAM16(GUN_X) = d0;
+	RAM16(GUN_X) = d0;                         /* move.w d0,(gun_x).l */
+	hle_insn(ctx, 16);
 
 	/* Y: same, threshold $14, /16 or /8, then + gun_y_offset */
 	HLE_SEQ(ctx, 4, 4);                        /* move.w d1,d2 / sub.w d4,d2 */
@@ -237,11 +248,12 @@ HLE_FUNC_PURE(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see abo
 		HLE_SEQ(ctx, 12, 10);                  /* lsr.w #3,d1 / bra.s */
 		d1 = d1 >> 3;
 	}
-	HLE_SEQ(ctx, 16, 16, 12, 16);              /* add.w (abs).l,d1 / move.w d1,(gun_y).l / move.l (sp)+,d7 / rts */
-	uint32_t sum = d1 + RAM16(GUN_Y_OFFSET);
-	uint32_t xf = (sum > 0xFFFF) ? CC_X : 0;   /* add.w (gun_y_offset).l,d1 sets X */
+	uint32_t sum = d1 + RAM16(GUN_Y_OFFSET);   /* add.w (gun_y_offset).l,d1 sets X */
+	uint32_t xf = (sum > 0xFFFF) ? CC_X : 0;
 	d1 = sum & 0xFFFF;
-	RAM16(GUN_Y) = d1;
+	hle_insn(ctx, 16);
+	RAM16(GUN_Y) = d1;                         /* move.w d1,(gun_y).l */
+	hle_insn(ctx, 16);
 
 	if (menacer_stats_on()) {
 		if (still_x) g_x16++; else g_x8++;
@@ -260,4 +272,5 @@ HLE_FUNC_PURE(0x01E442, MenacerReadXY, 1700)   /* cost: per instruction, see abo
 	uint32_t d7 = ctx->d[7];
 	cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C,
 	       xf | ((d7 & 0x80000000u) ? CC_N : 0) | (d7 ? 0 : CC_Z));
+	HLE_SEQ(ctx, 12, 16);                      /* move.l (sp)+,d7 / rts */
 }
