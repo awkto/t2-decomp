@@ -168,6 +168,17 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
 	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
+/* HLE_WAIT_FUNC_GROUP: a wait block that exists only in the native runner (group "native", enabled by
+ * hle_native_mode()): with a 68k the spin is the original code, whose instruction phase decides when the
+ * interrupt is taken, and a C idle would change that by a few cycles (lockstep). */
+#define HLE_WAIT_FUNC_GROUP(ADDR, NAME, CYCLES, GROUP)                                  \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, \
+	                                        (GROUP), HLE_F_WAIT };                      \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+/* HLE_FUNC_GROUP for a block that is part of the native runner only (spin loops, glue) */
 #define HLE_WAIT_RANGE(ADDR, NAME, CYCLES, ...)                                         \
 	void NAME(hle_ctx *ctx);                                                            \
 	static const uint32_t hle_exits_##NAME[] = { __VA_ARGS__, 0 };                      \
@@ -276,6 +287,9 @@ void hle_chk_note(int bound_cycles);
 int hle_nest_depth(void);
 const hle_def *hle_current_def(void);
 bool hle_pc_replaced(uint32_t pc);
+void hle_native_mode(void);   /* native runner: no declines (src/emu.c native_init) */
+unsigned long hle_declined_total(void);   /* top-level calls that ran as 68k (ipprof) */
+unsigned long hle_bailed_total(void);     /* top-level calls that bailed to 68k (ipprof) */
 /* forget layer state that is not in the savestate (pending cycle debt): emu reset/load */
 void hle_state_reset(void);
 

@@ -35,6 +35,7 @@ int gx_m68k_cycle_end(void);
 int gx_frame_end_clock(void);     /* the clock value at which the frame loop rebases (end of the frame) */
 int gx_next_slice_end(int b);
 void gx_z80_catchup(int b);       /* what the frame loop does at a slice end: run the Z80 (if the 68k does not hold its bus) */
+unsigned long gx_m68k_insn_count(void); /* instructions executed by the 68k core */
 int gx_m68k_slice_left(void);    /* 68k cycles left in the CPU's current frame-loop slice */
 void gx_m68k_resync_irq(void);   /* int level = what the VDP asserts (after holding it off) */
 

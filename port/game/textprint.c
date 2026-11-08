@@ -18,6 +18,7 @@
  * tile $1A + digit + base.
  */
 #include "hle.h"
+#include "native.h"
 #include "gx.h"
 
 #include <stdint.h>
@@ -94,6 +95,8 @@ static void sess_finish(void) { hle_dma_end(); }
 
 static int safe_run(int bound_cycles)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 1;
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
 	if (hle_post_access)

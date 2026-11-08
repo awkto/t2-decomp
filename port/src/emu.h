@@ -51,6 +51,9 @@ void emu_set_gun(int x, int y, bool offscreen, unsigned buttons);
 void emu_run_frame(void);
 void emu_reset(void);                     /* back to the power-on state, frame count 0 */
 long emu_frame_count(void);
+void native_init(void);        /* T2_NATIVE=1: the native runner replaces the 68k core (docs/native.md) */
+bool emu_native(void);
+void native_settle(void);      /* T2_NATIVE_SETTLE=1: leave the 68k mid-function of a loaded state (see emu.c) */
 
 /* last video frame, RGB565 */
 const uint16_t *emu_video(unsigned *w, unsigned *h, size_t *pitch_bytes);

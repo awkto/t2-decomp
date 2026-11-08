@@ -24,11 +24,11 @@ if(EMSCRIPTEN)
   set(WEB_SDL -sUSE_SDL=2)
   file(GLOB GAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/game/*.c")
   add_executable(t2_web src/web/main_web.c src/emu.c src/gun.c src/mouse.c src/options.c src/overlay.c src/sha1.c
-    hle/hle.c hle/sandbox.c hle/gx.c ${GAME_SOURCES})
+    hle/hle.c hle/sandbox.c hle/gx.c hle/native.c ${GAME_SOURCES})
   target_link_libraries(t2_web PRIVATE gpgx_core)
   target_include_directories(t2_web PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/hle"
     "${CMAKE_CURRENT_SOURCE_DIR}/game")
-  set_source_files_properties(hle/gx.c PROPERTIES COMPILE_DEFINITIONS "${GPGX_DEFINES}")
+  set_source_files_properties(hle/gx.c hle/native.c PROPERTIES COMPILE_DEFINITIONS "${GPGX_DEFINES}")
   target_compile_options(t2_web PRIVATE ${WEB_SDL} -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing)
   target_compile_definitions(t2_web PRIVATE T2_ROOT="." T2_DIST)
   set_target_properties(t2_web PROPERTIES OUTPUT_NAME t2 SUFFIX ".js")
@@ -45,8 +45,8 @@ endif()
 # OBJECT library so that HLE_FUNC registrations (constructors) are never dropped by the linker.
 file(GLOB GAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/game/*.c")
 add_library(t2_common OBJECT
-  src/emu.c src/sha1.c src/script.c src/mouse.c src/gun.c src/capture.c
-  hle/hle.c hle/sandbox.c hle/gx.c
+  src/emu.c src/sha1.c src/script.c src/mouse.c src/gun.c src/capture.c src/ipprof.c
+  hle/hle.c hle/sandbox.c hle/gx.c hle/native.c
   ${GAME_SOURCES})
 target_link_libraries(t2_common PUBLIC gpgx_core)
 target_include_directories(t2_common PUBLIC
@@ -58,7 +58,7 @@ if(T2_DIST)
   target_compile_definitions(t2_common PUBLIC T2_DIST)
 endif()
 # hle/gx.c is the only file that includes GPGX internals (shared.h): it needs the core's defines
-set_source_files_properties(hle/gx.c PROPERTIES COMPILE_DEFINITIONS "${GPGX_DEFINES}")
+set_source_files_properties(hle/gx.c hle/native.c PROPERTIES COMPILE_DEFINITIONS "${GPGX_DEFINES}")
 
 find_package(SDL2 REQUIRED)
 add_executable(t2port

@@ -149,6 +149,14 @@ void gx_vdp_follow_cpu(void)
 }
 
 /* 68k cycles left in the CPU's current time slice of the frame loop (hle_idle) */
+/* instructions the 68k core executed (gpgx-native.patch; the native build has no core: 0) */
+#ifdef T2_NO_68K
+unsigned long gx_m68k_insn_count(void) { return 0; }
+#else
+extern unsigned long m68k_insn_count;
+unsigned long gx_m68k_insn_count(void) { return m68k_insn_count; }
+#endif
+
 int gx_m68k_slice_left(void)
 {
 	if (!m68k.cycle_end || (int)m68k.cycle_end <= m68k.cycles)

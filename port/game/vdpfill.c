@@ -21,6 +21,7 @@
  * VramClearDma stay 68k (docs/remaining.md).
  */
 #include "hle.h"
+#include "native.h"
 #include "gx.h"
 
 #include <stdint.h>
@@ -82,6 +83,8 @@ static void sess_finish(void) { hle_dma_end(); }
 
 static int safe_run(int bound_cycles)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 1;
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
 	if (hle_post_access)
@@ -95,6 +98,8 @@ static int safe_run(int bound_cycles)
 /* margin-free guard for the fixed-length head of a bail-capable call (cycles) */
 static int head_ok(int head_cycles)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 1;
 	if (hle_chk_on)
 		hle_chk_note(head_cycles);
 	if (hle_post_access)
@@ -109,6 +114,8 @@ static int g_armed;
 static long g_tog;
 static int due(int slack)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 0;
 	if (g_armed)
 		follow();
 	return g_armed && (long)gx_m68k_cycles() + (long)slack * 7 >= g_tog;
