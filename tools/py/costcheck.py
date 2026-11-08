@@ -37,6 +37,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from functools import lru_cache
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -154,7 +155,7 @@ def insn_costs(words, T):
     if (op & 0xF1C0) in (0xC0C0, 0xC1C0):          # mulu / muls
         return frozenset(base + c for c in range(38, 71, 2))
     if (op & 0xF1C0) == 0x80C0:                    # divu
-        return frozenset(base + c for c in range(70, 141, 2))
+        return frozenset([base + 10]) | frozenset(base + c for c in range(70, 141, 2))   # +10: overflow
     if (op & 0xF1C0) == 0x81C0:                    # divs
         return frozenset(base + c for c in range(10, 170, 2))
     if base == 0:
@@ -366,7 +367,7 @@ def parse_file(path):
         # brace tracking
         for ch in code:
             if ch == "{":
-                if depth == 0:
+                if depth == 0 and pending:
                     hdr = " ".join(p[1] for p in pending)
                     cur = Func(None, pending[0][0], " ".join(cmt_block) + " " + " ".join(p[2] for p in pending), hdr)
                     funcs.append(cur)
@@ -487,6 +488,8 @@ class Expander:
         for n, f in self.fn.items():
             if f.is_hle or f.anchors or "static" not in f.header:
                 continue
+            if n.startswith(("pc_run", "boot_run")):
+                continue               # generated: every charge carries its own address, checked directly
             if any(it[0] == "s" for it in self.items[n]):
                 continue
             try:
@@ -577,6 +580,7 @@ FAMILY = {"movea": "move", "adda": "add", "addi": "add", "addq": "add", "addx": 
 CCS = {"eq", "ne", "cc", "cs", "hi", "ls", "pl", "mi", "ge", "lt", "gt", "le", "hs", "lo", "vc", "vs"}
 
 
+@lru_cache(maxsize=None)
 def norm_mn(tok):
     """Mnemonic token (objdump AT&T, GNU Motorola or a comment's) -> canonical class, or None."""
     t = tok.lower().strip(".,:;/()")
@@ -826,6 +830,14 @@ def check_file(path, insns, index, T, opts_cache, verbose):
             opts_cache[k] = insn_costs(insns[k].words, T)
         return opts_cache[k]
 
+    went = {}
+
+    def wentry(k):
+        e = went.get(k)
+        if e is None:
+            e = went[k] = (insns[k], opts(k), norm_mn(insns[k].text.split()[0]) if insns[k].text else None)
+        return e
+
     for f in funcs:
         if f.name in helpers:
             continue
@@ -852,8 +864,7 @@ def check_file(path, insns, index, T, opts_cache, verbose):
         if not rest:
             continue
         def mkwin(k0):
-            return [(insns[k], opts(k), norm_mn(insns[k].text.split()[0]) if insns[k].text else None)
-                    for k in range(k0, min(k0 + wl, len(insns)))]
+            return [wentry(k) for k in range(k0, min(k0 + wl, len(insns)))]
 
         wl = max(3 * len(rest) + 40, 120)
         best = None
