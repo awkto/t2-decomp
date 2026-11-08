@@ -356,7 +356,7 @@ static void io_w8(hle_ctx *c, uint8_t v)
 }
 
 /* $000308 .. $000396: everything but `jsr sub_0FBBD0` and the rte */
-HLE_RANGE(0x000308, VBlankInt, 14000, 0x000396)
+HLE_RANGE_YS(0x000308, VBlankInt, 14000, 0x000396)
 {
 	uint8_t cm = RAM8(CONTROL_MODE);
 	cc_set(ctx, CC_Z, (cm & 1) ? 0 : CC_Z);
@@ -369,10 +369,10 @@ HLE_RANGE(0x000308, VBlankInt, 14000, 0x000396)
 		dbra_loop(ctx, 0xA1);                               /* 00031A dbf d0,0x31a */
 		hle_insn(ctx, 4);                                   /* 00031E nop */
 		io_w8(ctx, 0xFF);                                   /* 000320 move.b #-1,(0xa10005).l */
+		RAM8(GUN_LATCH_COUNT) = RAM8(GUN_LATCH_CUR);        /* each effect first, then its charge (a coroutine) */
 		hle_insn(ctx, 28);                                  /* 000328 move.b (0xffff9f76).l,(0xffff9f74).l */
-		RAM8(GUN_LATCH_COUNT) = RAM8(GUN_LATCH_CUR);
-		hle_insn(ctx, 20);                                  /* 000332 clr.b (0xffff9f76).l */
 		RAM8(GUN_LATCH_CUR) = 0;
+		hle_insn(ctx, 20);                                  /* 000332 clr.b (0xffff9f76).l */
 		for (int i = 0; i < 5; i++)
 			hle_insn(ctx, 4);                           /* 000338..000340 nop x5 */
 		hle_insn(ctx, 8);                                   /* 000342 move.w #$3c,d0 */
@@ -390,21 +390,21 @@ HLE_RANGE(0x000308, VBlankInt, 14000, 0x000396)
 		hle_insn(ctx, 4);                                   /* 00037A nop */
 		io_w8(ctx, 0xCF);                                   /* 00037C move.b #-49,(0xa10005).l */
 		hle_insn(ctx, 4);                                   /* 000384 not.b d0 */
-		hle_insn(ctx, 16);                                  /* 000386 move.b d0,(0xffff9f77).l */
 		RAM8(GUN_BTN_RAW) = (uint8_t)~v;
+		hle_insn(ctx, 16);                                  /* 000386 move.b d0,(0xffff9f77).l */
 		hle_movem_l(ctx, 28, 2);                            /* 00038C movem.l (sp)+,d0/a0 */
 		/* d0 and a0 are restored from the stack (the flags are overwritten by the addq below) */
 		ctx->d[0] = bus_r32(ctx->a[7]); ctx->a[7] += 4;
 		ctx->a[0] = bus_r32(ctx->a[7]); ctx->a[7] += 4;
 	}
 	uint32_t r = alu(ctx, OP_ADD, RAM16(VBLANK_COUNT), 1, 16, 1);
-	hle_insn(ctx, 20);                                          /* 000390 addq.w #1,(0xffffa0ee).l */
 	RAM16(VBLANK_COUNT) = (uint16_t)r;
+	hle_insn(ctx, 20);                                          /* 000390 addq.w #1,(0xffffa0ee).l */
 	hle_jump(ctx, 0x000396);                                    /* the real jsr sub_0FBBD0 + rte follow */
 }
 
 /* $00039E .. $0003DC: first TH of the frame stores the HV counter in the 16-word ring */
-HLE_RANGE(0x00039E, ExtInt, 220, 0x0003DC)
+HLE_RANGE_YS(0x00039E, ExtInt, 220, 0x0003DC)
 {
 	uint8_t cur = RAM8(GUN_LATCH_CUR);
 	alu(ctx, OP_SUB, cur, 0, 8, 0);
@@ -413,34 +413,34 @@ HLE_RANGE(0x00039E, ExtInt, 220, 0x0003DC)
 		hle_jump(ctx, 0x0003DC);                            /* rte (68k) */
 		return;
 	}
-	hle_insn(ctx, 8);                                           /* 0003AA move.w d0,-(sp) */
 	ctx->a[7] -= 2; bus_w16(ctx->a[7], (uint16_t)ctx->d[0]);
-	hle_insn(ctx, 12);                                          /* 0003AC move.l a0,-(sp) */
+	hle_insn(ctx, 8);                                           /* 0003AA move.w d0,-(sp) */
 	ctx->a[7] -= 4; bus_w32(ctx->a[7], ctx->a[0]);
+	hle_insn(ctx, 12);                                          /* 0003AC move.l a0,-(sp) */
 	hle_pre(ctx);
 	uint16_t hv = bus_r16(0xC00008);                            /* 0003AE move.w (0xc00008).l,d0 */
 	hle_post(ctx, 16);
 	uint32_t a0 = RAM32(0xFFA09E);
 	hle_insn(ctx, 20);                                          /* 0003B4 movea.l (0xffffa09e).l,a0 */
-	hle_insn(ctx, 8);                                           /* 0003BA move.w d0,(a0)+ */
 	bus_w16(a0 & 0xFFFFFF, hv);
 	a0 += 2;
+	hle_insn(ctx, 8);                                           /* 0003BA move.w d0,(a0)+ */
 	alu(ctx, OP_SUB, a0, 0xFFFFA09E, 32, 0);
 	hle_insn(ctx, 14);                                          /* 0003BC cmpa.l #0xffffa09e,a0 */
 	if (!bw(ctx, a0 != 0xFFFFA09E)) {                           /* 0003C2 bne.w 0x3cc */
 		a0 = 0xFFFFA07E;
 		hle_insn(ctx, 12);                                  /* 0003C6 lea (0xffffa07e).l,a0 */
 	}
-	hle_insn(ctx, 20);                                          /* 0003CC move.l a0,(0xffffa09e).l */
 	RAM32_W(0xFFA09E, a0);
+	hle_insn(ctx, 20);                                          /* 0003CC move.l a0,(0xffffa09e).l */
 	uint32_t r = alu(ctx, OP_ADD, RAM8(GUN_LATCH_CUR), 1, 8, 1);
-	hle_insn(ctx, 20);                                          /* 0003D2 addq.b #1,(0xffff9f76).l */
 	RAM8(GUN_LATCH_CUR) = (uint8_t)r;
-	hle_insn(ctx, 12);                                          /* 0003D8 movea.l (sp)+,a0 */
+	hle_insn(ctx, 20);                                          /* 0003D2 addq.b #1,(0xffff9f76).l */
 	ctx->a[7] += 4;
-	hle_insn(ctx, 8);                                           /* 0003DA move.w (sp)+,d0 */
+	hle_insn(ctx, 12);                                          /* 0003D8 movea.l (sp)+,a0 */
 	set_w(&ctx->d[0], bus_r16(ctx->a[7]));
 	ctx->a[7] += 2;
 	cc_logic16(ctx, ctx->d[0]);
+	hle_insn(ctx, 8);                                           /* 0003DA move.w (sp)+,d0 */
 	hle_jump(ctx, 0x0003DC);                                    /* rte (68k) */
 }
