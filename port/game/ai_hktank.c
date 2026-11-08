@@ -274,7 +274,7 @@ static void jsr68(hle_ctx *c, uint32_t addr)
 {
 	hle_insn(c, 18);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* clr.w (a6) ; subq.w #1,(obj_count).l : free the slot */
@@ -430,7 +430,7 @@ static void body_retimer(hle_ctx *ctx, uint32_t st)
 }
 
 /* $00CB34 ai_hk_tank_body, first state: drive left ($FF9EBA = -1) until X = $5A */
-HLE_RANGE(0x00CB34, HkBodyLeft, 8800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CB34, HkBodyLeft, 8800, EXIT_NEXT)
 {
 	btst_m(ctx, BOSS_PARTS, 2, 20);
 	if (!bs(ctx, c_z(ctx))) {                                           /* beq.s loc_00CB42 */
@@ -467,7 +467,7 @@ HLE_RANGE(0x00CB34, HkBodyLeft, 8800, EXIT_NEXT)
 }
 
 /* $00CB9E ai_hk_tank_body: drive right ($FF9EBA = +1) until X = $E6 or the timer runs out */
-HLE_RANGE(0x00CB9E, HkBodyRight, 8800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CB9E, HkBodyRight, 8800, EXIT_NEXT)
 {
 	btst_m(ctx, BOSS_PARTS, 2, 20);
 	if (!bs(ctx, c_z(ctx))) {
@@ -522,7 +522,7 @@ static void body_explode(hle_ctx *ctx)
 }
 
 /* $00CC98: the body dies: the two halves of the wreck are queued, then the countdown state */
-HLE_RANGE(0x00CC98, HkBodyDie, 35000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CC98, HkBodyDie, 35000, EXIT_NEXT)
 {
 	push_w(ctx, 7);
 	lea_(ctx, 0, 0x04E696, 12);
@@ -583,7 +583,7 @@ HLE_RANGE_PURE(0x00CD3A, HkBodyEnd1, 200, EXIT_NEXT)
 }
 
 /* after the second ScriptNext: bra.w sub_00CCE6 */
-HLE_RANGE(0x00CD4E, HkBodyEnd2, 20500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CD4E, HkBodyEnd2, 20500, EXIT_NEXT)
 {
 	hle_insn(ctx, 10);
 	body_explode(ctx);
@@ -600,7 +600,7 @@ HLE_RANGE_PURE(0x00CDFE, HkHull, 120, EXIT_NEXT)
 }
 
 /* $00CE0C: the hull dies: wreck tiles, then the dying state $00CEFA */
-HLE_RANGE(0x00CE0C, HkHullDie, 2850, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CE0C, HkHullDie, 2850, EXIT_NEXT)
 {
 	mvw_im(ctx, A6 + 0x24, 0x32, 16);
 	push_w(ctx, 7);
@@ -651,7 +651,7 @@ static void turret_fire(hle_ctx *ctx)
 }
 
 /* $00CE46 ai_hk_tank_turret */
-HLE_RANGE(0x00CE46, HkTurret, 3500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CE46, HkTurret, 3500, EXIT_NEXT)
 {
 	hle_insn(ctx, 18);                                                  /* jsr (sub_00CF58,pc) */
 	turret_fire(ctx);
@@ -689,7 +689,7 @@ HLE_RANGE(0x00CE46, HkTurret, 3500, EXIT_NEXT)
 }
 
 /* $00CEC4: the turret dies */
-HLE_RANGE(0x00CEC4, HkTurretDie, 2800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CEC4, HkTurretDie, 2800, EXIT_NEXT)
 {
 	push_w(ctx, 7);
 	lea_(ctx, 0, 0x04E664, 12);
@@ -709,7 +709,7 @@ HLE_RANGE(0x00CEC4, HkTurretDie, 2800, EXIT_NEXT)
 /* ------------------------------------------------------------------ dying state of hull, turret, arms */
 /* $00CEFA: slide with the tank, explode every 8th frame; at 0 free the slot (the hull, type $17,
  * also clears the boss tile rows) */
-HLE_RANGE(0x00CEFA, HkPartDying, 2800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CEFA, HkPartDying, 2800, EXIT_NEXT)
 {
 	mvw_abs(ctx, 0, BOSS_STEP);
 	RAM16(A6 + 2) = (uint16_t)alu(ctx, OP_ADD, RAM16(A6 + 2), ctx->d[0], 16, 1);
@@ -772,7 +772,7 @@ HLE_RANGE_PURE(0x00CF9E, HkArm, 500, EXIT_NEXT)
 }
 
 /* $00CFDE: the arm dies (bit 6 of +0 selects the side) */
-HLE_RANGE(0x00CFDE, HkArmDie, 3500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00CFDE, HkArmDie, 3500, EXIT_NEXT)
 {
 	push_w(ctx, 7);
 	lea_(ctx, 0, 0x04E67A, 12);

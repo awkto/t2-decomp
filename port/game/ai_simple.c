@@ -204,7 +204,7 @@ HLE_RANGE_PURE(0x00C886, ai_crate, 700, EXIT_NEXT)
 }
 
 /* $00C8BA: opening, counter runs down; at 0 spawn debris and go to $00C8F0 */
-HLE_RANGE(0x00C8BA, crate_open1, 6000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C8BA, crate_open1, 6000, EXIT_NEXT)
 {
 	uint32_t a6 = ctx->a[6];
 	uint16_t r = subq_mem(ctx, a6 + 0x14, 16);      /* subq.w #1,(0x14,a6) */
@@ -217,7 +217,7 @@ HLE_RANGE(0x00C8BA, crate_open1, 6000, EXIT_NEXT)
 		hle_insn(ctx, 12);                      /* move.w (0x2a,a6),d2 */
 		hle_insn(ctx, 18);                      /* jsr (sub_012A16,pc) */
 		hle_sync(ctx);
-		hle_call68k(ctx, 0x012A16);
+		hle_callc(ctx, 0x012A16);
 		a6 = ctx->a[6];
 		RAM32_W(a6 + 0x20, 0xC8F0);
 		cc_logic32(ctx, 0xC8F0);
@@ -318,7 +318,7 @@ static void human_tiles(hle_ctx *c)
 	hle_insn(c, 16);                                /* move.w (abs).l,d7 */
 	hle_insn(c, 18);                                /* jsr (VdpQueueTileRect,pc) */
 	hle_sync(c);
-	hle_call68k(c, TILE_RECT);
+	hle_callc(c, TILE_RECT);
 	set_w(&c->d[7], pop16(c));
 	cc_logic16(c, c->d[7]);
 	hle_insn(c, 8);                                 /* move.w (sp)+,d7 */
@@ -364,7 +364,7 @@ static void human_dec24(hle_ctx *c)
 }
 
 /* $00C9A2 ai_human_soldier */
-HLE_RANGE(0x00C9A2, ai_human_soldier, 3000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C9A2, ai_human_soldier, 3000, EXIT_NEXT)
 {
 	hle_insn(ctx, 18);                              /* jsr (ObjScrollX,pc) */
 	ObjScrollX(ctx);
@@ -383,7 +383,7 @@ HLE_RANGE(0x00C9A2, ai_human_soldier, 3000, EXIT_NEXT)
 }
 
 /* $00C968 flinch after a hit (countdown in +$14), then back to $00C9A2 */
-HLE_RANGE(0x00C968, human_flinch, 3000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C968, human_flinch, 3000, EXIT_NEXT)
 {
 	hle_insn(ctx, 18);                              /* jsr (ObjScrollX,pc) */
 	ObjScrollX(ctx);
@@ -423,7 +423,7 @@ HLE_RANGE(0x00C968, human_flinch, 3000, EXIT_NEXT)
 }
 
 /* $00C95E kill: free the slot, draw the last frame ($00C99A) */
-HLE_RANGE(0x00C95E, human_kill, 3000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C95E, human_kill, 3000, EXIT_NEXT)
 {
 	free_slot(ctx);
 	hle_insn(ctx, 10);                              /* bra.s sub_00C99A */
@@ -463,7 +463,7 @@ static void wall_call(hle_ctx *c, uint32_t addr)
 {
 	hle_insn(c, 18);                                /* jsr (sub_xxxxxx,pc) */
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* dbra d5 at the loop end; returns 1 when it loops */
@@ -480,7 +480,7 @@ static int dbra_d5(hle_ctx *c)
 }
 
 /* $00CA12: shot away - debris at the wall, then replace the wall tiles and free the slot */
-HLE_RANGE(0x00CA12, wall_kill, 24000, EXIT_NEXT)   /* T2_HLE_BOUNDS+NODECLINE max 15923 (misc_c) x 1.5 */
+HLE_RANGE_YIELD(0x00CA12, wall_kill, 24000, EXIT_NEXT)   /* T2_HLE_BOUNDS+NODECLINE max 15923 (misc_c) x 1.5 */
 {
 	uint32_t a6 = ctx->a[6];
 	set_w(&ctx->d[3], RAM16(a6 + 0x2A));

@@ -68,7 +68,10 @@ static inline void st16(uint32_t a, uint32_t v) { RAM16(a) = (uint16_t)v; }
 /* ---------------------------------------------------------------- exact clock model (as vdplist.c) */
 static void pre(void)
 {
-	gx_vdp_follow_cpu_lines();
+	if (hle_yielding())
+		hle_yield_point();            /* the frame loop's line work happens while we are suspended */
+	else
+		gx_vdp_follow_cpu_lines();
 	int c = gx_m68k_cycles(), r = gx_m68k_refresh_cycles();
 	if (c >= r) {
 		gx_m68k_set_refresh_cycles(c + 128 * 7);
@@ -99,7 +102,7 @@ static int safe_run(int bound_cycles)
 		return 1;
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length())
 		return 0;
@@ -142,7 +145,7 @@ static void vww(hle_ctx *ctx)
 	tick(16);                                                     /* 0087E4 rts */
 }
 
-HLE_FUNC(0x0087C4, VramWriteWord, 0)
+HLE_FUNC_YIELD(0x0087C4, VramWriteWord, 0)
 {
 	if (!safe_run(400)) {
 		hle_decline();
@@ -225,7 +228,7 @@ static int bound_7d0e(uint32_t d7)
 	return 100 + ((int)(d7 & 0xFFFF) + 1) * 2 * CHAR_COST;
 }
 
-HLE_FUNC(0x007D0E, DigitPrint, 0)
+HLE_FUNC_YIELD(0x007D0E, DigitPrint, 0)
 {
 	if (!safe_run(bound_7d0e(ctx->d[7]))) {
 		hle_decline();
@@ -244,7 +247,7 @@ static void lea_a0(hle_ctx *ctx, uint32_t a) { ctx->a[0] = a; tick(12); }
 static void moveq_d7(hle_ctx *ctx, uint32_t v) { ctx->d[7] = v; cc_logic32(ctx, v); tick(4); }
 
 /* sub_007C9A: P1 and P2 score (2 BCD bytes each) */
-HLE_FUNC(0x007C9A, HudScores, 0)
+HLE_FUNC_YIELD(0x007C9A, HudScores, 0)
 {
 	if (!safe_run(2 * bound_7d0e(1) + 200)) {
 		hle_decline();
@@ -275,7 +278,7 @@ HLE_FUNC(0x007C9A, HudScores, 0)
 }
 
 /* sub_007CD8: P1 and P2 lives/credits (4 BCD bytes each) */
-HLE_FUNC(0x007CD8, HudLives, 0)
+HLE_FUNC_YIELD(0x007CD8, HudLives, 0)
 {
 	if (!safe_run(2 * bound_7d0e(3) + 200)) {
 		hle_decline();
@@ -341,7 +344,7 @@ static int str_len(uint32_t a)
 	return n;
 }
 
-HLE_FUNC(0x007EB2, StringPrint, 0)
+HLE_FUNC_YIELD(0x007EB2, StringPrint, 0)
 {
 	int n = str_len(ctx->a[0]);
 	if (n >= 4096 || !safe_run(200 + (n + 1) * CHAR_COST)) {
@@ -411,7 +414,7 @@ L_007EB0:;
 	tick(16); return; /* 007EB0 rts */
 }
 
-HLE_FUNC(0x007E08, TextPrint, 0)
+HLE_FUNC_YIELD(0x007E08, TextPrint, 0)
 {
 	int n = str_len(ctx->a[0]);
 	if (n >= 2048 || !safe_run(300 + (n + 1) * CHAR_COST)) {

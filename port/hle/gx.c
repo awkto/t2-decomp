@@ -34,6 +34,7 @@ void gx_vdp_fifo_clamp(void)
 }
 int gx_m68k_pending_irq(void) { return (m68k.int_level >> 8) & 7; }
 void gx_m68k_clear_irq(void) { m68k.int_level = 0; }
+void gx_m68k_set_irq_level(int l) { m68k.int_level = (unsigned)l << 8; }
 /* the interrupt level the VDP is asserting right now (VINT has priority) */
 void gx_m68k_resync_irq(void)
 {

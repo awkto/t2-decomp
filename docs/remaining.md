@@ -44,6 +44,21 @@ The tables further down are the new measurement.
 | $0086E2 | WaitVBlank | 18.2 | waits for vblank_count to change (menus, fades, loads) |
 | $01DC4E | VDP wait | 0.7 | spins on `(1,a6)` bit 3 then `$C00008` HV counter == 0 |
 
+## P5 update: coroutines instead of declines (GitLab github/t2-decomp#11)
+
+The functions below no longer decline or bail when they are `HLE_F_YIELD` coroutines (docs/porting.md,
+"Yielding"): VramWriteWord, DigitPrint, HudScores, HudLives, StringPrint, TextPrint, PrintText, ScrText,
+ScrTextClear, VramFillWords (+ the 873A / 874E loops), CramUpload, the VDP list (VdpListRun and all
+VdpCmd0..8 entries: the argument prologues and the VramFillWords / VramWriteWord calls are C now), ScrollRows*,
+BuildSpriteTable*, MissilesRun / MissilesSlot, PlayersButtons, PlayerButtons, PlayerShoot, EnergyHud,
+GunpowerHud, the PURE functions with an exact timeline (their interrupt-window declines), the AI / on-hit
+ranges of ai_*.c and onhit_*.c, and the 68k helpers they called, ported as C (callees2.c, callees3.c,
+queues2.c, pickup2.c, hudtext2.c, bcdhelp.c): DONE. VramClearDma $00800C, DmaFillAt $00807C, DmaToVram
+$011FA2, DmaToVramSave $011F94 and VdpVScrollWrite $0081B6 are C coroutines too (vdpfill.c): DONE.
+Still declining / bailing: ReadPad1/2, ReadInput, ReadInputAim, MenacerReadXY (I/O sequences that charge in
+batches or are LOWMASK), BgStreamLayers (bails to the 68k around its heavy path), PalFade (nested
+CramUpload), and the rest listed by `T2_HLE_DECLINES` in the final report.
+
 ## Already in C but declined (10.3% of busy, 2.3% of all; was 9.7% / 2.1% at the previous measurement)
 
 Not remaining port work: the original runs when a VBlank/HBlank would land inside the call, or the C charge is

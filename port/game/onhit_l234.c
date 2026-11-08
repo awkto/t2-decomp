@@ -88,7 +88,7 @@ static void jsr68(hle_ctx *c, uint32_t addr, int cost)
 {
 	hle_insn(c, cost);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* bclr/bset/btst #n,Dn (Z = the bit before) */
@@ -223,7 +223,7 @@ HLE_FUNC_PURE(0x006524, Onhit2Kill_6524, 300)
 }
 
 HLE_FUNC_PURE(0x006550, Onhit2_6550, 40) { lea_a0(ctx, 0x006556); rts_(ctx); }
-HLE_FUNC(0x006556, Onhit2Kill_6556, 2500)
+HLE_FUNC_YIELD(0x006556, Onhit2Kill_6556, 2500)
 {
 	jsr68(ctx, 0x0072DC, 18);                           /* jsr sub_0072DC */
 	kill_tail(ctx, 0xEA72, 0x3A);
@@ -250,7 +250,7 @@ static void human_kill(hle_ctx *ctx, uint32_t state)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006668, Onhit2_HumanC, 2500)
+HLE_FUNC_YIELD(0x006668, Onhit2_HumanC, 2500)
 {
 	jsr68(ctx, 0x013DA8, 20);                           /* jsr (sub_013DA8).l */
 	mvli_a6(ctx, 0x20, 0x1522A);
@@ -259,7 +259,7 @@ HLE_FUNC(0x006668, Onhit2_HumanC, 2500)
 	lea_a0(ctx, 0x006686);
 	rts_(ctx);                                          /* loc_006684 */
 }
-HLE_FUNC(0x006686, Onhit2Kill_HumanC, 2500) { human_kill(ctx, 0x15208); }
+HLE_FUNC_YIELD(0x006686, Onhit2Kill_HumanC, 2500) { human_kill(ctx, 0x15208); }
 
 HLE_FUNC_PURE(0x0066B4, Onhit2_66B4, 40) { lea_a0(ctx, 0x0066BA); rts_(ctx); }
 
@@ -314,7 +314,7 @@ HLE_FUNC_PURE(0x005DD2, Onhit3Kill_5DD2, 300)
 }
 
 HLE_FUNC_PURE(0x006060, Onhit3_6060, 40) { lea_a0(ctx, 0x006066); rts_(ctx); }
-HLE_FUNC(0x006066, Onhit3Kill_6066, 2500)
+HLE_FUNC_YIELD(0x006066, Onhit3Kill_6066, 2500)
 {
 	mvli_a6(ctx, 0x20, 0xC54A);
 	jsr68(ctx, 0x0072CE, 18);                           /* jsr sub_0072CE */
@@ -331,7 +331,7 @@ static void sky_hit(hle_ctx *ctx, uint32_t kill)
 	lea_a0(ctx, kill);
 	rts_(ctx);
 }
-HLE_FUNC(0x006770, OnhitSky_Part, 4000) { sky_hit(ctx, 0x00677E); }
+HLE_FUNC_YIELD(0x006770, OnhitSky_Part, 4000) { sky_hit(ctx, 0x00677E); }
 HLE_FUNC_PURE(0x00677E, OnhitSkyKill_Part, 300)
 {
 	jsr_c(ctx, AddScore5000);
@@ -340,7 +340,7 @@ HLE_FUNC_PURE(0x00677E, OnhitSkyKill_Part, 300)
 
 
 HLE_FUNC_PURE(0x00639A, Onhit4_639A, 40) { lea_a0(ctx, 0x0063A0); rts_(ctx); }
-HLE_FUNC(0x0063A0, Onhit4Kill_63A0, 2500)
+HLE_FUNC_YIELD(0x0063A0, Onhit4Kill_63A0, 2500)
 {
 	jsr68(ctx, 0x0072EA, 18);                           /* jsr sub_0072EA */
 	kill_tail(ctx, 0xDBC4, 0x3A);
@@ -404,7 +404,7 @@ static void tst_26(hle_ctx *ctx)
 }
 
 /* $00690C orb: hit reaction by the current +$20 state ($E026 $DFF0 $DE08 / $DF46 $DF9C / other) */
-HLE_FUNC(0x00690C, Onhit4_690C, 3000)
+HLE_FUNC_YIELD(0x00690C, Onhit4_690C, 3000)
 {
 	ctx->d[0] = RAM32(A6 + 0x20);
 	cc_logic32(ctx, ctx->d[0]);

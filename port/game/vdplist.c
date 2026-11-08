@@ -52,8 +52,8 @@
 #define VDP_REG01       0xFFA0DCu     /* shadow of VDP regs 0/1 (word) */
 #define VDP_REG01_DMA   0xFFA0DDu     /* its low byte; bit 4 = DMA enable */
 #define VDP_LIST_NEXT   0x011D38u     /* VdpListNext */
-#define VRAM_FILL_WORDS 0x008782u
-#define VRAM_WRITE_WORD 0x0087C4u
+void VramFillWords(hle_ctx *ctx);   /* vdpfill.c */
+void VramWriteWord(hle_ctx *ctx);   /* textprint.c */
 
 /* ---------------------------------------------------------------- path stats (T2_VDP_STATS) */
 static unsigned long g_cmd[9];
@@ -144,7 +144,10 @@ static uint16_t vdp_status_word(uint32_t read_addr)
  * (hle_vdp_timed) so GPGX applies its FIFO stall to the clock. */
 static void pre(void)
 {
-	gx_vdp_follow_cpu_lines();     /* the frame loop's line step comes before the next fetch */
+	if (hle_yielding())
+		hle_yield_point();         /* the frame loop's line work happens while we are suspended */
+	else
+		gx_vdp_follow_cpu_lines();     /* the frame loop's line step comes before the next fetch */
 	int c = gx_m68k_cycles(), r = gx_m68k_refresh_cycles();
 	if (c >= r) {
 		gx_m68k_set_refresh_cycles(c + 128 * 7);
@@ -191,7 +194,7 @@ static int safe_run(int bound_cycles)
 		return 1;
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length()) {   /* a DMA in flight: the frame loop halts the CPU for it per line */
 		sr_why = 10;
@@ -219,6 +222,10 @@ static int due(int slack)
 {
 	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
 		return 0;
+	if (hle_yielding()) {            /* the bail point is a yield point: the frame loop runs while we are suspended */
+		hle_yield_point();
+		return 0;
+	}
 	/* the frame loop's line step (and the Z80 run, whose bus accesses delay the 68k) comes
 	 * between the instruction that crossed a line start and the loop test of the next one */
 	if (g_armed)
@@ -232,7 +239,7 @@ static int head_ok(int head_cycles)
 		return 1;
 	if (hle_chk_on)
 		hle_chk_note(head_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length()) {
 		sr_why = 10;
@@ -301,70 +308,28 @@ static void poll_status(hle_ctx *ctx, int reg, uint32_t read_addr)
  * sentinel and starts the callee without charging them. */
 static void jsr_tick(void) { tick(20); }
 
-/* Run the original 68k from `start` up to `stop` (the argument reads), then leave ctx at
- * `stop` for C. */
-/* The same stretches in C for the native runner (no 68k to run them): straight-line argument reads from the
- * list pointer a6 and the VDP setup of cmd 8, each instruction on the real clock like the helpers above. */
-static void rd_w(hle_ctx *ctx, int dreg)             /* move.w (a6)+,dN: 8 */
+/* The prologues of the commands (argument reads from the list at a6), as C: instruction by instruction on
+ * the clock like the rest. mv_w = move.w (a6)+,Dn (8 cycles); mv_l_a = movea.l (a6)+,An (12); lea_a5 =
+ * lea.l (abs).l,a5 (12). */
+static uint16_t arg_w(hle_ctx *ctx, int d)
 {
-	uint16_t v = RAM16(ctx->a[6]);
+	uint16_t w = RAM16(ctx->a[6]);
 	ctx->a[6] += 2;
-	set_w(&ctx->d[dreg], v);
-	cc_logic16(ctx, v);
+	set_w(&ctx->d[d], w);
+	cc_logic16(ctx, w);
 	tick(8);
+	return w;
 }
-static void rd_al(hle_ctx *ctx, int areg)            /* movea.l (a6)+,aN: 12 */
+static void arg_a(hle_ctx *ctx, int a)
 {
-	ctx->a[areg] = RAM32(ctx->a[6]);
+	ctx->a[a] = RAM32(ctx->a[6]);
 	ctx->a[6] += 4;
 	tick(12);
 }
-static void lea_a5(hle_ctx *ctx) { ctx->a[5] = 0xC00000; tick(12); }   /* lea.l (vdp_data).l,a5 */
-static void native_run_to(hle_ctx *ctx, uint32_t start)
+static void lea_a5(hle_ctx *ctx)
 {
-	switch (start) {
-	case 0x012068: rd_w(ctx, 4); rd_al(ctx, 1); rd_w(ctx, 2); lea_a5(ctx); break;
-	case 0x011D70: rd_w(ctx, 1); rd_w(ctx, 2); ctx->d[6] = 0; cc_logic32(ctx, 0); tick(4); break;
-	case 0x011D80: rd_w(ctx, 1); rd_w(ctx, 2); rd_w(ctx, 6); break;
-	case 0x011D90: rd_w(ctx, 0); rd_w(ctx, 2); break;
-	case 0x011D9E: {                                  /* move.l #$c000,d1 / or.w (a6)+,d1 / swap d1 / movea.l (a6)+,a0 / lea */
-		ctx->d[1] = 0xC000; cc_logic32(ctx, 0xC000); tick(12);
-		uint16_t v = RAM16(ctx->a[6]); ctx->a[6] += 2;
-		uint16_t r = (uint16_t)((ctx->d[1] & 0xFFFF) | v);
-		set_w(&ctx->d[1], r); cc_logic16(ctx, r); tick(8);
-		ctx->d[1] = (ctx->d[1] << 16) | (ctx->d[1] >> 16); cc_logic32(ctx, ctx->d[1]); tick(4);
-		rd_al(ctx, 0); lea_a5(ctx);
-		break;
-	}
-	case 0x0120BA: rd_w(ctx, 4); rd_al(ctx, 1); rd_w(ctx, 3); rd_w(ctx, 6); lea_a5(ctx); break;
-	case 0x011E48: rd_w(ctx, 1); rd_al(ctx, 1); rd_w(ctx, 5); lea_a5(ctx); break;
-	case 0x011F6E:                                    /* lea / move.w #$8f02,(4,a5) / move.l #$40000010,(4,a5) */
-		lea_a5(ctx);
-		wr_ctrl(0x8F02, 16);
-		pre(); vdp_ctrl_w32(0x40000010); post(28);
-		break;
-	case 0x011DD8: poll_status(ctx, 1, 0x011DE2); break;   /* move.w (4,a5),d1 / btst #1,d1 / bne.s */
-	default:
-		fprintf(stderr, "vdplist: no native version of the 68k stretch at $%06X\n", start);
-		abort();
-	}
-}
-
-static void run_to(hle_ctx *ctx, uint32_t start, uint32_t stop)
-{
-	if (native_active) {
-		native_run_to(ctx, start);
-		ctx->jumped = 0;
-		ctx->pc = stop;
-		return;
-	}
-	uint32_t exits[2];
-	exits[0] = stop;
-	exits[1] = 0;
-	ctx->pc = start;
-	hle_run68k_until(ctx, exits);
-	ctx->jumped = 0;
-	ctx->pc = stop;
+	ctx->a[5] = 0xC00000u;
+	tick(12);
 }
 
 /* set up the VRAM/CRAM address: d2 = (addr & $3fff) | $4000, d1 = (addr rol 2) & 3 */
@@ -436,7 +401,7 @@ static int copy_loop(hle_ctx *ctx, uint16_t d4, uint16_t count, int resume)
 static int cmd_copy_words(hle_ctx *ctx)
 {
 	count_cmd(1);
-	run_to(ctx, 0x012068, 0x012074);            /* prologue (arg reads) as 68k */
+	arg_w(ctx, 4); arg_a(ctx, 1); arg_w(ctx, 2); lea_a5(ctx);   /* 012068: the argument reads */
 	uint16_t count = ctx->d[4] & 0xFFFF;
 	uint16_t addr = ctx->d[2] & 0xFFFF;
 
@@ -459,9 +424,10 @@ static int cmd_copy_words(hle_ctx *ctx)
 static void cmd_fill_zero(hle_ctx *ctx)
 {
 	count_cmd(2);
-	run_to(ctx, 0x011D70, 0x011D76);            /* prologue (arg reads) as 68k */
+	arg_w(ctx, 1); arg_w(ctx, 2);               /* 011D70 move.w (a6)+,d1 / move.w (a6)+,d2 */
+	ctx->d[6] = 0; cc_logic32(ctx, 0); tick(4); /* moveq #0,d6 */
 	jsr_tick();                                 /* the jsr itself */
-	hle_call68k(ctx, VRAM_FILL_WORDS);          /* jsr (VramFillWords).l (not ported) */
+	VramFillWords(ctx);                         /* jsr (VramFillWords).l (C, vdpfill.c) */
 	tick(10);                                   /* bra.w VdpListNext */
 }
 
@@ -469,9 +435,9 @@ static void cmd_fill_zero(hle_ctx *ctx)
 static void cmd_write_word(hle_ctx *ctx)
 {
 	count_cmd(3);
-	run_to(ctx, 0x011D90, 0x011D94);            /* prologue (arg reads) as 68k */
+	arg_w(ctx, 0); arg_w(ctx, 2);               /* 011D90 move.w (a6)+,d0 / move.w (a6)+,d2 */
 	jsr_tick();                                 /* the jsr itself */
-	hle_call68k(ctx, VRAM_WRITE_WORD);          /* jsr (VramWriteWord).l (not ported) */
+	VramWriteWord(ctx);                         /* jsr (VramWriteWord).l (C, textprint.c) */
 	tick(10);                                   /* bra.w VdpListNext */
 }
 
@@ -479,7 +445,11 @@ static void cmd_write_word(hle_ctx *ctx)
 static void cmd_cram_line(hle_ctx *ctx)
 {
 	count_cmd(4);
-	run_to(ctx, 0x011D9E, 0x011DB0);            /* prologue (CRAM address setup) as 68k */
+	ctx->d[1] = 0xC000; tick(12);               /* 011D9E move.l #$c000,d1 */
+	{ uint16_t w = RAM16(ctx->a[6]); ctx->a[6] += 2;   /* or.w (a6)+,d1 */
+	  set_w(&ctx->d[1], (ctx->d[1] & 0xFFFF) | w); tick(8); }
+	ctx->d[1] = (ctx->d[1] << 16) | (ctx->d[1] >> 16); cc_logic32(ctx, ctx->d[1]); tick(4);   /* swap d1 */
+	arg_a(ctx, 0); lea_a5(ctx);                 /* movea.l (a6)+,a0 / lea.l (abs).l,a5 */
 	poll_status(ctx, 0, 0x011DB0);              /* loc_011DB0 */
 	RAM8(VDP_REG01_DMA) |= 0x10;                /* bset.b #4,(vdp_reg01+1).l */
 	tick(24);
@@ -493,7 +463,7 @@ static void cmd_cram_line(hle_ctx *ctx)
 
 	uint16_t d0 = 15;
 	for (;;) {                                  /* loc_011DD8: poll, move.w (a0)+,(a5), dbra d0 */
-		run_to(ctx, 0x011DD8, 0x011DE2);    /* the per-iteration status poll as 68k */
+		poll_status(ctx, 1, 0x011DD8);      /* the per-iteration status poll: move.w (4,a5),d1 / btst / bne */
 		uint16_t w = bus_r16(ctx->a[0]);
 		ctx->a[0] += 2;
 		wr_data(w, 12);                     /* move.w (a0)+,(a5) */
@@ -518,9 +488,9 @@ static void cmd_cram_line(hle_ctx *ctx)
 static void cmd_fill_value(hle_ctx *ctx)
 {
 	count_cmd(5);
-	run_to(ctx, 0x011D80, 0x011D86);            /* prologue (arg reads) as 68k */
+	arg_w(ctx, 1); arg_w(ctx, 2); arg_w(ctx, 6);   /* 011D80: move.w (a6)+,d1 / d2 / d6 */
 	jsr_tick();                                 /* the jsr itself */
-	hle_call68k(ctx, VRAM_FILL_WORDS);          /* jsr (VramFillWords).l (not ported) */
+	VramFillWords(ctx);                         /* jsr (VramFillWords).l (C, vdpfill.c) */
 	tick(10);                                   /* bra.w VdpListNext */
 }
 
@@ -545,7 +515,7 @@ static int cmd_tile_rect(hle_ctx *ctx, int from)
 	int inner = 0;
 	if (from == 0) {
 		count_cmd(6);
-		run_to(ctx, 0x0120BA, 0x0120C8);    /* prologue (arg reads) as 68k */
+		arg_w(ctx, 4); arg_a(ctx, 1); arg_w(ctx, 3); arg_w(ctx, 6); lea_a5(ctx);   /* 0120BA */
 		uint16_t cols = ctx->d[4] & 0xFFFF;
 		d6 = ctx->d[6] & 0xFFFF;
 
@@ -656,7 +626,7 @@ static int cmd_hscroll(hle_ctx *ctx, int from)
 	int plane0 = 0, i0 = 0;
 	if (from == 0) {
 		count_cmd(7);
-		run_to(ctx, 0x011E48, 0x011E54);    /* prologue (arg reads) as 68k */
+		arg_w(ctx, 1); arg_a(ctx, 1); arg_w(ctx, 5); lea_a5(ctx);   /* 011E48 */
 		src = ctx->a[1];
 		addr = ctx->d[5] & 0xFFFF;
 
@@ -733,7 +703,11 @@ static int cmd_hscroll(hle_ctx *ctx, int from)
 static void cmd_vscroll(hle_ctx *ctx)
 {
 	count_cmd(8);
-	run_to(ctx, 0x011F6E, 0x011F82);            /* prologue (lea + ctrl writes) as 68k */
+	lea_a5(ctx);                                /* 011F6E lea.l (abs).l,a5 */
+	wr_ctrl(0x8F02, 16);                        /* move.w #$8f02,(4,a5) */
+	pre();                                      /* move.l #$40000010,(4,a5) */
+	vdp_ctrl_w32(0x40000010u);
+	post(24);
 	poll_status(ctx, 2, 0x011F82);              /* loc_011F82: move.w (4,a5),d2 / btst / bne */
 	uint16_t a = RAM16(ctx->a[6]); ctx->a[6] += 2;   /* move.w (a6)+,(a5) */
 	wr_data(a, 12);
@@ -744,7 +718,7 @@ static void cmd_vscroll(hle_ctx *ctx)
 }
 
 /* ---------------------------------------------------------------- registrations */
-HLE_FUNC(0x011D64, VdpCmd0End, 0)
+HLE_FUNC_YIELD(0x011D64, VdpCmd0End, 0)
 {
 	if (!safe_run(100)) {                       /* ~44 cycles: only a line-start event can land in it */
 		hle_decline_why(sr_why);
@@ -790,7 +764,7 @@ static void run_bailable(hle_ctx *ctx, int (*body)(hle_ctx *), int cmd)
 	}
 }
 
-HLE_RANGE(0x012068, VdpCmd1CopyWords, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x012068, VdpCmd1CopyWords, 0, VDP_LIST_NEXT)
 {
 	run_bailable(ctx, cmd_copy_words, 1);
 }
@@ -825,35 +799,35 @@ static int resume_start(int head_cycles)
 
 static int cmd_hscroll0(hle_ctx *ctx) { return cmd_hscroll(ctx, 0); }
 
-HLE_RANGE(0x011E7E, VdpCmd7HScrollA, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011E7E, VdpCmd7HScrollA, 0, VDP_LIST_NEXT)
 {
 	if (!resume_start(60))
 		return;
 	resume_finish(ctx, cmd_hscroll(ctx, 1));
 }
 
-HLE_RANGE(0x011E8A, VdpCmd7HScrollSetup, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011E8A, VdpCmd7HScrollSetup, 0, VDP_LIST_NEXT)
 {
 	if (!resume_start(140))
 		return;
 	resume_finish(ctx, cmd_hscroll(ctx, 2));
 }
 
-HLE_RANGE(0x011EB4, VdpCmd7HScrollB, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011EB4, VdpCmd7HScrollB, 0, VDP_LIST_NEXT)
 {
 	if (!resume_start(60))
 		return;
 	resume_finish(ctx, cmd_hscroll(ctx, 3));
 }
 
-HLE_RANGE(0x0120B0, VdpCmd1CopyLoop, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x0120B0, VdpCmd1CopyLoop, 0, VDP_LIST_NEXT)
 {
 	if (!resume_start(60))
 		return;
 	resume_finish(ctx, copy_loop(ctx, ctx->d[4] & 0xFFFF, 0, 1));
 }
 
-HLE_RANGE(0x011D70, VdpCmd2FillZero, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011D70, VdpCmd2FillZero, 0, VDP_LIST_NEXT)
 {
 	if (!safe_run(cmd_bound(2, ctx->a[6]))) {
 		hle_decline_why(sr_why);
@@ -865,7 +839,7 @@ HLE_RANGE(0x011D70, VdpCmd2FillZero, 0, VDP_LIST_NEXT)
 	hle_jump(ctx, VDP_LIST_NEXT);
 }
 
-HLE_RANGE(0x011D90, VdpCmd3WriteWord, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011D90, VdpCmd3WriteWord, 0, VDP_LIST_NEXT)
 {
 	if (!safe_run(cmd_bound(3, ctx->a[6]))) {
 		hle_decline_why(sr_why);
@@ -877,7 +851,7 @@ HLE_RANGE(0x011D90, VdpCmd3WriteWord, 0, VDP_LIST_NEXT)
 	hle_jump(ctx, VDP_LIST_NEXT);
 }
 
-HLE_RANGE(0x011D9E, VdpCmd4CramLine, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011D9E, VdpCmd4CramLine, 0, VDP_LIST_NEXT)
 {
 	if (!safe_run(cmd_bound(4, ctx->a[6]))) {
 		hle_decline_why(sr_why);
@@ -889,7 +863,7 @@ HLE_RANGE(0x011D9E, VdpCmd4CramLine, 0, VDP_LIST_NEXT)
 	hle_jump(ctx, VDP_LIST_NEXT);
 }
 
-HLE_RANGE(0x011D80, VdpCmd5FillValue, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011D80, VdpCmd5FillValue, 0, VDP_LIST_NEXT)
 {
 	if (!safe_run(cmd_bound(5, ctx->a[6]))) {
 		hle_decline_why(sr_why);
@@ -903,31 +877,31 @@ HLE_RANGE(0x011D80, VdpCmd5FillValue, 0, VDP_LIST_NEXT)
 
 static int cmd_tile_rect0(hle_ctx *ctx) { return cmd_tile_rect(ctx, 0); }
 
-HLE_RANGE(0x0120BA, VdpCmd6TileRect, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x0120BA, VdpCmd6TileRect, 0, VDP_LIST_NEXT)
 {
 	run_bailable(ctx, cmd_tile_rect0, 6);
 }
 
-HLE_RANGE(0x0120DA, VdpCmd6Row, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x0120DA, VdpCmd6Row, 0, VDP_LIST_NEXT)
 {
 	if (!resume_start(150))
 		return;
 	resume_finish(ctx, cmd_tile_rect(ctx, 1));
 }
 
-HLE_RANGE(0x0120F6, VdpCmd6Words, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x0120F6, VdpCmd6Words, 0, VDP_LIST_NEXT)
 {
 	if (!resume_start(60))
 		return;
 	resume_finish(ctx, cmd_tile_rect(ctx, 2));
 }
 
-HLE_RANGE(0x011E48, VdpCmd7HScroll, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011E48, VdpCmd7HScroll, 0, VDP_LIST_NEXT)
 {
 	run_bailable(ctx, cmd_hscroll0, 7);
 }
 
-HLE_RANGE(0x011F6E, VdpCmd8VScroll, 0, VDP_LIST_NEXT)
+HLE_RANGE_YIELD(0x011F6E, VdpCmd8VScroll, 0, VDP_LIST_NEXT)
 {
 	if (!safe_run(cmd_bound(8, ctx->a[6]))) {
 		hle_decline_why(sr_why);
@@ -951,7 +925,7 @@ static int cmd_ok(int cmd, uint32_t args)
 	return safe_run(cmd_bound(cmd, args));
 }
 
-HLE_FUNC(0x011D32, VdpListRun, 0)
+HLE_FUNC_YIELD(0x011D32, VdpListRun, 0)
 {
 	int first = 1;
 	bail_init();
