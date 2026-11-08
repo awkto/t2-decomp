@@ -31,14 +31,18 @@ Lockstep `--frames 1000` (six defaults) is identical with the variable set.
 | $0086E2 | WaitVBlank | 23.0 | waits for vblank_count to change (menus, fades, loads) |
 | $01DC4E | VDP wait | 1.0 | spins on `(1,a6)` bit 3 then `$C00008` HV counter == 0 |
 
-## Already in C but declined (28.3% of busy, 6.7% of all)
+## Already in C but declined (24.3% of busy, 7.9% of all)
 
-Not remaining port work: the original runs when a VBlank/HBlank would land inside the call. This is the
-largest single lever, bigger than any group below. Declined / calls (all runs): VdpCmd1CopyWords
-21461/45497 (137 Mcyc, 9.5% busy), VdpCmd7HScroll 36311/36653 (87 Mcyc, 6.1%), BuildSpriteTable 4085/41763
-(79 Mcyc, 5.5%), GunpowerHud 1603 and EnergyHud 1689 of 41763 (22 and 16 Mcyc), BgStreamLayers 107103/121667
-(10 Mcyc), GameLoopBg6 49/5898 (10 Mcyc, long calls), VdpCmd6TileRect 4505/18528, PlayerShoot 27974/42812,
-PlayersButtons 21407/43549, MissilesRun 17982/43549, VdpListRun 36808/47748, ScrollRows 1413/40461.
+Not remaining port work: the original runs when a VBlank/HBlank would land inside the call. The VDP list
+copy-words / hscroll loops no longer decline outright: they bail into the 68k at the next frame-loop
+event (docs/porting.md), so the 68k part is only the tail of the loop (counted as "nested 68k inside C").
+Numbers in this section are from a smaller sample than the tables above: `port/tools/declines.py` over 9
+runs of 3000 frames (the six default states, pad_05, gun_03, 2p_gun_04; 27000 frames), after the bail change.
+In that sample busy is C 52.7% / 68k 47.3% (the 16-run measurement above was 44.0% / 56.0% before it).
+Declined / calls: BuildSpriteTable 2969/25482 (70 Mcyc, 7.9% busy), VdpCmd1CopyWords 5236/18770 (63 Mcyc,
+7.2%, mostly bails), VdpCmd7HScroll 1994/2233 (17 Mcyc, 1.9%, bails), GunpowerHud 902 and EnergyHud 990
+of 25482 (13 and 10 Mcyc), BgStreamLayers 86021/95773 (9 Mcyc), PlayerShoot, PlayersButtons, MissilesRun
+and PlayerButtons (interrupt window, few Mcyc). Reasons per function: `T2_HLE_DECLINES=1`.
 
 ## Remaining 68k, by group
 
