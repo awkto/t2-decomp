@@ -662,6 +662,9 @@ struct rs {
 	int clock0;
 	int y_nest;
 	bool y_sess, y_timed;
+	bool sr_pend;              /* the yield lowered the mask with an interrupt pending: applied at the resume hook */
+	uint16_t sr_val;
+	int sr_back;               /* mclk of the move to SR (the core takes the interrupt before it adds them) */
 	ucontext_t uc, back;
 	char *stack;
 };
@@ -760,12 +763,15 @@ static void cor_check(hle_ctx *c)
 }
 /* call after a coroutine has lowered the mask in ctx->sr (and charged that instruction): an interrupt that is
  * pending above the new mask is taken at this boundary, as the core does after a move to SR */
+static int g_irq_back;
 void hle_irq_poll(hle_ctx *c)
 {
 	if (g_cor && c == &g_cor->c && !g_cor_block && !c->dry) {
 		int lvl = gx_m68k_pending_irq();
-		if (lvl && lvl > ((c->sr >> 8) & 7))
+		if (lvl && lvl > ((c->sr >> 8) & 7)) {
+			g_irq_back = (int)c->tl_last;
 			cor_do_yield(g_cor);
+		}
 	}
 }
 void hle_yield_point(void)
@@ -1028,7 +1034,19 @@ static int rs_finish(rs *s)
 		c.cycles = 0;
 		uint32_t pc_keep = c.pc;
 		c.pc = YIELD_PC;
+		/* A mask lowered below a pending interrupt (hle_irq_poll: the move to SR of ReadPad) must be taken on the
+		 * CPU clock after this call's charge is added, as the core does it after the instruction, not here (the
+		 * session was rewound just now): the resume hook applies the SR. */
+		uint16_t want = c.sr, cur = (uint16_t)m68k_hle_get_sr();
+		s->sr_pend = false;
+		if ((want & 0x0700) < (cur & 0x0700) && lvl > ((want >> 8) & 7)) {
+			s->sr_pend = true;
+			s->sr_val = want;
+			s->sr_back = g_irq_back;
+			c.sr = (uint16_t)((want & 0x00FF) | (cur & 0xFF00));
+		}
 		ctx_store(cp);
+		c.sr = want;
 		c.pc = pc_keep;
 		g_susp[g_nsusp++] = s;
 		return (int)total;
@@ -1112,7 +1130,19 @@ static int resume_cor(void)
 		fprintf(stderr, "hle: YIELD_PC reached with no suspended function\n");
 		abort();
 	}
-	rs *s = g_susp[--g_nsusp];
+	rs *s = g_susp[g_nsusp - 1];
+	if (s->sr_pend) {
+		s->sr_pend = false;
+		uint32_t pc0 = gx_m68k_pc();
+		/* the core takes the interrupt inside the move to SR, before it adds that instruction's cycles, and the
+		 * interrupt latency depends on the clock then (m68ki_cycle_interrupts[(cycles/MUL) % 10]) */
+		gx_m68k_set_cycles(gx_m68k_cycles() - s->sr_back);
+		m68k_hle_set_sr(s->sr_val);
+		gx_m68k_set_cycles(gx_m68k_cycles() + s->sr_back);
+		if (gx_m68k_pc() != pc0)       /* the interrupt was taken: its handler returns to YIELD_PC */
+			return 0;
+	}
+	g_nsusp--;
 	g_top = true;
 	g_cur_def = s->def;
 	g_bnd = gx_m68k_cycle_end();
@@ -1187,6 +1217,9 @@ void hle_callc(hle_ctx *c, uint32_t addr)
 				fn(c);
 				if (!c->jumped) {              /* the rts */
 					c->a[7] += 4;
+					/* a callee that advances the real clock itself (the VDP printers) checks at the start of
+					 * its instructions only: the boundary after its rts is the caller's to take */
+					hle_yield_point();
 					return;
 				}
 				uint32_t t = c->pc;            /* a tail jump */
