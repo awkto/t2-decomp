@@ -1165,7 +1165,7 @@ static void nest_begin(void)
 		gx_vdp_follow_cpu_lines();
 }
 
-static void nest_step_done(void)
+static void nest_step_done_x(bool flush)
 {
 	/* a slice end of the original's frame loop falls between this instruction and the next:
 	 * run the Z80 up to it (tl_boundary) */
@@ -1177,9 +1177,10 @@ static void nest_step_done(void)
 	gx_m68k_clear_irq();
 	if (g_sess)
 		gx_vdp_follow_cpu_lines();
-	if (gx_dma_length())
+	if (flush && gx_dma_length())
 		gx_flush_dma();
 }
+static void nest_step_done(void) { nest_step_done_x(true); }
 
 static void nest_end(void)
 {
@@ -1248,6 +1249,13 @@ void hle_dma_complete(void) { nest_step_done(); }
 void hle_dma_end(void)
 {
 	nest_step_done();
+	nest_end();
+}
+/* end of a block that opened its session with hle_dma_begin() for exact VDP access (generated boot code,
+ * game/boot.c): a DMA still running (a VRAM fill, the 68k is not halted) goes on in the frame loop as in the original */
+void hle_vdp_end(void)
+{
+	nest_step_done_x(false);
 	nest_end();
 }
 void hle_set_usp(uint32_t usp) { gx_m68k_set_usp(usp); }
@@ -1372,6 +1380,7 @@ void bus_w32(uint32_t a, uint32_t v)
 }
 
 long emu_frame_count(void);
+void native_fallback_report(unsigned pc, unsigned long n, unsigned long e) { fprintf(stderr, "native-fallback: $%06X %lu %lu\n", pc & 0xFFFFFF, n, e); }
 /* fatal errors of the native runner (native.c cannot use stdio: GPGX's headers remap it) */
 void native_fatal(const char *what, unsigned pc, unsigned sr, unsigned sp, unsigned ret)
 {

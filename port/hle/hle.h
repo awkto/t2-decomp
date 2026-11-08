@@ -262,6 +262,7 @@ int hle_nested_cycles(void);
 void hle_dma_begin(void);
 void hle_dma_complete(void);
 void hle_dma_end(void);
+void hle_vdp_end(void);      /* like hle_dma_end, but a running DMA (a fill) is not completed */
 /* hle_vdp_timed(1): VDP data port writes made by bus_w*() are NOT "untimed" (see gx.c): GPGX
  * applies its FIFO/access-slot stall to the CPU clock. Only valid while the C code advances
  * the real clock instruction by instruction inside a session (game/vdplist.c); the FIFO
