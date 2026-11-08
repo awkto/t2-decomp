@@ -52,7 +52,7 @@ static void pre(void)
 {
 	follow();
 	int c = gx_m68k_cycles(), r = gx_m68k_refresh_cycles();
-	if (c >= r) {
+	if (c >= r && !hle_irqd_nested()) {
 		gx_m68k_set_refresh_cycles(c + 128 * 7);
 		gx_m68k_set_cycles(c + 2 * 7);
 	}
@@ -65,7 +65,7 @@ static uint16_t status_rd(uint32_t at, unsigned op)
 	post(12);
 	return st;
 }
-static void post(int c) { gx_m68k_set_cycles(gx_m68k_cycles() + c * 7); }
+static void post(int c) { hle_irqd_note(c * 7); gx_m68k_set_cycles(gx_m68k_cycles() + c * 7); }
 static void tick(int c) { pre(); post(c); }
 static void wr_ctrl(uint16_t v, int c) { pre(); vdp_ctrl_w(v); post(c); }
 static void wr_data(uint16_t v, int c)
@@ -80,6 +80,7 @@ static void sess_begin(void)
 {
 	hle_dma_begin();
 	hle_exact_session();
+	hle_irqd_enable();
 }
 static void sess_finish(void) { hle_dma_end(); }
 
@@ -425,7 +426,8 @@ static void dma_enable(hle_ctx *ctx, int on)
 	post(28);
 }
 
-#if 0   /* not lockstep-exact yet: gun_0a diverges 8 cycles after the first call that overlaps a VBlank (see docs/remaining.md) */
+/* VramClearDma / DmaFillAt: exact since the delayed IRQ of the register 1 write is modelled (hle.c irqd_hook) */
+#if 1
 HLE_FUNC_YIELD(0x00800C, VramClearDma, 0)
 {
 	sess_begin();
