@@ -1241,5 +1241,5 @@ L_01243A:;
 	hle_insn(ctx, 16);                                                     /* 01243A rts */
 }
 
-HLE_FUNC_BAIL_YIELD(0x0123F0, MissilesRun, MSL_BOUND) { missiles_run(ctx, 0x0123F0); }
-HLE_FUNC_BAIL_YIELD(0x012402, MissilesSlot, MSL_BOUND) { missiles_run(ctx, 0x012402); }
+HLE_FUNC_BAIL(0x0123F0, MissilesRun, MSL_BOUND) { missiles_run(ctx, 0x0123F0); }
+HLE_FUNC_BAIL(0x012402, MissilesSlot, MSL_BOUND) { missiles_run(ctx, 0x012402); }

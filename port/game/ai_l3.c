@@ -919,7 +919,7 @@ HLE_RANGE_YIELD(0x00BD22, BgStructHit, 4500, EXIT_NEXT)
 }
 
 /* $00BE2E: free the slot and clean up (68k helpers) */
-HLE_RANGE_YIELD(0x00BE2E, BgStructFree, 40000, EXIT_NEXT)
+HLE_RANGE(0x00BE2E, BgStructFree, 40000, EXIT_NEXT)
 {
 	RAM16(A6) = 0;
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);

@@ -418,6 +418,7 @@ static void dma_enable(hle_ctx *ctx, int on)
 	post(28);
 }
 
+#if 0   /* not lockstep-exact yet: gun_0a diverges 8 cycles after the first call that overlaps a VBlank (see docs/remaining.md) */
 HLE_FUNC_YIELD(0x00800C, VramClearDma, 0)
 {
 	sess_begin();
@@ -474,6 +475,8 @@ HLE_FUNC_YIELD(0x00807C, DmaFillAt, 0)
 	tick(16);                                                     /* 0080FC rts */
 	dma_end();
 }
+
+#endif
 
 /* DmaToVram: the 68k to VRAM transfer described by the record at $FFA0E0 (length, source, destination) */
 static void dma_to_vram(hle_ctx *ctx)
