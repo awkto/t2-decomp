@@ -132,7 +132,7 @@ static inline int plain(uint32_t a)
 	return a >= 0xE00000u || a < 0x400000u;
 }
 static uint32_t g_next_pc;   /* the word behind the instruction that makes the I/O access (the prefetch queue) */
-static int g_own_sess;       /* this block started a VDP session (below) */
+#define g_own_sess hle_cor_slot   /* this block started a VDP session (below); per coroutine, see hle.h */
 static void io_pre(hle_ctx *ctx, unsigned op, uint32_t next_pc)
 {
 	hle_pre(ctx);
@@ -220,7 +220,7 @@ L_0014D4:
 	hle_jump(ctx, 0x0014DC); return;  /* 0014DC rts */
 }
 
-HLE_RANGE(0x0014D4, bt_Auto_0014D4, 180, 0x0014DC) { boot_run_0014C8(ctx, 0x0014D4); block_end(); }
+HLE_RANGE_YS(0x0014D4, bt_Auto_0014D4, 180, 0x0014DC) { boot_run_0014C8(ctx, 0x0014D4); block_end(); }
 static void boot_run_00155E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -234,7 +234,7 @@ L_00155E:
 	hle_jump(ctx, 0x001566); return;  /* 001566 jmp %a1@ */
 }
 
-HLE_RANGE(0x00155E, bt_Auto_00155E, 128, 0x001566) { boot_run_00155E(ctx, 0x00155E); block_end(); }
+HLE_RANGE_YS(0x00155E, bt_Auto_00155E, 128, 0x001566) { boot_run_00155E(ctx, 0x00155E); block_end(); }
 static void boot_run_001584(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -247,7 +247,7 @@ L_001584:
 	hle_jump(ctx, 0x00158A); return;  /* 00158A jmp fbb6c */
 }
 
-HLE_RANGE(0x001584, bt_Auto_001584, 112, 0x00158A) { boot_run_001584(ctx, 0x001584); block_end(); }
+HLE_RANGE_YS(0x001584, bt_Auto_001584, 112, 0x00158A) { boot_run_001584(ctx, 0x001584); block_end(); }
 static void boot_run_001ADC(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -304,8 +304,8 @@ L_001B70:
 	hle_jump(ctx, 0x001B70); return;  /* 001B70 rts */
 }
 
-HLE_RANGE(0x001AE8, bt_Auto_001AE8, 100, HLE_EXIT_SP(0x001AEA, -2)) { boot_run_001ADC(ctx, 0x001AE8); block_end(); }
-HLE_RANGE(0x001B02, bt_Auto_001B02, 230, 0x001B16) { boot_run_001ADC(ctx, 0x001B02); block_end(); }
+HLE_RANGE_YS(0x001AE8, bt_Auto_001AE8, 100, HLE_EXIT_SP(0x001AEA, -2)) { boot_run_001ADC(ctx, 0x001AE8); block_end(); }
+HLE_RANGE_YS(0x001B02, bt_Auto_001B02, 230, 0x001B16) { boot_run_001ADC(ctx, 0x001B02); block_end(); }
 static void boot_run_003360(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -633,46 +633,46 @@ L_00368A:
 	hle_jump(ctx, 0x00368A); return;  /* 00368A rts */
 }
 
-HLE_RANGE(0x003360, bt_Auto_003360, 98, 0x003364) { boot_run_003360(ctx, 0x003360); block_end(); }
-HLE_RANGE(0x003376, bt_Auto_003376, 140, 0x003386) { boot_run_003360(ctx, 0x003376); block_end(); }
-HLE_RANGE(0x00338C, bt_Auto_00338C, 140, 0x00339C) { boot_run_003360(ctx, 0x00338C); block_end(); }
-HLE_RANGE(0x0033A2, bt_Auto_0033A2, 116, 0x0033AC) { boot_run_003360(ctx, 0x0033A2); block_end(); }
-HLE_RANGE(0x0033B0, bt_Auto_0033B0, 98, 0x0033B4) { boot_run_003360(ctx, 0x0033B0); block_end(); }
-HLE_RANGE(0x0033B8, bt_Auto_0033B8, 98, 0x0033BC) { boot_run_003360(ctx, 0x0033B8); block_end(); }
-HLE_RANGE(0x0033C0, bt_Auto_0033C0, 98, 0x0033C4) { boot_run_003360(ctx, 0x0033C0); block_end(); }
-HLE_RANGE(0x0033DA, bt_Auto_0033DA, 178, 0x0033F4) { boot_run_003360(ctx, 0x0033DA); block_end(); }
-HLE_RANGE(0x0033FA, bt_Auto_0033FA, 178, 0x003414) { boot_run_003360(ctx, 0x0033FA); block_end(); }
-HLE_RANGE(0x003426, bt_Auto_003426, 110, 0x00342C) { boot_run_003360(ctx, 0x003426); block_end(); }
-HLE_RANGE(0x003430, bt_Auto_003430, 74, 0x003434) { boot_run_003360(ctx, 0x003430); block_end(); }
-HLE_RANGE(0x003434, bt_Auto_003434, 314, 0x00343C, 0x0034B2, 0x0034E6) { boot_run_003360(ctx, 0x003434); block_end(); }
-HLE_RANGE(0x003442, bt_Auto_003442, 196, HLE_EXIT_SP(0x00345E, -4)) { boot_run_003360(ctx, 0x003442); block_end(); }
-HLE_RANGE(0x003464, bt_Auto_003464, 178, 0x00347E) { boot_run_003360(ctx, 0x003464); block_end(); }
-HLE_RANGE(0x003494, bt_Auto_003494, 94, HLE_EXIT_SP(0x003434, 4)) { boot_run_003360(ctx, 0x003494); block_end(); }
-HLE_RANGE(0x0034B6, bt_Auto_0034B6, 106, 0x0034B2, 0x0034BE) { boot_run_003360(ctx, 0x0034B6); block_end(); }
-HLE_RANGE(0x0034BE, bt_Auto_0034BE, 152, HLE_EXIT_SP(0x0034CC, -4)) { boot_run_003360(ctx, 0x0034BE); block_end(); }
-HLE_RANGE(0x0034D0, bt_Auto_0034D0, 114, HLE_EXIT_SP(0x003434, 4), HLE_EXIT_SP(0x0034BE, 4)) { boot_run_003360(ctx, 0x0034D0); block_end(); }
-HLE_RANGE(0x0034EA, bt_Auto_0034EA, 98, 0x0034EE) { boot_run_003360(ctx, 0x0034EA); block_end(); }
-HLE_RANGE(0x0034FC, bt_Auto_0034FC, 178, 0x003516) { boot_run_003360(ctx, 0x0034FC); block_end(); }
-HLE_RANGE(0x00351C, bt_Auto_00351C, 178, 0x003536) { boot_run_003360(ctx, 0x00351C); block_end(); }
-HLE_RANGE(0x003548, bt_Auto_003548, 242, 0x003564) { boot_run_003360(ctx, 0x003548); block_end(); }
-HLE_RANGE(0x00356A, bt_Auto_00356A, 100, 0x00356E) { boot_run_003360(ctx, 0x00356A); block_end(); }
-HLE_RANGE(0x00357E, bt_Auto_00357E, 404, 0x00358A, 0x0035B4, 0x0035DA, 0x0035F4, 0x003622, 0x00368A) { boot_run_003360(ctx, 0x00357E); block_end(); }
-HLE_RANGE(0x00359A, bt_Auto_00359A, 98, 0x00359E) { boot_run_003360(ctx, 0x00359A); block_end(); }
-HLE_RANGE(0x0035A2, bt_Auto_0035A2, 98, 0x0035A6) { boot_run_003360(ctx, 0x0035A2); block_end(); }
-HLE_RANGE(0x0035C0, bt_Auto_0035C0, 98, 0x0035C4) { boot_run_003360(ctx, 0x0035C0); block_end(); }
-HLE_RANGE(0x0035C8, bt_Auto_0035C8, 98, 0x0035CC) { boot_run_003360(ctx, 0x0035C8); block_end(); }
-HLE_RANGE(0x0035E2, bt_Auto_0035E2, 98, 0x0035E6) { boot_run_003360(ctx, 0x0035E2); block_end(); }
-HLE_RANGE(0x00360C, bt_Auto_00360C, 98, 0x003610) { boot_run_003360(ctx, 0x00360C); block_end(); }
-HLE_RANGE(0x003626, bt_Auto_003626, 98, 0x00362A) { boot_run_003360(ctx, 0x003626); block_end(); }
-HLE_RANGE(0x00362E, bt_Auto_00362E, 98, 0x003632) { boot_run_003360(ctx, 0x00362E); block_end(); }
-HLE_RANGE(0x003644, bt_Auto_003644, 98, 0x003648) { boot_run_003360(ctx, 0x003644); block_end(); }
-HLE_RANGE(0x00364C, bt_Auto_00364C, 96, 0x00364E) { boot_run_003360(ctx, 0x00364C); block_end(); }
-HLE_RANGE(0x003654, bt_Auto_003654, 98, 0x003658) { boot_run_003360(ctx, 0x003654); block_end(); }
-HLE_RANGE(0x003662, bt_Auto_003662, 98, 0x003666) { boot_run_003360(ctx, 0x003662); block_end(); }
-HLE_RANGE(0x00366A, bt_Auto_00366A, 102, 0x003670) { boot_run_003360(ctx, 0x00366A); block_end(); }
-HLE_RANGE(0x003674, bt_Auto_003674, 94, 0x003676) { boot_run_003360(ctx, 0x003674); block_end(); }
-HLE_RANGE(0x00367A, bt_Auto_00367A, 102, 0x003680) { boot_run_003360(ctx, 0x00367A); block_end(); }
-HLE_RANGE(0x003684, bt_Auto_003684, 94, 0x003686) { boot_run_003360(ctx, 0x003684); block_end(); }
+HLE_RANGE_YS(0x003360, bt_Auto_003360, 98, 0x003364) { boot_run_003360(ctx, 0x003360); block_end(); }
+HLE_RANGE_YS(0x003376, bt_Auto_003376, 140, 0x003386) { boot_run_003360(ctx, 0x003376); block_end(); }
+HLE_RANGE_YS(0x00338C, bt_Auto_00338C, 140, 0x00339C) { boot_run_003360(ctx, 0x00338C); block_end(); }
+HLE_RANGE_YS(0x0033A2, bt_Auto_0033A2, 116, 0x0033AC) { boot_run_003360(ctx, 0x0033A2); block_end(); }
+HLE_RANGE_YS(0x0033B0, bt_Auto_0033B0, 98, 0x0033B4) { boot_run_003360(ctx, 0x0033B0); block_end(); }
+HLE_RANGE_YS(0x0033B8, bt_Auto_0033B8, 98, 0x0033BC) { boot_run_003360(ctx, 0x0033B8); block_end(); }
+HLE_RANGE_YS(0x0033C0, bt_Auto_0033C0, 98, 0x0033C4) { boot_run_003360(ctx, 0x0033C0); block_end(); }
+HLE_RANGE_YS(0x0033DA, bt_Auto_0033DA, 178, 0x0033F4) { boot_run_003360(ctx, 0x0033DA); block_end(); }
+HLE_RANGE_YS(0x0033FA, bt_Auto_0033FA, 178, 0x003414) { boot_run_003360(ctx, 0x0033FA); block_end(); }
+HLE_RANGE_YS(0x003426, bt_Auto_003426, 110, 0x00342C) { boot_run_003360(ctx, 0x003426); block_end(); }
+HLE_RANGE_YS(0x003430, bt_Auto_003430, 74, 0x003434) { boot_run_003360(ctx, 0x003430); block_end(); }
+HLE_RANGE_YS(0x003434, bt_Auto_003434, 314, 0x00343C, 0x0034B2, 0x0034E6) { boot_run_003360(ctx, 0x003434); block_end(); }
+HLE_RANGE_YS(0x003442, bt_Auto_003442, 196, HLE_EXIT_SP(0x00345E, -4)) { boot_run_003360(ctx, 0x003442); block_end(); }
+HLE_RANGE_YS(0x003464, bt_Auto_003464, 178, 0x00347E) { boot_run_003360(ctx, 0x003464); block_end(); }
+HLE_RANGE_YS(0x003494, bt_Auto_003494, 94, HLE_EXIT_SP(0x003434, 4)) { boot_run_003360(ctx, 0x003494); block_end(); }
+HLE_RANGE_YS(0x0034B6, bt_Auto_0034B6, 106, 0x0034B2, 0x0034BE) { boot_run_003360(ctx, 0x0034B6); block_end(); }
+HLE_RANGE_YS(0x0034BE, bt_Auto_0034BE, 152, HLE_EXIT_SP(0x0034CC, -4)) { boot_run_003360(ctx, 0x0034BE); block_end(); }
+HLE_RANGE_YS(0x0034D0, bt_Auto_0034D0, 114, HLE_EXIT_SP(0x003434, 4), HLE_EXIT_SP(0x0034BE, 4)) { boot_run_003360(ctx, 0x0034D0); block_end(); }
+HLE_RANGE_YS(0x0034EA, bt_Auto_0034EA, 98, 0x0034EE) { boot_run_003360(ctx, 0x0034EA); block_end(); }
+HLE_RANGE_YS(0x0034FC, bt_Auto_0034FC, 178, 0x003516) { boot_run_003360(ctx, 0x0034FC); block_end(); }
+HLE_RANGE_YS(0x00351C, bt_Auto_00351C, 178, 0x003536) { boot_run_003360(ctx, 0x00351C); block_end(); }
+HLE_RANGE_YS(0x003548, bt_Auto_003548, 242, 0x003564) { boot_run_003360(ctx, 0x003548); block_end(); }
+HLE_RANGE_YS(0x00356A, bt_Auto_00356A, 100, 0x00356E) { boot_run_003360(ctx, 0x00356A); block_end(); }
+HLE_RANGE_YS(0x00357E, bt_Auto_00357E, 404, 0x00358A, 0x0035B4, 0x0035DA, 0x0035F4, 0x003622, 0x00368A) { boot_run_003360(ctx, 0x00357E); block_end(); }
+HLE_RANGE_YS(0x00359A, bt_Auto_00359A, 98, 0x00359E) { boot_run_003360(ctx, 0x00359A); block_end(); }
+HLE_RANGE_YS(0x0035A2, bt_Auto_0035A2, 98, 0x0035A6) { boot_run_003360(ctx, 0x0035A2); block_end(); }
+HLE_RANGE_YS(0x0035C0, bt_Auto_0035C0, 98, 0x0035C4) { boot_run_003360(ctx, 0x0035C0); block_end(); }
+HLE_RANGE_YS(0x0035C8, bt_Auto_0035C8, 98, 0x0035CC) { boot_run_003360(ctx, 0x0035C8); block_end(); }
+HLE_RANGE_YS(0x0035E2, bt_Auto_0035E2, 98, 0x0035E6) { boot_run_003360(ctx, 0x0035E2); block_end(); }
+HLE_RANGE_YS(0x00360C, bt_Auto_00360C, 98, 0x003610) { boot_run_003360(ctx, 0x00360C); block_end(); }
+HLE_RANGE_YS(0x003626, bt_Auto_003626, 98, 0x00362A) { boot_run_003360(ctx, 0x003626); block_end(); }
+HLE_RANGE_YS(0x00362E, bt_Auto_00362E, 98, 0x003632) { boot_run_003360(ctx, 0x00362E); block_end(); }
+HLE_RANGE_YS(0x003644, bt_Auto_003644, 98, 0x003648) { boot_run_003360(ctx, 0x003644); block_end(); }
+HLE_RANGE_YS(0x00364C, bt_Auto_00364C, 96, 0x00364E) { boot_run_003360(ctx, 0x00364C); block_end(); }
+HLE_RANGE_YS(0x003654, bt_Auto_003654, 98, 0x003658) { boot_run_003360(ctx, 0x003654); block_end(); }
+HLE_RANGE_YS(0x003662, bt_Auto_003662, 98, 0x003666) { boot_run_003360(ctx, 0x003662); block_end(); }
+HLE_RANGE_YS(0x00366A, bt_Auto_00366A, 102, 0x003670) { boot_run_003360(ctx, 0x00366A); block_end(); }
+HLE_RANGE_YS(0x003674, bt_Auto_003674, 94, 0x003676) { boot_run_003360(ctx, 0x003674); block_end(); }
+HLE_RANGE_YS(0x00367A, bt_Auto_00367A, 102, 0x003680) { boot_run_003360(ctx, 0x00367A); block_end(); }
+HLE_RANGE_YS(0x003684, bt_Auto_003684, 94, 0x003686) { boot_run_003360(ctx, 0x003684); block_end(); }
 static void boot_run_00391A(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -740,14 +740,14 @@ L_0039C4:
 	hle_jump(ctx, 0x0039C4); return;  /* 0039C4 rts */
 }
 
-HLE_RANGE(0x00391A, bt_Auto_00391A, 192, 0x003930, 0x0039C4) { boot_run_00391A(ctx, 0x00391A); block_end(); }
-HLE_RANGE(0x003934, bt_Auto_003934, 148, 0x003946) { boot_run_00391A(ctx, 0x003934); block_end(); }
-HLE_RANGE(0x00394A, bt_Auto_00394A, 144, 0x003956) { boot_run_00391A(ctx, 0x00394A); block_end(); }
-HLE_RANGE(0x00395C, bt_Auto_00395C, 124, 0x003968) { boot_run_00391A(ctx, 0x00395C); block_end(); }
-HLE_RANGE(0x00396C, bt_Auto_00396C, 198, HLE_EXIT_SP(0x003974, -4)) { boot_run_00391A(ctx, 0x00396C); block_end(); }
-HLE_RANGE(0x00397A, bt_Auto_00397A, 138, 0x00398A) { boot_run_00391A(ctx, 0x00397A); block_end(); }
-HLE_RANGE(0x00398E, bt_Auto_00398E, 448, HLE_EXIT_SP(0x0039AA, 4)) { boot_run_00391A(ctx, 0x00398E); block_end(); }
-HLE_RANGE(0x0039B0, bt_Auto_0039B0, 138, 0x0039C0) { boot_run_00391A(ctx, 0x0039B0); block_end(); }
+HLE_RANGE_YS(0x00391A, bt_Auto_00391A, 192, 0x003930, 0x0039C4) { boot_run_00391A(ctx, 0x00391A); block_end(); }
+HLE_RANGE_YS(0x003934, bt_Auto_003934, 148, 0x003946) { boot_run_00391A(ctx, 0x003934); block_end(); }
+HLE_RANGE_YS(0x00394A, bt_Auto_00394A, 144, 0x003956) { boot_run_00391A(ctx, 0x00394A); block_end(); }
+HLE_RANGE_YS(0x00395C, bt_Auto_00395C, 124, 0x003968) { boot_run_00391A(ctx, 0x00395C); block_end(); }
+HLE_RANGE_YS(0x00396C, bt_Auto_00396C, 198, HLE_EXIT_SP(0x003974, -4)) { boot_run_00391A(ctx, 0x00396C); block_end(); }
+HLE_RANGE_YS(0x00397A, bt_Auto_00397A, 138, 0x00398A) { boot_run_00391A(ctx, 0x00397A); block_end(); }
+HLE_RANGE_YS(0x00398E, bt_Auto_00398E, 448, HLE_EXIT_SP(0x0039AA, 4)) { boot_run_00391A(ctx, 0x00398E); block_end(); }
+HLE_RANGE_YS(0x0039B0, bt_Auto_0039B0, 138, 0x0039C0) { boot_run_00391A(ctx, 0x0039B0); block_end(); }
 static void boot_run_0039C6(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -795,12 +795,12 @@ L_003A32:
 	hle_jump(ctx, 0x003A32); return;  /* 003A32 rts */
 }
 
-HLE_RANGE(0x0039C6, bt_Auto_0039C6, 192, 0x0039DC, 0x003A32) { boot_run_0039C6(ctx, 0x0039C6); block_end(); }
-HLE_RANGE(0x0039E0, bt_Auto_0039E0, 144, 0x0039EC) { boot_run_0039C6(ctx, 0x0039E0); block_end(); }
-HLE_RANGE(0x0039F2, bt_Auto_0039F2, 138, 0x003A02) { boot_run_0039C6(ctx, 0x0039F2); block_end(); }
-HLE_RANGE(0x003A06, bt_Auto_003A06, 190, 0x003A0E) { boot_run_0039C6(ctx, 0x003A06); block_end(); }
-HLE_RANGE(0x003A14, bt_Auto_003A14, 138, 0x003A24) { boot_run_0039C6(ctx, 0x003A14); block_end(); }
-HLE_RANGE(0x003A28, bt_Auto_003A28, 158, 0x003A32) { boot_run_0039C6(ctx, 0x003A28); block_end(); }
+HLE_RANGE_YS(0x0039C6, bt_Auto_0039C6, 192, 0x0039DC, 0x003A32) { boot_run_0039C6(ctx, 0x0039C6); block_end(); }
+HLE_RANGE_YS(0x0039E0, bt_Auto_0039E0, 144, 0x0039EC) { boot_run_0039C6(ctx, 0x0039E0); block_end(); }
+HLE_RANGE_YS(0x0039F2, bt_Auto_0039F2, 138, 0x003A02) { boot_run_0039C6(ctx, 0x0039F2); block_end(); }
+HLE_RANGE_YS(0x003A06, bt_Auto_003A06, 190, 0x003A0E) { boot_run_0039C6(ctx, 0x003A06); block_end(); }
+HLE_RANGE_YS(0x003A14, bt_Auto_003A14, 138, 0x003A24) { boot_run_0039C6(ctx, 0x003A14); block_end(); }
+HLE_RANGE_YS(0x003A28, bt_Auto_003A28, 158, 0x003A32) { boot_run_0039C6(ctx, 0x003A28); block_end(); }
 static void boot_run_003A34(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -835,10 +835,10 @@ L_003A7C:
 	hle_jump(ctx, 0x003A7C); return;  /* 003A7C rts */
 }
 
-HLE_RANGE(0x003A34, bt_Auto_003A34, 192, 0x003A4A, 0x003A7C) { boot_run_003A34(ctx, 0x003A34); block_end(); }
-HLE_RANGE(0x003A4E, bt_Auto_003A4E, 228, 0x003A5E) { boot_run_003A34(ctx, 0x003A4E); block_end(); }
-HLE_RANGE(0x003A64, bt_Auto_003A64, 138, 0x003A74) { boot_run_003A34(ctx, 0x003A64); block_end(); }
-HLE_RANGE(0x003A78, bt_Auto_003A78, 112, 0x003A7C) { boot_run_003A34(ctx, 0x003A78); block_end(); }
+HLE_RANGE_YS(0x003A34, bt_Auto_003A34, 192, 0x003A4A, 0x003A7C) { boot_run_003A34(ctx, 0x003A34); block_end(); }
+HLE_RANGE_YS(0x003A4E, bt_Auto_003A4E, 228, 0x003A5E) { boot_run_003A34(ctx, 0x003A4E); block_end(); }
+HLE_RANGE_YS(0x003A64, bt_Auto_003A64, 138, 0x003A74) { boot_run_003A34(ctx, 0x003A64); block_end(); }
+HLE_RANGE_YS(0x003A78, bt_Auto_003A78, 112, 0x003A7C) { boot_run_003A34(ctx, 0x003A78); block_end(); }
 static void boot_run_003A7E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -883,12 +883,12 @@ L_003AE2:
 	hle_jump(ctx, 0x003AE2); return;  /* 003AE2 rts */
 }
 
-HLE_RANGE(0x003A7E, bt_Auto_003A7E, 192, 0x003A94, 0x003AE2) { boot_run_003A7E(ctx, 0x003A7E); block_end(); }
-HLE_RANGE(0x003A98, bt_Auto_003A98, 144, 0x003AA4) { boot_run_003A7E(ctx, 0x003A98); block_end(); }
-HLE_RANGE(0x003AAA, bt_Auto_003AAA, 138, 0x003ABA) { boot_run_003A7E(ctx, 0x003AAA); block_end(); }
-HLE_RANGE(0x003ABE, bt_Auto_003ABE, 180, 0x003AC4) { boot_run_003A7E(ctx, 0x003ABE); block_end(); }
-HLE_RANGE(0x003ACA, bt_Auto_003ACA, 138, 0x003ADA) { boot_run_003A7E(ctx, 0x003ACA); block_end(); }
-HLE_RANGE(0x003ADE, bt_Auto_003ADE, 112, 0x003AE2) { boot_run_003A7E(ctx, 0x003ADE); block_end(); }
+HLE_RANGE_YS(0x003A7E, bt_Auto_003A7E, 192, 0x003A94, 0x003AE2) { boot_run_003A7E(ctx, 0x003A7E); block_end(); }
+HLE_RANGE_YS(0x003A98, bt_Auto_003A98, 144, 0x003AA4) { boot_run_003A7E(ctx, 0x003A98); block_end(); }
+HLE_RANGE_YS(0x003AAA, bt_Auto_003AAA, 138, 0x003ABA) { boot_run_003A7E(ctx, 0x003AAA); block_end(); }
+HLE_RANGE_YS(0x003ABE, bt_Auto_003ABE, 180, 0x003AC4) { boot_run_003A7E(ctx, 0x003ABE); block_end(); }
+HLE_RANGE_YS(0x003ACA, bt_Auto_003ACA, 138, 0x003ADA) { boot_run_003A7E(ctx, 0x003ACA); block_end(); }
+HLE_RANGE_YS(0x003ADE, bt_Auto_003ADE, 112, 0x003AE2) { boot_run_003A7E(ctx, 0x003ADE); block_end(); }
 static void boot_run_003BA6(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -915,8 +915,8 @@ L_003BD0:
 	hle_jump(ctx, 0x003BD8); return;  /* 003BD8 rts */
 }
 
-HLE_RANGE(0x003BA6, bt_Auto_003BA6, 184, HLE_EXIT_SP(0x003BB4, -24)) { boot_run_003BA6(ctx, 0x003BA6); block_end(); }
-HLE_RANGE(0x003BD0, bt_Auto_003BD0, 166, HLE_EXIT_SP(0x003BD8, 24)) { boot_run_003BA6(ctx, 0x003BD0); block_end(); }
+HLE_RANGE_YS(0x003BA6, bt_Auto_003BA6, 184, HLE_EXIT_SP(0x003BB4, -24)) { boot_run_003BA6(ctx, 0x003BA6); block_end(); }
+HLE_RANGE_YS(0x003BD0, bt_Auto_003BD0, 166, HLE_EXIT_SP(0x003BD8, 24)) { boot_run_003BA6(ctx, 0x003BD0); block_end(); }
 static void boot_run_0042CE(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1149,7 +1149,7 @@ L_004600:
 	hle_jump(ctx, 0x00460A); return;  /* 00460A rts */
 }
 
-HLE_RANGE(0x004320, bt_Auto_004320, 108, 0x004326) { boot_run_0042CE(ctx, 0x004320); block_end(); }
+HLE_RANGE_YS(0x004320, bt_Auto_004320, 108, 0x004326) { boot_run_0042CE(ctx, 0x004320); block_end(); }
 static void boot_run_004682(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1185,10 +1185,10 @@ L_0046B8:
 	hle_jump(ctx, 0x0046C4); return;  /* 0046C4 rts */
 }
 
-HLE_RANGE(0x004682, bt_Auto_004682, 70, 0x004684) { boot_run_004682(ctx, 0x004682); block_end(); }
-HLE_RANGE(0x004684, bt_Auto_004684, 108, 0x004690) { boot_run_004682(ctx, 0x004684); block_end(); }
-HLE_RANGE(0x004690, bt_Auto_004690, 232, 0x004690, 0x0046B2) { boot_run_004682(ctx, 0x004690); block_end(); }
-HLE_RANGE(0x0046B8, bt_Auto_0046B8, 130, 0x004684, 0x0046C4) { boot_run_004682(ctx, 0x0046B8); block_end(); }
+HLE_RANGE_YS(0x004682, bt_Auto_004682, 70, 0x004684) { boot_run_004682(ctx, 0x004682); block_end(); }
+HLE_RANGE_YS(0x004684, bt_Auto_004684, 108, 0x004690) { boot_run_004682(ctx, 0x004684); block_end(); }
+HLE_RANGE_YS(0x004690, bt_Auto_004690, 232, 0x004690, 0x0046B2) { boot_run_004682(ctx, 0x004690); block_end(); }
+HLE_RANGE_YS(0x0046B8, bt_Auto_0046B8, 130, 0x004684, 0x0046C4) { boot_run_004682(ctx, 0x0046B8); block_end(); }
 static void boot_run_005A08(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1203,7 +1203,7 @@ L_005A0C:
 	{ uint32_t eaD = ctx->a[4] + (uint32_t)(int32_t)(50); int io = !plain(eaD); if (io) io_pre(ctx, 0x526C, 0x005A24); uint32_t v = alu(ctx, OP_ADD, ld16(eaD), 0x1u, 16, 1); st16(eaD, v); if (io) hle_post(ctx, 16); else hle_insn(ctx, 16); } hle_jump(ctx, 0x005A24); return;  /* 005A20 addqw #1,%a4@(50) */
 }
 
-HLE_RANGE(0x005A0C, bt_Auto_005A0C, 166, 0x005A24) { boot_run_005A08(ctx, 0x005A0C); block_end(); }
+HLE_RANGE_YS(0x005A0C, bt_Auto_005A0C, 166, 0x005A24) { boot_run_005A08(ctx, 0x005A0C); block_end(); }
 static void boot_run_006252(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1224,8 +1224,8 @@ L_006274:
 	hle_jump(ctx, 0x006278); return;  /* 006278 rts */
 }
 
-HLE_RANGE(0x006252, bt_Auto_006252, 484, HLE_EXIT_SP(0x00626E, -60), 0x006278) { boot_run_006252(ctx, 0x006252); block_end(); }
-HLE_RANGE(0x006274, bt_Auto_006274, 220, HLE_EXIT_SP(0x006278, 60)) { boot_run_006252(ctx, 0x006274); block_end(); }
+HLE_RANGE_YS(0x006252, bt_Auto_006252, 484, HLE_EXIT_SP(0x00626E, -60), 0x006278) { boot_run_006252(ctx, 0x006252); block_end(); }
+HLE_RANGE_YS(0x006274, bt_Auto_006274, 220, HLE_EXIT_SP(0x006278, 60)) { boot_run_006252(ctx, 0x006274); block_end(); }
 static void boot_run_006332(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1239,7 +1239,7 @@ L_006332:
 	hle_jump(ctx, 0x006344); return;  /* 006344 rts */
 }
 
-HLE_RANGE(0x006332, bt_Auto_006332, 148, 0x006344) { boot_run_006332(ctx, 0x006332); block_end(); }
+HLE_RANGE_YS(0x006332, bt_Auto_006332, 148, 0x006344) { boot_run_006332(ctx, 0x006332); block_end(); }
 static void boot_run_0065DE(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1251,7 +1251,7 @@ L_0065DE:
 	hle_jump(ctx, 0x0065E2); return;  /* 0065E2 rts */
 }
 
-HLE_RANGE(0x0065DE, bt_Auto_0065DE, 96, 0x0065E2) { boot_run_0065DE(ctx, 0x0065DE); block_end(); }
+HLE_RANGE_YS(0x0065DE, bt_Auto_0065DE, 96, 0x0065E2) { boot_run_0065DE(ctx, 0x0065DE); block_end(); }
 static void boot_run_0065E4(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1265,7 +1265,7 @@ L_0065E4:
 	hle_jump(ctx, 0x0065F2); return;  /* 0065F2 rts */
 }
 
-HLE_RANGE(0x0065E4, bt_Auto_0065E4, 144, 0x0065F2) { boot_run_0065E4(ctx, 0x0065E4); block_end(); }
+HLE_RANGE_YS(0x0065E4, bt_Auto_0065E4, 144, 0x0065F2) { boot_run_0065E4(ctx, 0x0065E4); block_end(); }
 static void boot_run_006730(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1277,7 +1277,7 @@ L_006738:
 	hle_jump(ctx, 0x00673C); return;  /* 00673C rts */
 }
 
-HLE_RANGE(0x006738, bt_Auto_006738, 96, 0x00673C) { boot_run_006730(ctx, 0x006738); block_end(); }
+HLE_RANGE_YS(0x006738, bt_Auto_006738, 96, 0x00673C) { boot_run_006730(ctx, 0x006738); block_end(); }
 static void boot_run_00673E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1292,7 +1292,7 @@ L_006742:
 	hle_jump(ctx, 0x006754); return;  /* 006754 rts */
 }
 
-HLE_RANGE(0x006742, bt_Auto_006742, 166, 0x006754) { boot_run_00673E(ctx, 0x006742); block_end(); }
+HLE_RANGE_YS(0x006742, bt_Auto_006742, 166, 0x006754) { boot_run_00673E(ctx, 0x006742); block_end(); }
 static void boot_run_00711A(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1304,7 +1304,7 @@ L_00711A:
 	hle_jump(ctx, 0x00711C); return;  /* 00711C bsrw 7c7c */
 }
 
-HLE_RANGE(0x00711A, bt_Auto_00711A, 94, 0x00711C) { boot_run_00711A(ctx, 0x00711A); block_end(); }
+HLE_RANGE_YS(0x00711A, bt_Auto_00711A, 94, 0x00711C) { boot_run_00711A(ctx, 0x00711A); block_end(); }
 static void boot_run_00718C(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1321,8 +1321,8 @@ L_007196:
 	if (COND_EQ) { hle_insn(ctx, 10); hle_jump(ctx, 0x0071AA); return; } hle_insn(ctx, 8); hle_jump(ctx, 0x00719A); return;  /* 007198 beqs 71aa */
 }
 
-HLE_RANGE(0x00718C, bt_Auto_00718C, 108, 0x007192) { boot_run_00718C(ctx, 0x00718C); block_end(); }
-HLE_RANGE(0x007196, bt_Auto_007196, 86, 0x00719A, 0x0071AA) { boot_run_00718C(ctx, 0x007196); block_end(); }
+HLE_RANGE_YS(0x00718C, bt_Auto_00718C, 108, 0x007192) { boot_run_00718C(ctx, 0x00718C); block_end(); }
+HLE_RANGE_YS(0x007196, bt_Auto_007196, 86, 0x00719A, 0x0071AA) { boot_run_00718C(ctx, 0x007196); block_end(); }
 static void boot_run_007292(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1344,8 +1344,8 @@ L_0072A8:
 	hle_jump(ctx, 0x0072A8); return;  /* 0072A8 rts */
 }
 
-HLE_RANGE(0x007292, bt_Auto_007292, 108, 0x007298) { boot_run_007292(ctx, 0x007292); block_end(); }
-HLE_RANGE(0x00729C, bt_Auto_00729C, 132, 0x0072A0, 0x0072A8) { boot_run_007292(ctx, 0x00729C); block_end(); }
+HLE_RANGE_YS(0x007292, bt_Auto_007292, 108, 0x007298) { boot_run_007292(ctx, 0x007292); block_end(); }
+HLE_RANGE_YS(0x00729C, bt_Auto_00729C, 132, 0x0072A0, 0x0072A8) { boot_run_007292(ctx, 0x00729C); block_end(); }
 static void boot_run_007376(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1357,7 +1357,7 @@ L_00739A:
 	hle_jump(ctx, 0x00739E); return;  /* 00739E rts */
 }
 
-HLE_RANGE(0x00739A, bt_Auto_00739A, 124, HLE_EXIT_SP(0x00739E, 12)) { boot_run_007376(ctx, 0x00739A); block_end(); }
+HLE_RANGE_YS(0x00739A, bt_Auto_00739A, 124, HLE_EXIT_SP(0x00739E, 12)) { boot_run_007376(ctx, 0x00739A); block_end(); }
 static void boot_run_0073A0(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1408,11 +1408,11 @@ L_0073F8:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x0073E4); return;  /* 007404 bras 73e4 */
 }
 
-HLE_RANGE(0x0073A0, bt_Auto_0073A0, 214, HLE_EXIT_SP(0x0073C0, -4), HLE_EXIT_SP(0x0073E4, -4)) { boot_run_0073A0(ctx, 0x0073A0); block_end(); }
-HLE_RANGE(0x0073C0, bt_Auto_0073C0, 248, 0x0073C0, 0x0073D6, 0x0073E4) { boot_run_0073A0(ctx, 0x0073C0); block_end(); }
-HLE_RANGE(0x0073D8, bt_Auto_0073D8, 156, 0x0073C0, 0x0073E4, 0x0073F2) { boot_run_0073A0(ctx, 0x0073D8); block_end(); }
-HLE_RANGE(0x0073E4, bt_Auto_0073E4, 100, HLE_EXIT_SP(0x0073E6, 4)) { boot_run_0073A0(ctx, 0x0073E4); block_end(); }
-HLE_RANGE(0x0073F8, bt_Auto_0073F8, 150, 0x0073E4) { boot_run_0073A0(ctx, 0x0073F8); block_end(); }
+HLE_RANGE_YS(0x0073A0, bt_Auto_0073A0, 214, HLE_EXIT_SP(0x0073C0, -4), HLE_EXIT_SP(0x0073E4, -4)) { boot_run_0073A0(ctx, 0x0073A0); block_end(); }
+HLE_RANGE_YS(0x0073C0, bt_Auto_0073C0, 248, 0x0073C0, 0x0073D6, 0x0073E4) { boot_run_0073A0(ctx, 0x0073C0); block_end(); }
+HLE_RANGE_YS(0x0073D8, bt_Auto_0073D8, 156, 0x0073C0, 0x0073E4, 0x0073F2) { boot_run_0073A0(ctx, 0x0073D8); block_end(); }
+HLE_RANGE_YS(0x0073E4, bt_Auto_0073E4, 100, HLE_EXIT_SP(0x0073E6, 4)) { boot_run_0073A0(ctx, 0x0073E4); block_end(); }
+HLE_RANGE_YS(0x0073F8, bt_Auto_0073F8, 150, 0x0073E4) { boot_run_0073A0(ctx, 0x0073F8); block_end(); }
 static void boot_run_00745C(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1857,9 +1857,9 @@ L_007A56:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00763E); return;  /* 007A6A braw 763e */
 }
 
-HLE_RANGE(0x00745C, bt_Auto_00745C, 566, 0x007476, 0x00747E, 0x0074D8) { boot_run_00745C(ctx, 0x00745C); block_end(); }
-HLE_RANGE(0x007482, bt_Auto_007482, 404, 0x0074D8) { boot_run_00745C(ctx, 0x007482); block_end(); }
-HLE_RANGE(0x00763E, bt_Auto_00763E, 132, 0x00764A) { boot_run_00745C(ctx, 0x00763E); block_end(); }
+HLE_RANGE_YS(0x00745C, bt_Auto_00745C, 566, 0x007476, 0x00747E, 0x0074D8) { boot_run_00745C(ctx, 0x00745C); block_end(); }
+HLE_RANGE_YS(0x007482, bt_Auto_007482, 404, 0x0074D8) { boot_run_00745C(ctx, 0x007482); block_end(); }
+HLE_RANGE_YS(0x00763E, bt_Auto_00763E, 132, 0x00764A) { boot_run_00745C(ctx, 0x00763E); block_end(); }
 static void boot_run_007C1E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1875,7 +1875,7 @@ L_007C1E:
 	hle_jump(ctx, 0x007C2A); return;  /* 007C2A rts */
 }
 
-HLE_RANGE(0x007C1E, bt_Auto_007C1E, 204, 0x007C2A) { boot_run_007C1E(ctx, 0x007C1E); block_end(); }
+HLE_RANGE_YS(0x007C1E, bt_Auto_007C1E, 204, 0x007C2A) { boot_run_007C1E(ctx, 0x007C1E); block_end(); }
 static void boot_run_007C2C(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1891,7 +1891,7 @@ L_007C2C:
 	hle_jump(ctx, 0x007C3E); return;  /* 007C3E rts */
 }
 
-HLE_RANGE(0x007C2C, bt_Auto_007C2C, 178, 0x007C3E) { boot_run_007C2C(ctx, 0x007C2C); block_end(); }
+HLE_RANGE_YS(0x007C2C, bt_Auto_007C2C, 178, 0x007C3E) { boot_run_007C2C(ctx, 0x007C2C); block_end(); }
 static void boot_run_007C68(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1908,7 +1908,7 @@ L_007C68:
 	hle_jump(ctx, 0x007C7A); return;  /* 007C7A rts */
 }
 
-HLE_RANGE(0x007C68, bt_Auto_007C68, 198, 0x007C7A) { boot_run_007C68(ctx, 0x007C68); block_end(); }
+HLE_RANGE_YS(0x007C68, bt_Auto_007C68, 198, 0x007C7A) { boot_run_007C68(ctx, 0x007C68); block_end(); }
 static void boot_run_007C90(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -1922,7 +1922,7 @@ L_007C90:
 	hle_jump(ctx, 0x007C98); return;  /* 007C98 rts */
 }
 
-HLE_RANGE(0x007C90, bt_Auto_007C90, 156, 0x007C98) { boot_run_007C90(ctx, 0x007C90); block_end(); }
+HLE_RANGE_YS(0x007C90, bt_Auto_007C90, 156, 0x007C98) { boot_run_007C90(ctx, 0x007C90); block_end(); }
 static void boot_run_007F00(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2016,24 +2016,24 @@ L_007FA0:
 	{ uint32_t v = alu(ctx, OP_SUB, (ctx->d[0] & 0xFFu), 0x41u, 8, 1); set_b(&ctx->d[0], v); } hle_insn(ctx, 8); hle_jump(ctx, 0x007FA4); return;  /* 007FA0 subib #65,%d0 */
 }
 
-HLE_RANGE(0x007F00, bt_Auto_007F00, 82, 0x007F06) { boot_run_007F00(ctx, 0x007F00); block_end(); }
-HLE_RANGE(0x007F06, bt_Auto_007F06, 808, 0x007F06, 0x007FA4, 0x007FE8, 0x007FF4) { boot_run_007F00(ctx, 0x007F06); block_end(); }
-HLE_RANGE(0x007F08, bt_Auto_007F08, 794, 0x007F06, 0x007FA4, 0x007FE8, 0x007FF4) { boot_run_007F00(ctx, 0x007F08); block_end(); }
-HLE_RANGE(0x007F0C, bt_Auto_007F0C, 780, 0x007F06, 0x007FA4, 0x007FE8, 0x007FF4) { boot_run_007F00(ctx, 0x007F0C); block_end(); }
-HLE_RANGE(0x007F10, bt_Auto_007F10, 762, 0x007F06, 0x007FA4, 0x007FE8) { boot_run_007F00(ctx, 0x007F10); block_end(); }
-HLE_RANGE(0x007F16, bt_Auto_007F16, 734, 0x007F06, 0x007FA4, 0x007FE8) { boot_run_007F00(ctx, 0x007F16); block_end(); }
-HLE_RANGE(0x007F22, bt_Auto_007F22, 674, 0x007FA4, 0x007FE8) { boot_run_007F00(ctx, 0x007F22); block_end(); }
-HLE_RANGE(0x007F5C, bt_Auto_007F5C, 94, 0x007FE8) { boot_run_007F00(ctx, 0x007F5C); block_end(); }
-HLE_RANGE(0x007F64, bt_Auto_007F64, 374, 0x007FA4) { boot_run_007F00(ctx, 0x007F64); block_end(); }
-HLE_RANGE(0x007F68, bt_Auto_007F68, 360, 0x007FA4) { boot_run_007F00(ctx, 0x007F68); block_end(); }
-HLE_RANGE(0x007F70, bt_Auto_007F70, 314, 0x007FA4) { boot_run_007F00(ctx, 0x007F70); block_end(); }
-HLE_RANGE(0x007F74, bt_Auto_007F74, 300, 0x007FA4) { boot_run_007F00(ctx, 0x007F74); block_end(); }
-HLE_RANGE(0x007F7C, bt_Auto_007F7C, 254, 0x007FA4) { boot_run_007F00(ctx, 0x007F7C); block_end(); }
-HLE_RANGE(0x007F88, bt_Auto_007F88, 194, 0x007FA4) { boot_run_007F00(ctx, 0x007F88); block_end(); }
-HLE_RANGE(0x007F8C, bt_Auto_007F8C, 180, 0x007FA4) { boot_run_007F00(ctx, 0x007F8C); block_end(); }
-HLE_RANGE(0x007F94, bt_Auto_007F94, 134, 0x007FA4) { boot_run_007F00(ctx, 0x007F94); block_end(); }
-HLE_RANGE(0x007F98, bt_Auto_007F98, 120, 0x007FA4) { boot_run_007F00(ctx, 0x007F98); block_end(); }
-HLE_RANGE(0x007FA0, bt_Auto_007FA0, 74, 0x007FA4) { boot_run_007F00(ctx, 0x007FA0); block_end(); }
+HLE_RANGE_YS(0x007F00, bt_Auto_007F00, 82, 0x007F06) { boot_run_007F00(ctx, 0x007F00); block_end(); }
+HLE_RANGE_YS(0x007F06, bt_Auto_007F06, 808, 0x007F06, 0x007FA4, 0x007FE8, 0x007FF4) { boot_run_007F00(ctx, 0x007F06); block_end(); }
+HLE_RANGE_YS(0x007F08, bt_Auto_007F08, 794, 0x007F06, 0x007FA4, 0x007FE8, 0x007FF4) { boot_run_007F00(ctx, 0x007F08); block_end(); }
+HLE_RANGE_YS(0x007F0C, bt_Auto_007F0C, 780, 0x007F06, 0x007FA4, 0x007FE8, 0x007FF4) { boot_run_007F00(ctx, 0x007F0C); block_end(); }
+HLE_RANGE_YS(0x007F10, bt_Auto_007F10, 762, 0x007F06, 0x007FA4, 0x007FE8) { boot_run_007F00(ctx, 0x007F10); block_end(); }
+HLE_RANGE_YS(0x007F16, bt_Auto_007F16, 734, 0x007F06, 0x007FA4, 0x007FE8) { boot_run_007F00(ctx, 0x007F16); block_end(); }
+HLE_RANGE_YS(0x007F22, bt_Auto_007F22, 674, 0x007FA4, 0x007FE8) { boot_run_007F00(ctx, 0x007F22); block_end(); }
+HLE_RANGE_YS(0x007F5C, bt_Auto_007F5C, 94, 0x007FE8) { boot_run_007F00(ctx, 0x007F5C); block_end(); }
+HLE_RANGE_YS(0x007F64, bt_Auto_007F64, 374, 0x007FA4) { boot_run_007F00(ctx, 0x007F64); block_end(); }
+HLE_RANGE_YS(0x007F68, bt_Auto_007F68, 360, 0x007FA4) { boot_run_007F00(ctx, 0x007F68); block_end(); }
+HLE_RANGE_YS(0x007F70, bt_Auto_007F70, 314, 0x007FA4) { boot_run_007F00(ctx, 0x007F70); block_end(); }
+HLE_RANGE_YS(0x007F74, bt_Auto_007F74, 300, 0x007FA4) { boot_run_007F00(ctx, 0x007F74); block_end(); }
+HLE_RANGE_YS(0x007F7C, bt_Auto_007F7C, 254, 0x007FA4) { boot_run_007F00(ctx, 0x007F7C); block_end(); }
+HLE_RANGE_YS(0x007F88, bt_Auto_007F88, 194, 0x007FA4) { boot_run_007F00(ctx, 0x007F88); block_end(); }
+HLE_RANGE_YS(0x007F8C, bt_Auto_007F8C, 180, 0x007FA4) { boot_run_007F00(ctx, 0x007F8C); block_end(); }
+HLE_RANGE_YS(0x007F94, bt_Auto_007F94, 134, 0x007FA4) { boot_run_007F00(ctx, 0x007F94); block_end(); }
+HLE_RANGE_YS(0x007F98, bt_Auto_007F98, 120, 0x007FA4) { boot_run_007F00(ctx, 0x007F98); block_end(); }
+HLE_RANGE_YS(0x007FA0, bt_Auto_007FA0, 74, 0x007FA4) { boot_run_007F00(ctx, 0x007FA0); block_end(); }
 static void boot_run_007FA4(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2095,22 +2095,22 @@ L_007FE6:
 	{ uint32_t eaD = ctx->a[5]; ctx->a[5] += 2; int io = !plain(eaD); if (io) io_pre(ctx, 0x3AC0, 0x007FE8); uint32_t v = (ctx->d[0] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); } hle_jump(ctx, 0x007FE8); return;  /* 007FE6 movew %d0,%a5@+ */
 }
 
-HLE_RANGE(0x007FA4, bt_Auto_007FA4, 380, 0x007FE8) { boot_run_007FA4(ctx, 0x007FA4); block_end(); }
-HLE_RANGE(0x007FA6, bt_Auto_007FA6, 370, 0x007FE8) { boot_run_007FA4(ctx, 0x007FA6); block_end(); }
-HLE_RANGE(0x007FA8, bt_Auto_007FA8, 360, 0x007FE8) { boot_run_007FA4(ctx, 0x007FA8); block_end(); }
-HLE_RANGE(0x007FB2, bt_Auto_007FB2, 314, 0x007FE8) { boot_run_007FA4(ctx, 0x007FB2); block_end(); }
-HLE_RANGE(0x007FB6, bt_Auto_007FB6, 296, 0x007FE8) { boot_run_007FA4(ctx, 0x007FB6); block_end(); }
-HLE_RANGE(0x007FB8, bt_Auto_007FB8, 282, 0x007FE8) { boot_run_007FA4(ctx, 0x007FB8); block_end(); }
-HLE_RANGE(0x007FBE, bt_Auto_007FBE, 254, 0x007FE8) { boot_run_007FA4(ctx, 0x007FBE); block_end(); }
-HLE_RANGE(0x007FC6, bt_Auto_007FC6, 222, 0x007FE8) { boot_run_007FA4(ctx, 0x007FC6); block_end(); }
-HLE_RANGE(0x007FC8, bt_Auto_007FC8, 208, 0x007FE8) { boot_run_007FA4(ctx, 0x007FC8); block_end(); }
-HLE_RANGE(0x007FCA, bt_Auto_007FCA, 194, 0x007FE8) { boot_run_007FA4(ctx, 0x007FCA); block_end(); }
-HLE_RANGE(0x007FCE, bt_Auto_007FCE, 180, 0x007FE8) { boot_run_007FA4(ctx, 0x007FCE); block_end(); }
-HLE_RANGE(0x007FD2, bt_Auto_007FD2, 166, 0x007FE8) { boot_run_007FA4(ctx, 0x007FD2); block_end(); }
-HLE_RANGE(0x007FD6, bt_Auto_007FD6, 148, 0x007FE8) { boot_run_007FA4(ctx, 0x007FD6); block_end(); }
-HLE_RANGE(0x007FD8, bt_Auto_007FD8, 134, 0x007FE8) { boot_run_007FA4(ctx, 0x007FD8); block_end(); }
-HLE_RANGE(0x007FDA, bt_Auto_007FDA, 120, 0x007FE8) { boot_run_007FA4(ctx, 0x007FDA); block_end(); }
-HLE_RANGE(0x007FE6, bt_Auto_007FE6, 74, 0x007FE8) { boot_run_007FA4(ctx, 0x007FE6); block_end(); }
+HLE_RANGE_YS(0x007FA4, bt_Auto_007FA4, 380, 0x007FE8) { boot_run_007FA4(ctx, 0x007FA4); block_end(); }
+HLE_RANGE_YS(0x007FA6, bt_Auto_007FA6, 370, 0x007FE8) { boot_run_007FA4(ctx, 0x007FA6); block_end(); }
+HLE_RANGE_YS(0x007FA8, bt_Auto_007FA8, 360, 0x007FE8) { boot_run_007FA4(ctx, 0x007FA8); block_end(); }
+HLE_RANGE_YS(0x007FB2, bt_Auto_007FB2, 314, 0x007FE8) { boot_run_007FA4(ctx, 0x007FB2); block_end(); }
+HLE_RANGE_YS(0x007FB6, bt_Auto_007FB6, 296, 0x007FE8) { boot_run_007FA4(ctx, 0x007FB6); block_end(); }
+HLE_RANGE_YS(0x007FB8, bt_Auto_007FB8, 282, 0x007FE8) { boot_run_007FA4(ctx, 0x007FB8); block_end(); }
+HLE_RANGE_YS(0x007FBE, bt_Auto_007FBE, 254, 0x007FE8) { boot_run_007FA4(ctx, 0x007FBE); block_end(); }
+HLE_RANGE_YS(0x007FC6, bt_Auto_007FC6, 222, 0x007FE8) { boot_run_007FA4(ctx, 0x007FC6); block_end(); }
+HLE_RANGE_YS(0x007FC8, bt_Auto_007FC8, 208, 0x007FE8) { boot_run_007FA4(ctx, 0x007FC8); block_end(); }
+HLE_RANGE_YS(0x007FCA, bt_Auto_007FCA, 194, 0x007FE8) { boot_run_007FA4(ctx, 0x007FCA); block_end(); }
+HLE_RANGE_YS(0x007FCE, bt_Auto_007FCE, 180, 0x007FE8) { boot_run_007FA4(ctx, 0x007FCE); block_end(); }
+HLE_RANGE_YS(0x007FD2, bt_Auto_007FD2, 166, 0x007FE8) { boot_run_007FA4(ctx, 0x007FD2); block_end(); }
+HLE_RANGE_YS(0x007FD6, bt_Auto_007FD6, 148, 0x007FE8) { boot_run_007FA4(ctx, 0x007FD6); block_end(); }
+HLE_RANGE_YS(0x007FD8, bt_Auto_007FD8, 134, 0x007FE8) { boot_run_007FA4(ctx, 0x007FD8); block_end(); }
+HLE_RANGE_YS(0x007FDA, bt_Auto_007FDA, 120, 0x007FE8) { boot_run_007FA4(ctx, 0x007FDA); block_end(); }
+HLE_RANGE_YS(0x007FE6, bt_Auto_007FE6, 74, 0x007FE8) { boot_run_007FA4(ctx, 0x007FE6); block_end(); }
 static void boot_run_007FE8(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2127,9 +2127,9 @@ L_007FF0:
 	{ uint32_t v = alu(ctx, OP_SUB, (ctx->d[3] & 0xFFFFu), 0x7Eu, 16, 1); set_w(&ctx->d[3], v); } hle_insn(ctx, 8); hle_jump(ctx, 0x007FF4); return;  /* 007FF0 subiw #126,%d3 */
 }
 
-HLE_RANGE(0x007FE8, bt_Auto_007FE8, 114, 0x007FF4) { boot_run_007FE8(ctx, 0x007FE8); block_end(); }
-HLE_RANGE(0x007FEA, bt_Auto_007FEA, 100, 0x007FF4) { boot_run_007FE8(ctx, 0x007FEA); block_end(); }
-HLE_RANGE(0x007FF0, bt_Auto_007FF0, 74, 0x007FF4) { boot_run_007FE8(ctx, 0x007FF0); block_end(); }
+HLE_RANGE_YS(0x007FE8, bt_Auto_007FE8, 114, 0x007FF4) { boot_run_007FE8(ctx, 0x007FE8); block_end(); }
+HLE_RANGE_YS(0x007FEA, bt_Auto_007FEA, 100, 0x007FF4) { boot_run_007FE8(ctx, 0x007FEA); block_end(); }
+HLE_RANGE_YS(0x007FF0, bt_Auto_007FF0, 74, 0x007FF4) { boot_run_007FE8(ctx, 0x007FF0); block_end(); }
 static void boot_run_008808(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2144,7 +2144,7 @@ L_008808:
 	hle_jump(ctx, 0x00881A); return;  /* 00881A rts */
 }
 
-HLE_RANGE(0x008808, bt_Auto_008808, 146, 0x00881A) { boot_run_008808(ctx, 0x008808); block_end(); }
+HLE_RANGE_YS(0x008808, bt_Auto_008808, 146, 0x00881A) { boot_run_008808(ctx, 0x008808); block_end(); }
 static void boot_run_008876(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2161,7 +2161,7 @@ L_008876:
 	hle_jump(ctx, 0x00889E); return;  /* 00889E rts */
 }
 
-HLE_RANGE(0x008876, bt_Auto_008876, 222, 0x00889E) { boot_run_008876(ctx, 0x008876); block_end(); }
+HLE_RANGE_YS(0x008876, bt_Auto_008876, 222, 0x00889E) { boot_run_008876(ctx, 0x008876); block_end(); }
 static void boot_run_008B3C(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2193,10 +2193,10 @@ L_008B82:
 	hle_jump(ctx, 0x008BB2); return;  /* 008BB2 rts */
 }
 
-HLE_RANGE(0x008B72, bt_Auto_008B72, 138, 0x008B72, 0x008B82) { boot_run_008B3C(ctx, 0x008B72); block_end(); }
-HLE_RANGE(0x008B74, bt_Auto_008B74, 120, 0x008B72, 0x008B82) { boot_run_008B3C(ctx, 0x008B74); block_end(); }
-HLE_RANGE(0x008B76, bt_Auto_008B76, 108, 0x008B72, 0x008B82) { boot_run_008B3C(ctx, 0x008B76); block_end(); }
-HLE_RANGE(0x008B82, bt_Auto_008B82, 302, 0x008B82, 0x008BB2) { boot_run_008B3C(ctx, 0x008B82); block_end(); }
+HLE_RANGE_YS(0x008B72, bt_Auto_008B72, 138, 0x008B72, 0x008B82) { boot_run_008B3C(ctx, 0x008B72); block_end(); }
+HLE_RANGE_YS(0x008B74, bt_Auto_008B74, 120, 0x008B72, 0x008B82) { boot_run_008B3C(ctx, 0x008B74); block_end(); }
+HLE_RANGE_YS(0x008B76, bt_Auto_008B76, 108, 0x008B72, 0x008B82) { boot_run_008B3C(ctx, 0x008B76); block_end(); }
+HLE_RANGE_YS(0x008B82, bt_Auto_008B82, 302, 0x008B82, 0x008BB2) { boot_run_008B3C(ctx, 0x008B82); block_end(); }
 static void boot_run_008C8E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2257,8 +2257,8 @@ L_008EC8:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x008DFC); return;  /* 008ED6 braw 8dfc */
 }
 
-HLE_RANGE(0x008DC0, bt_Auto_008DC0, 340, 0x008DCC, 0x008DF8, 0x008DFC) { boot_run_008C8E(ctx, 0x008DC0); block_end(); }
-HLE_RANGE(0x008E68, bt_Auto_008E68, 258, 0x008E92) { boot_run_008C8E(ctx, 0x008E68); block_end(); }
+HLE_RANGE_YS(0x008DC0, bt_Auto_008DC0, 340, 0x008DCC, 0x008DF8, 0x008DFC) { boot_run_008C8E(ctx, 0x008DC0); block_end(); }
+HLE_RANGE_YS(0x008E68, bt_Auto_008E68, 258, 0x008E92) { boot_run_008C8E(ctx, 0x008E68); block_end(); }
 static void boot_run_008F2E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2295,11 +2295,11 @@ L_008F74:
 	hle_jump(ctx, 0x008F7A); return;  /* 008F7A jsr %pc@(8a7c) */
 }
 
-HLE_RANGE(0x008F2E, bt_Auto_008F2E, 146, 0x008F40) { boot_run_008F2E(ctx, 0x008F2E); block_end(); }
-HLE_RANGE(0x008F50, bt_Auto_008F50, 120, 0x008F5C) { boot_run_008F2E(ctx, 0x008F50); block_end(); }
-HLE_RANGE(0x008F60, bt_Auto_008F60, 102, 0x008F66) { boot_run_008F2E(ctx, 0x008F60); block_end(); }
-HLE_RANGE(0x008F6A, bt_Auto_008F6A, 102, 0x008F70) { boot_run_008F2E(ctx, 0x008F6A); block_end(); }
-HLE_RANGE(0x008F74, bt_Auto_008F74, 102, 0x008F7A) { boot_run_008F2E(ctx, 0x008F74); block_end(); }
+HLE_RANGE_YS(0x008F2E, bt_Auto_008F2E, 146, 0x008F40) { boot_run_008F2E(ctx, 0x008F2E); block_end(); }
+HLE_RANGE_YS(0x008F50, bt_Auto_008F50, 120, 0x008F5C) { boot_run_008F2E(ctx, 0x008F50); block_end(); }
+HLE_RANGE_YS(0x008F60, bt_Auto_008F60, 102, 0x008F66) { boot_run_008F2E(ctx, 0x008F60); block_end(); }
+HLE_RANGE_YS(0x008F6A, bt_Auto_008F6A, 102, 0x008F70) { boot_run_008F2E(ctx, 0x008F6A); block_end(); }
+HLE_RANGE_YS(0x008F74, bt_Auto_008F74, 102, 0x008F7A) { boot_run_008F2E(ctx, 0x008F74); block_end(); }
 static void boot_run_00902E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2322,9 +2322,9 @@ L_00904E:
 	hle_jump(ctx, 0x009052); return;  /* 009052 rts */
 }
 
-HLE_RANGE(0x00902E, bt_Auto_00902E, 146, HLE_EXIT_SP(0x00903C, -8)) { boot_run_00902E(ctx, 0x00902E); block_end(); }
-HLE_RANGE(0x009040, bt_Auto_009040, 116, 0x00904A) { boot_run_00902E(ctx, 0x009040); block_end(); }
-HLE_RANGE(0x00904E, bt_Auto_00904E, 116, HLE_EXIT_SP(0x009052, 8)) { boot_run_00902E(ctx, 0x00904E); block_end(); }
+HLE_RANGE_YS(0x00902E, bt_Auto_00902E, 146, HLE_EXIT_SP(0x00903C, -8)) { boot_run_00902E(ctx, 0x00902E); block_end(); }
+HLE_RANGE_YS(0x009040, bt_Auto_009040, 116, 0x00904A) { boot_run_00902E(ctx, 0x009040); block_end(); }
+HLE_RANGE_YS(0x00904E, bt_Auto_00904E, 116, HLE_EXIT_SP(0x009052, 8)) { boot_run_00902E(ctx, 0x00904E); block_end(); }
 static void boot_run_009054(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2343,9 +2343,9 @@ L_009060:
 	hle_jump(ctx, 0x009064); return;  /* 009064 rts */
 }
 
-HLE_RANGE(0x009054, bt_Auto_009054, 128, HLE_EXIT_SP(0x00905C, -8)) { boot_run_009054(ctx, 0x009054); block_end(); }
-HLE_RANGE(0x009058, bt_Auto_009058, 98, 0x00905C) { boot_run_009054(ctx, 0x009058); block_end(); }
-HLE_RANGE(0x009060, bt_Auto_009060, 116, HLE_EXIT_SP(0x009064, 8)) { boot_run_009054(ctx, 0x009060); block_end(); }
+HLE_RANGE_YS(0x009054, bt_Auto_009054, 128, HLE_EXIT_SP(0x00905C, -8)) { boot_run_009054(ctx, 0x009054); block_end(); }
+HLE_RANGE_YS(0x009058, bt_Auto_009058, 98, 0x00905C) { boot_run_009054(ctx, 0x009058); block_end(); }
+HLE_RANGE_YS(0x009060, bt_Auto_009060, 116, HLE_EXIT_SP(0x009064, 8)) { boot_run_009054(ctx, 0x009060); block_end(); }
 static void boot_run_009066(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2362,8 +2362,8 @@ L_009072:
 	hle_jump(ctx, 0x009076); return;  /* 009076 rts */
 }
 
-HLE_RANGE(0x009066, bt_Auto_009066, 128, HLE_EXIT_SP(0x00906E, -8)) { boot_run_009066(ctx, 0x009066); block_end(); }
-HLE_RANGE(0x009072, bt_Auto_009072, 116, HLE_EXIT_SP(0x009076, 8)) { boot_run_009066(ctx, 0x009072); block_end(); }
+HLE_RANGE_YS(0x009066, bt_Auto_009066, 128, HLE_EXIT_SP(0x00906E, -8)) { boot_run_009066(ctx, 0x009066); block_end(); }
+HLE_RANGE_YS(0x009072, bt_Auto_009072, 116, HLE_EXIT_SP(0x009076, 8)) { boot_run_009066(ctx, 0x009072); block_end(); }
 static void boot_run_009078(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2382,9 +2382,9 @@ L_009084:
 	hle_jump(ctx, 0x009088); return;  /* 009088 rts */
 }
 
-HLE_RANGE(0x009078, bt_Auto_009078, 128, HLE_EXIT_SP(0x009080, -8)) { boot_run_009078(ctx, 0x009078); block_end(); }
-HLE_RANGE(0x00907C, bt_Auto_00907C, 98, 0x009080) { boot_run_009078(ctx, 0x00907C); block_end(); }
-HLE_RANGE(0x009084, bt_Auto_009084, 116, HLE_EXIT_SP(0x009088, 8)) { boot_run_009078(ctx, 0x009084); block_end(); }
+HLE_RANGE_YS(0x009078, bt_Auto_009078, 128, HLE_EXIT_SP(0x009080, -8)) { boot_run_009078(ctx, 0x009078); block_end(); }
+HLE_RANGE_YS(0x00907C, bt_Auto_00907C, 98, 0x009080) { boot_run_009078(ctx, 0x00907C); block_end(); }
+HLE_RANGE_YS(0x009084, bt_Auto_009084, 116, HLE_EXIT_SP(0x009088, 8)) { boot_run_009078(ctx, 0x009084); block_end(); }
 static void boot_run_00908A(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2401,8 +2401,8 @@ L_009096:
 	hle_jump(ctx, 0x00909A); return;  /* 00909A rts */
 }
 
-HLE_RANGE(0x00908A, bt_Auto_00908A, 128, HLE_EXIT_SP(0x009092, -8)) { boot_run_00908A(ctx, 0x00908A); block_end(); }
-HLE_RANGE(0x009096, bt_Auto_009096, 116, HLE_EXIT_SP(0x00909A, 8)) { boot_run_00908A(ctx, 0x009096); block_end(); }
+HLE_RANGE_YS(0x00908A, bt_Auto_00908A, 128, HLE_EXIT_SP(0x009092, -8)) { boot_run_00908A(ctx, 0x00908A); block_end(); }
+HLE_RANGE_YS(0x009096, bt_Auto_009096, 116, HLE_EXIT_SP(0x00909A, 8)) { boot_run_00908A(ctx, 0x009096); block_end(); }
 static void boot_run_009A02(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2433,8 +2433,8 @@ L_009A5C:
 	hle_jump(ctx, 0x009A5C); return;  /* 009A5C rts */
 }
 
-HLE_RANGE(0x009A06, bt_Auto_009A06, 134, 0x009A0C, 0x009A5C) { boot_run_009A02(ctx, 0x009A06); block_end(); }
-HLE_RANGE(0x009A10, bt_Auto_009A10, 384, 0x009A5C) { boot_run_009A02(ctx, 0x009A10); block_end(); }
+HLE_RANGE_YS(0x009A06, bt_Auto_009A06, 134, 0x009A0C, 0x009A5C) { boot_run_009A02(ctx, 0x009A06); block_end(); }
+HLE_RANGE_YS(0x009A10, bt_Auto_009A10, 384, 0x009A5C) { boot_run_009A02(ctx, 0x009A10); block_end(); }
 static void boot_run_009B16(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2452,7 +2452,7 @@ L_009B16:
 	hle_jump(ctx, 0x009B2E); return;  /* 009B2E rts */
 }
 
-HLE_RANGE(0x009B16, bt_Auto_009B16, 212, 0x009B2E) { boot_run_009B16(ctx, 0x009B16); block_end(); }
+HLE_RANGE_YS(0x009B16, bt_Auto_009B16, 212, 0x009B2E) { boot_run_009B16(ctx, 0x009B16); block_end(); }
 static void boot_run_00A5FA(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2478,8 +2478,8 @@ L_00A632:
 	hle_jump(ctx, 0x00A642); return;  /* 00A642 rts */
 }
 
-HLE_RANGE(0x00A5FE, bt_Auto_00A5FE, 274, 0x00A62C) { boot_run_00A5FA(ctx, 0x00A5FE); block_end(); }
-HLE_RANGE(0x00A632, bt_Auto_00A632, 148, 0x00A642) { boot_run_00A5FA(ctx, 0x00A632); block_end(); }
+HLE_RANGE_YS(0x00A5FE, bt_Auto_00A5FE, 274, 0x00A62C) { boot_run_00A5FA(ctx, 0x00A5FE); block_end(); }
+HLE_RANGE_YS(0x00A632, bt_Auto_00A632, 148, 0x00A642) { boot_run_00A5FA(ctx, 0x00A632); block_end(); }
 static void boot_run_00BA2A(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2506,9 +2506,9 @@ L_00BA4E:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00B3BE); return;  /* 00BA56 braw b3be */
 }
 
-HLE_RANGE(0x00BA2A, bt_Auto_00BA2A, 102, 0x00BA2C) { boot_run_00BA2A(ctx, 0x00BA2A); block_end(); }
-HLE_RANGE(0x00BA30, bt_Auto_00BA30, 186, HLE_EXIT_SP(0x00BA4A, -2)) { boot_run_00BA2A(ctx, 0x00BA30); block_end(); }
-HLE_RANGE(0x00BA4E, bt_Auto_00BA4E, 116, HLE_EXIT_SP(0x00B3BE, 2)) { boot_run_00BA2A(ctx, 0x00BA4E); block_end(); }
+HLE_RANGE_YS(0x00BA2A, bt_Auto_00BA2A, 102, 0x00BA2C) { boot_run_00BA2A(ctx, 0x00BA2A); block_end(); }
+HLE_RANGE_YS(0x00BA30, bt_Auto_00BA30, 186, HLE_EXIT_SP(0x00BA4A, -2)) { boot_run_00BA2A(ctx, 0x00BA30); block_end(); }
+HLE_RANGE_YS(0x00BA4E, bt_Auto_00BA4E, 116, HLE_EXIT_SP(0x00B3BE, 2)) { boot_run_00BA2A(ctx, 0x00BA4E); block_end(); }
 static void boot_run_00BABC(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2532,10 +2532,10 @@ L_00BAC8:
 	hle_jump(ctx, 0x00BAD4); return;  /* 00BAD4 rts */
 }
 
-HLE_RANGE(0x00BABC, bt_Auto_00BABC, 334, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BABC); block_end(); }
-HLE_RANGE(0x00BAC0, bt_Auto_00BAC0, 316, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BAC0); block_end(); }
-HLE_RANGE(0x00BAC4, bt_Auto_00BAC4, 166, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BAC4); block_end(); }
-HLE_RANGE(0x00BAC8, bt_Auto_00BAC8, 140, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BAC8); block_end(); }
+HLE_RANGE_YS(0x00BABC, bt_Auto_00BABC, 334, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BABC); block_end(); }
+HLE_RANGE_YS(0x00BAC0, bt_Auto_00BAC0, 316, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BAC0); block_end(); }
+HLE_RANGE_YS(0x00BAC4, bt_Auto_00BAC4, 166, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BAC4); block_end(); }
+HLE_RANGE_YS(0x00BAC8, bt_Auto_00BAC8, 140, 0x00BAD4) { boot_run_00BABC(ctx, 0x00BAC8); block_end(); }
 static void boot_run_00BBAE(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2563,10 +2563,10 @@ L_00BBCA:
 	hle_jump(ctx, 0x00BBD6); return;  /* 00BBD6 jsr %pc@(13240) */
 }
 
-HLE_RANGE(0x00BBAE, bt_Auto_00BBAE, 94, 0x00BBB0) { boot_run_00BBAE(ctx, 0x00BBAE); block_end(); }
-HLE_RANGE(0x00BBB4, bt_Auto_00BBB4, 126, 0x00BBC0) { boot_run_00BBAE(ctx, 0x00BBB4); block_end(); }
-HLE_RANGE(0x00BBC4, bt_Auto_00BBC4, 94, 0x00BBC6) { boot_run_00BBAE(ctx, 0x00BBC4); block_end(); }
-HLE_RANGE(0x00BBCA, bt_Auto_00BBCA, 126, 0x00BBD6) { boot_run_00BBAE(ctx, 0x00BBCA); block_end(); }
+HLE_RANGE_YS(0x00BBAE, bt_Auto_00BBAE, 94, 0x00BBB0) { boot_run_00BBAE(ctx, 0x00BBAE); block_end(); }
+HLE_RANGE_YS(0x00BBB4, bt_Auto_00BBB4, 126, 0x00BBC0) { boot_run_00BBAE(ctx, 0x00BBB4); block_end(); }
+HLE_RANGE_YS(0x00BBC4, bt_Auto_00BBC4, 94, 0x00BBC6) { boot_run_00BBAE(ctx, 0x00BBC4); block_end(); }
+HLE_RANGE_YS(0x00BBCA, bt_Auto_00BBCA, 126, 0x00BBD6) { boot_run_00BBAE(ctx, 0x00BBCA); block_end(); }
 static void boot_run_00BC56(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2593,9 +2593,9 @@ L_00BC7A:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00B3BE); return;  /* 00BC82 braw b3be */
 }
 
-HLE_RANGE(0x00BC56, bt_Auto_00BC56, 102, 0x00BC58) { boot_run_00BC56(ctx, 0x00BC56); block_end(); }
-HLE_RANGE(0x00BC5C, bt_Auto_00BC5C, 186, HLE_EXIT_SP(0x00BC76, -2)) { boot_run_00BC56(ctx, 0x00BC5C); block_end(); }
-HLE_RANGE(0x00BC7A, bt_Auto_00BC7A, 116, HLE_EXIT_SP(0x00B3BE, 2)) { boot_run_00BC56(ctx, 0x00BC7A); block_end(); }
+HLE_RANGE_YS(0x00BC56, bt_Auto_00BC56, 102, 0x00BC58) { boot_run_00BC56(ctx, 0x00BC56); block_end(); }
+HLE_RANGE_YS(0x00BC5C, bt_Auto_00BC5C, 186, HLE_EXIT_SP(0x00BC76, -2)) { boot_run_00BC56(ctx, 0x00BC5C); block_end(); }
+HLE_RANGE_YS(0x00BC7A, bt_Auto_00BC7A, 116, HLE_EXIT_SP(0x00B3BE, 2)) { boot_run_00BC56(ctx, 0x00BC7A); block_end(); }
 static void boot_run_00BF46(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2611,7 +2611,7 @@ L_00BF46:
 	hle_jump(ctx, 0x00BF5E); return;  /* 00BF5E rts */
 }
 
-HLE_RANGE(0x00BF46, bt_Auto_00BF46, 188, 0x00BF5E) { boot_run_00BF46(ctx, 0x00BF46); block_end(); }
+HLE_RANGE_YS(0x00BF46, bt_Auto_00BF46, 188, 0x00BF5E) { boot_run_00BF46(ctx, 0x00BF46); block_end(); }
 static void boot_run_00C3C6(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2650,10 +2650,10 @@ L_00C418:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00B3BE); return;  /* 00C418 braw b3be */
 }
 
-HLE_RANGE(0x00C3CA, bt_Auto_00C3CA, 352, 0x00C3F4, 0x00C40A) { boot_run_00C3C6(ctx, 0x00C3CA); block_end(); }
-HLE_RANGE(0x00C3D2, bt_Auto_00C3D2, 236, 0x00C3F4) { boot_run_00C3C6(ctx, 0x00C3D2); block_end(); }
-HLE_RANGE(0x00C3D6, bt_Auto_00C3D6, 218, 0x00C3F4) { boot_run_00C3C6(ctx, 0x00C3D6); block_end(); }
-HLE_RANGE(0x00C40E, bt_Auto_00C40E, 100, 0x00C412) { boot_run_00C3C6(ctx, 0x00C40E); block_end(); }
+HLE_RANGE_YS(0x00C3CA, bt_Auto_00C3CA, 352, 0x00C3F4, 0x00C40A) { boot_run_00C3C6(ctx, 0x00C3CA); block_end(); }
+HLE_RANGE_YS(0x00C3D2, bt_Auto_00C3D2, 236, 0x00C3F4) { boot_run_00C3C6(ctx, 0x00C3D2); block_end(); }
+HLE_RANGE_YS(0x00C3D6, bt_Auto_00C3D6, 218, 0x00C3F4) { boot_run_00C3C6(ctx, 0x00C3D6); block_end(); }
+HLE_RANGE_YS(0x00C40E, bt_Auto_00C40E, 100, 0x00C412) { boot_run_00C3C6(ctx, 0x00C40E); block_end(); }
 static void boot_run_00D322(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2740,13 +2740,13 @@ L_00D3E2:
 	hle_jump(ctx, 0x00D3E2); return;  /* 00D3E2 rts */
 }
 
-HLE_RANGE(0x00D322, bt_Auto_00D322, 88, 0x00D32A) { boot_run_00D322(ctx, 0x00D322); block_end(); }
-HLE_RANGE(0x00D32E, bt_Auto_00D32E, 344, 0x00D32A, 0x00D33C, 0x00D374, 0x00D3E0) { boot_run_00D322(ctx, 0x00D32E); block_end(); }
-HLE_RANGE(0x00D340, bt_Auto_00D340, 128, 0x00D34C) { boot_run_00D322(ctx, 0x00D340); block_end(); }
-HLE_RANGE(0x00D350, bt_Auto_00D350, 120, 0x00D3E2) { boot_run_00D322(ctx, 0x00D350); block_end(); }
-HLE_RANGE(0x00D378, bt_Auto_00D378, 340, HLE_EXIT_SP(0x00D3AE, -2)) { boot_run_00D322(ctx, 0x00D378); block_end(); }
-HLE_RANGE(0x00D3B2, bt_Auto_00D3B2, 98, HLE_EXIT_SP(0x00D3B4, 2)) { boot_run_00D322(ctx, 0x00D3B2); block_end(); }
-HLE_RANGE(0x00D3B8, bt_Auto_00D3B8, 298, 0x00D3DC, 0x00D3E0) { boot_run_00D322(ctx, 0x00D3B8); block_end(); }
+HLE_RANGE_YS(0x00D322, bt_Auto_00D322, 88, 0x00D32A) { boot_run_00D322(ctx, 0x00D322); block_end(); }
+HLE_RANGE_YS(0x00D32E, bt_Auto_00D32E, 344, 0x00D32A, 0x00D33C, 0x00D374, 0x00D3E0) { boot_run_00D322(ctx, 0x00D32E); block_end(); }
+HLE_RANGE_YS(0x00D340, bt_Auto_00D340, 128, 0x00D34C) { boot_run_00D322(ctx, 0x00D340); block_end(); }
+HLE_RANGE_YS(0x00D350, bt_Auto_00D350, 120, 0x00D3E2) { boot_run_00D322(ctx, 0x00D350); block_end(); }
+HLE_RANGE_YS(0x00D378, bt_Auto_00D378, 340, HLE_EXIT_SP(0x00D3AE, -2)) { boot_run_00D322(ctx, 0x00D378); block_end(); }
+HLE_RANGE_YS(0x00D3B2, bt_Auto_00D3B2, 98, HLE_EXIT_SP(0x00D3B4, 2)) { boot_run_00D322(ctx, 0x00D3B2); block_end(); }
+HLE_RANGE_YS(0x00D3B8, bt_Auto_00D3B8, 298, 0x00D3DC, 0x00D3E0) { boot_run_00D322(ctx, 0x00D3B8); block_end(); }
 static void boot_run_00D444(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2770,8 +2770,8 @@ L_00D468:
 	hle_jump(ctx, 0x00D46C); return;  /* 00D46C rts */
 }
 
-HLE_RANGE(0x00D444, bt_Auto_00D444, 236, HLE_EXIT_SP(0x00D462, -6)) { boot_run_00D444(ctx, 0x00D444); block_end(); }
-HLE_RANGE(0x00D468, bt_Auto_00D468, 112, HLE_EXIT_SP(0x00D46C, 6)) { boot_run_00D444(ctx, 0x00D468); block_end(); }
+HLE_RANGE_YS(0x00D444, bt_Auto_00D444, 236, HLE_EXIT_SP(0x00D462, -6)) { boot_run_00D444(ctx, 0x00D444); block_end(); }
+HLE_RANGE_YS(0x00D468, bt_Auto_00D468, 112, HLE_EXIT_SP(0x00D46C, 6)) { boot_run_00D444(ctx, 0x00D468); block_end(); }
 static void boot_run_00D46E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2810,8 +2810,8 @@ L_00D476:
 	hle_jump(ctx, 0x00D4E4); return;  /* 00D4E4 rts */
 }
 
-HLE_RANGE(0x00D46E, bt_Auto_00D46E, 88, HLE_EXIT_SP(0x00D472, -4)) { boot_run_00D46E(ctx, 0x00D46E); block_end(); }
-HLE_RANGE(0x00D476, bt_Auto_00D476, 566, 0x00D472, HLE_EXIT_SP(0x00D4E4, 4)) { boot_run_00D46E(ctx, 0x00D476); block_end(); }
+HLE_RANGE_YS(0x00D46E, bt_Auto_00D46E, 88, HLE_EXIT_SP(0x00D472, -4)) { boot_run_00D46E(ctx, 0x00D46E); block_end(); }
+HLE_RANGE_YS(0x00D476, bt_Auto_00D476, 566, 0x00D472, HLE_EXIT_SP(0x00D4E4, 4)) { boot_run_00D46E(ctx, 0x00D476); block_end(); }
 static void boot_run_00DC06(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2828,8 +2828,8 @@ L_00DC5A:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00B3BE); return;  /* 00DC5A braw b3be */
 }
 
-HLE_RANGE(0x00DC38, bt_Auto_00DC38, 110, HLE_EXIT_SP(0x00B3BE, 4)) { boot_run_00DC06(ctx, 0x00DC38); block_end(); }
-HLE_RANGE(0x00DC58, bt_Auto_00DC58, 94, HLE_EXIT_SP(0x00B3BE, 4)) { boot_run_00DC06(ctx, 0x00DC58); block_end(); }
+HLE_RANGE_YS(0x00DC38, bt_Auto_00DC38, 110, HLE_EXIT_SP(0x00B3BE, 4)) { boot_run_00DC06(ctx, 0x00DC38); block_end(); }
+HLE_RANGE_YS(0x00DC58, bt_Auto_00DC58, 94, HLE_EXIT_SP(0x00B3BE, 4)) { boot_run_00DC06(ctx, 0x00DC58); block_end(); }
 static void boot_run_00DE6C(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2845,7 +2845,7 @@ L_00DEA0:
 	hle_jump(ctx, 0x00DEB8); return;  /* 00DEB8 rts */
 }
 
-HLE_RANGE(0x00DEA0, bt_Auto_00DEA0, 188, 0x00DEB8) { boot_run_00DE6C(ctx, 0x00DEA0); block_end(); }
+HLE_RANGE_YS(0x00DEA0, bt_Auto_00DEA0, 188, 0x00DEB8) { boot_run_00DE6C(ctx, 0x00DEA0); block_end(); }
 static void boot_run_00F452(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2908,20 +2908,20 @@ L_00F4AC:
 	hle_jump(ctx, 0x00F4AC); return;  /* 00F4AC jsr %pc@(13228) */
 }
 
-HLE_RANGE(0x00F452, bt_Auto_00F452, 490, 0x00F4AC) { boot_run_00F452(ctx, 0x00F452); block_end(); }
-HLE_RANGE(0x00F458, bt_Auto_00F458, 468, 0x00F4AC) { boot_run_00F452(ctx, 0x00F458); block_end(); }
-HLE_RANGE(0x00F45E, bt_Auto_00F45E, 450, 0x00F4AC) { boot_run_00F452(ctx, 0x00F45E); block_end(); }
-HLE_RANGE(0x00F464, bt_Auto_00F464, 414, 0x00F4AC) { boot_run_00F452(ctx, 0x00F464); block_end(); }
-HLE_RANGE(0x00F466, bt_Auto_00F466, 404, 0x00F4AC) { boot_run_00F452(ctx, 0x00F466); block_end(); }
-HLE_RANGE(0x00F46A, bt_Auto_00F46A, 390, 0x00F4AC) { boot_run_00F452(ctx, 0x00F46A); block_end(); }
-HLE_RANGE(0x00F470, bt_Auto_00F470, 368, 0x00F4AC) { boot_run_00F452(ctx, 0x00F470); block_end(); }
-HLE_RANGE(0x00F474, bt_Auto_00F474, 350, 0x00F4AC) { boot_run_00F452(ctx, 0x00F474); block_end(); }
-HLE_RANGE(0x00F47C, bt_Auto_00F47C, 304, 0x00F4AC) { boot_run_00F452(ctx, 0x00F47C); block_end(); }
-HLE_RANGE(0x00F480, bt_Auto_00F480, 286, 0x00F4AC) { boot_run_00F452(ctx, 0x00F480); block_end(); }
-HLE_RANGE(0x00F48E, bt_Auto_00F48E, 224, 0x00F4AC) { boot_run_00F452(ctx, 0x00F48E); block_end(); }
-HLE_RANGE(0x00F496, bt_Auto_00F496, 186, 0x00F4AC) { boot_run_00F452(ctx, 0x00F496); block_end(); }
-HLE_RANGE(0x00F49A, bt_Auto_00F49A, 172, 0x00F4AC) { boot_run_00F452(ctx, 0x00F49A); block_end(); }
-HLE_RANGE(0x00F4A6, bt_Auto_00F4A6, 114, 0x00F4AC) { boot_run_00F452(ctx, 0x00F4A6); block_end(); }
+HLE_RANGE_YS(0x00F452, bt_Auto_00F452, 490, 0x00F4AC) { boot_run_00F452(ctx, 0x00F452); block_end(); }
+HLE_RANGE_YS(0x00F458, bt_Auto_00F458, 468, 0x00F4AC) { boot_run_00F452(ctx, 0x00F458); block_end(); }
+HLE_RANGE_YS(0x00F45E, bt_Auto_00F45E, 450, 0x00F4AC) { boot_run_00F452(ctx, 0x00F45E); block_end(); }
+HLE_RANGE_YS(0x00F464, bt_Auto_00F464, 414, 0x00F4AC) { boot_run_00F452(ctx, 0x00F464); block_end(); }
+HLE_RANGE_YS(0x00F466, bt_Auto_00F466, 404, 0x00F4AC) { boot_run_00F452(ctx, 0x00F466); block_end(); }
+HLE_RANGE_YS(0x00F46A, bt_Auto_00F46A, 390, 0x00F4AC) { boot_run_00F452(ctx, 0x00F46A); block_end(); }
+HLE_RANGE_YS(0x00F470, bt_Auto_00F470, 368, 0x00F4AC) { boot_run_00F452(ctx, 0x00F470); block_end(); }
+HLE_RANGE_YS(0x00F474, bt_Auto_00F474, 350, 0x00F4AC) { boot_run_00F452(ctx, 0x00F474); block_end(); }
+HLE_RANGE_YS(0x00F47C, bt_Auto_00F47C, 304, 0x00F4AC) { boot_run_00F452(ctx, 0x00F47C); block_end(); }
+HLE_RANGE_YS(0x00F480, bt_Auto_00F480, 286, 0x00F4AC) { boot_run_00F452(ctx, 0x00F480); block_end(); }
+HLE_RANGE_YS(0x00F48E, bt_Auto_00F48E, 224, 0x00F4AC) { boot_run_00F452(ctx, 0x00F48E); block_end(); }
+HLE_RANGE_YS(0x00F496, bt_Auto_00F496, 186, 0x00F4AC) { boot_run_00F452(ctx, 0x00F496); block_end(); }
+HLE_RANGE_YS(0x00F49A, bt_Auto_00F49A, 172, 0x00F4AC) { boot_run_00F452(ctx, 0x00F49A); block_end(); }
+HLE_RANGE_YS(0x00F4A6, bt_Auto_00F4A6, 114, 0x00F4AC) { boot_run_00F452(ctx, 0x00F4A6); block_end(); }
 static void boot_run_00F4B0(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -2999,28 +2999,28 @@ L_00F4FC:
 	hle_jump(ctx, 0x00F500); return;  /* 00F500 rts */
 }
 
-HLE_RANGE(0x00F4B0, bt_Auto_00F4B0, 124, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4B0); block_end(); }
-HLE_RANGE(0x00F4B6, bt_Auto_00F4B6, 102, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4B6); block_end(); }
-HLE_RANGE(0x00F4BC, bt_Auto_00F4BC, 84, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4BC); block_end(); }
-HLE_RANGE(0x00F4C0, bt_Auto_00F4C0, 70, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4C0); block_end(); }
-HLE_RANGE(0x00F4C2, bt_Auto_00F4C2, 390, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4C2); block_end(); }
-HLE_RANGE(0x00F4C6, bt_Auto_00F4C6, 376, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4C6); block_end(); }
-HLE_RANGE(0x00F4C8, bt_Auto_00F4C8, 360, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4C8); block_end(); }
-HLE_RANGE(0x00F4CC, bt_Auto_00F4CC, 346, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4CC); block_end(); }
-HLE_RANGE(0x00F4D0, bt_Auto_00F4D0, 326, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4D0); block_end(); }
-HLE_RANGE(0x00F4D4, bt_Auto_00F4D4, 306, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4D4); block_end(); }
-HLE_RANGE(0x00F4D6, bt_Auto_00F4D6, 248, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4D6); block_end(); }
-HLE_RANGE(0x00F4DA, bt_Auto_00F4DA, 230, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4DA); block_end(); }
-HLE_RANGE(0x00F4DC, bt_Auto_00F4DC, 156, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4DC); block_end(); }
-HLE_RANGE(0x00F4E0, bt_Auto_00F4E0, 188, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E0); block_end(); }
-HLE_RANGE(0x00F4E2, bt_Auto_00F4E2, 178, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E2); block_end(); }
-HLE_RANGE(0x00F4E6, bt_Auto_00F4E6, 164, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E6); block_end(); }
-HLE_RANGE(0x00F4E8, bt_Auto_00F4E8, 150, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E8); block_end(); }
-HLE_RANGE(0x00F4EC, bt_Auto_00F4EC, 130, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4EC); block_end(); }
-HLE_RANGE(0x00F4F0, bt_Auto_00F4F0, 116, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4F0); block_end(); }
-HLE_RANGE(0x00F4F2, bt_Auto_00F4F2, 102, 0x00F4F6) { boot_run_00F4B0(ctx, 0x00F4F2); block_end(); }
-HLE_RANGE(0x00F4FA, bt_Auto_00F4FA, 116, HLE_EXIT_SP(0x00F4C2, 2), HLE_EXIT_SP(0x00F500, 2)) { boot_run_00F4B0(ctx, 0x00F4FA); block_end(); }
-HLE_RANGE(0x00F4FC, bt_Auto_00F4FC, 102, 0x00F4C2, 0x00F500) { boot_run_00F4B0(ctx, 0x00F4FC); block_end(); }
+HLE_RANGE_YS(0x00F4B0, bt_Auto_00F4B0, 124, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4B0); block_end(); }
+HLE_RANGE_YS(0x00F4B6, bt_Auto_00F4B6, 102, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4B6); block_end(); }
+HLE_RANGE_YS(0x00F4BC, bt_Auto_00F4BC, 84, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4BC); block_end(); }
+HLE_RANGE_YS(0x00F4C0, bt_Auto_00F4C0, 70, 0x00F4C2) { boot_run_00F4B0(ctx, 0x00F4C0); block_end(); }
+HLE_RANGE_YS(0x00F4C2, bt_Auto_00F4C2, 390, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4C2); block_end(); }
+HLE_RANGE_YS(0x00F4C6, bt_Auto_00F4C6, 376, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4C6); block_end(); }
+HLE_RANGE_YS(0x00F4C8, bt_Auto_00F4C8, 360, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4C8); block_end(); }
+HLE_RANGE_YS(0x00F4CC, bt_Auto_00F4CC, 346, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4CC); block_end(); }
+HLE_RANGE_YS(0x00F4D0, bt_Auto_00F4D0, 326, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4D0); block_end(); }
+HLE_RANGE_YS(0x00F4D4, bt_Auto_00F4D4, 306, 0x00F4C2, HLE_EXIT_SP(0x00F4F6, -2), 0x00F500) { boot_run_00F4B0(ctx, 0x00F4D4); block_end(); }
+HLE_RANGE_YS(0x00F4D6, bt_Auto_00F4D6, 248, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4D6); block_end(); }
+HLE_RANGE_YS(0x00F4DA, bt_Auto_00F4DA, 230, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4DA); block_end(); }
+HLE_RANGE_YS(0x00F4DC, bt_Auto_00F4DC, 156, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4DC); block_end(); }
+HLE_RANGE_YS(0x00F4E0, bt_Auto_00F4E0, 188, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E0); block_end(); }
+HLE_RANGE_YS(0x00F4E2, bt_Auto_00F4E2, 178, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E2); block_end(); }
+HLE_RANGE_YS(0x00F4E6, bt_Auto_00F4E6, 164, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E6); block_end(); }
+HLE_RANGE_YS(0x00F4E8, bt_Auto_00F4E8, 150, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4E8); block_end(); }
+HLE_RANGE_YS(0x00F4EC, bt_Auto_00F4EC, 130, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4EC); block_end(); }
+HLE_RANGE_YS(0x00F4F0, bt_Auto_00F4F0, 116, HLE_EXIT_SP(0x00F4F6, -2)) { boot_run_00F4B0(ctx, 0x00F4F0); block_end(); }
+HLE_RANGE_YS(0x00F4F2, bt_Auto_00F4F2, 102, 0x00F4F6) { boot_run_00F4B0(ctx, 0x00F4F2); block_end(); }
+HLE_RANGE_YS(0x00F4FA, bt_Auto_00F4FA, 116, HLE_EXIT_SP(0x00F4C2, 2), HLE_EXIT_SP(0x00F500, 2)) { boot_run_00F4B0(ctx, 0x00F4FA); block_end(); }
+HLE_RANGE_YS(0x00F4FC, bt_Auto_00F4FC, 102, 0x00F4C2, 0x00F500) { boot_run_00F4B0(ctx, 0x00F4FC); block_end(); }
 static void boot_run_00F5D2(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3040,7 +3040,7 @@ L_00F5FE:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00DDBA); return;  /* 00F630 braw ddba */
 }
 
-HLE_RANGE(0x00F5FE, bt_Auto_00F5FE, 282, HLE_EXIT_SP(0x00DDBA, 2)) { boot_run_00F5D2(ctx, 0x00F5FE); block_end(); }
+HLE_RANGE_YS(0x00F5FE, bt_Auto_00F5FE, 282, HLE_EXIT_SP(0x00DDBA, 2)) { boot_run_00F5D2(ctx, 0x00F5FE); block_end(); }
 static void boot_run_010666(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3085,10 +3085,10 @@ L_0106C2:
 	hle_jump(ctx, 0x0106C2); return;  /* 0106C2 rts */
 }
 
-HLE_RANGE(0x010666, bt_Auto_010666, 510, 0x0106BE) { boot_run_010666(ctx, 0x010666); block_end(); }
-HLE_RANGE(0x01066C, bt_Auto_01066C, 486, 0x0106BE) { boot_run_010666(ctx, 0x01066C); block_end(); }
-HLE_RANGE(0x01067C, bt_Auto_01067C, 408, 0x0106BE) { boot_run_010666(ctx, 0x01067C); block_end(); }
-HLE_RANGE(0x010682, bt_Auto_010682, 378, 0x0106BE) { boot_run_010666(ctx, 0x010682); block_end(); }
+HLE_RANGE_YS(0x010666, bt_Auto_010666, 510, 0x0106BE) { boot_run_010666(ctx, 0x010666); block_end(); }
+HLE_RANGE_YS(0x01066C, bt_Auto_01066C, 486, 0x0106BE) { boot_run_010666(ctx, 0x01066C); block_end(); }
+HLE_RANGE_YS(0x01067C, bt_Auto_01067C, 408, 0x0106BE) { boot_run_010666(ctx, 0x01067C); block_end(); }
+HLE_RANGE_YS(0x010682, bt_Auto_010682, 378, 0x0106BE) { boot_run_010666(ctx, 0x010682); block_end(); }
 static void boot_run_0118F4(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3115,8 +3115,8 @@ L_0118FE:
 	hle_jump(ctx, 0x011926); return;  /* 011926 rts */
 }
 
-HLE_RANGE(0x0118F4, bt_Auto_0118F4, 344, 0x011926) { boot_run_0118F4(ctx, 0x0118F4); block_end(); }
-HLE_RANGE(0x0118FE, bt_Auto_0118FE, 300, 0x011926) { boot_run_0118F4(ctx, 0x0118FE); block_end(); }
+HLE_RANGE_YS(0x0118F4, bt_Auto_0118F4, 344, 0x011926) { boot_run_0118F4(ctx, 0x0118F4); block_end(); }
+HLE_RANGE_YS(0x0118FE, bt_Auto_0118FE, 300, 0x011926) { boot_run_0118F4(ctx, 0x0118FE); block_end(); }
 static void boot_run_011D44(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3130,7 +3130,7 @@ L_0120B2:
 	hle_insn(ctx, 10); hle_jump(ctx, 0x011D38); return;  /* 0120B6 braw 11d38 */
 }
 
-HLE_RANGE(0x0120B2, bt_Auto_0120B2, 96, 0x011D38, 0x0120B0) { boot_run_011D44(ctx, 0x0120B2); block_end(); }
+HLE_RANGE_YS(0x0120B2, bt_Auto_0120B2, 96, 0x011D38, 0x0120B0) { boot_run_011D44(ctx, 0x0120B2); block_end(); }
 static void boot_run_011F58(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3146,7 +3146,7 @@ L_011F58:
 	hle_jump(ctx, 0x011F6C); return;  /* 011F6C rts */
 }
 
-HLE_RANGE(0x011F58, bt_Auto_011F58, 180, 0x011F6C) { boot_run_011F58(ctx, 0x011F58); block_end(); }
+HLE_RANGE_YS(0x011F58, bt_Auto_011F58, 180, 0x011F6C) { boot_run_011F58(ctx, 0x011F58); block_end(); }
 static void boot_run_0121D6(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3179,10 +3179,10 @@ L_012210:
 	hle_jump(ctx, 0x012210); return;  /* 012210 rts */
 }
 
-HLE_RANGE(0x0121D6, bt_Auto_0121D6, 92, 0x0121E0) { boot_run_0121D6(ctx, 0x0121D6); block_end(); }
-HLE_RANGE(0x0121E0, bt_Auto_0121E0, 130, 0x0121E0, 0x0121E6) { boot_run_0121D6(ctx, 0x0121E0); block_end(); }
-HLE_RANGE(0x0121E2, bt_Auto_0121E2, 104, 0x0121E0, 0x0121E6) { boot_run_0121D6(ctx, 0x0121E2); block_end(); }
-HLE_RANGE(0x0121EA, bt_Auto_0121EA, 216, 0x012208) { boot_run_0121D6(ctx, 0x0121EA); block_end(); }
+HLE_RANGE_YS(0x0121D6, bt_Auto_0121D6, 92, 0x0121E0) { boot_run_0121D6(ctx, 0x0121D6); block_end(); }
+HLE_RANGE_YS(0x0121E0, bt_Auto_0121E0, 130, 0x0121E0, 0x0121E6) { boot_run_0121D6(ctx, 0x0121E0); block_end(); }
+HLE_RANGE_YS(0x0121E2, bt_Auto_0121E2, 104, 0x0121E0, 0x0121E6) { boot_run_0121D6(ctx, 0x0121E2); block_end(); }
+HLE_RANGE_YS(0x0121EA, bt_Auto_0121EA, 216, 0x012208) { boot_run_0121D6(ctx, 0x0121EA); block_end(); }
 static void boot_run_012212(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3205,8 +3205,8 @@ L_01221C:
 	hle_jump(ctx, 0x012232); return;  /* 012232 rts */
 }
 
-HLE_RANGE(0x012212, bt_Auto_012212, 106, 0x01221C) { boot_run_012212(ctx, 0x012212); block_end(); }
-HLE_RANGE(0x01221C, bt_Auto_01221C, 188, 0x01221C, 0x012232) { boot_run_012212(ctx, 0x01221C); block_end(); }
+HLE_RANGE_YS(0x012212, bt_Auto_012212, 106, 0x01221C) { boot_run_012212(ctx, 0x012212); block_end(); }
+HLE_RANGE_YS(0x01221C, bt_Auto_01221C, 188, 0x01221C, 0x012232) { boot_run_012212(ctx, 0x01221C); block_end(); }
 static void boot_run_0122CA(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3250,10 +3250,10 @@ L_0122FE:
 	hle_jump(ctx, 0x012314); return;  /* 012314 rts */
 }
 
-HLE_RANGE(0x0122CA, bt_Auto_0122CA, 200, 0x0122E4) { boot_run_0122CA(ctx, 0x0122CA); block_end(); }
-HLE_RANGE(0x0122E4, bt_Auto_0122E4, 90, 0x0122EA) { boot_run_0122CA(ctx, 0x0122E4); block_end(); }
-HLE_RANGE(0x0122EA, bt_Auto_0122EA, 292, 0x0122E4, 0x0122EA, 0x012314) { boot_run_0122CA(ctx, 0x0122EA); block_end(); }
-HLE_RANGE(0x0122F0, bt_Auto_0122F0, 258, 0x0122E4, 0x0122EA, 0x012314) { boot_run_0122CA(ctx, 0x0122F0); block_end(); }
+HLE_RANGE_YS(0x0122CA, bt_Auto_0122CA, 200, 0x0122E4) { boot_run_0122CA(ctx, 0x0122CA); block_end(); }
+HLE_RANGE_YS(0x0122E4, bt_Auto_0122E4, 90, 0x0122EA) { boot_run_0122CA(ctx, 0x0122E4); block_end(); }
+HLE_RANGE_YS(0x0122EA, bt_Auto_0122EA, 292, 0x0122E4, 0x0122EA, 0x012314) { boot_run_0122CA(ctx, 0x0122EA); block_end(); }
+HLE_RANGE_YS(0x0122F0, bt_Auto_0122F0, 258, 0x0122E4, 0x0122EA, 0x012314) { boot_run_0122CA(ctx, 0x0122F0); block_end(); }
 static void boot_run_013394(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3288,7 +3288,7 @@ L_0133D6:
 	hle_jump(ctx, 0x0133D6); return;  /* 0133D6 rts */
 }
 
-HLE_RANGE(0x013394, bt_Auto_013394, 476, 0x013394, 0x0133D6) { boot_run_013394(ctx, 0x013394); block_end(); }
+HLE_RANGE_YS(0x013394, bt_Auto_013394, 476, 0x013394, 0x0133D6) { boot_run_013394(ctx, 0x013394); block_end(); }
 static void boot_run_014792(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3330,10 +3330,10 @@ L_0147E2:
 	hle_jump(ctx, 0x0147E4); return;  /* 0147E4 jmp 0 */
 }
 
-HLE_RANGE(0x014792, bt_Auto_014792, 148, HLE_EXIT_SP(0x01479E, -2)) { boot_run_014792(ctx, 0x014792); block_end(); }
-HLE_RANGE(0x0147A2, bt_Auto_0147A2, 126, 0x0147AC) { boot_run_014792(ctx, 0x0147A2); block_end(); }
-HLE_RANGE(0x0147B0, bt_Auto_0147B0, 320, 0x0147DE, HLE_EXIT_SP(0x0147E4, 2)) { boot_run_014792(ctx, 0x0147B0); block_end(); }
-HLE_RANGE(0x0147E2, bt_Auto_0147E2, 92, HLE_EXIT_SP(0x0147E4, 2)) { boot_run_014792(ctx, 0x0147E2); block_end(); }
+HLE_RANGE_YS(0x014792, bt_Auto_014792, 148, HLE_EXIT_SP(0x01479E, -2)) { boot_run_014792(ctx, 0x014792); block_end(); }
+HLE_RANGE_YS(0x0147A2, bt_Auto_0147A2, 126, 0x0147AC) { boot_run_014792(ctx, 0x0147A2); block_end(); }
+HLE_RANGE_YS(0x0147B0, bt_Auto_0147B0, 320, 0x0147DE, HLE_EXIT_SP(0x0147E4, 2)) { boot_run_014792(ctx, 0x0147B0); block_end(); }
+HLE_RANGE_YS(0x0147E2, bt_Auto_0147E2, 92, HLE_EXIT_SP(0x0147E4, 2)) { boot_run_014792(ctx, 0x0147E2); block_end(); }
 static void boot_run_01480A(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3365,7 +3365,7 @@ L_014844:
 	hle_jump(ctx, 0x014844); return;  /* 014844 rts */
 }
 
-HLE_RANGE(0x01480A, bt_Auto_01480A, 346, 0x014832, 0x014840, 0x014844) { boot_run_01480A(ctx, 0x01480A); block_end(); }
+HLE_RANGE_YS(0x01480A, bt_Auto_01480A, 346, 0x014832, 0x014840, 0x014844) { boot_run_01480A(ctx, 0x01480A); block_end(); }
 static void boot_run_0148AE(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3395,9 +3395,9 @@ L_0148E2:
 	hle_jump(ctx, 0x0148E2); return;  /* 0148E2 jmp b3be */
 }
 
-HLE_RANGE(0x0148AE, bt_Auto_0148AE, 154, 0x0148BC) { boot_run_0148AE(ctx, 0x0148AE); block_end(); }
-HLE_RANGE(0x0148C0, bt_Auto_0148C0, 158, 0x0148CA, 0x0148CE) { boot_run_0148AE(ctx, 0x0148C0); block_end(); }
-HLE_RANGE(0x0148D4, bt_Auto_0148D4, 146, 0x0148E2) { boot_run_0148AE(ctx, 0x0148D4); block_end(); }
+HLE_RANGE_YS(0x0148AE, bt_Auto_0148AE, 154, 0x0148BC) { boot_run_0148AE(ctx, 0x0148AE); block_end(); }
+HLE_RANGE_YS(0x0148C0, bt_Auto_0148C0, 158, 0x0148CA, 0x0148CE) { boot_run_0148AE(ctx, 0x0148C0); block_end(); }
+HLE_RANGE_YS(0x0148D4, bt_Auto_0148D4, 146, 0x0148E2) { boot_run_0148AE(ctx, 0x0148D4); block_end(); }
 static void boot_run_014A34(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3435,9 +3435,9 @@ L_014A98:
 	hle_jump(ctx, 0x014A98); return;  /* 014A98 jmp b3be */
 }
 
-HLE_RANGE(0x014A34, bt_Auto_014A34, 154, 0x014A42) { boot_run_014A34(ctx, 0x014A34); block_end(); }
-HLE_RANGE(0x014A46, bt_Auto_014A46, 306, 0x014A76, 0x014A98) { boot_run_014A34(ctx, 0x014A46); block_end(); }
-HLE_RANGE(0x014A7C, bt_Auto_014A7C, 218, 0x014A98) { boot_run_014A34(ctx, 0x014A7C); block_end(); }
+HLE_RANGE_YS(0x014A34, bt_Auto_014A34, 154, 0x014A42) { boot_run_014A34(ctx, 0x014A34); block_end(); }
+HLE_RANGE_YS(0x014A46, bt_Auto_014A46, 306, 0x014A76, 0x014A98) { boot_run_014A34(ctx, 0x014A46); block_end(); }
+HLE_RANGE_YS(0x014A7C, bt_Auto_014A7C, 218, 0x014A98) { boot_run_014A34(ctx, 0x014A7C); block_end(); }
 static void boot_run_01DB36(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3586,24 +3586,24 @@ L_01DC2C:
 	hle_jump(ctx, 0x01DC38); return;  /* 01DC38 rts */
 }
 
-HLE_RANGE(0x01DB36, bt_Auto_01DB36, 124, HLE_EXIT_SP(0x01DB48, -32)) { boot_run_01DB36(ctx, 0x01DB36); block_end(); }
-HLE_RANGE(0x01DB48, bt_Auto_01DB48, 140, 0x01DB48, 0x01DB54) { boot_run_01DB36(ctx, 0x01DB48); block_end(); }
-HLE_RANGE(0x01DB5C, bt_Auto_01DB5C, 88, 0x01DB62) { boot_run_01DB36(ctx, 0x01DB5C); block_end(); }
-HLE_RANGE(0x01DB62, bt_Auto_01DB62, 154, 0x01DB62, 0x01DB74) { boot_run_01DB36(ctx, 0x01DB62); block_end(); }
-HLE_RANGE(0x01DB74, bt_Auto_01DB74, 196, 0x01DB74, 0x01DB90) { boot_run_01DB36(ctx, 0x01DB74); block_end(); }
-HLE_RANGE(0x01DB90, bt_Auto_01DB90, 224, 0x01DB90, 0x01DBB4) { boot_run_01DB36(ctx, 0x01DB90); block_end(); }
-HLE_RANGE(0x01DBB4, bt_Auto_01DBB4, 88, 0x01DBB8) { boot_run_01DB36(ctx, 0x01DBB4); block_end(); }
-HLE_RANGE(0x01DBB8, bt_Auto_01DBB8, 202, 0x01DBB4, 0x01DBB8, 0x01DBD6) { boot_run_01DB36(ctx, 0x01DBB8); block_end(); }
-HLE_RANGE(0x01DBD6, bt_Auto_01DBD6, 130, 0x01DBD6, 0x01DBE2) { boot_run_01DB36(ctx, 0x01DBD6); block_end(); }
-HLE_RANGE(0x01DBE2, bt_Auto_01DBE2, 94, 0x01DBEA) { boot_run_01DB36(ctx, 0x01DBE2); block_end(); }
-HLE_RANGE(0x01DBEA, bt_Auto_01DBEA, 130, 0x01DBEA, 0x01DBF0) { boot_run_01DB36(ctx, 0x01DBEA); block_end(); }
-HLE_RANGE(0x01DBF2, bt_Auto_01DBF2, 70, 0x01DBF4) { boot_run_01DB36(ctx, 0x01DBF2); block_end(); }
-HLE_RANGE(0x01DBF6, bt_Auto_01DBF6, 124, 0x01DBE2, 0x01DBF4, 0x01DC02) { boot_run_01DB36(ctx, 0x01DBF6); block_end(); }
-HLE_RANGE(0x01DC04, bt_Auto_01DC04, 90, 0x01DC02, 0x01DC0A) { boot_run_01DB36(ctx, 0x01DC04); block_end(); }
-HLE_RANGE(0x01DC0A, bt_Auto_01DC0A, 80, 0x01DC0E) { boot_run_01DB36(ctx, 0x01DC0A); block_end(); }
-HLE_RANGE(0x01DC0E, bt_Auto_01DC0E, 232, 0x01DC0E, 0x01DC26) { boot_run_01DB36(ctx, 0x01DC0E); block_end(); }
-HLE_RANGE(0x01DC28, bt_Auto_01DC28, 70, 0x01DC2A) { boot_run_01DB36(ctx, 0x01DC28); block_end(); }
-HLE_RANGE(0x01DC2C, bt_Auto_01DC2C, 140, 0x01DC0A, 0x01DC2A, HLE_EXIT_SP(0x01DC38, 32)) { boot_run_01DB36(ctx, 0x01DC2C); block_end(); }
+HLE_RANGE_YS(0x01DB36, bt_Auto_01DB36, 124, HLE_EXIT_SP(0x01DB48, -32)) { boot_run_01DB36(ctx, 0x01DB36); block_end(); }
+HLE_RANGE_YS(0x01DB48, bt_Auto_01DB48, 140, 0x01DB48, 0x01DB54) { boot_run_01DB36(ctx, 0x01DB48); block_end(); }
+HLE_RANGE_YS(0x01DB5C, bt_Auto_01DB5C, 88, 0x01DB62) { boot_run_01DB36(ctx, 0x01DB5C); block_end(); }
+HLE_RANGE_YS(0x01DB62, bt_Auto_01DB62, 154, 0x01DB62, 0x01DB74) { boot_run_01DB36(ctx, 0x01DB62); block_end(); }
+HLE_RANGE_YS(0x01DB74, bt_Auto_01DB74, 196, 0x01DB74, 0x01DB90) { boot_run_01DB36(ctx, 0x01DB74); block_end(); }
+HLE_RANGE_YS(0x01DB90, bt_Auto_01DB90, 224, 0x01DB90, 0x01DBB4) { boot_run_01DB36(ctx, 0x01DB90); block_end(); }
+HLE_RANGE_YS(0x01DBB4, bt_Auto_01DBB4, 88, 0x01DBB8) { boot_run_01DB36(ctx, 0x01DBB4); block_end(); }
+HLE_RANGE_YS(0x01DBB8, bt_Auto_01DBB8, 202, 0x01DBB4, 0x01DBB8, 0x01DBD6) { boot_run_01DB36(ctx, 0x01DBB8); block_end(); }
+HLE_RANGE_YS(0x01DBD6, bt_Auto_01DBD6, 130, 0x01DBD6, 0x01DBE2) { boot_run_01DB36(ctx, 0x01DBD6); block_end(); }
+HLE_RANGE_YS(0x01DBE2, bt_Auto_01DBE2, 94, 0x01DBEA) { boot_run_01DB36(ctx, 0x01DBE2); block_end(); }
+HLE_RANGE_YS(0x01DBEA, bt_Auto_01DBEA, 130, 0x01DBEA, 0x01DBF0) { boot_run_01DB36(ctx, 0x01DBEA); block_end(); }
+HLE_RANGE_YS(0x01DBF2, bt_Auto_01DBF2, 70, 0x01DBF4) { boot_run_01DB36(ctx, 0x01DBF2); block_end(); }
+HLE_RANGE_YS(0x01DBF6, bt_Auto_01DBF6, 124, 0x01DBE2, 0x01DBF4, 0x01DC02) { boot_run_01DB36(ctx, 0x01DBF6); block_end(); }
+HLE_RANGE_YS(0x01DC04, bt_Auto_01DC04, 90, 0x01DC02, 0x01DC0A) { boot_run_01DB36(ctx, 0x01DC04); block_end(); }
+HLE_RANGE_YS(0x01DC0A, bt_Auto_01DC0A, 80, 0x01DC0E) { boot_run_01DB36(ctx, 0x01DC0A); block_end(); }
+HLE_RANGE_YS(0x01DC0E, bt_Auto_01DC0E, 232, 0x01DC0E, 0x01DC26) { boot_run_01DB36(ctx, 0x01DC0E); block_end(); }
+HLE_RANGE_YS(0x01DC28, bt_Auto_01DC28, 70, 0x01DC2A) { boot_run_01DB36(ctx, 0x01DC28); block_end(); }
+HLE_RANGE_YS(0x01DC2C, bt_Auto_01DC2C, 140, 0x01DC0A, 0x01DC2A, HLE_EXIT_SP(0x01DC38, 32)) { boot_run_01DB36(ctx, 0x01DC2C); block_end(); }
 static void boot_run_01DC3A(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3622,8 +3622,8 @@ L_01DC46:
 	hle_jump(ctx, 0x01DC4C); return;  /* 01DC4C rts */
 }
 
-HLE_RANGE(0x01DC3C, bt_Auto_01DC3C, 106, 0x01DC46) { boot_run_01DC3A(ctx, 0x01DC3C); block_end(); }
-HLE_RANGE(0x01DC46, bt_Auto_01DC46, 128, 0x01DC46, 0x01DC4C) { boot_run_01DC3A(ctx, 0x01DC46); block_end(); }
+HLE_RANGE_YS(0x01DC3C, bt_Auto_01DC3C, 106, 0x01DC46) { boot_run_01DC3A(ctx, 0x01DC3C); block_end(); }
+HLE_RANGE_YS(0x01DC46, bt_Auto_01DC46, 128, 0x01DC46, 0x01DC4C) { boot_run_01DC3A(ctx, 0x01DC46); block_end(); }
 static void boot_run_01DC4E(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3648,10 +3648,10 @@ L_01DC5E:
 	hle_jump(ctx, 0x01DC66); return;  /* 01DC66 rts */
 }
 
-HLE_RANGE(0x01DC4E, bt_Auto_01DC4E, 98, 0x01DC4E, 0x01DC56) { boot_run_01DC4E(ctx, 0x01DC4E); block_end(); }
-HLE_RANGE(0x01DC56, bt_Auto_01DC56, 98, 0x01DC56, 0x01DC5E) { boot_run_01DC4E(ctx, 0x01DC56); block_end(); }
-HLE_RANGE(0x01DC5C, bt_Auto_01DC5C, 76, 0x01DC56, 0x01DC5E) { boot_run_01DC4E(ctx, 0x01DC5C); block_end(); }
-HLE_RANGE(0x01DC5E, bt_Auto_01DC5E, 120, 0x01DC5E, 0x01DC66) { boot_run_01DC4E(ctx, 0x01DC5E); block_end(); }
+HLE_RANGE_YS(0x01DC4E, bt_Auto_01DC4E, 98, 0x01DC4E, 0x01DC56) { boot_run_01DC4E(ctx, 0x01DC4E); block_end(); }
+HLE_RANGE_YS(0x01DC56, bt_Auto_01DC56, 98, 0x01DC56, 0x01DC5E) { boot_run_01DC4E(ctx, 0x01DC56); block_end(); }
+HLE_RANGE_YS(0x01DC5C, bt_Auto_01DC5C, 76, 0x01DC56, 0x01DC5E) { boot_run_01DC4E(ctx, 0x01DC5C); block_end(); }
+HLE_RANGE_YS(0x01DC5E, bt_Auto_01DC5E, 120, 0x01DC5E, 0x01DC66) { boot_run_01DC4E(ctx, 0x01DC5E); block_end(); }
 static void boot_run_01E346(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3683,9 +3683,9 @@ L_01E3AE:
 	hle_jump(ctx, 0x01E3AE); return;  /* 01E3AE rts */
 }
 
-HLE_RANGE(0x01E346, bt_Auto_01E346, 240, HLE_EXIT_SP(0x01E370, -12)) { boot_run_01E346(ctx, 0x01E346); block_end(); }
-HLE_RANGE(0x01E374, bt_Auto_01E374, 104, HLE_EXIT_SP(0x01E37E, 12)) { boot_run_01E346(ctx, 0x01E374); block_end(); }
-HLE_RANGE(0x01E37E, bt_Auto_01E37E, 230, 0x01E3AE) { boot_run_01E346(ctx, 0x01E37E); block_end(); }
+HLE_RANGE_YS(0x01E346, bt_Auto_01E346, 240, HLE_EXIT_SP(0x01E370, -12)) { boot_run_01E346(ctx, 0x01E346); block_end(); }
+HLE_RANGE_YS(0x01E374, bt_Auto_01E374, 104, HLE_EXIT_SP(0x01E37E, 12)) { boot_run_01E346(ctx, 0x01E374); block_end(); }
+HLE_RANGE_YS(0x01E37E, bt_Auto_01E37E, 230, 0x01E3AE) { boot_run_01E346(ctx, 0x01E37E); block_end(); }
 static void boot_run_01E3B0(hle_ctx *ctx, uint32_t pc)
 {
 	switch (pc) {
@@ -3750,9 +3750,9 @@ L_01E440:
 	hle_jump(ctx, 0x01E440); return;  /* 01E440 rts */
 }
 
-HLE_RANGE(0x01E3B0, bt_Auto_01E3B0, 148, 0x01E3C6) { boot_run_01E3B0(ctx, 0x01E3B0); block_end(); }
-HLE_RANGE(0x01E3C6, bt_Auto_01E3C6, 212, 0x01E3C6, 0x01E3E8) { boot_run_01E3B0(ctx, 0x01E3C6); block_end(); }
-HLE_RANGE(0x01E3E8, bt_Auto_01E3E8, 172, 0x01E3E8, 0x01E400) { boot_run_01E3B0(ctx, 0x01E3E8); block_end(); }
-HLE_RANGE(0x01E400, bt_Auto_01E400, 158, 0x01E400, 0x01E416) { boot_run_01E3B0(ctx, 0x01E400); block_end(); }
-HLE_RANGE(0x01E416, bt_Auto_01E416, 196, 0x01E42A, 0x01E440) { boot_run_01E3B0(ctx, 0x01E416); block_end(); }
-HLE_RANGE(0x01E42A, bt_Auto_01E42A, 130, 0x01E416) { boot_run_01E3B0(ctx, 0x01E42A); block_end(); }
+HLE_RANGE_YS(0x01E3B0, bt_Auto_01E3B0, 148, 0x01E3C6) { boot_run_01E3B0(ctx, 0x01E3B0); block_end(); }
+HLE_RANGE_YS(0x01E3C6, bt_Auto_01E3C6, 212, 0x01E3C6, 0x01E3E8) { boot_run_01E3B0(ctx, 0x01E3C6); block_end(); }
+HLE_RANGE_YS(0x01E3E8, bt_Auto_01E3E8, 172, 0x01E3E8, 0x01E400) { boot_run_01E3B0(ctx, 0x01E3E8); block_end(); }
+HLE_RANGE_YS(0x01E400, bt_Auto_01E400, 158, 0x01E400, 0x01E416) { boot_run_01E3B0(ctx, 0x01E400); block_end(); }
+HLE_RANGE_YS(0x01E416, bt_Auto_01E416, 196, 0x01E42A, 0x01E440) { boot_run_01E3B0(ctx, 0x01E416); block_end(); }
+HLE_RANGE_YS(0x01E42A, bt_Auto_01E42A, 130, 0x01E416) { boot_run_01E3B0(ctx, 0x01E42A); block_end(); }

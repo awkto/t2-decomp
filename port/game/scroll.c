@@ -242,16 +242,9 @@ static void bg_call(hle_ctx *c, uint32_t addr)
  * instruction after the `blt` ($0049A8, all registers and flags are in ctx) when the first event could fall
  * inside the heavy path; at the top of a pass (after the first) it hands over to the entry address, where
  * the hook declines and the 68k runs that pass. */
-HLE_FUNC_BAIL(0x00498A, BgStreamLayers, 76500)
+HLE_FUNC_YIELD(0x00498A, BgStreamLayers, 76500)
 {
 	for (;;) {
-		if (hle_bail_due(ctx, 260)) {
-			if (!ctx->tl_used)                                 /* nothing done yet: the 68k runs the call */
-				hle_decline_why(2);
-			else
-				hle_bail_to(ctx, 0x00498A);
-			return;
-		}
 		ctx->a[3] = bus_r32(ctx->a[2]); ctx->a[2] += 4;            /* movea.l (a2)+,a3 */
 		hle_insn(ctx, 12);
 		set_w(&ctx->d[7], bus_r16(ctx->a[0])); ctx->a[0] += 2;     /* move.w (a0)+,d7 */
@@ -278,14 +271,12 @@ HLE_FUNC_BAIL(0x00498A, BgStreamLayers, 76500)
 		hle_insn(ctx, 8);
 		if (f_lt(ctx)) { hle_insn(ctx, 10); goto next; }           /* blt.w */
 		hle_insn(ctx, 12);
-		if (hle_bail_due(ctx, 76500)) {                            /* the trigger fired: the long path */
-			hle_bail_to(ctx, 0x0049A8);   /* (tl_used: the blt before it was charged) */
-			return;
-		}
 		set_w(&ctx->d[6], RAM16(ctx->a[6])); cc_logic16(ctx, ctx->d[6]);   /* move.w (a6),d6 */
+		hle_insn(ctx, 8);
 		RAM16(ctx->a[6]) = (uint16_t)alu(ctx, OP_ADD, RAM16(ctx->a[6]), ctx->d[1], 16);  /* add.w d1,(a6) */
+		hle_insn(ctx, 12);
 		RAM16(BG_SCRATCH) = (uint16_t)ctx->d[1]; cc_logic16(ctx, ctx->d[1]);             /* move.w d1,(abs).l */
-		HLE_SEQ(ctx, 8, 12, 16);
+		hle_insn(ctx, 16);
 		set_w(&ctx->d[6], ctx->d[5]); cc_logic16(ctx, ctx->d[6]);  /* move.w d5,d6 */
 		set_w(&ctx->d[6], alu(ctx, OP_SUB, ctx->d[6], ctx->d[1], 16));   /* sub.w d1,d6 */
 		set_w(&ctx->d[6], asr16(ctx, ctx->d[6], 2));               /* asr.w #2,d6 */
@@ -316,8 +307,9 @@ HLE_FUNC_BAIL(0x00498A, BgStreamLayers, 76500)
 		}
 		set_w(&ctx->d[3], ctx->d[7]); cc_logic16(ctx, ctx->d[3]);  /* move.w d7,d3 */
 		set_w(&ctx->d[1], ctx->d[6]); cc_logic16(ctx, ctx->d[1]);  /* move.w d6,d1 */
+		HLE_SEQ(ctx, 4, 4);
 		set_w(&ctx->d[6], RAM16(BG_PLANEVAL)); cc_logic16(ctx, ctx->d[6]);   /* move.w (abs).l,d6 */
-		HLE_SEQ(ctx, 4, 4, 16);
+		hle_insn(ctx, 16);
 		{
 			uint32_t b = bus_r8(ctx->a[3] + (uint32_t)(int32_t)(int16_t)ctx->d[5]);
 			set_b(&ctx->d[5], b); cc_logic8(ctx, b);               /* move.b (0,a3,d5.w),d5 */

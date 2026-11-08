@@ -5,18 +5,19 @@
  * their own (t2-decomp#11, docs/native.md "Glue"): the cycles of the 68000 instruction, its effect on the stack and
  * PC, and hle_jump to the target, so a callee and the code at the return address are C blocks. Static targets are
  * HLE_RANGEs (difftest runs the original instruction up to the declared exit); computed targets (jsr (a0), jmp
- * (a0)) are functions that jump. 2600 blocks. */
+ * (a0)) are functions that jump. Every block is one instruction, so it is HLE_F_ATOMIC (an interrupt cannot fall
+ * inside it: no decline); only rte, which lowers the mask, is an ordinary HLE_FUNC. 2600 blocks. */
 #include "hle.h"
 
 #include <stdint.h>
 
-HLE_RANGE(0x000300, glue_000300, 12, 0x007406)   /* jmp $007406.l */
+HLE_RANGE_ATOMIC(0x000300, glue_000300, 12, 0x007406)   /* jmp $007406.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x007406);
 }
 
-HLE_RANGE(0x000396, glue_000396, 20, HLE_EXIT_SP(0x0FBBD0, -4))   /* jsr $0FBBD0.l */
+HLE_RANGE_ATOMIC(0x000396, glue_000396, 20, HLE_EXIT_SP(0x0FBBD0, -4))   /* jsr $0FBBD0.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00039C);
@@ -37,1255 +38,1255 @@ HLE_FUNC(0x0003DC, glue_0003DC, 20)   /* rte */
 	hle_jump(ctx, pop32(ctx));
 }
 
-HLE_RANGE(0x0004E0, glue_0004E0, 20, HLE_EXIT_SP(0x008908, -4))   /* jsr $008908.l */
+HLE_RANGE_ATOMIC(0x0004E0, glue_0004E0, 20, HLE_EXIT_SP(0x008908, -4))   /* jsr $008908.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0004E6);
 	hle_jump(ctx, 0x008908);
 }
 
-HLE_RANGE(0x0004E6, glue_0004E6, 20, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0.l */
+HLE_RANGE_ATOMIC(0x0004E6, glue_0004E6, 20, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0004EC);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_RANGE(0x00050E, glue_00050E, 18, HLE_EXIT_SP(0x0005FC, -4))   /* bsr $0005FC */
+HLE_RANGE_ATOMIC(0x00050E, glue_00050E, 18, HLE_EXIT_SP(0x0005FC, -4))   /* bsr $0005FC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000512);
 	hle_jump(ctx, 0x0005FC);
 }
 
-HLE_RANGE(0x000518, glue_000518, 18, HLE_EXIT_SP(0x0005FC, -4))   /* bsr $0005FC */
+HLE_RANGE_ATOMIC(0x000518, glue_000518, 18, HLE_EXIT_SP(0x0005FC, -4))   /* bsr $0005FC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00051C);
 	hle_jump(ctx, 0x0005FC);
 }
 
-HLE_FUNC(0x00051C, glue_00051C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00051C, glue_00051C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00056E, glue_00056E, 20, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0.l */
+HLE_RANGE_ATOMIC(0x00056E, glue_00056E, 20, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000574);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_RANGE(0x000580, glue_000580, 18, HLE_EXIT_SP(0x0005FC, -4))   /* bsr $0005FC */
+HLE_RANGE_ATOMIC(0x000580, glue_000580, 18, HLE_EXIT_SP(0x0005FC, -4))   /* bsr $0005FC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000584);
 	hle_jump(ctx, 0x0005FC);
 }
 
-HLE_RANGE(0x000584, glue_000584, 20, HLE_EXIT_SP(0x01E442, -4))   /* jsr $01E442.l */
+HLE_RANGE_ATOMIC(0x000584, glue_000584, 20, HLE_EXIT_SP(0x01E442, -4))   /* jsr $01E442.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00058A);
 	hle_jump(ctx, 0x01E442);
 }
 
-HLE_RANGE(0x0005F8, glue_0005F8, 10, 0x00071C)   /* bra $00071C */
+HLE_RANGE_ATOMIC(0x0005F8, glue_0005F8, 10, 0x00071C)   /* bra $00071C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00071C);
 }
 
-HLE_RANGE(0x000648, glue_000648, 10, 0x000690)   /* bra $000690 */
+HLE_RANGE_ATOMIC(0x000648, glue_000648, 10, 0x000690)   /* bra $000690 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x000690);
 }
 
-HLE_RANGE(0x0006D4, glue_0006D4, 10, 0x00071C)   /* bra $00071C */
+HLE_RANGE_ATOMIC(0x0006D4, glue_0006D4, 10, 0x00071C)   /* bra $00071C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00071C);
 }
 
-HLE_RANGE(0x000730, glue_000730, 20, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240.l */
+HLE_RANGE_ATOMIC(0x000730, glue_000730, 20, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000736);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x000736, glue_000736, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000736, glue_000736, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000752, glue_000752, 18, HLE_EXIT_SP(0x00076A, -4))   /* bsr $00076A */
+HLE_RANGE_ATOMIC(0x000752, glue_000752, 18, HLE_EXIT_SP(0x00076A, -4))   /* bsr $00076A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000756);
 	hle_jump(ctx, 0x00076A);
 }
 
-HLE_RANGE(0x000756, glue_000756, 18, HLE_EXIT_SP(0x00086C, -4))   /* jsr $00086C(pc) */
+HLE_RANGE_ATOMIC(0x000756, glue_000756, 18, HLE_EXIT_SP(0x00086C, -4))   /* jsr $00086C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00075A);
 	hle_jump(ctx, 0x00086C);
 }
 
-HLE_RANGE(0x000760, glue_000760, 18, HLE_EXIT_SP(0x00076A, -4))   /* bsr $00076A */
+HLE_RANGE_ATOMIC(0x000760, glue_000760, 18, HLE_EXIT_SP(0x00076A, -4))   /* bsr $00076A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000764);
 	hle_jump(ctx, 0x00076A);
 }
 
-HLE_RANGE(0x000764, glue_000764, 18, HLE_EXIT_SP(0x00086C, -4))   /* jsr $00086C(pc) */
+HLE_RANGE_ATOMIC(0x000764, glue_000764, 18, HLE_EXIT_SP(0x00086C, -4))   /* jsr $00086C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000768);
 	hle_jump(ctx, 0x00086C);
 }
 
-HLE_FUNC(0x000768, glue_000768, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000768, glue_000768, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0007F8, glue_0007F8, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0007F8, glue_0007F8, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0007FE);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0007FE, glue_0007FE, 10, 0x00086A)   /* bra $00086A */
+HLE_RANGE_ATOMIC(0x0007FE, glue_0007FE, 10, 0x00086A)   /* bra $00086A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00086A);
 }
 
-HLE_RANGE(0x00082A, glue_00082A, 18, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892(pc) */
+HLE_RANGE_ATOMIC(0x00082A, glue_00082A, 18, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00082E);
 	hle_jump(ctx, 0x005892);
 }
 
-HLE_RANGE(0x000830, glue_000830, 10, 0x000834)   /* bra $000834 */
+HLE_RANGE_ATOMIC(0x000830, glue_000830, 10, 0x000834)   /* bra $000834 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x000834);
 }
 
-HLE_RANGE(0x000834, glue_000834, 20, HLE_EXIT_SP(0x013CC4, -4))   /* jsr $013CC4.l */
+HLE_RANGE_ATOMIC(0x000834, glue_000834, 20, HLE_EXIT_SP(0x013CC4, -4))   /* jsr $013CC4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00083A);
 	hle_jump(ctx, 0x013CC4);
 }
 
-HLE_RANGE(0x00083A, glue_00083A, 18, HLE_EXIT_SP(0x007C68, -4))   /* jsr $007C68(pc) */
+HLE_RANGE_ATOMIC(0x00083A, glue_00083A, 18, HLE_EXIT_SP(0x007C68, -4))   /* jsr $007C68(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00083E);
 	hle_jump(ctx, 0x007C68);
 }
 
-HLE_RANGE(0x00084A, glue_00084A, 20, HLE_EXIT_SP(0x012D00, -4))   /* jsr $012D00.l */
+HLE_RANGE_ATOMIC(0x00084A, glue_00084A, 20, HLE_EXIT_SP(0x012D00, -4))   /* jsr $012D00.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000850);
 	hle_jump(ctx, 0x012D00);
 }
 
-HLE_FUNC(0x00086A, glue_00086A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00086A, glue_00086A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000892, glue_000892, 20, HLE_EXIT_SP(0x012D00, -4))   /* jsr $012D00.l */
+HLE_RANGE_ATOMIC(0x000892, glue_000892, 20, HLE_EXIT_SP(0x012D00, -4))   /* jsr $012D00.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000898);
 	hle_jump(ctx, 0x012D00);
 }
 
-HLE_RANGE(0x00089C, glue_00089C, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00089C, glue_00089C, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0008A2);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0008AA, glue_0008AA, 18, HLE_EXIT_SP(0x00700C, -4))   /* jsr $00700C(pc) */
+HLE_RANGE_ATOMIC(0x0008AA, glue_0008AA, 18, HLE_EXIT_SP(0x00700C, -4))   /* jsr $00700C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0008AE);
 	hle_jump(ctx, 0x00700C);
 }
 
-HLE_RANGE(0x0008BA, glue_0008BA, 18, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892(pc) */
+HLE_RANGE_ATOMIC(0x0008BA, glue_0008BA, 18, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0008BE);
 	hle_jump(ctx, 0x005892);
 }
 
-HLE_RANGE(0x0008CC, glue_0008CC, 20, HLE_EXIT_SP(0x01248C, -4))   /* jsr $01248C.l */
+HLE_RANGE_ATOMIC(0x0008CC, glue_0008CC, 20, HLE_EXIT_SP(0x01248C, -4))   /* jsr $01248C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0008D2);
 	hle_jump(ctx, 0x01248C);
 }
 
-HLE_RANGE(0x0008E4, glue_0008E4, 18, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892(pc) */
+HLE_RANGE_ATOMIC(0x0008E4, glue_0008E4, 18, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0008E8);
 	hle_jump(ctx, 0x005892);
 }
 
-HLE_RANGE(0x0008F8, glue_0008F8, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0008F8, glue_0008F8, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0008FE);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_FUNC(0x0008FE, glue_0008FE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0008FE, glue_0008FE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000900, glue_000900, 20, HLE_EXIT_SP(0x01DB36, -4))   /* jsr $01DB36.l */
+HLE_RANGE_ATOMIC(0x000900, glue_000900, 20, HLE_EXIT_SP(0x01DB36, -4))   /* jsr $01DB36.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000906);
 	hle_jump(ctx, 0x01DB36);
 }
 
-HLE_RANGE(0x000906, glue_000906, 18, HLE_EXIT_SP(0x008162, -4))   /* jsr $008162(pc) */
+HLE_RANGE_ATOMIC(0x000906, glue_000906, 18, HLE_EXIT_SP(0x008162, -4))   /* jsr $008162(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00090A);
 	hle_jump(ctx, 0x008162);
 }
 
-HLE_RANGE(0x00090A, glue_00090A, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
+HLE_RANGE_ATOMIC(0x00090A, glue_00090A, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00090E);
 	hle_jump(ctx, 0x00818C);
 }
 
-HLE_RANGE(0x00090E, glue_00090E, 18, HLE_EXIT_SP(0x00800C, -4))   /* jsr $00800C(pc) */
+HLE_RANGE_ATOMIC(0x00090E, glue_00090E, 18, HLE_EXIT_SP(0x00800C, -4))   /* jsr $00800C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000912);
 	hle_jump(ctx, 0x00800C);
 }
 
-HLE_RANGE(0x000916, glue_000916, 18, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A(pc) */
+HLE_RANGE_ATOMIC(0x000916, glue_000916, 18, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00091A);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x00091E, glue_00091E, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x00091E, glue_00091E, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000922);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x000932, glue_000932, 18, HLE_EXIT_SP(0x00099E, -4))   /* bsr $00099E */
+HLE_RANGE_ATOMIC(0x000932, glue_000932, 18, HLE_EXIT_SP(0x00099E, -4))   /* bsr $00099E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000936);
 	hle_jump(ctx, 0x00099E);
 }
 
-HLE_RANGE(0x000936, glue_000936, 18, HLE_EXIT_SP(0x000CC6, -4))   /* bsr $000CC6 */
+HLE_RANGE_ATOMIC(0x000936, glue_000936, 18, HLE_EXIT_SP(0x000CC6, -4))   /* bsr $000CC6 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00093A);
 	hle_jump(ctx, 0x000CC6);
 }
 
-HLE_RANGE(0x00093A, glue_00093A, 18, HLE_EXIT_SP(0x000D76, -4))   /* bsr $000D76 */
+HLE_RANGE_ATOMIC(0x00093A, glue_00093A, 18, HLE_EXIT_SP(0x000D76, -4))   /* bsr $000D76 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00093E);
 	hle_jump(ctx, 0x000D76);
 }
 
-HLE_RANGE(0x000944, glue_000944, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x000944, glue_000944, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000948);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x000948, glue_000948, 18, HLE_EXIT_SP(0x0042CE, -4))   /* jsr $0042CE(pc) */
+HLE_RANGE_ATOMIC(0x000948, glue_000948, 18, HLE_EXIT_SP(0x0042CE, -4))   /* jsr $0042CE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00094C);
 	hle_jump(ctx, 0x0042CE);
 }
 
-HLE_RANGE(0x000954, glue_000954, 18, HLE_EXIT_SP(0x0041E6, -4))   /* jsr $0041E6(pc) */
+HLE_RANGE_ATOMIC(0x000954, glue_000954, 18, HLE_EXIT_SP(0x0041E6, -4))   /* jsr $0041E6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000958);
 	hle_jump(ctx, 0x0041E6);
 }
 
-HLE_RANGE(0x000958, glue_000958, 18, HLE_EXIT_SP(0x001A30, -4))   /* jsr $001A30(pc) */
+HLE_RANGE_ATOMIC(0x000958, glue_000958, 18, HLE_EXIT_SP(0x001A30, -4))   /* jsr $001A30(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00095C);
 	hle_jump(ctx, 0x001A30);
 }
 
-HLE_RANGE(0x00096E, glue_00096E, 20, HLE_EXIT_SP(0x00745C, -4))   /* jsr $00745C.l */
+HLE_RANGE_ATOMIC(0x00096E, glue_00096E, 20, HLE_EXIT_SP(0x00745C, -4))   /* jsr $00745C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000974);
 	hle_jump(ctx, 0x00745C);
 }
 
-HLE_RANGE(0x00097E, glue_00097E, 18, HLE_EXIT_SP(0x003F98, -4))   /* jsr $003F98(pc) */
+HLE_RANGE_ATOMIC(0x00097E, glue_00097E, 18, HLE_EXIT_SP(0x003F98, -4))   /* jsr $003F98(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000982);
 	hle_jump(ctx, 0x003F98);
 }
 
-HLE_RANGE(0x000986, glue_000986, 18, HLE_EXIT_SP(0x000ED4, -4))   /* bsr $000ED4 */
+HLE_RANGE_ATOMIC(0x000986, glue_000986, 18, HLE_EXIT_SP(0x000ED4, -4))   /* bsr $000ED4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00098A);
 	hle_jump(ctx, 0x000ED4);
 }
 
-HLE_RANGE(0x00098A, glue_00098A, 20, HLE_EXIT_SP(0x00745C, -4))   /* jsr $00745C.l */
+HLE_RANGE_ATOMIC(0x00098A, glue_00098A, 20, HLE_EXIT_SP(0x00745C, -4))   /* jsr $00745C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000990);
 	hle_jump(ctx, 0x00745C);
 }
 
-HLE_RANGE(0x000996, glue_000996, 18, HLE_EXIT_SP(0x003F98, -4))   /* jsr $003F98(pc) */
+HLE_RANGE_ATOMIC(0x000996, glue_000996, 18, HLE_EXIT_SP(0x003F98, -4))   /* jsr $003F98(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00099A);
 	hle_jump(ctx, 0x003F98);
 }
 
-HLE_RANGE(0x0009A2, glue_0009A2, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
+HLE_RANGE_ATOMIC(0x0009A2, glue_0009A2, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0009A6);
 	hle_jump(ctx, 0x0056FA);
 }
 
-HLE_RANGE(0x0009A6, glue_0009A6, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x0009A6, glue_0009A6, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0009AA);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x0009AA, glue_0009AA, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x0009AA, glue_0009AA, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0009B0);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x0009B4, glue_0009B4, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
+HLE_RANGE_ATOMIC(0x0009B4, glue_0009B4, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0009BA);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x0009C4, glue_0009C4, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0009C4, glue_0009C4, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0009CA);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0009DA, glue_0009DA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0009DA, glue_0009DA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0009E0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0009EA, glue_0009EA, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
+HLE_RANGE_ATOMIC(0x0009EA, glue_0009EA, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0009F0);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0009F4, glue_0009F4, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
+HLE_RANGE_ATOMIC(0x0009F4, glue_0009F4, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0009FA);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0009FE, glue_0009FE, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
+HLE_RANGE_ATOMIC(0x0009FE, glue_0009FE, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000A04);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000A0C, glue_000A0C, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
+HLE_RANGE_ATOMIC(0x000A0C, glue_000A0C, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000A12);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x000A1E, glue_000A1E, 20, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C.l */
+HLE_RANGE_ATOMIC(0x000A1E, glue_000A1E, 20, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000A24);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x000A2A, glue_000A2A, 18, HLE_EXIT_SP(0x000E22, -4))   /* bsr $000E22 */
+HLE_RANGE_ATOMIC(0x000A2A, glue_000A2A, 18, HLE_EXIT_SP(0x000E22, -4))   /* bsr $000E22 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000A2E);
 	hle_jump(ctx, 0x000E22);
 }
 
-HLE_FUNC(0x000A32, glue_000A32, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000A32, glue_000A32, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000CAC, glue_000CAC, 20, HLE_EXIT_SP(0x013E04, -4))   /* jsr $013E04.l */
+HLE_RANGE_ATOMIC(0x000CAC, glue_000CAC, 20, HLE_EXIT_SP(0x013E04, -4))   /* jsr $013E04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000CB2);
 	hle_jump(ctx, 0x013E04);
 }
 
-HLE_FUNC(0x000CB8, glue_000CB8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000CB8, glue_000CB8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000CCA, glue_000CCA, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
+HLE_RANGE_ATOMIC(0x000CCA, glue_000CCA, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000CCE);
 	hle_jump(ctx, 0x0056FA);
 }
 
-HLE_RANGE(0x000CCE, glue_000CCE, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x000CCE, glue_000CCE, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000CD2);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x000CD2, glue_000CD2, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x000CD2, glue_000CD2, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000CD8);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x000CDC, glue_000CDC, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
+HLE_RANGE_ATOMIC(0x000CDC, glue_000CDC, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000CE2);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x000CF2, glue_000CF2, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x000CF2, glue_000CF2, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000CF8);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x000D02, glue_000D02, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000D02, glue_000D02, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D06);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000D0A, glue_000D0A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000D0A, glue_000D0A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D0E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000D12, glue_000D12, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000D12, glue_000D12, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D16);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000D1A, glue_000D1A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000D1A, glue_000D1A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D1E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000D24, glue_000D24, 18, HLE_EXIT_SP(0x000D42, -4))   /* bsr $000D42 */
+HLE_RANGE_ATOMIC(0x000D24, glue_000D24, 18, HLE_EXIT_SP(0x000D42, -4))   /* bsr $000D42 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D28);
 	hle_jump(ctx, 0x000D42);
 }
 
-HLE_RANGE(0x000D2E, glue_000D2E, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x000D2E, glue_000D2E, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D32);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x000D38, glue_000D38, 18, HLE_EXIT_SP(0x000E22, -4))   /* bsr $000E22 */
+HLE_RANGE_ATOMIC(0x000D38, glue_000D38, 18, HLE_EXIT_SP(0x000E22, -4))   /* bsr $000E22 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D3C);
 	hle_jump(ctx, 0x000E22);
 }
 
-HLE_FUNC(0x000D40, glue_000D40, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000D40, glue_000D40, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000D42, glue_000D42, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x000D42, glue_000D42, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000D48);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x000D62, glue_000D62, 20, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA.l */
+HLE_RANGE_ATOMIC(0x000D62, glue_000D62, 20, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000D68);
 	hle_jump(ctx, 0x0122CA);
 }
 
-HLE_RANGE(0x000D68, glue_000D68, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x000D68, glue_000D68, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000D6E);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x000D6E, glue_000D6E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x000D6E, glue_000D6E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000D74);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x000D74, glue_000D74, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000D74, glue_000D74, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000D7A, glue_000D7A, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
+HLE_RANGE_ATOMIC(0x000D7A, glue_000D7A, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D7E);
 	hle_jump(ctx, 0x0056FA);
 }
 
-HLE_RANGE(0x000D7E, glue_000D7E, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x000D7E, glue_000D7E, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000D82);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x000D82, glue_000D82, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x000D82, glue_000D82, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000D88);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x000D8C, glue_000D8C, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
+HLE_RANGE_ATOMIC(0x000D8C, glue_000D8C, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000D92);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x000DA2, glue_000DA2, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x000DA2, glue_000DA2, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000DA8);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x000DB8, glue_000DB8, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x000DB8, glue_000DB8, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000DBE);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x000DC8, glue_000DC8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000DC8, glue_000DC8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000DCC);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000DD0, glue_000DD0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000DD0, glue_000DD0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000DD4);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000DD8, glue_000DD8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000DD8, glue_000DD8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000DDC);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000DE0, glue_000DE0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000DE0, glue_000DE0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000DE4);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000DEA, glue_000DEA, 18, HLE_EXIT_SP(0x000E60, -4))   /* bsr $000E60 */
+HLE_RANGE_ATOMIC(0x000DEA, glue_000DEA, 18, HLE_EXIT_SP(0x000E60, -4))   /* bsr $000E60 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000DEE);
 	hle_jump(ctx, 0x000E60);
 }
 
-HLE_RANGE(0x000DF8, glue_000DF8, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
+HLE_RANGE_ATOMIC(0x000DF8, glue_000DF8, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000DFE);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x000DFE, glue_000DFE, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
+HLE_RANGE_ATOMIC(0x000DFE, glue_000DFE, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000E04);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x000E0A, glue_000E0A, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x000E0A, glue_000E0A, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000E0E);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x000E14, glue_000E14, 18, HLE_EXIT_SP(0x000E60, -4))   /* bsr $000E60 */
+HLE_RANGE_ATOMIC(0x000E14, glue_000E14, 18, HLE_EXIT_SP(0x000E60, -4))   /* bsr $000E60 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000E18);
 	hle_jump(ctx, 0x000E60);
 }
 
-HLE_RANGE(0x000E18, glue_000E18, 18, HLE_EXIT_SP(0x000E22, -4))   /* bsr $000E22 */
+HLE_RANGE_ATOMIC(0x000E18, glue_000E18, 18, HLE_EXIT_SP(0x000E22, -4))   /* bsr $000E22 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000E1C);
 	hle_jump(ctx, 0x000E22);
 }
 
-HLE_FUNC(0x000E20, glue_000E20, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000E20, glue_000E20, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000E22, glue_000E22, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x000E22, glue_000E22, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000E28);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x000E28, glue_000E28, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x000E28, glue_000E28, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000E2C);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_FUNC(0x000E5A, glue_000E5A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000E5A, glue_000E5A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x000E5E, glue_000E5E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000E5E, glue_000E5E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000E60, glue_000E60, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x000E60, glue_000E60, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000E66);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x000EA0, glue_000EA0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x000EA0, glue_000EA0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000EA6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x000EA6, glue_000EA6, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x000EA6, glue_000EA6, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000EAC);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x000EAC, glue_000EAC, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x000EAC, glue_000EAC, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000EB2);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x000EB2, glue_000EB2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000EB2, glue_000EB2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000ED8, glue_000ED8, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
+HLE_RANGE_ATOMIC(0x000ED8, glue_000ED8, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000EDC);
 	hle_jump(ctx, 0x0056FA);
 }
 
-HLE_RANGE(0x000EDC, glue_000EDC, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x000EDC, glue_000EDC, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000EE0);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x000EE0, glue_000EE0, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x000EE0, glue_000EE0, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000EE6);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x000EEA, glue_000EEA, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
+HLE_RANGE_ATOMIC(0x000EEA, glue_000EEA, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000EF0);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x000F00, glue_000F00, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x000F00, glue_000F00, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000F06);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x000F16, glue_000F16, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x000F16, glue_000F16, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000F1C);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x000F2C, glue_000F2C, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x000F2C, glue_000F2C, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000F32);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x000F3C, glue_000F3C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000F3C, glue_000F3C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F40);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000F44, glue_000F44, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000F44, glue_000F44, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F48);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000F4C, glue_000F4C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000F4C, glue_000F4C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F50);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000F54, glue_000F54, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x000F54, glue_000F54, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F58);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x000F58, glue_000F58, 18, HLE_EXIT_SP(0x00102A, -4))   /* bsr $00102A */
+HLE_RANGE_ATOMIC(0x000F58, glue_000F58, 18, HLE_EXIT_SP(0x00102A, -4))   /* bsr $00102A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F5C);
 	hle_jump(ctx, 0x00102A);
 }
 
-HLE_RANGE(0x000F68, glue_000F68, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
+HLE_RANGE_ATOMIC(0x000F68, glue_000F68, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F6C);
 	hle_jump(ctx, 0x001BE8);
 }
 
-HLE_RANGE(0x000F76, glue_000F76, 18, HLE_EXIT_SP(0x00107E, -4))   /* bsr $00107E */
+HLE_RANGE_ATOMIC(0x000F76, glue_000F76, 18, HLE_EXIT_SP(0x00107E, -4))   /* bsr $00107E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F7A);
 	hle_jump(ctx, 0x00107E);
 }
 
-HLE_RANGE(0x000F80, glue_000F80, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x000F80, glue_000F80, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F84);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x000F84, glue_000F84, 18, HLE_EXIT_SP(0x00102A, -4))   /* bsr $00102A */
+HLE_RANGE_ATOMIC(0x000F84, glue_000F84, 18, HLE_EXIT_SP(0x00102A, -4))   /* bsr $00102A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F88);
 	hle_jump(ctx, 0x00102A);
 }
 
-HLE_RANGE(0x000F88, glue_000F88, 18, HLE_EXIT_SP(0x001164, -4))   /* bsr $001164 */
+HLE_RANGE_ATOMIC(0x000F88, glue_000F88, 18, HLE_EXIT_SP(0x001164, -4))   /* bsr $001164 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000F8C);
 	hle_jump(ctx, 0x001164);
 }
 
-HLE_RANGE(0x000FAE, glue_000FAE, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
+HLE_RANGE_ATOMIC(0x000FAE, glue_000FAE, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000FB2);
 	hle_jump(ctx, 0x001BE8);
 }
 
-HLE_RANGE(0x000FC6, glue_000FC6, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
+HLE_RANGE_ATOMIC(0x000FC6, glue_000FC6, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000FCA);
 	hle_jump(ctx, 0x001BE8);
 }
 
-HLE_RANGE(0x000FE4, glue_000FE4, 18, HLE_EXIT_SP(0x003818, -4))   /* bsr $003818 */
+HLE_RANGE_ATOMIC(0x000FE4, glue_000FE4, 18, HLE_EXIT_SP(0x003818, -4))   /* bsr $003818 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x000FE8);
 	hle_jump(ctx, 0x003818);
 }
 
-HLE_FUNC(0x000FEE, glue_000FEE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x000FEE, glue_000FEE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x000FF6, glue_000FF6, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x000FF6, glue_000FF6, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x000FFC);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001016, glue_001016, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001016, glue_001016, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00101C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00101C, glue_00101C, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00101C, glue_00101C, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001022);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001022, glue_001022, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001022, glue_001022, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001028);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x001028, glue_001028, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001028, glue_001028, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00102A, glue_00102A, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
+HLE_RANGE_ATOMIC(0x00102A, glue_00102A, 18, HLE_EXIT_SP(0x001BE8, -4))   /* bsr $001BE8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00102E);
 	hle_jump(ctx, 0x001BE8);
 }
 
-HLE_RANGE(0x001040, glue_001040, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x001040, glue_001040, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001044);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001048, glue_001048, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x001048, glue_001048, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00104C);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001058, glue_001058, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x001058, glue_001058, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00105C);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00106A, glue_00106A, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00106A, glue_00106A, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00106E);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001072, glue_001072, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x001072, glue_001072, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001076);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_FUNC(0x001076, glue_001076, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001076, glue_001076, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00108A, glue_00108A, 18, HLE_EXIT_SP(0x000FF6, -4))   /* bsr $000FF6 */
+HLE_RANGE_ATOMIC(0x00108A, glue_00108A, 18, HLE_EXIT_SP(0x000FF6, -4))   /* bsr $000FF6 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00108E);
 	hle_jump(ctx, 0x000FF6);
 }
 
-HLE_RANGE(0x001092, glue_001092, 18, HLE_EXIT_SP(0x001130, -4))   /* bsr $001130 */
+HLE_RANGE_ATOMIC(0x001092, glue_001092, 18, HLE_EXIT_SP(0x001130, -4))   /* bsr $001130 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001096);
 	hle_jump(ctx, 0x001130);
 }
 
-HLE_RANGE(0x001098, glue_001098, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001098, glue_001098, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00109E);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0010A6, glue_0010A6, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x0010A6, glue_0010A6, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010AC);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x0010AC, glue_0010AC, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0010AC, glue_0010AC, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010B2);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0010B2, glue_0010B2, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0010B2, glue_0010B2, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010B8);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0010BC, glue_0010BC, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0010BC, glue_0010BC, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010C2);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0010C2, glue_0010C2, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0010C2, glue_0010C2, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010C8);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0010D4, glue_0010D4, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x0010D4, glue_0010D4, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010DA);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x0010E6, glue_0010E6, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x0010E6, glue_0010E6, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010EC);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x0010EC, glue_0010EC, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0010EC, glue_0010EC, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010F2);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0010F2, glue_0010F2, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0010F2, glue_0010F2, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0010F8);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001114, glue_001114, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
+HLE_RANGE_ATOMIC(0x001114, glue_001114, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00111A);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x001128, glue_001128, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
+HLE_RANGE_ATOMIC(0x001128, glue_001128, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00112E);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x00112E, glue_00112E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00112E, glue_00112E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001130, glue_001130, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001130, glue_001130, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001136);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001150, glue_001150, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001150, glue_001150, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001156);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001156, glue_001156, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x001156, glue_001156, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00115C);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x00115C, glue_00115C, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x00115C, glue_00115C, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001162);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x001162, glue_001162, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001162, glue_001162, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001164, glue_001164, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x001164, glue_001164, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00116A);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x00116A, glue_00116A, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x00116A, glue_00116A, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00116E);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_RANGE(0x00117C, glue_00117C, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x00117C, glue_00117C, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001180);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x001198, glue_001198, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x001198, glue_001198, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00119C);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x0011B8, glue_0011B8, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x0011B8, glue_0011B8, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0011BC);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x0011C8, glue_0011C8, 18, HLE_EXIT_SP(0x00107E, -4))   /* bsr $00107E */
+HLE_RANGE_ATOMIC(0x0011C8, glue_0011C8, 18, HLE_EXIT_SP(0x00107E, -4))   /* bsr $00107E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0011CC);
 	hle_jump(ctx, 0x00107E);
 }
 
-HLE_FUNC(0x0011CC, glue_0011CC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0011CC, glue_0011CC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0011D8, glue_0011D8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0011D8, glue_0011D8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0011DC, glue_0011DC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0011DC, glue_0011DC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001344, glue_001344, 18, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E(pc) */
+HLE_RANGE_ATOMIC(0x001344, glue_001344, 18, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001348);
 	hle_jump(ctx, 0x00874E);
 }
 
-HLE_RANGE(0x00135C, glue_00135C, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
+HLE_RANGE_ATOMIC(0x00135C, glue_00135C, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001362);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001362, glue_001362, 18, HLE_EXIT_SP(0x0010B8, -4))   /* bsr $0010B8 */
+HLE_RANGE_ATOMIC(0x001362, glue_001362, 18, HLE_EXIT_SP(0x0010B8, -4))   /* bsr $0010B8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001366);
 	hle_jump(ctx, 0x0010B8);
 }
 
-HLE_RANGE(0x001366, glue_001366, 18, HLE_EXIT_SP(0x0014DE, -4))   /* bsr $0014DE */
+HLE_RANGE_ATOMIC(0x001366, glue_001366, 18, HLE_EXIT_SP(0x0014DE, -4))   /* bsr $0014DE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00136A);
 	hle_jump(ctx, 0x0014DE);
 }
 
-HLE_RANGE(0x001374, glue_001374, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
+HLE_RANGE_ATOMIC(0x001374, glue_001374, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001378);
 	hle_jump(ctx, 0x0014C8);
 }
 
-HLE_RANGE(0x001378, glue_001378, 18, HLE_EXIT_SP(0x0014A4, -4))   /* bsr $0014A4 */
+HLE_RANGE_ATOMIC(0x001378, glue_001378, 18, HLE_EXIT_SP(0x0014A4, -4))   /* bsr $0014A4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00137C);
 	hle_jump(ctx, 0x0014A4);
 }
 
-HLE_RANGE(0x00137C, glue_00137C, 18, HLE_EXIT_SP(0x0013A2, -4))   /* bsr $0013A2 */
+HLE_RANGE_ATOMIC(0x00137C, glue_00137C, 18, HLE_EXIT_SP(0x0013A2, -4))   /* bsr $0013A2 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001380);
 	hle_jump(ctx, 0x0013A2);
 }
 
-HLE_RANGE(0x00138A, glue_00138A, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00138A, glue_00138A, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001390);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x001390, glue_001390, 18, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E(pc) */
+HLE_RANGE_ATOMIC(0x001390, glue_001390, 18, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001394);
 	hle_jump(ctx, 0x00874E);
 }
 
-HLE_RANGE(0x0013A2, glue_0013A2, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x0013A2, glue_0013A2, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0013A8);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x0013A8, glue_0013A8, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x0013A8, glue_0013A8, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0013AC);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_RANGE(0x0013BA, glue_0013BA, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x0013BA, glue_0013BA, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0013BE);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x0013C2, glue_0013C2, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
+HLE_RANGE_ATOMIC(0x0013C2, glue_0013C2, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0013C6);
 	hle_jump(ctx, 0x0014C8);
 }
 
-HLE_RANGE(0x0013D6, glue_0013D6, 18, HLE_EXIT_SP(0x0014A4, -4))   /* bsr $0014A4 */
+HLE_RANGE_ATOMIC(0x0013D6, glue_0013D6, 18, HLE_EXIT_SP(0x0014A4, -4))   /* bsr $0014A4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0013DA);
 	hle_jump(ctx, 0x0014A4);
 }
 
-HLE_RANGE(0x0013E0, glue_0013E0, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x0013E0, glue_0013E0, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0013E4);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x0013E8, glue_0013E8, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
+HLE_RANGE_ATOMIC(0x0013E8, glue_0013E8, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0013EC);
 	hle_jump(ctx, 0x0014C8);
 }
 
-HLE_RANGE(0x0013FC, glue_0013FC, 18, HLE_EXIT_SP(0x0014A4, -4))   /* bsr $0014A4 */
+HLE_RANGE_ATOMIC(0x0013FC, glue_0013FC, 18, HLE_EXIT_SP(0x0014A4, -4))   /* bsr $0014A4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001400);
 	hle_jump(ctx, 0x0014A4);
 }
 
-HLE_RANGE(0x001406, glue_001406, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x001406, glue_001406, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00140A);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x001410, glue_001410, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x001410, glue_001410, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001414);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x00141A, glue_00141A, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x00141A, glue_00141A, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00141E);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x001422, glue_001422, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
+HLE_RANGE_ATOMIC(0x001422, glue_001422, 18, HLE_EXIT_SP(0x0014C8, -4))   /* bsr $0014C8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001426);
 	hle_jump(ctx, 0x0014C8);
 }
 
-HLE_FUNC(0x001430, glue_001430, 16)   /* jsr (a2) */
+HLE_FUNC_ATOMIC(0x001430, glue_001430, 16)   /* jsr (a2) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[2];
@@ -1293,3990 +1294,3990 @@ HLE_FUNC(0x001430, glue_001430, 16)   /* jsr (a2) */
 	hle_jump(ctx, t);
 }
 
-HLE_RANGE(0x001438, glue_001438, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x001438, glue_001438, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00143C);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x001452, glue_001452, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x001452, glue_001452, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001458);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x001458, glue_001458, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x001458, glue_001458, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00145E);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x001462, glue_001462, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x001462, glue_001462, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001466);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x001480, glue_001480, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x001480, glue_001480, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001486);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x001486, glue_001486, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x001486, glue_001486, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00148C);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x001490, glue_001490, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
+HLE_RANGE_ATOMIC(0x001490, glue_001490, 18, HLE_EXIT_SP(0x0011CE, -4))   /* bsr $0011CE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001494);
 	hle_jump(ctx, 0x0011CE);
 }
 
-HLE_RANGE(0x00149E, glue_00149E, 18, HLE_EXIT_SP(0x0010B8, -4))   /* bsr $0010B8 */
+HLE_RANGE_ATOMIC(0x00149E, glue_00149E, 18, HLE_EXIT_SP(0x0010B8, -4))   /* bsr $0010B8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0014A2);
 	hle_jump(ctx, 0x0010B8);
 }
 
-HLE_FUNC(0x0014A2, glue_0014A2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0014A2, glue_0014A2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0014AA, glue_0014AA, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x0014AA, glue_0014AA, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0014B0);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x0014C0, glue_0014C0, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
+HLE_RANGE_ATOMIC(0x0014C0, glue_0014C0, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0014C6);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x0014C6, glue_0014C6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0014C6, glue_0014C6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0014DC, glue_0014DC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0014DC, glue_0014DC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0014F0, glue_0014F0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0014F0, glue_0014F0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00154A, glue_00154A, 12, 0x0FBBAE)   /* jmp $0FBBAE.l */
+HLE_RANGE_ATOMIC(0x00154A, glue_00154A, 12, 0x0FBBAE)   /* jmp $0FBBAE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x0FBBAE);
 }
 
-HLE_RANGE(0x001558, glue_001558, 12, 0x0FBB96)   /* jmp $0FBB96.l */
+HLE_RANGE_ATOMIC(0x001558, glue_001558, 12, 0x0FBB96)   /* jmp $0FBB96.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x0FBB96);
 }
 
-HLE_FUNC(0x001566, glue_001566, 8)   /* jmp (a1) */
+HLE_FUNC_ATOMIC(0x001566, glue_001566, 8)   /* jmp (a1) */
 {
 	hle_insn(ctx, 8);
 	hle_jump(ctx, ctx->a[1]);
 }
 
-HLE_RANGE(0x00158A, glue_00158A, 12, 0x0FBB6C)   /* jmp $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00158A, glue_00158A, 12, 0x0FBB6C)   /* jmp $0FBB6C.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x0015A0, glue_0015A0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0015A0, glue_0015A0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0015A2, glue_0015A2, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
+HLE_RANGE_ATOMIC(0x0015A2, glue_0015A2, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015A6);
 	hle_jump(ctx, 0x004212);
 }
 
-HLE_RANGE(0x0015A6, glue_0015A6, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x0015A6, glue_0015A6, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015AA);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x0015B0, glue_0015B0, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x0015B0, glue_0015B0, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015B4);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x0015C0, glue_0015C0, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0015C0, glue_0015C0, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0015C6);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0015C6, glue_0015C6, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
+HLE_RANGE_ATOMIC(0x0015C6, glue_0015C6, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015CA);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x0015CA, glue_0015CA, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0015CA, glue_0015CA, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0015D0);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0015D0, glue_0015D0, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x0015D0, glue_0015D0, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015D4);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x0015D4, glue_0015D4, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x0015D4, glue_0015D4, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015D8);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x0015D8, glue_0015D8, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0015D8, glue_0015D8, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0015DE);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0015E6, glue_0015E6, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0015E6, glue_0015E6, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015EA);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_FUNC(0x0015EA, glue_0015EA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0015EA, glue_0015EA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0015EC, glue_0015EC, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
+HLE_RANGE_ATOMIC(0x0015EC, glue_0015EC, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0015F0);
 	hle_jump(ctx, 0x004212);
 }
 
-HLE_RANGE(0x001600, glue_001600, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001600, glue_001600, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001606);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001610, glue_001610, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001610, glue_001610, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001614);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001614, glue_001614, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001614, glue_001614, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00161A);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001634, glue_001634, 20, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA.l */
+HLE_RANGE_ATOMIC(0x001634, glue_001634, 20, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00163A);
 	hle_jump(ctx, 0x0122CA);
 }
 
-HLE_RANGE(0x00163A, glue_00163A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00163A, glue_00163A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001640);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001640, glue_001640, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001640, glue_001640, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001646);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001652, glue_001652, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001652, glue_001652, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001658);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001658, glue_001658, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
+HLE_RANGE_ATOMIC(0x001658, glue_001658, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00165C);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x00165C, glue_00165C, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00165C, glue_00165C, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001662);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001662, glue_001662, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001662, glue_001662, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001668);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001674, glue_001674, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
+HLE_RANGE_ATOMIC(0x001674, glue_001674, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00167A);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001686, glue_001686, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
+HLE_RANGE_ATOMIC(0x001686, glue_001686, 20, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00168C);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001692, glue_001692, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x001692, glue_001692, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001696);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x00169A, glue_00169A, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x00169A, glue_00169A, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00169E);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x00169E, glue_00169E, 20, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E.l */
+HLE_RANGE_ATOMIC(0x00169E, glue_00169E, 20, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0016A4);
 	hle_jump(ctx, 0x00874E);
 }
 
-HLE_RANGE(0x0016CC, glue_0016CC, 18, HLE_EXIT_SP(0x001A1E, -4))   /* bsr $001A1E */
+HLE_RANGE_ATOMIC(0x0016CC, glue_0016CC, 18, HLE_EXIT_SP(0x001A1E, -4))   /* bsr $001A1E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0016D0);
 	hle_jump(ctx, 0x001A1E);
 }
 
-HLE_RANGE(0x0016D6, glue_0016D6, 18, HLE_EXIT_SP(0x001A1E, -4))   /* bsr $001A1E */
+HLE_RANGE_ATOMIC(0x0016D6, glue_0016D6, 18, HLE_EXIT_SP(0x001A1E, -4))   /* bsr $001A1E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0016DA);
 	hle_jump(ctx, 0x001A1E);
 }
 
-HLE_RANGE(0x0016F2, glue_0016F2, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0016F2, glue_0016F2, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0016F8);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001706, glue_001706, 20, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58.l */
+HLE_RANGE_ATOMIC(0x001706, glue_001706, 20, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00170C);
 	hle_jump(ctx, 0x011F58);
 }
 
-HLE_RANGE(0x00170C, glue_00170C, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x00170C, glue_00170C, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001710);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x001710, glue_001710, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x001710, glue_001710, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001716);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001716, glue_001716, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001716, glue_001716, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00171C);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x001726, glue_001726, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001726, glue_001726, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001A2C, glue_001A2C, 10, 0x007DF6)   /* bra $007DF6 */
+HLE_RANGE_ATOMIC(0x001A2C, glue_001A2C, 10, 0x007DF6)   /* bra $007DF6 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007DF6);
 }
 
-HLE_RANGE(0x001A30, glue_001A30, 18, HLE_EXIT_SP(0x001A38, -4))   /* bsr $001A38 */
+HLE_RANGE_ATOMIC(0x001A30, glue_001A30, 18, HLE_EXIT_SP(0x001A38, -4))   /* bsr $001A38 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A34);
 	hle_jump(ctx, 0x001A38);
 }
 
-HLE_RANGE(0x001A38, glue_001A38, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x001A38, glue_001A38, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A3C);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x001A3C, glue_001A3C, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x001A3C, glue_001A3C, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001A42);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x001A46, glue_001A46, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
+HLE_RANGE_ATOMIC(0x001A46, glue_001A46, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001A4C);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x001A56, glue_001A56, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A56, glue_001A56, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A5A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A5E, glue_001A5E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A5E, glue_001A5E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A62);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A66, glue_001A66, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A66, glue_001A66, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A6A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A6E, glue_001A6E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A6E, glue_001A6E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A72);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A78, glue_001A78, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x001A78, glue_001A78, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001A7E);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_RANGE(0x001A8A, glue_001A8A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A8A, glue_001A8A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A8E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A8E, glue_001A8E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A8E, glue_001A8E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A92);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A92, glue_001A92, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A92, glue_001A92, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A96);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001A96, glue_001A96, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001A96, glue_001A96, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001A9A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001AAA, glue_001AAA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001AAA, glue_001AAA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001AB0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001AC0, glue_001AC0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001AC0, glue_001AC0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001AC6);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001ACC, glue_001ACC, 18, HLE_EXIT_SP(0x001ADC, -4))   /* bsr $001ADC */
+HLE_RANGE_ATOMIC(0x001ACC, glue_001ACC, 18, HLE_EXIT_SP(0x001ADC, -4))   /* bsr $001ADC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001AD0);
 	hle_jump(ctx, 0x001ADC);
 }
 
-HLE_RANGE(0x001AD2, glue_001AD2, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x001AD2, glue_001AD2, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001AD6);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x001AE0, glue_001AE0, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x001AE0, glue_001AE0, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001AE6);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x001AEA, glue_001AEA, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001AEA, glue_001AEA, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001AF0);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001B16, glue_001B16, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001B16, glue_001B16, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B1C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001B3C, glue_001B3C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001B3C, glue_001B3C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B42);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001B42, glue_001B42, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x001B42, glue_001B42, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B48);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001B48, glue_001B48, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x001B48, glue_001B48, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B4E);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x001B4E, glue_001B4E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001B4E, glue_001B4E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B54);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001B60, glue_001B60, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x001B60, glue_001B60, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B66);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x001B6A, glue_001B6A, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x001B6A, glue_001B6A, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B70);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_FUNC(0x001B70, glue_001B70, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001B70, glue_001B70, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001B94, glue_001B94, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x001B94, glue_001B94, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001B98);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x001B98, glue_001B98, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x001B98, glue_001B98, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001B9E);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x001BA8, glue_001BA8, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x001BA8, glue_001BA8, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001BAC);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_RANGE(0x001BAC, glue_001BAC, 18, HLE_EXIT_SP(0x000C78, -4))   /* bsr $000C78 */
+HLE_RANGE_ATOMIC(0x001BAC, glue_001BAC, 18, HLE_EXIT_SP(0x000C78, -4))   /* bsr $000C78 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001BB0);
 	hle_jump(ctx, 0x000C78);
 }
 
-HLE_FUNC(0x001BCA, glue_001BCA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001BCA, glue_001BCA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x001BD2, glue_001BD2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001BD2, glue_001BD2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x001C48, glue_001C48, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001C48, glue_001C48, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001C4A, glue_001C4A, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
+HLE_RANGE_ATOMIC(0x001C4A, glue_001C4A, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001C4E);
 	hle_jump(ctx, 0x004212);
 }
 
-HLE_RANGE(0x001C60, glue_001C60, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001C60, glue_001C60, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001C66);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001C66, glue_001C66, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
+HLE_RANGE_ATOMIC(0x001C66, glue_001C66, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001C6A);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x001C6A, glue_001C6A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x001C6A, glue_001C6A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001C70);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001C70, glue_001C70, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001C70, glue_001C70, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001C76);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001C7A, glue_001C7A, 20, HLE_EXIT_SP(0x00B2FA, -4))   /* jsr $00B2FA.l */
+HLE_RANGE_ATOMIC(0x001C7A, glue_001C7A, 20, HLE_EXIT_SP(0x00B2FA, -4))   /* jsr $00B2FA.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001C80);
 	hle_jump(ctx, 0x00B2FA);
 }
 
-HLE_RANGE(0x001CA2, glue_001CA2, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001CA2, glue_001CA2, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001CA6);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001CAC, glue_001CAC, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x001CAC, glue_001CAC, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001CB0);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_FUNC(0x001CD4, glue_001CD4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001CD4, glue_001CD4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001D46, glue_001D46, 20, HLE_EXIT_SP(0x002980, -4))   /* jsr $002980.l */
+HLE_RANGE_ATOMIC(0x001D46, glue_001D46, 20, HLE_EXIT_SP(0x002980, -4))   /* jsr $002980.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001D4C);
 	hle_jump(ctx, 0x002980);
 }
 
-HLE_RANGE(0x001D54, glue_001D54, 20, HLE_EXIT_SP(0x00241E, -4))   /* jsr $00241E.l */
+HLE_RANGE_ATOMIC(0x001D54, glue_001D54, 20, HLE_EXIT_SP(0x00241E, -4))   /* jsr $00241E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001D5A);
 	hle_jump(ctx, 0x00241E);
 }
 
-HLE_RANGE(0x001D62, glue_001D62, 20, HLE_EXIT_SP(0x00281E, -4))   /* jsr $00281E.l */
+HLE_RANGE_ATOMIC(0x001D62, glue_001D62, 20, HLE_EXIT_SP(0x00281E, -4))   /* jsr $00281E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001D68);
 	hle_jump(ctx, 0x00281E);
 }
 
-HLE_RANGE(0x001D70, glue_001D70, 20, HLE_EXIT_SP(0x002632, -4))   /* jsr $002632.l */
+HLE_RANGE_ATOMIC(0x001D70, glue_001D70, 20, HLE_EXIT_SP(0x002632, -4))   /* jsr $002632.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001D76);
 	hle_jump(ctx, 0x002632);
 }
 
-HLE_RANGE(0x001D7E, glue_001D7E, 20, HLE_EXIT_SP(0x00229E, -4))   /* jsr $00229E.l */
+HLE_RANGE_ATOMIC(0x001D7E, glue_001D7E, 20, HLE_EXIT_SP(0x00229E, -4))   /* jsr $00229E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001D84);
 	hle_jump(ctx, 0x00229E);
 }
 
-HLE_RANGE(0x001D8C, glue_001D8C, 20, HLE_EXIT_SP(0x002154, -4))   /* jsr $002154.l */
+HLE_RANGE_ATOMIC(0x001D8C, glue_001D8C, 20, HLE_EXIT_SP(0x002154, -4))   /* jsr $002154.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001D92);
 	hle_jump(ctx, 0x002154);
 }
 
-HLE_RANGE(0x001D9A, glue_001D9A, 20, HLE_EXIT_SP(0x001FB2, -4))   /* jsr $001FB2.l */
+HLE_RANGE_ATOMIC(0x001D9A, glue_001D9A, 20, HLE_EXIT_SP(0x001FB2, -4))   /* jsr $001FB2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001DA0);
 	hle_jump(ctx, 0x001FB2);
 }
 
-HLE_RANGE(0x001DA8, glue_001DA8, 20, HLE_EXIT_SP(0x001DB4, -4))   /* jsr $001DB4.l */
+HLE_RANGE_ATOMIC(0x001DA8, glue_001DA8, 20, HLE_EXIT_SP(0x001DB4, -4))   /* jsr $001DB4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001DAE);
 	hle_jump(ctx, 0x001DB4);
 }
 
-HLE_FUNC(0x001DB2, glue_001DB2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001DB2, glue_001DB2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001DB4, glue_001DB4, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x001DB4, glue_001DB4, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001DB8);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x001DE2, glue_001DE2, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001DE2, glue_001DE2, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001DE8);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001DF8, glue_001DF8, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001DF8, glue_001DF8, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001DFE);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001E0E, glue_001E0E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001E0E, glue_001E0E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001E14);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001E24, glue_001E24, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001E24, glue_001E24, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001E2A);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001E6E, glue_001E6E, 20, HLE_EXIT_SP(0x01320C, -4))   /* jsr $01320C.l */
+HLE_RANGE_ATOMIC(0x001E6E, glue_001E6E, 20, HLE_EXIT_SP(0x01320C, -4))   /* jsr $01320C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001E74);
 	hle_jump(ctx, 0x01320C);
 }
 
-HLE_RANGE(0x001E84, glue_001E84, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001E84, glue_001E84, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001E8A);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001E9A, glue_001E9A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001E9A, glue_001E9A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001EA0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001EB0, glue_001EB0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001EB0, glue_001EB0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001EB6);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001EC6, glue_001EC6, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001EC6, glue_001EC6, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001ECC);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001ECC, glue_001ECC, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001ECC, glue_001ECC, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001ED2);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001EDC, glue_001EDC, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x001EDC, glue_001EDC, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001EE2);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x001EFC, glue_001EFC, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001EFC, glue_001EFC, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F02);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001F1C, glue_001F1C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001F1C, glue_001F1C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F22);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001F22, glue_001F22, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x001F22, glue_001F22, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F28);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001F28, glue_001F28, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001F28, glue_001F28, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F2E);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001F2E, glue_001F2E, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x001F2E, glue_001F2E, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F34);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x001F4E, glue_001F4E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001F4E, glue_001F4E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F54);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001F6E, glue_001F6E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x001F6E, glue_001F6E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F74);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x001F74, glue_001F74, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x001F74, glue_001F74, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F7A);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x001F7A, glue_001F7A, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x001F7A, glue_001F7A, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001F80);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x001F8A, glue_001F8A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001F8A, glue_001F8A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001F8E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001F92, glue_001F92, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001F92, glue_001F92, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001F96);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001F9A, glue_001F9A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001F9A, glue_001F9A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001F9E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001FA2, glue_001FA2, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x001FA2, glue_001FA2, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001FA6);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x001FAA, glue_001FAA, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x001FAA, glue_001FAA, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001FB0);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x001FB0, glue_001FB0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x001FB0, glue_001FB0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x001FB2, glue_001FB2, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x001FB2, glue_001FB2, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x001FB6);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x001FD4, glue_001FD4, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001FD4, glue_001FD4, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001FDA);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x001FEA, glue_001FEA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x001FEA, glue_001FEA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x001FF0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002000, glue_002000, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002000, glue_002000, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002006);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002016, glue_002016, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002016, glue_002016, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00201C);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002034, glue_002034, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002034, glue_002034, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00203A);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00204A, glue_00204A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00204A, glue_00204A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002050);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002050, glue_002050, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x002050, glue_002050, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002056);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x002070, glue_002070, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002070, glue_002070, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002076);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002090, glue_002090, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002090, glue_002090, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002096);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0020B0, glue_0020B0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0020B0, glue_0020B0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0020B6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0020D0, glue_0020D0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0020D0, glue_0020D0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0020D6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0020F0, glue_0020F0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0020F0, glue_0020F0, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0020F6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002110, glue_002110, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002110, glue_002110, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002116);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002116, glue_002116, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x002116, glue_002116, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00211C);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x00211C, glue_00211C, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x00211C, glue_00211C, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002122);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x00212C, glue_00212C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00212C, glue_00212C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002130);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002134, glue_002134, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002134, glue_002134, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002138);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00213C, glue_00213C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00213C, glue_00213C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002140);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002144, glue_002144, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002144, glue_002144, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002148);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00214C, glue_00214C, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00214C, glue_00214C, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002152);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x002152, glue_002152, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002152, glue_002152, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002154, glue_002154, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x002154, glue_002154, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002158);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x00216E, glue_00216E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00216E, glue_00216E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002174);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0021A4, glue_0021A4, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0021A4, glue_0021A4, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0021AA);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0021BA, glue_0021BA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0021BA, glue_0021BA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0021C0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0021D4, glue_0021D4, 20, HLE_EXIT_SP(0x01320C, -4))   /* jsr $01320C.l */
+HLE_RANGE_ATOMIC(0x0021D4, glue_0021D4, 20, HLE_EXIT_SP(0x01320C, -4))   /* jsr $01320C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0021DA);
 	hle_jump(ctx, 0x01320C);
 }
 
-HLE_RANGE(0x00220A, glue_00220A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x00220A, glue_00220A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002210);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x00221A, glue_00221A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x00221A, glue_00221A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002220);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x00223A, glue_00223A, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00223A, glue_00223A, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002240);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00225A, glue_00225A, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00225A, glue_00225A, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002260);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002260, glue_002260, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x002260, glue_002260, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002266);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x002266, glue_002266, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x002266, glue_002266, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00226C);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x002276, glue_002276, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002276, glue_002276, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00227A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00227E, glue_00227E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00227E, glue_00227E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002282);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002286, glue_002286, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002286, glue_002286, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00228A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00228E, glue_00228E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00228E, glue_00228E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002292);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002296, glue_002296, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x002296, glue_002296, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00229C);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x00229C, glue_00229C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00229C, glue_00229C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00229E, glue_00229E, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x00229E, glue_00229E, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0022A2);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x0022A8, glue_0022A8, 18, HLE_EXIT_SP(0x00240E, -4))   /* bsr $00240E */
+HLE_RANGE_ATOMIC(0x0022A8, glue_0022A8, 18, HLE_EXIT_SP(0x00240E, -4))   /* bsr $00240E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0022AC);
 	hle_jump(ctx, 0x00240E);
 }
 
-HLE_RANGE(0x0022B2, glue_0022B2, 18, HLE_EXIT_SP(0x00240E, -4))   /* bsr $00240E */
+HLE_RANGE_ATOMIC(0x0022B2, glue_0022B2, 18, HLE_EXIT_SP(0x00240E, -4))   /* bsr $00240E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0022B6);
 	hle_jump(ctx, 0x00240E);
 }
 
-HLE_RANGE(0x0022DA, glue_0022DA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0022DA, glue_0022DA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0022E0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0022F0, glue_0022F0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0022F0, glue_0022F0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0022F6);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002326, glue_002326, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002326, glue_002326, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00232C);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00233C, glue_00233C, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00233C, glue_00233C, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002342);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00237A, glue_00237A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x00237A, glue_00237A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002380);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x00238A, glue_00238A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x00238A, glue_00238A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002390);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x0023AA, glue_0023AA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0023AA, glue_0023AA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0023B0);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0023CA, glue_0023CA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0023CA, glue_0023CA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0023D0);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0023D0, glue_0023D0, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0023D0, glue_0023D0, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0023D6);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0023D6, glue_0023D6, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0023D6, glue_0023D6, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0023DC);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0023E6, glue_0023E6, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0023E6, glue_0023E6, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0023EA);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0023EE, glue_0023EE, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0023EE, glue_0023EE, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0023F2);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0023F6, glue_0023F6, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0023F6, glue_0023F6, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0023FA);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0023FE, glue_0023FE, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0023FE, glue_0023FE, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002402);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002406, glue_002406, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x002406, glue_002406, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00240C);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x00240C, glue_00240C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00240C, glue_00240C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00241C, glue_00241C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00241C, glue_00241C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00241E, glue_00241E, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x00241E, glue_00241E, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002422);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x00243A, glue_00243A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00243A, glue_00243A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002440);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002450, glue_002450, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002450, glue_002450, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002456);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002466, glue_002466, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002466, glue_002466, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00246C);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0024FC, glue_0024FC, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x0024FC, glue_0024FC, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002502);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x00251C, glue_00251C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00251C, glue_00251C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002522);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00253C, glue_00253C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00253C, glue_00253C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002542);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00255C, glue_00255C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00255C, glue_00255C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002562);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002562, glue_002562, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x002562, glue_002562, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002568);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x002568, glue_002568, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x002568, glue_002568, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00256E);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x00256E, glue_00256E, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x00256E, glue_00256E, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002574);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x00258E, glue_00258E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00258E, glue_00258E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002594);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0025AE, glue_0025AE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0025AE, glue_0025AE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0025B4);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0025CE, glue_0025CE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0025CE, glue_0025CE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0025D4);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0025EE, glue_0025EE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0025EE, glue_0025EE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0025F4);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0025F4, glue_0025F4, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0025F4, glue_0025F4, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0025FA);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0025FA, glue_0025FA, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0025FA, glue_0025FA, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002600);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x00260A, glue_00260A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00260A, glue_00260A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00260E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002612, glue_002612, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002612, glue_002612, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002616);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00261A, glue_00261A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00261A, glue_00261A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00261E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002622, glue_002622, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002622, glue_002622, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002626);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00262A, glue_00262A, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00262A, glue_00262A, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002630);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x002630, glue_002630, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002630, glue_002630, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002632, glue_002632, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x002632, glue_002632, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002636);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x00264E, glue_00264E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00264E, glue_00264E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002654);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002664, glue_002664, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002664, glue_002664, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00266A);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00267A, glue_00267A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00267A, glue_00267A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002680);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002690, glue_002690, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002690, glue_002690, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002696);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0026A6, glue_0026A6, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0026A6, glue_0026A6, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0026AC);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0026BC, glue_0026BC, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0026BC, glue_0026BC, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0026C2);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00279A, glue_00279A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x00279A, glue_00279A, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0027A0);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x0027BA, glue_0027BA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0027BA, glue_0027BA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0027C0);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0027DA, glue_0027DA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0027DA, glue_0027DA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0027E0);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0027E0, glue_0027E0, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0027E0, glue_0027E0, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0027E6);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0027E6, glue_0027E6, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0027E6, glue_0027E6, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0027EC);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0027F6, glue_0027F6, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0027F6, glue_0027F6, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0027FA);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0027FE, glue_0027FE, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0027FE, glue_0027FE, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002802);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002806, glue_002806, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002806, glue_002806, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00280A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00280E, glue_00280E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00280E, glue_00280E, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002812);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002816, glue_002816, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x002816, glue_002816, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00281C);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x00281C, glue_00281C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00281C, glue_00281C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00281E, glue_00281E, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x00281E, glue_00281E, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002822);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x002832, glue_002832, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002832, glue_002832, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002838);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002848, glue_002848, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002848, glue_002848, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00284E);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00285E, glue_00285E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00285E, glue_00285E, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002864);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002874, glue_002874, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x002874, glue_002874, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00287A);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00288A, glue_00288A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00288A, glue_00288A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002890);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0028A0, glue_0028A0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0028A0, glue_0028A0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0028A6);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0028F6, glue_0028F6, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x0028F6, glue_0028F6, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0028FC);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x002916, glue_002916, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002916, glue_002916, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00291C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002936, glue_002936, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002936, glue_002936, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00293C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00293C, glue_00293C, 20, HLE_EXIT_SP(0x00BE42, -4))   /* jsr $00BE42.l */
+HLE_RANGE_ATOMIC(0x00293C, glue_00293C, 20, HLE_EXIT_SP(0x00BE42, -4))   /* jsr $00BE42.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002942);
 	hle_jump(ctx, 0x00BE42);
 }
 
-HLE_RANGE(0x002942, glue_002942, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x002942, glue_002942, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002948);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x002948, glue_002948, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x002948, glue_002948, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00294E);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x002958, glue_002958, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002958, glue_002958, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00295C);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002960, glue_002960, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002960, glue_002960, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002964);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002968, glue_002968, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002968, glue_002968, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00296C);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002970, glue_002970, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002970, glue_002970, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002974);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002978, glue_002978, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x002978, glue_002978, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00297E);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x00297E, glue_00297E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00297E, glue_00297E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002980, glue_002980, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x002980, glue_002980, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002984);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x00299A, glue_00299A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00299A, glue_00299A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0029A0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0029B0, glue_0029B0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0029B0, glue_0029B0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0029B6);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x002A5E, glue_002A5E, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x002A5E, glue_002A5E, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002A64);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x002A6E, glue_002A6E, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x002A6E, glue_002A6E, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002A74);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x002A7E, glue_002A7E, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
+HLE_RANGE_ATOMIC(0x002A7E, glue_002A7E, 20, HLE_EXIT_SP(0x013394, -4))   /* jsr $013394.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002A84);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_RANGE(0x002A9E, glue_002A9E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002A9E, glue_002A9E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002AA4);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002ABE, glue_002ABE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x002ABE, glue_002ABE, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002AC4);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x002AC4, glue_002AC4, 20, HLE_EXIT_SP(0x00BE42, -4))   /* jsr $00BE42.l */
+HLE_RANGE_ATOMIC(0x002AC4, glue_002AC4, 20, HLE_EXIT_SP(0x00BE42, -4))   /* jsr $00BE42.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002ACA);
 	hle_jump(ctx, 0x00BE42);
 }
 
-HLE_RANGE(0x002ACA, glue_002ACA, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x002ACA, glue_002ACA, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002AD0);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x002AD0, glue_002AD0, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x002AD0, glue_002AD0, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002AD6);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x002AE0, glue_002AE0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002AE0, glue_002AE0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002AE4);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002AE8, glue_002AE8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002AE8, glue_002AE8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002AEC);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002AF0, glue_002AF0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002AF0, glue_002AF0, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002AF4);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002AF8, glue_002AF8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x002AF8, glue_002AF8, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002AFC);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x002B00, glue_002B00, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x002B00, glue_002B00, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x002B06);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_FUNC(0x002B06, glue_002B06, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002B06, glue_002B06, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002B14, glue_002B14, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x002B14, glue_002B14, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B18);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x002B20, glue_002B20, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x002B20, glue_002B20, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B24);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x002B2C, glue_002B2C, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002B2C, glue_002B2C, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B30);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x002B38, glue_002B38, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002B38, glue_002B38, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B3C);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x002B3C, glue_002B3C, 18, HLE_EXIT_SP(0x002B6C, -4))   /* jsr $002B6C(pc) */
+HLE_RANGE_ATOMIC(0x002B3C, glue_002B3C, 18, HLE_EXIT_SP(0x002B6C, -4))   /* jsr $002B6C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B40);
 	hle_jump(ctx, 0x002B6C);
 }
 
-HLE_FUNC(0x002B40, glue_002B40, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002B40, glue_002B40, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002B4A, glue_002B4A, 18, HLE_EXIT_SP(0x002B70, -4))   /* jsr $002B70(pc) */
+HLE_RANGE_ATOMIC(0x002B4A, glue_002B4A, 18, HLE_EXIT_SP(0x002B70, -4))   /* jsr $002B70(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B4E);
 	hle_jump(ctx, 0x002B70);
 }
 
-HLE_RANGE(0x002B56, glue_002B56, 18, HLE_EXIT_SP(0x002B8E, -4))   /* jsr $002B8E(pc) */
+HLE_RANGE_ATOMIC(0x002B56, glue_002B56, 18, HLE_EXIT_SP(0x002B8E, -4))   /* jsr $002B8E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B5A);
 	hle_jump(ctx, 0x002B8E);
 }
 
-HLE_FUNC(0x002B5A, glue_002B5A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002B5A, glue_002B5A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002B64, glue_002B64, 10, 0x002B70)   /* jmp $002B70(pc) */
+HLE_RANGE_ATOMIC(0x002B64, glue_002B64, 10, 0x002B70)   /* jmp $002B70(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x002B70);
 }
 
-HLE_RANGE(0x002B68, glue_002B68, 10, 0x002B8E)   /* jmp $002B8E(pc) */
+HLE_RANGE_ATOMIC(0x002B68, glue_002B68, 10, 0x002B8E)   /* jmp $002B8E(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x002B8E);
 }
 
-HLE_RANGE(0x002B6C, glue_002B6C, 18, HLE_EXIT_SP(0x002B8E, -4))   /* jsr $002B8E(pc) */
+HLE_RANGE_ATOMIC(0x002B6C, glue_002B6C, 18, HLE_EXIT_SP(0x002B8E, -4))   /* jsr $002B8E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B70);
 	hle_jump(ctx, 0x002B8E);
 }
 
-HLE_RANGE(0x002B7C, glue_002B7C, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002B7C, glue_002B7C, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B80);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x002B88, glue_002B88, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002B88, glue_002B88, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B8C);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_FUNC(0x002B8C, glue_002B8C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002B8C, glue_002B8C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x002B9A, glue_002B9A, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002B9A, glue_002B9A, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002B9E);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x002BA6, glue_002BA6, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002BA6, glue_002BA6, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002BAA);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x002BB6, glue_002BB6, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002BB6, glue_002BB6, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002BBA);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x002BC2, glue_002BC2, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x002BC2, glue_002BC2, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x002BC6);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_FUNC(0x002BC6, glue_002BC6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x002BC6, glue_002BC6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0032B0, glue_0032B0, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
+HLE_RANGE_ATOMIC(0x0032B0, glue_0032B0, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0032B4);
 	hle_jump(ctx, 0x0056FA);
 }
 
-HLE_RANGE(0x0032C4, glue_0032C4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0032C4, glue_0032C4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0032CA);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0032D2, glue_0032D2, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
+HLE_RANGE_ATOMIC(0x0032D2, glue_0032D2, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0032D6);
 	hle_jump(ctx, 0x00818C);
 }
 
-HLE_RANGE(0x0032D6, glue_0032D6, 18, HLE_EXIT_SP(0x00800C, -4))   /* jsr $00800C(pc) */
+HLE_RANGE_ATOMIC(0x0032D6, glue_0032D6, 18, HLE_EXIT_SP(0x00800C, -4))   /* jsr $00800C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0032DA);
 	hle_jump(ctx, 0x00800C);
 }
 
-HLE_RANGE(0x0032DE, glue_0032DE, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
+HLE_RANGE_ATOMIC(0x0032DE, glue_0032DE, 20, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0032E4);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x0032E4, glue_0032E4, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x0032E4, glue_0032E4, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0032EA);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x0032FA, glue_0032FA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0032FA, glue_0032FA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003300);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x003310, glue_003310, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x003310, glue_003310, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003316);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x003326, glue_003326, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x003326, glue_003326, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00332C);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00332C, glue_00332C, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x00332C, glue_00332C, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003332);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x003346, glue_003346, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
+HLE_RANGE_ATOMIC(0x003346, glue_003346, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00334A);
 	hle_jump(ctx, 0x004752);
 }
 
-HLE_RANGE(0x00334A, glue_00334A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00334A, glue_00334A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003350);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x003350, glue_003350, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x003350, glue_003350, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003356);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x003356, glue_003356, 18, HLE_EXIT_SP(0x002B08, -4))   /* jsr $002B08(pc) */
+HLE_RANGE_ATOMIC(0x003356, glue_003356, 18, HLE_EXIT_SP(0x002B08, -4))   /* jsr $002B08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00335A);
 	hle_jump(ctx, 0x002B08);
 }
 
-HLE_RANGE(0x00335A, glue_00335A, 18, HLE_EXIT_SP(0x007C54, -4))   /* jsr $007C54(pc) */
+HLE_RANGE_ATOMIC(0x00335A, glue_00335A, 18, HLE_EXIT_SP(0x007C54, -4))   /* jsr $007C54(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00335E);
 	hle_jump(ctx, 0x007C54);
 }
 
-HLE_FUNC(0x00335E, glue_00335E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00335E, glue_00335E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003364, glue_003364, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
+HLE_RANGE_ATOMIC(0x003364, glue_003364, 18, HLE_EXIT_SP(0x0056FA, -4))   /* jsr $0056FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003368);
 	hle_jump(ctx, 0x0056FA);
 }
 
-HLE_RANGE(0x003368, glue_003368, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
+HLE_RANGE_ATOMIC(0x003368, glue_003368, 20, HLE_EXIT_SP(0x0121D6, -4))   /* jsr $0121D6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00336E);
 	hle_jump(ctx, 0x0121D6);
 }
 
-HLE_RANGE(0x00336E, glue_00336E, 18, HLE_EXIT_SP(0x0086F6, -4))   /* jsr $0086F6(pc) */
+HLE_RANGE_ATOMIC(0x00336E, glue_00336E, 18, HLE_EXIT_SP(0x0086F6, -4))   /* jsr $0086F6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003372);
 	hle_jump(ctx, 0x0086F6);
 }
 
-HLE_RANGE(0x003372, glue_003372, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
+HLE_RANGE_ATOMIC(0x003372, glue_003372, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003376);
 	hle_jump(ctx, 0x00818C);
 }
 
-HLE_RANGE(0x003386, glue_003386, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x003386, glue_003386, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00338C);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00339C, glue_00339C, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00339C, glue_00339C, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0033A2);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0033AC, glue_0033AC, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0033AC, glue_0033AC, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0033B0);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0033B4, glue_0033B4, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0033B4, glue_0033B4, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0033B8);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0033BC, glue_0033BC, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0033BC, glue_0033BC, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0033C0);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0033C4, glue_0033C4, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x0033C4, glue_0033C4, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0033C8);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x0033C8, glue_0033C8, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0033C8, glue_0033C8, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0033CE);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0033CE, glue_0033CE, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
+HLE_RANGE_ATOMIC(0x0033CE, glue_0033CE, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0033D4);
 	hle_jump(ctx, 0x013376);
 }
 
-HLE_RANGE(0x0033D4, glue_0033D4, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
+HLE_RANGE_ATOMIC(0x0033D4, glue_0033D4, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0033DA);
 	hle_jump(ctx, 0x013272);
 }
 
-HLE_RANGE(0x0033F4, glue_0033F4, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x0033F4, glue_0033F4, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0033FA);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x003414, glue_003414, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
+HLE_RANGE_ATOMIC(0x003414, glue_003414, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00341A);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00341A, glue_00341A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00341A, glue_00341A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003420);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x003420, glue_003420, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x003420, glue_003420, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003426);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x00342C, glue_00342C, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x00342C, glue_00342C, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003430);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x00343C, glue_00343C, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x00343C, glue_00343C, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003442);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x00345E, glue_00345E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00345E, glue_00345E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003464);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00347E, glue_00347E, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
+HLE_RANGE_ATOMIC(0x00347E, glue_00347E, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003484);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x003484, glue_003484, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x003484, glue_003484, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003488);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x003488, glue_003488, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x003488, glue_003488, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00348E);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x00348E, glue_00348E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x00348E, glue_00348E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003494);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x003496, glue_003496, 10, 0x003434)   /* bra $003434 */
+HLE_RANGE_ATOMIC(0x003496, glue_003496, 10, 0x003434)   /* bra $003434 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003434);
 }
 
-HLE_RANGE(0x0034B2, glue_0034B2, 18, HLE_EXIT_SP(0x003BA6, -4))   /* jsr $003BA6(pc) */
+HLE_RANGE_ATOMIC(0x0034B2, glue_0034B2, 18, HLE_EXIT_SP(0x003BA6, -4))   /* jsr $003BA6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0034B6);
 	hle_jump(ctx, 0x003BA6);
 }
 
-HLE_RANGE(0x0034CC, glue_0034CC, 18, HLE_EXIT_SP(0x003BA6, -4))   /* jsr $003BA6(pc) */
+HLE_RANGE_ATOMIC(0x0034CC, glue_0034CC, 18, HLE_EXIT_SP(0x003BA6, -4))   /* jsr $003BA6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0034D0);
 	hle_jump(ctx, 0x003BA6);
 }
 
-HLE_RANGE(0x0034D6, glue_0034D6, 10, 0x003434)   /* bra $003434 */
+HLE_RANGE_ATOMIC(0x0034D6, glue_0034D6, 10, 0x003434)   /* bra $003434 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003434);
 }
 
-HLE_RANGE(0x0034E6, glue_0034E6, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x0034E6, glue_0034E6, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0034EA);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x0034EE, glue_0034EE, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0034EE, glue_0034EE, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0034F2);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x0034F2, glue_0034F2, 18, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E(pc) */
+HLE_RANGE_ATOMIC(0x0034F2, glue_0034F2, 18, HLE_EXIT_SP(0x00874E, -4))   /* jsr $00874E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0034F6);
 	hle_jump(ctx, 0x00874E);
 }
 
-HLE_RANGE(0x0034F6, glue_0034F6, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0034F6, glue_0034F6, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0034FC);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x003516, glue_003516, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x003516, glue_003516, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00351C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x003536, glue_003536, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x003536, glue_003536, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00353C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00353C, glue_00353C, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00353C, glue_00353C, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003542);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x003542, glue_003542, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x003542, glue_003542, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003548);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x003564, glue_003564, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x003564, glue_003564, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00356A);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x00356E, glue_00356E, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00356E, glue_00356E, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003574);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x003574, glue_003574, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x003574, glue_003574, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00357A);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x00357A, glue_00357A, 18, HLE_EXIT_SP(0x003BDA, -4))   /* bsr $003BDA */
+HLE_RANGE_ATOMIC(0x00357A, glue_00357A, 18, HLE_EXIT_SP(0x003BDA, -4))   /* bsr $003BDA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00357E);
 	hle_jump(ctx, 0x003BDA);
 }
 
-HLE_RANGE(0x00358A, glue_00358A, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
+HLE_RANGE_ATOMIC(0x00358A, glue_00358A, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00358E);
 	hle_jump(ctx, 0x00385E);
 }
 
-HLE_RANGE(0x00358E, glue_00358E, 18, HLE_EXIT_SP(0x003858, -4))   /* bsr $003858 */
+HLE_RANGE_ATOMIC(0x00358E, glue_00358E, 18, HLE_EXIT_SP(0x003858, -4))   /* bsr $003858 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003592);
 	hle_jump(ctx, 0x003858);
 }
 
-HLE_RANGE(0x003592, glue_003592, 18, HLE_EXIT_SP(0x003852, -4))   /* bsr $003852 */
+HLE_RANGE_ATOMIC(0x003592, glue_003592, 18, HLE_EXIT_SP(0x003852, -4))   /* bsr $003852 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003596);
 	hle_jump(ctx, 0x003852);
 }
 
-HLE_RANGE(0x003596, glue_003596, 18, HLE_EXIT_SP(0x003840, -4))   /* bsr $003840 */
+HLE_RANGE_ATOMIC(0x003596, glue_003596, 18, HLE_EXIT_SP(0x003840, -4))   /* bsr $003840 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00359A);
 	hle_jump(ctx, 0x003840);
 }
 
-HLE_RANGE(0x00359E, glue_00359E, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
+HLE_RANGE_ATOMIC(0x00359E, glue_00359E, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035A2);
 	hle_jump(ctx, 0x003706);
 }
 
-HLE_RANGE(0x0035A6, glue_0035A6, 18, HLE_EXIT_SP(0x003762, -4))   /* bsr $003762 */
+HLE_RANGE_ATOMIC(0x0035A6, glue_0035A6, 18, HLE_EXIT_SP(0x003762, -4))   /* bsr $003762 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035AA);
 	hle_jump(ctx, 0x003762);
 }
 
-HLE_RANGE(0x0035AA, glue_0035AA, 10, 0x00363E)   /* bra $00363E */
+HLE_RANGE_ATOMIC(0x0035AA, glue_0035AA, 10, 0x00363E)   /* bra $00363E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00363E);
 }
 
-HLE_RANGE(0x0035B4, glue_0035B4, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
+HLE_RANGE_ATOMIC(0x0035B4, glue_0035B4, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035B8);
 	hle_jump(ctx, 0x00385E);
 }
 
-HLE_RANGE(0x0035B8, glue_0035B8, 18, HLE_EXIT_SP(0x00384C, -4))   /* bsr $00384C */
+HLE_RANGE_ATOMIC(0x0035B8, glue_0035B8, 18, HLE_EXIT_SP(0x00384C, -4))   /* bsr $00384C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035BC);
 	hle_jump(ctx, 0x00384C);
 }
 
-HLE_RANGE(0x0035BC, glue_0035BC, 18, HLE_EXIT_SP(0x003846, -4))   /* bsr $003846 */
+HLE_RANGE_ATOMIC(0x0035BC, glue_0035BC, 18, HLE_EXIT_SP(0x003846, -4))   /* bsr $003846 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035C0);
 	hle_jump(ctx, 0x003846);
 }
 
-HLE_RANGE(0x0035C4, glue_0035C4, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
+HLE_RANGE_ATOMIC(0x0035C4, glue_0035C4, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035C8);
 	hle_jump(ctx, 0x003706);
 }
 
-HLE_RANGE(0x0035CC, glue_0035CC, 18, HLE_EXIT_SP(0x003762, -4))   /* bsr $003762 */
+HLE_RANGE_ATOMIC(0x0035CC, glue_0035CC, 18, HLE_EXIT_SP(0x003762, -4))   /* bsr $003762 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035D0);
 	hle_jump(ctx, 0x003762);
 }
 
-HLE_RANGE(0x0035D0, glue_0035D0, 10, 0x00363E)   /* bra $00363E */
+HLE_RANGE_ATOMIC(0x0035D0, glue_0035D0, 10, 0x00363E)   /* bra $00363E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00363E);
 }
 
-HLE_RANGE(0x0035DA, glue_0035DA, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
+HLE_RANGE_ATOMIC(0x0035DA, glue_0035DA, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035DE);
 	hle_jump(ctx, 0x00385E);
 }
 
-HLE_RANGE(0x0035DE, glue_0035DE, 18, HLE_EXIT_SP(0x003858, -4))   /* bsr $003858 */
+HLE_RANGE_ATOMIC(0x0035DE, glue_0035DE, 18, HLE_EXIT_SP(0x003858, -4))   /* bsr $003858 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035E2);
 	hle_jump(ctx, 0x003858);
 }
 
-HLE_RANGE(0x0035E6, glue_0035E6, 18, HLE_EXIT_SP(0x0036D8, -4))   /* bsr $0036D8 */
+HLE_RANGE_ATOMIC(0x0035E6, glue_0035E6, 18, HLE_EXIT_SP(0x0036D8, -4))   /* bsr $0036D8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035EA);
 	hle_jump(ctx, 0x0036D8);
 }
 
-HLE_RANGE(0x0035EA, glue_0035EA, 10, 0x00363E)   /* bra $00363E */
+HLE_RANGE_ATOMIC(0x0035EA, glue_0035EA, 10, 0x00363E)   /* bra $00363E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00363E);
 }
 
-HLE_RANGE(0x0035F4, glue_0035F4, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
+HLE_RANGE_ATOMIC(0x0035F4, glue_0035F4, 18, HLE_EXIT_SP(0x00385E, -4))   /* bsr $00385E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035F8);
 	hle_jump(ctx, 0x00385E);
 }
 
-HLE_RANGE(0x0035F8, glue_0035F8, 18, HLE_EXIT_SP(0x00384C, -4))   /* bsr $00384C */
+HLE_RANGE_ATOMIC(0x0035F8, glue_0035F8, 18, HLE_EXIT_SP(0x00384C, -4))   /* bsr $00384C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0035FC);
 	hle_jump(ctx, 0x00384C);
 }
 
-HLE_RANGE(0x0035FC, glue_0035FC, 18, HLE_EXIT_SP(0x003846, -4))   /* bsr $003846 */
+HLE_RANGE_ATOMIC(0x0035FC, glue_0035FC, 18, HLE_EXIT_SP(0x003846, -4))   /* bsr $003846 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003600);
 	hle_jump(ctx, 0x003846);
 }
 
-HLE_RANGE(0x003600, glue_003600, 18, HLE_EXIT_SP(0x00383A, -4))   /* bsr $00383A */
+HLE_RANGE_ATOMIC(0x003600, glue_003600, 18, HLE_EXIT_SP(0x00383A, -4))   /* bsr $00383A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003604);
 	hle_jump(ctx, 0x00383A);
 }
 
-HLE_RANGE(0x003604, glue_003604, 18, HLE_EXIT_SP(0x003858, -4))   /* bsr $003858 */
+HLE_RANGE_ATOMIC(0x003604, glue_003604, 18, HLE_EXIT_SP(0x003858, -4))   /* bsr $003858 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003608);
 	hle_jump(ctx, 0x003858);
 }
 
-HLE_RANGE(0x003608, glue_003608, 18, HLE_EXIT_SP(0x003840, -4))   /* bsr $003840 */
+HLE_RANGE_ATOMIC(0x003608, glue_003608, 18, HLE_EXIT_SP(0x003840, -4))   /* bsr $003840 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00360C);
 	hle_jump(ctx, 0x003840);
 }
 
-HLE_RANGE(0x003610, glue_003610, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
+HLE_RANGE_ATOMIC(0x003610, glue_003610, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003614);
 	hle_jump(ctx, 0x003706);
 }
 
-HLE_RANGE(0x003614, glue_003614, 10, 0x00363E)   /* bra $00363E */
+HLE_RANGE_ATOMIC(0x003614, glue_003614, 10, 0x00363E)   /* bra $00363E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00363E);
 }
 
-HLE_RANGE(0x003622, glue_003622, 18, HLE_EXIT_SP(0x003734, -4))   /* bsr $003734 */
+HLE_RANGE_ATOMIC(0x003622, glue_003622, 18, HLE_EXIT_SP(0x003734, -4))   /* bsr $003734 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003626);
 	hle_jump(ctx, 0x003734);
 }
 
-HLE_RANGE(0x00362A, glue_00362A, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
+HLE_RANGE_ATOMIC(0x00362A, glue_00362A, 18, HLE_EXIT_SP(0x003706, -4))   /* bsr $003706 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00362E);
 	hle_jump(ctx, 0x003706);
 }
 
-HLE_RANGE(0x003632, glue_003632, 18, HLE_EXIT_SP(0x00368C, -4))   /* bsr $00368C */
+HLE_RANGE_ATOMIC(0x003632, glue_003632, 18, HLE_EXIT_SP(0x00368C, -4))   /* bsr $00368C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003636);
 	hle_jump(ctx, 0x00368C);
 }
 
-HLE_RANGE(0x003636, glue_003636, 10, 0x00363E)   /* bra $00363E */
+HLE_RANGE_ATOMIC(0x003636, glue_003636, 10, 0x00363E)   /* bra $00363E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00363E);
 }
 
-HLE_RANGE(0x00363E, glue_00363E, 20, HLE_EXIT_SP(0x013E04, -4))   /* jsr $013E04.l */
+HLE_RANGE_ATOMIC(0x00363E, glue_00363E, 20, HLE_EXIT_SP(0x013E04, -4))   /* jsr $013E04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003644);
 	hle_jump(ctx, 0x013E04);
 }
 
-HLE_RANGE(0x003648, glue_003648, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x003648, glue_003648, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00364C);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x00364E, glue_00364E, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00364E, glue_00364E, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003654);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x003658, glue_003658, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x003658, glue_003658, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00365C);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x00365C, glue_00365C, 20, HLE_EXIT_SP(0x001A38, -4))   /* jsr $001A38.l */
+HLE_RANGE_ATOMIC(0x00365C, glue_00365C, 20, HLE_EXIT_SP(0x001A38, -4))   /* jsr $001A38.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003662);
 	hle_jump(ctx, 0x001A38);
 }
 
-HLE_RANGE(0x003666, glue_003666, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x003666, glue_003666, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00366A);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x003670, glue_003670, 18, HLE_EXIT_SP(0x003814, -4))   /* bsr $003814 */
+HLE_RANGE_ATOMIC(0x003670, glue_003670, 18, HLE_EXIT_SP(0x003814, -4))   /* bsr $003814 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003674);
 	hle_jump(ctx, 0x003814);
 }
 
-HLE_RANGE(0x003676, glue_003676, 18, HLE_EXIT_SP(0x007BF8, -4))   /* bsr $007BF8 */
+HLE_RANGE_ATOMIC(0x003676, glue_003676, 18, HLE_EXIT_SP(0x007BF8, -4))   /* bsr $007BF8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00367A);
 	hle_jump(ctx, 0x007BF8);
 }
 
-HLE_RANGE(0x003680, glue_003680, 18, HLE_EXIT_SP(0x003814, -4))   /* bsr $003814 */
+HLE_RANGE_ATOMIC(0x003680, glue_003680, 18, HLE_EXIT_SP(0x003814, -4))   /* bsr $003814 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003684);
 	hle_jump(ctx, 0x003814);
 }
 
-HLE_RANGE(0x003686, glue_003686, 18, HLE_EXIT_SP(0x007C04, -4))   /* bsr $007C04 */
+HLE_RANGE_ATOMIC(0x003686, glue_003686, 18, HLE_EXIT_SP(0x007C04, -4))   /* bsr $007C04 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00368A);
 	hle_jump(ctx, 0x007C04);
 }
 
-HLE_FUNC(0x00368A, glue_00368A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00368A, glue_00368A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00368C, glue_00368C, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x00368C, glue_00368C, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003690);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x00369A, glue_00369A, 18, HLE_EXIT_SP(0x003B1A, -4))   /* bsr $003B1A */
+HLE_RANGE_ATOMIC(0x00369A, glue_00369A, 18, HLE_EXIT_SP(0x003B1A, -4))   /* bsr $003B1A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00369E);
 	hle_jump(ctx, 0x003B1A);
 }
 
-HLE_RANGE(0x0036A8, glue_0036A8, 18, HLE_EXIT_SP(0x003B1A, -4))   /* bsr $003B1A */
+HLE_RANGE_ATOMIC(0x0036A8, glue_0036A8, 18, HLE_EXIT_SP(0x003B1A, -4))   /* bsr $003B1A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036AC);
 	hle_jump(ctx, 0x003B1A);
 }
 
-HLE_RANGE(0x0036AC, glue_0036AC, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x0036AC, glue_0036AC, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036B0);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x0036C6, glue_0036C6, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0036C6, glue_0036C6, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036CA);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x0036CA, glue_0036CA, 18, HLE_EXIT_SP(0x003C06, -4))   /* jsr $003C06(pc) */
+HLE_RANGE_ATOMIC(0x0036CA, glue_0036CA, 18, HLE_EXIT_SP(0x003C06, -4))   /* jsr $003C06(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036CE);
 	hle_jump(ctx, 0x003C06);
 }
 
-HLE_RANGE(0x0036D2, glue_0036D2, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0036D2, glue_0036D2, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036D6);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_FUNC(0x0036D6, glue_0036D6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0036D6, glue_0036D6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0036D8, glue_0036D8, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x0036D8, glue_0036D8, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036DC);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x0036E6, glue_0036E6, 18, HLE_EXIT_SP(0x003AE4, -4))   /* bsr $003AE4 */
+HLE_RANGE_ATOMIC(0x0036E6, glue_0036E6, 18, HLE_EXIT_SP(0x003AE4, -4))   /* bsr $003AE4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036EA);
 	hle_jump(ctx, 0x003AE4);
 }
 
-HLE_RANGE(0x0036F4, glue_0036F4, 18, HLE_EXIT_SP(0x003AE4, -4))   /* bsr $003AE4 */
+HLE_RANGE_ATOMIC(0x0036F4, glue_0036F4, 18, HLE_EXIT_SP(0x003AE4, -4))   /* bsr $003AE4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036F8);
 	hle_jump(ctx, 0x003AE4);
 }
 
-HLE_RANGE(0x0036F8, glue_0036F8, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x0036F8, glue_0036F8, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0036FC);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003702, glue_003702, 10, 0x00388C)   /* bra $00388C */
+HLE_RANGE_ATOMIC(0x003702, glue_003702, 10, 0x00388C)   /* bra $00388C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00388C);
 }
 
-HLE_RANGE(0x003706, glue_003706, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003706, glue_003706, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00370A);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003714, glue_003714, 18, HLE_EXIT_SP(0x003A34, -4))   /* bsr $003A34 */
+HLE_RANGE_ATOMIC(0x003714, glue_003714, 18, HLE_EXIT_SP(0x003A34, -4))   /* bsr $003A34 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003718);
 	hle_jump(ctx, 0x003A34);
 }
 
-HLE_RANGE(0x003722, glue_003722, 18, HLE_EXIT_SP(0x003A34, -4))   /* bsr $003A34 */
+HLE_RANGE_ATOMIC(0x003722, glue_003722, 18, HLE_EXIT_SP(0x003A34, -4))   /* bsr $003A34 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003726);
 	hle_jump(ctx, 0x003A34);
 }
 
-HLE_RANGE(0x003726, glue_003726, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003726, glue_003726, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00372A);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003730, glue_003730, 10, 0x00388C)   /* bra $00388C */
+HLE_RANGE_ATOMIC(0x003730, glue_003730, 10, 0x00388C)   /* bra $00388C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00388C);
 }
 
-HLE_RANGE(0x003734, glue_003734, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003734, glue_003734, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003738);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003742, glue_003742, 18, HLE_EXIT_SP(0x003A7E, -4))   /* bsr $003A7E */
+HLE_RANGE_ATOMIC(0x003742, glue_003742, 18, HLE_EXIT_SP(0x003A7E, -4))   /* bsr $003A7E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003746);
 	hle_jump(ctx, 0x003A7E);
 }
 
-HLE_RANGE(0x003750, glue_003750, 18, HLE_EXIT_SP(0x003A7E, -4))   /* bsr $003A7E */
+HLE_RANGE_ATOMIC(0x003750, glue_003750, 18, HLE_EXIT_SP(0x003A7E, -4))   /* bsr $003A7E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003754);
 	hle_jump(ctx, 0x003A7E);
 }
 
-HLE_RANGE(0x003754, glue_003754, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003754, glue_003754, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003758);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x00375E, glue_00375E, 10, 0x00388C)   /* bra $00388C */
+HLE_RANGE_ATOMIC(0x00375E, glue_00375E, 10, 0x00388C)   /* bra $00388C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00388C);
 }
 
-HLE_RANGE(0x003762, glue_003762, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003762, glue_003762, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003766);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003770, glue_003770, 18, HLE_EXIT_SP(0x0039C6, -4))   /* bsr $0039C6 */
+HLE_RANGE_ATOMIC(0x003770, glue_003770, 18, HLE_EXIT_SP(0x0039C6, -4))   /* bsr $0039C6 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003774);
 	hle_jump(ctx, 0x0039C6);
 }
 
-HLE_RANGE(0x00377E, glue_00377E, 18, HLE_EXIT_SP(0x0039C6, -4))   /* bsr $0039C6 */
+HLE_RANGE_ATOMIC(0x00377E, glue_00377E, 18, HLE_EXIT_SP(0x0039C6, -4))   /* bsr $0039C6 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003782);
 	hle_jump(ctx, 0x0039C6);
 }
 
-HLE_RANGE(0x003782, glue_003782, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003782, glue_003782, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003786);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x00378A, glue_00378A, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x00378A, glue_00378A, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00378E);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x003790, glue_003790, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x003790, glue_003790, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003796);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0037A2, glue_0037A2, 18, HLE_EXIT_SP(0x0037D4, -4))   /* bsr $0037D4 */
+HLE_RANGE_ATOMIC(0x0037A2, glue_0037A2, 18, HLE_EXIT_SP(0x0037D4, -4))   /* bsr $0037D4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0037A6);
 	hle_jump(ctx, 0x0037D4);
 }
 
-HLE_RANGE(0x0037B2, glue_0037B2, 18, HLE_EXIT_SP(0x0037D4, -4))   /* bsr $0037D4 */
+HLE_RANGE_ATOMIC(0x0037B2, glue_0037B2, 18, HLE_EXIT_SP(0x0037D4, -4))   /* bsr $0037D4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0037B6);
 	hle_jump(ctx, 0x0037D4);
 }
 
-HLE_RANGE(0x0037C2, glue_0037C2, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0037C2, glue_0037C2, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0037C6);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x0037C6, glue_0037C6, 18, HLE_EXIT_SP(0x003C06, -4))   /* jsr $003C06(pc) */
+HLE_RANGE_ATOMIC(0x0037C6, glue_0037C6, 18, HLE_EXIT_SP(0x003C06, -4))   /* jsr $003C06(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0037CA);
 	hle_jump(ctx, 0x003C06);
 }
 
-HLE_RANGE(0x0037CE, glue_0037CE, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0037CE, glue_0037CE, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0037D2);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_FUNC(0x0037D2, glue_0037D2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0037D2, glue_0037D2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0037F8, glue_0037F8, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x0037F8, glue_0037F8, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0037FE);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x00380A, glue_00380A, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x00380A, glue_00380A, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00380E);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x003812, glue_003812, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003812, glue_003812, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00381A, glue_00381A, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x00381A, glue_00381A, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003820);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_FUNC(0x003838, glue_003838, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003838, glue_003838, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00383E, glue_00383E, 10, 0x003862)   /* bra $003862 */
+HLE_RANGE_ATOMIC(0x00383E, glue_00383E, 10, 0x003862)   /* bra $003862 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003862);
 }
 
-HLE_RANGE(0x003844, glue_003844, 10, 0x003862)   /* bra $003862 */
+HLE_RANGE_ATOMIC(0x003844, glue_003844, 10, 0x003862)   /* bra $003862 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003862);
 }
 
-HLE_RANGE(0x00384A, glue_00384A, 10, 0x003862)   /* bra $003862 */
+HLE_RANGE_ATOMIC(0x00384A, glue_00384A, 10, 0x003862)   /* bra $003862 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003862);
 }
 
-HLE_RANGE(0x003850, glue_003850, 10, 0x003862)   /* bra $003862 */
+HLE_RANGE_ATOMIC(0x003850, glue_003850, 10, 0x003862)   /* bra $003862 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003862);
 }
 
-HLE_RANGE(0x003856, glue_003856, 10, 0x003862)   /* bra $003862 */
+HLE_RANGE_ATOMIC(0x003856, glue_003856, 10, 0x003862)   /* bra $003862 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003862);
 }
 
-HLE_RANGE(0x00385C, glue_00385C, 10, 0x003862)   /* bra $003862 */
+HLE_RANGE_ATOMIC(0x00385C, glue_00385C, 10, 0x003862)   /* bra $003862 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x003862);
 }
 
-HLE_RANGE(0x003862, glue_003862, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003862, glue_003862, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003866);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003870, glue_003870, 18, HLE_EXIT_SP(0x00391A, -4))   /* bsr $00391A */
+HLE_RANGE_ATOMIC(0x003870, glue_003870, 18, HLE_EXIT_SP(0x00391A, -4))   /* bsr $00391A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003874);
 	hle_jump(ctx, 0x00391A);
 }
 
-HLE_RANGE(0x00387E, glue_00387E, 18, HLE_EXIT_SP(0x00391A, -4))   /* bsr $00391A */
+HLE_RANGE_ATOMIC(0x00387E, glue_00387E, 18, HLE_EXIT_SP(0x00391A, -4))   /* bsr $00391A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003882);
 	hle_jump(ctx, 0x00391A);
 }
 
-HLE_RANGE(0x003882, glue_003882, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
+HLE_RANGE_ATOMIC(0x003882, glue_003882, 18, HLE_EXIT_SP(0x003B4A, -4))   /* bsr $003B4A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003886);
 	hle_jump(ctx, 0x003B4A);
 }
 
-HLE_RANGE(0x003890, glue_003890, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x003890, glue_003890, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003894);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x003896, glue_003896, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x003896, glue_003896, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00389C);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0038A8, glue_0038A8, 18, HLE_EXIT_SP(0x0038DA, -4))   /* bsr $0038DA */
+HLE_RANGE_ATOMIC(0x0038A8, glue_0038A8, 18, HLE_EXIT_SP(0x0038DA, -4))   /* bsr $0038DA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0038AC);
 	hle_jump(ctx, 0x0038DA);
 }
 
-HLE_RANGE(0x0038B8, glue_0038B8, 18, HLE_EXIT_SP(0x0038DA, -4))   /* bsr $0038DA */
+HLE_RANGE_ATOMIC(0x0038B8, glue_0038B8, 18, HLE_EXIT_SP(0x0038DA, -4))   /* bsr $0038DA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0038BC);
 	hle_jump(ctx, 0x0038DA);
 }
 
-HLE_RANGE(0x0038C8, glue_0038C8, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0038C8, glue_0038C8, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0038CC);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x0038CC, glue_0038CC, 18, HLE_EXIT_SP(0x003C06, -4))   /* jsr $003C06(pc) */
+HLE_RANGE_ATOMIC(0x0038CC, glue_0038CC, 18, HLE_EXIT_SP(0x003C06, -4))   /* jsr $003C06(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0038D0);
 	hle_jump(ctx, 0x003C06);
 }
 
-HLE_RANGE(0x0038D4, glue_0038D4, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x0038D4, glue_0038D4, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0038D8);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_FUNC(0x0038D8, glue_0038D8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0038D8, glue_0038D8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0038FC, glue_0038FC, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x0038FC, glue_0038FC, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003902);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x00390E, glue_00390E, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x00390E, glue_00390E, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003912);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x003914, glue_003914, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003914, glue_003914, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x003918, glue_003918, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003918, glue_003918, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003930, glue_003930, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x003930, glue_003930, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003934);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_RANGE(0x003946, glue_003946, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003946, glue_003946, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00394A);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x003956, glue_003956, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x003956, glue_003956, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00395C);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x003968, glue_003968, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003968, glue_003968, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00396C);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x003974, glue_003974, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x003974, glue_003974, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00397A);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x00398A, glue_00398A, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x00398A, glue_00398A, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00398E);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x0039AA, glue_0039AA, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x0039AA, glue_0039AA, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0039B0);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x0039C0, glue_0039C0, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x0039C0, glue_0039C0, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0039C4);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x0039C4, glue_0039C4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0039C4, glue_0039C4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0039DC, glue_0039DC, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x0039DC, glue_0039DC, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0039E0);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_RANGE(0x0039EC, glue_0039EC, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x0039EC, glue_0039EC, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0039F2);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x003A02, glue_003A02, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003A02, glue_003A02, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003A06);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x003A0E, glue_003A0E, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x003A0E, glue_003A0E, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003A14);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x003A24, glue_003A24, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003A24, glue_003A24, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003A28);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x003A32, glue_003A32, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003A32, glue_003A32, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003A4A, glue_003A4A, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x003A4A, glue_003A4A, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003A4E);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_RANGE(0x003A5E, glue_003A5E, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x003A5E, glue_003A5E, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003A64);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x003A74, glue_003A74, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003A74, glue_003A74, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003A78);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x003A7C, glue_003A7C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003A7C, glue_003A7C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003A94, glue_003A94, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x003A94, glue_003A94, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003A98);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_RANGE(0x003AA4, glue_003AA4, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x003AA4, glue_003AA4, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003AAA);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x003ABA, glue_003ABA, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003ABA, glue_003ABA, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003ABE);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x003AC4, glue_003AC4, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
+HLE_RANGE_ATOMIC(0x003AC4, glue_003AC4, 20, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003ACA);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x003ADA, glue_003ADA, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x003ADA, glue_003ADA, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003ADE);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x003AE2, glue_003AE2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003AE2, glue_003AE2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003B10, glue_003B10, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x003B10, glue_003B10, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003B14);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_FUNC(0x003B18, glue_003B18, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003B18, glue_003B18, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003B44, glue_003B44, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x003B44, glue_003B44, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003B48);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_FUNC(0x003B48, glue_003B48, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003B48, glue_003B48, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003B4E, glue_003B4E, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x003B4E, glue_003B4E, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003B54);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x003B74, glue_003B74, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x003B74, glue_003B74, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003B7A);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x003B84, glue_003B84, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x003B84, glue_003B84, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003B88);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x003B8E, glue_003B8E, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x003B8E, glue_003B8E, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003B94);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_RANGE(0x003B94, glue_003B94, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x003B94, glue_003B94, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003B9A);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x003B9A, glue_003B9A, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x003B9A, glue_003B9A, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003BA0);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x003BA4, glue_003BA4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003BA4, glue_003BA4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003BB4, glue_003BB4, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x003BB4, glue_003BB4, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003BBA);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x003BBA, glue_003BBA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x003BBA, glue_003BBA, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003BC0);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x003BC0, glue_003BC0, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x003BC0, glue_003BC0, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003BC6);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x003BC6, glue_003BC6, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x003BC6, glue_003BC6, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003BCA);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x003BCA, glue_003BCA, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x003BCA, glue_003BCA, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003BD0);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x003BD8, glue_003BD8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003BD8, glue_003BD8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003BE4, glue_003BE4, 18, HLE_EXIT_SP(0x003BF2, -4))   /* bsr $003BF2 */
+HLE_RANGE_ATOMIC(0x003BE4, glue_003BE4, 18, HLE_EXIT_SP(0x003BF2, -4))   /* bsr $003BF2 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003BE8);
 	hle_jump(ctx, 0x003BF2);
 }
 
-HLE_RANGE(0x003C00, glue_003C00, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
+HLE_RANGE_ATOMIC(0x003C00, glue_003C00, 18, HLE_EXIT_SP(0x007E02, -4))   /* jsr $007E02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003C04);
 	hle_jump(ctx, 0x007E02);
 }
 
-HLE_FUNC(0x003C04, glue_003C04, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003C04, glue_003C04, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003C06, glue_003C06, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x003C06, glue_003C06, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003C0C);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x003C14, glue_003C14, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x003C14, glue_003C14, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003C1A);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x003C22, glue_003C22, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x003C22, glue_003C22, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003C28);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x003C28, glue_003C28, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x003C28, glue_003C28, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003C2E);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x003C2E, glue_003C2E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x003C2E, glue_003C2E, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003C34);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x003C34, glue_003C34, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003C34, glue_003C34, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x003F3A, glue_003F3A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x003F3A, glue_003F3A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x003F98, glue_003F98, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x003F98, glue_003F98, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003F9C);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x003F9C, glue_003F9C, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x003F9C, glue_003F9C, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003FA0);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x003FAA, glue_003FAA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x003FAA, glue_003FAA, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003FB0);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x003FC0, glue_003FC0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x003FC0, glue_003FC0, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x003FC6);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x003FDE, glue_003FDE, 18, HLE_EXIT_SP(0x004682, -4))   /* jsr $004682(pc) */
+HLE_RANGE_ATOMIC(0x003FDE, glue_003FDE, 18, HLE_EXIT_SP(0x004682, -4))   /* jsr $004682(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003FE2);
 	hle_jump(ctx, 0x004682);
 }
 
-HLE_RANGE(0x003FE4, glue_003FE4, 18, HLE_EXIT_SP(0x008808, -4))   /* jsr $008808(pc) */
+HLE_RANGE_ATOMIC(0x003FE4, glue_003FE4, 18, HLE_EXIT_SP(0x008808, -4))   /* jsr $008808(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003FE8);
 	hle_jump(ctx, 0x008808);
 }
 
-HLE_RANGE(0x003FF2, glue_003FF2, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x003FF2, glue_003FF2, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003FF6);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x003FFA, glue_003FFA, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x003FFA, glue_003FFA, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x003FFE);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x004004, glue_004004, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x004004, glue_004004, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004008);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x004014, glue_004014, 18, HLE_EXIT_SP(0x007ED2, -4))   /* jsr $007ED2(pc) */
+HLE_RANGE_ATOMIC(0x004014, glue_004014, 18, HLE_EXIT_SP(0x007ED2, -4))   /* jsr $007ED2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004018);
 	hle_jump(ctx, 0x007ED2);
 }
 
-HLE_RANGE(0x00402A, glue_00402A, 18, HLE_EXIT_SP(0x007D5A, -4))   /* jsr $007D5A(pc) */
+HLE_RANGE_ATOMIC(0x00402A, glue_00402A, 18, HLE_EXIT_SP(0x007D5A, -4))   /* jsr $007D5A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00402E);
 	hle_jump(ctx, 0x007D5A);
 }
 
-HLE_RANGE(0x004032, glue_004032, 18, HLE_EXIT_SP(0x007ED2, -4))   /* jsr $007ED2(pc) */
+HLE_RANGE_ATOMIC(0x004032, glue_004032, 18, HLE_EXIT_SP(0x007ED2, -4))   /* jsr $007ED2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004036);
 	hle_jump(ctx, 0x007ED2);
 }
 
-HLE_RANGE(0x004038, glue_004038, 18, HLE_EXIT_SP(0x007ED2, -4))   /* jsr $007ED2(pc) */
+HLE_RANGE_ATOMIC(0x004038, glue_004038, 18, HLE_EXIT_SP(0x007ED2, -4))   /* jsr $007ED2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00403C);
 	hle_jump(ctx, 0x007ED2);
 }
 
-HLE_RANGE(0x004046, glue_004046, 18, HLE_EXIT_SP(0x007D6E, -4))   /* jsr $007D6E(pc) */
+HLE_RANGE_ATOMIC(0x004046, glue_004046, 18, HLE_EXIT_SP(0x007D6E, -4))   /* jsr $007D6E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00404A);
 	hle_jump(ctx, 0x007D6E);
 }
 
-HLE_RANGE(0x004060, glue_004060, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x004060, glue_004060, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004064);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x004064, glue_004064, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x004064, glue_004064, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004068);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_FUNC(0x00407C, glue_00407C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00407C, glue_00407C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x004082, glue_004082, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x004082, glue_004082, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0041E6, glue_0041E6, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
+HLE_RANGE_ATOMIC(0x0041E6, glue_0041E6, 18, HLE_EXIT_SP(0x004212, -4))   /* bsr $004212 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0041EA);
 	hle_jump(ctx, 0x004212);
 }
 
-HLE_RANGE(0x0041F0, glue_0041F0, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x0041F0, glue_0041F0, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0041F4);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x0041F8, glue_0041F8, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
+HLE_RANGE_ATOMIC(0x0041F8, glue_0041F8, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0041FC);
 	hle_jump(ctx, 0x00424E);
 }
 
-HLE_RANGE(0x0041FC, glue_0041FC, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
+HLE_RANGE_ATOMIC(0x0041FC, glue_0041FC, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004200);
 	hle_jump(ctx, 0x00424E);
 }
 
-HLE_RANGE(0x004200, glue_004200, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
+HLE_RANGE_ATOMIC(0x004200, glue_004200, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004204);
 	hle_jump(ctx, 0x00424E);
 }
 
-HLE_RANGE(0x004204, glue_004204, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
+HLE_RANGE_ATOMIC(0x004204, glue_004204, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004208);
 	hle_jump(ctx, 0x00424E);
 }
 
-HLE_RANGE(0x004208, glue_004208, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
+HLE_RANGE_ATOMIC(0x004208, glue_004208, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00420C);
 	hle_jump(ctx, 0x00424E);
 }
 
-HLE_RANGE(0x00420C, glue_00420C, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
+HLE_RANGE_ATOMIC(0x00420C, glue_00420C, 18, HLE_EXIT_SP(0x00424E, -4))   /* jsr $00424E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004210);
 	hle_jump(ctx, 0x00424E);
 }
 
-HLE_FUNC(0x004210, glue_004210, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x004210, glue_004210, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x004212, glue_004212, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
+HLE_RANGE_ATOMIC(0x004212, glue_004212, 18, HLE_EXIT_SP(0x0032AC, -4))   /* jsr $0032AC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004216);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x004216, glue_004216, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x004216, glue_004216, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00421A);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x00422A, glue_00422A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x00422A, glue_00422A, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004230);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x00423A, glue_00423A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00423A, glue_00423A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00423E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x004242, glue_004242, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x004242, glue_004242, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004246);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00424A, glue_00424A, 10, 0x008A7C)   /* jmp $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x00424A, glue_00424A, 10, 0x008A7C)   /* jmp $008A7C(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00424E, glue_00424E, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x00424E, glue_00424E, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004252);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x00425A, glue_00425A, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x00425A, glue_00425A, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00425E);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_FUNC(0x004274, glue_004274, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x004274, glue_004274, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x004276, glue_004276, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x004276, glue_004276, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00427C);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x00427C, glue_00427C, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
+HLE_RANGE_ATOMIC(0x00427C, glue_00427C, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004280);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x004284, glue_004284, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x004284, glue_004284, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00428A);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00428A, glue_00428A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00428A, glue_00428A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004290);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x004290, glue_004290, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x004290, glue_004290, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004294);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x004294, glue_004294, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x004294, glue_004294, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004298);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x004298, glue_004298, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x004298, glue_004298, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00429E);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0042A8, glue_0042A8, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x0042A8, glue_0042A8, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0042AC);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x0042AC, glue_0042AC, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x0042AC, glue_0042AC, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0042B0);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_FUNC(0x0042C6, glue_0042C6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0042C6, glue_0042C6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0042CC, glue_0042CC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0042CC, glue_0042CC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0042CE, glue_0042CE, 18, HLE_EXIT_SP(0x0032AC, -4))   /* bsr $0032AC */
+HLE_RANGE_ATOMIC(0x0042CE, glue_0042CE, 18, HLE_EXIT_SP(0x0032AC, -4))   /* bsr $0032AC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0042D2);
 	hle_jump(ctx, 0x0032AC);
 }
 
-HLE_RANGE(0x0042D2, glue_0042D2, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
+HLE_RANGE_ATOMIC(0x0042D2, glue_0042D2, 18, HLE_EXIT_SP(0x00871A, -4))   /* jsr $00871A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0042D6);
 	hle_jump(ctx, 0x00871A);
 }
 
-HLE_RANGE(0x0042E6, glue_0042E6, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0042E6, glue_0042E6, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0042EC);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x0042FC, glue_0042FC, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
+HLE_RANGE_ATOMIC(0x0042FC, glue_0042FC, 20, HLE_EXIT_SP(0x01320A, -4))   /* jsr $01320A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004302);
 	hle_jump(ctx, 0x01320A);
 }
 
-HLE_RANGE(0x004326, glue_004326, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x004326, glue_004326, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00432C);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x00432C, glue_00432C, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
+HLE_RANGE_ATOMIC(0x00432C, glue_00432C, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004330);
 	hle_jump(ctx, 0x004752);
 }
 
-HLE_RANGE(0x00433E, glue_00433E, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x00433E, glue_00433E, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004342);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x004342, glue_004342, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x004342, glue_004342, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004348);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x004348, glue_004348, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x004348, glue_004348, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00434E);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x004358, glue_004358, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x004358, glue_004358, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00435C);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x004360, glue_004360, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x004360, glue_004360, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004364);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00436A, glue_00436A, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x00436A, glue_00436A, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00436E);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x00438C, glue_00438C, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x00438C, glue_00438C, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004392);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0043A8, glue_0043A8, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
+HLE_RANGE_ATOMIC(0x0043A8, glue_0043A8, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0043AC);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x0043B4, glue_0043B4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0043B4, glue_0043B4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0043BA);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0043DC, glue_0043DC, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
+HLE_RANGE_ATOMIC(0x0043DC, glue_0043DC, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0043E0);
 	hle_jump(ctx, 0x004668);
 }
 
-HLE_RANGE(0x0043EE, glue_0043EE, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x0043EE, glue_0043EE, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0043F2);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x0043F8, glue_0043F8, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
+HLE_RANGE_ATOMIC(0x0043F8, glue_0043F8, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0043FC);
 	hle_jump(ctx, 0x004668);
 }
 
-HLE_RANGE(0x00440A, glue_00440A, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x00440A, glue_00440A, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00440E);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x004414, glue_004414, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
+HLE_RANGE_ATOMIC(0x004414, glue_004414, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004418);
 	hle_jump(ctx, 0x004668);
 }
 
-HLE_RANGE(0x004426, glue_004426, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x004426, glue_004426, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00442A);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x00444C, glue_00444C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00444C, glue_00444C, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004452);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00446C, glue_00446C, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
+HLE_RANGE_ATOMIC(0x00446C, glue_00446C, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004472);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x0044D2, glue_0044D2, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x0044D2, glue_0044D2, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0044D6);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x0044E4, glue_0044E4, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x0044E4, glue_0044E4, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0044E8);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x0044FC, glue_0044FC, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x0044FC, glue_0044FC, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004500);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x00450E, glue_00450E, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x00450E, glue_00450E, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004512);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x004518, glue_004518, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
+HLE_RANGE_ATOMIC(0x004518, glue_004518, 18, HLE_EXIT_SP(0x004668, -4))   /* jsr $004668(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00451C);
 	hle_jump(ctx, 0x004668);
 }
 
-HLE_RANGE(0x004542, glue_004542, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x004542, glue_004542, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004546);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x004554, glue_004554, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x004554, glue_004554, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004558);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x004566, glue_004566, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x004566, glue_004566, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00456A);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x004588, glue_004588, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
+HLE_RANGE_ATOMIC(0x004588, glue_004588, 18, HLE_EXIT_SP(0x004650, -4))   /* jsr $004650(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00458C);
 	hle_jump(ctx, 0x004650);
 }
 
-HLE_RANGE(0x0045D0, glue_0045D0, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
+HLE_RANGE_ATOMIC(0x0045D0, glue_0045D0, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0045D4);
 	hle_jump(ctx, 0x004752);
 }
 
-HLE_RANGE(0x0045D4, glue_0045D4, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x0045D4, glue_0045D4, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0045DA);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0045DA, glue_0045DA, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x0045DA, glue_0045DA, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0045E0);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x0045E0, glue_0045E0, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0045E0, glue_0045E0, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0045E6);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0045E6, glue_0045E6, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
+HLE_RANGE_ATOMIC(0x0045E6, glue_0045E6, 18, HLE_EXIT_SP(0x0088A0, -4))   /* jsr $0088A0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0045EA);
 	hle_jump(ctx, 0x0088A0);
 }
 
-HLE_FUNC(0x0045FE, glue_0045FE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0045FE, glue_0045FE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00460A, glue_00460A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00460A, glue_00460A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00465E, glue_00465E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00465E, glue_00465E, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004664);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x004666, glue_004666, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x004666, glue_004666, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x004680, glue_004680, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x004680, glue_004680, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0046B2, glue_0046B2, 20, HLE_EXIT_SP(0x011F94, -4))   /* jsr $011F94.l */
+HLE_RANGE_ATOMIC(0x0046B2, glue_0046B2, 20, HLE_EXIT_SP(0x011F94, -4))   /* jsr $011F94.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0046B8);
 	hle_jump(ctx, 0x011F94);
 }
 
-HLE_FUNC(0x0046C4, glue_0046C4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0046C4, glue_0046C4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0047A0, glue_0047A0, 10, 0x004770)   /* bra $004770 */
+HLE_RANGE_ATOMIC(0x0047A0, glue_0047A0, 10, 0x004770)   /* bra $004770 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x004770);
 }
 
-HLE_RANGE(0x0047AA, glue_0047AA, 10, 0x004770)   /* bra $004770 */
+HLE_RANGE_ATOMIC(0x0047AA, glue_0047AA, 10, 0x004770)   /* bra $004770 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x004770);
 }
 
-HLE_FUNC(0x0047CC, glue_0047CC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0047CC, glue_0047CC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0047FE, glue_0047FE, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
+HLE_RANGE_ATOMIC(0x0047FE, glue_0047FE, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004802);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x00481C, glue_00481C, 10, 0x00498A)   /* bra $00498A */
+HLE_RANGE_ATOMIC(0x00481C, glue_00481C, 10, 0x00498A)   /* bra $00498A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x004850, glue_004850, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
+HLE_RANGE_ATOMIC(0x004850, glue_004850, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004854);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x00486E, glue_00486E, 10, 0x00498A)   /* bra $00498A */
+HLE_RANGE_ATOMIC(0x00486E, glue_00486E, 10, 0x00498A)   /* bra $00498A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x0048A2, glue_0048A2, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
+HLE_RANGE_ATOMIC(0x0048A2, glue_0048A2, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0048A6);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x0048C0, glue_0048C0, 10, 0x00498A)   /* bra $00498A */
+HLE_RANGE_ATOMIC(0x0048C0, glue_0048C0, 10, 0x00498A)   /* bra $00498A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x0048F4, glue_0048F4, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
+HLE_RANGE_ATOMIC(0x0048F4, glue_0048F4, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0048F8);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x004912, glue_004912, 10, 0x00498A)   /* bra $00498A */
+HLE_RANGE_ATOMIC(0x004912, glue_004912, 10, 0x00498A)   /* bra $00498A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x00495C, glue_00495C, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
+HLE_RANGE_ATOMIC(0x00495C, glue_00495C, 18, HLE_EXIT_SP(0x00498A, -4))   /* bsr $00498A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x004960);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_RANGE(0x004968, glue_004968, 10, 0x004962)   /* bra $004962 */
+HLE_RANGE_ATOMIC(0x004968, glue_004968, 10, 0x004962)   /* bra $004962 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x004962);
 }
 
-HLE_RANGE(0x0049C6, glue_0049C6, 10, 0x0049CC)   /* bra $0049CC */
+HLE_RANGE_ATOMIC(0x0049C6, glue_0049C6, 10, 0x0049CC)   /* bra $0049CC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0049CC);
 }
 
-HLE_RANGE(0x0049F2, glue_0049F2, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x0049F2, glue_0049F2, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0049F8);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x0049F8, glue_0049F8, 10, 0x004A4E)   /* bra $004A4E */
+HLE_RANGE_ATOMIC(0x0049F8, glue_0049F8, 10, 0x004A4E)   /* bra $004A4E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x004A4E);
 }
 
-HLE_RANGE(0x004A0E, glue_004A0E, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
+HLE_RANGE_ATOMIC(0x004A0E, glue_004A0E, 20, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004A14);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x004A14, glue_004A14, 10, 0x004A4E)   /* bra $004A4E */
+HLE_RANGE_ATOMIC(0x004A14, glue_004A14, 10, 0x004A4E)   /* bra $004A4E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x004A4E);
 }
 
-HLE_RANGE(0x004A32, glue_004A32, 20, HLE_EXIT_SP(0x013470, -4))   /* jsr $013470.l */
+HLE_RANGE_ATOMIC(0x004A32, glue_004A32, 20, HLE_EXIT_SP(0x013470, -4))   /* jsr $013470.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004A38);
 	hle_jump(ctx, 0x013470);
 }
 
-HLE_RANGE(0x004A42, glue_004A42, 20, HLE_EXIT_SP(0x01385A, -4))   /* jsr $01385A.l */
+HLE_RANGE_ATOMIC(0x004A42, glue_004A42, 20, HLE_EXIT_SP(0x01385A, -4))   /* jsr $01385A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004A48);
 	hle_jump(ctx, 0x01385A);
 }
 
-HLE_RANGE(0x004A48, glue_004A48, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x004A48, glue_004A48, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x004A4E);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x004A5E, glue_004A5E, 10, 0x00498A)   /* bra $00498A */
+HLE_RANGE_ATOMIC(0x004A5E, glue_004A5E, 10, 0x00498A)   /* bra $00498A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00498A);
 }
 
-HLE_FUNC(0x004A62, glue_004A62, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x004A62, glue_004A62, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0056FA, glue_0056FA, 18, HLE_EXIT_SP(0x005708, -4))   /* jsr $005708(pc) */
+HLE_RANGE_ATOMIC(0x0056FA, glue_0056FA, 18, HLE_EXIT_SP(0x005708, -4))   /* jsr $005708(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0056FE);
 	hle_jump(ctx, 0x005708);
 }
 
-HLE_RANGE(0x005704, glue_005704, 10, 0x008A4C)   /* jmp $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x005704, glue_005704, 10, 0x008A4C)   /* jmp $008A4C(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_FUNC(0x005718, glue_005718, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005718, glue_005718, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0058B4, glue_0058B4, 16)   /* jsr (a0) */
+HLE_FUNC_ATOMIC(0x0058B4, glue_0058B4, 16)   /* jsr (a0) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[0];
@@ -5284,7 +5285,7 @@ HLE_FUNC(0x0058B4, glue_0058B4, 16)   /* jsr (a0) */
 	hle_jump(ctx, t);
 }
 
-HLE_FUNC(0x005920, glue_005920, 16)   /* jsr (a0) */
+HLE_FUNC_ATOMIC(0x005920, glue_005920, 16)   /* jsr (a0) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[0];
@@ -5292,7 +5293,7 @@ HLE_FUNC(0x005920, glue_005920, 16)   /* jsr (a0) */
 	hle_jump(ctx, t);
 }
 
-HLE_FUNC(0x00592E, glue_00592E, 16)   /* jsr (a0) */
+HLE_FUNC_ATOMIC(0x00592E, glue_00592E, 16)   /* jsr (a0) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[0];
@@ -5300,551 +5301,551 @@ HLE_FUNC(0x00592E, glue_00592E, 16)   /* jsr (a0) */
 	hle_jump(ctx, t);
 }
 
-HLE_FUNC(0x005932, glue_005932, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005932, glue_005932, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x005936, glue_005936, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005936, glue_005936, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00593C, glue_00593C, 10, 0x0058AA)   /* bra $0058AA */
+HLE_RANGE_ATOMIC(0x00593C, glue_00593C, 10, 0x0058AA)   /* bra $0058AA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0058AA);
 }
 
-HLE_FUNC(0x005974, glue_005974, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005974, glue_005974, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x005978, glue_005978, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005978, glue_005978, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005984, glue_005984, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005984, glue_005984, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0059B4, glue_0059B4, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
+HLE_RANGE_ATOMIC(0x0059B4, glue_0059B4, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0059B8);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0059C0, glue_0059C0, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
+HLE_RANGE_ATOMIC(0x0059C0, glue_0059C0, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0059C4);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x0059C4, glue_0059C4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0059C4, glue_0059C4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005A08, glue_005A08, 18, HLE_EXIT_SP(0x0072F8, -4))   /* jsr $0072F8(pc) */
+HLE_RANGE_ATOMIC(0x005A08, glue_005A08, 18, HLE_EXIT_SP(0x0072F8, -4))   /* jsr $0072F8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x005A0C);
 	hle_jump(ctx, 0x0072F8);
 }
 
-HLE_FUNC(0x005A46, glue_005A46, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005A46, glue_005A46, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005A50, glue_005A50, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005A50, glue_005A50, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005A88, glue_005A88, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005A88, glue_005A88, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x005A90, glue_005A90, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005A90, glue_005A90, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005A92, glue_005A92, 18, HLE_EXIT_SP(0x0072F8, -4))   /* jsr $0072F8(pc) */
+HLE_RANGE_ATOMIC(0x005A92, glue_005A92, 18, HLE_EXIT_SP(0x0072F8, -4))   /* jsr $0072F8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x005A96);
 	hle_jump(ctx, 0x0072F8);
 }
 
-HLE_RANGE(0x005AAE, glue_005AAE, 18, HLE_EXIT_SP(0x005A24, -4))   /* jsr $005A24(pc) */
+HLE_RANGE_ATOMIC(0x005AAE, glue_005AAE, 18, HLE_EXIT_SP(0x005A24, -4))   /* jsr $005A24(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x005AB2);
 	hle_jump(ctx, 0x005A24);
 }
 
-HLE_FUNC(0x005AB2, glue_005AB2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005AB2, glue_005AB2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005C06, glue_005C06, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005C06, glue_005C06, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005CCE, glue_005CCE, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005CCE, glue_005CCE, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005D08, glue_005D08, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005D08, glue_005D08, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005DF2, glue_005DF2, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005DF2, glue_005DF2, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x005DFA, glue_005DFA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005DFA, glue_005DFA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005E5E, glue_005E5E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005E5E, glue_005E5E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005E98, glue_005E98, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005E98, glue_005E98, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x005EA8, glue_005EA8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005EA8, glue_005EA8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005ED2, glue_005ED2, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005ED2, glue_005ED2, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x005EE2, glue_005EE2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x005EE2, glue_005EE2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x005F16, glue_005F16, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005F16, glue_005F16, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005F70, glue_005F70, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
+HLE_RANGE_ATOMIC(0x005F70, glue_005F70, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x005F74);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005F76, glue_005F76, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005F76, glue_005F76, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x005FDA, glue_005FDA, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x005FDA, glue_005FDA, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00601E, glue_00601E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00601E, glue_00601E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x006040, glue_006040, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006040, glue_006040, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00605C, glue_00605C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00605C, glue_00605C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00606E, glue_00606E, 18, HLE_EXIT_SP(0x0072CE, -4))   /* jsr $0072CE(pc) */
+HLE_RANGE_ATOMIC(0x00606E, glue_00606E, 18, HLE_EXIT_SP(0x0072CE, -4))   /* jsr $0072CE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006072);
 	hle_jump(ctx, 0x0072CE);
 }
 
-HLE_FUNC(0x006072, glue_006072, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006072, glue_006072, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0060FC, glue_0060FC, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0060FC, glue_0060FC, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x006104, glue_006104, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006104, glue_006104, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006142, glue_006142, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006142, glue_006142, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006198, glue_006198, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
+HLE_RANGE_ATOMIC(0x006198, glue_006198, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00619C);
 	hle_jump(ctx, 0x006252);
 }
 
-HLE_FUNC(0x0061A0, glue_0061A0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0061A0, glue_0061A0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0061DA, glue_0061DA, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
+HLE_RANGE_ATOMIC(0x0061DA, glue_0061DA, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0061DE);
 	hle_jump(ctx, 0x006252);
 }
 
-HLE_FUNC(0x0061E2, glue_0061E2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0061E2, glue_0061E2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006210, glue_006210, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006210, glue_006210, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00626E, glue_00626E, 20, HLE_EXIT_SP(0x0124EC, -4))   /* jsr $0124EC.l */
+HLE_RANGE_ATOMIC(0x00626E, glue_00626E, 20, HLE_EXIT_SP(0x0124EC, -4))   /* jsr $0124EC.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x006274);
 	hle_jump(ctx, 0x0124EC);
 }
 
-HLE_FUNC(0x006278, glue_006278, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006278, glue_006278, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006282, glue_006282, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
+HLE_RANGE_ATOMIC(0x006282, glue_006282, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006286);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00628A, glue_00628A, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00628A, glue_00628A, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0062FE, glue_0062FE, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0062FE, glue_0062FE, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x006304);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_FUNC(0x006308, glue_006308, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006308, glue_006308, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00632E, glue_00632E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00632E, glue_00632E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x006344, glue_006344, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006344, glue_006344, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006364, glue_006364, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006364, glue_006364, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x00636C, glue_00636C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00636C, glue_00636C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00636E, glue_00636E, 18, HLE_EXIT_SP(0x0072CE, -4))   /* jsr $0072CE(pc) */
+HLE_RANGE_ATOMIC(0x00636E, glue_00636E, 18, HLE_EXIT_SP(0x0072CE, -4))   /* jsr $0072CE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006372);
 	hle_jump(ctx, 0x0072CE);
 }
 
-HLE_FUNC(0x006384, glue_006384, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006384, glue_006384, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006396, glue_006396, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006396, glue_006396, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0063C8, glue_0063C8, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0063C8, glue_0063C8, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0063FA, glue_0063FA, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0063FA, glue_0063FA, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00642C, glue_00642C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00642C, glue_00642C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00649C, glue_00649C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00649C, glue_00649C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0064E8, glue_0064E8, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0064E8, glue_0064E8, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x0064F0, glue_0064F0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0064F0, glue_0064F0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00651A, glue_00651A, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00651A, glue_00651A, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00654C, glue_00654C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00654C, glue_00654C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00657E, glue_00657E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00657E, glue_00657E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0065AC, glue_0065AC, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0065AC, glue_0065AC, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x0065E2, glue_0065E2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0065E2, glue_0065E2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0065F2, glue_0065F2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0065F2, glue_0065F2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00660E, glue_00660E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00660E, glue_00660E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x00672C, glue_00672C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00672C, glue_00672C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006730, glue_006730, 18, HLE_EXIT_SP(0x0072B2, -4))   /* jsr $0072B2(pc) */
+HLE_RANGE_ATOMIC(0x006730, glue_006730, 18, HLE_EXIT_SP(0x0072B2, -4))   /* jsr $0072B2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006734);
 	hle_jump(ctx, 0x0072B2);
 }
 
-HLE_RANGE(0x006734, glue_006734, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
+HLE_RANGE_ATOMIC(0x006734, glue_006734, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006738);
 	hle_jump(ctx, 0x006252);
 }
 
-HLE_FUNC(0x00673C, glue_00673C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00673C, glue_00673C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00673E, glue_00673E, 18, HLE_EXIT_SP(0x00735A, -4))   /* jsr $00735A(pc) */
+HLE_RANGE_ATOMIC(0x00673E, glue_00673E, 18, HLE_EXIT_SP(0x00735A, -4))   /* jsr $00735A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006742);
 	hle_jump(ctx, 0x00735A);
 }
 
-HLE_FUNC(0x006754, glue_006754, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006754, glue_006754, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00676C, glue_00676C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00676C, glue_00676C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006774, glue_006774, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
+HLE_RANGE_ATOMIC(0x006774, glue_006774, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006778);
 	hle_jump(ctx, 0x006252);
 }
 
-HLE_FUNC(0x00677C, glue_00677C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00677C, glue_00677C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00689C, glue_00689C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x00689C, glue_00689C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x0068D2, glue_0068D2, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0068D2, glue_0068D2, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006908, glue_006908, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006908, glue_006908, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006936, glue_006936, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
+HLE_RANGE_ATOMIC(0x006936, glue_006936, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00693A);
 	hle_jump(ctx, 0x009A5E);
 }
 
-HLE_RANGE(0x006956, glue_006956, 10, 0x006982)   /* bra $006982 */
+HLE_RANGE_ATOMIC(0x006956, glue_006956, 10, 0x006982)   /* bra $006982 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x006982);
 }
 
-HLE_RANGE(0x006986, glue_006986, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x006986, glue_006986, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00698C);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00698C, glue_00698C, 10, 0x00699C)   /* bra $00699C */
+HLE_RANGE_ATOMIC(0x00698C, glue_00698C, 10, 0x00699C)   /* bra $00699C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00699C);
 }
 
-HLE_FUNC(0x0069A0, glue_0069A0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0069A0, glue_0069A0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0069C4, glue_0069C4, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0069C4, glue_0069C4, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x0069CC, glue_0069CC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0069CC, glue_0069CC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0069FC, glue_0069FC, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x0069FC, glue_0069FC, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x006A16, glue_006A16, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006A16, glue_006A16, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006AE8, glue_006AE8, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006AE8, glue_006AE8, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006B3A, glue_006B3A, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006B3A, glue_006B3A, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006B70, glue_006B70, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006B70, glue_006B70, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006B9E, glue_006B9E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006B9E, glue_006B9E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006BEA, glue_006BEA, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006BEA, glue_006BEA, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006C3E, glue_006C3E, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006C3E, glue_006C3E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x006C94, glue_006C94, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006C94, glue_006C94, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006CAC, glue_006CAC, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006CAC, glue_006CAC, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006CCA, glue_006CCA, 18, HLE_EXIT_SP(0x006E32, -4))   /* bsr $006E32 */
+HLE_RANGE_ATOMIC(0x006CCA, glue_006CCA, 18, HLE_EXIT_SP(0x006E32, -4))   /* bsr $006E32 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006CCE);
 	hle_jump(ctx, 0x006E32);
 }
 
-HLE_FUNC(0x006CD2, glue_006CD2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006CD2, glue_006CD2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x006E50, glue_006E50, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006E50, glue_006E50, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006E5A, glue_006E5A, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
+HLE_RANGE_ATOMIC(0x006E5A, glue_006E5A, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006E5E);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006E62, glue_006E62, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006E62, glue_006E62, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006E98, glue_006E98, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
+HLE_RANGE_ATOMIC(0x006E98, glue_006E98, 18, HLE_EXIT_SP(0x005940, -4))   /* jsr $005940(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x006E9C);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006EA4, glue_006EA4, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006EA4, glue_006EA4, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x006F58, glue_006F58, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x006F58, glue_006F58, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x006F6C, glue_006F6C, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006F6C, glue_006F6C, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_RANGE(0x006F80, glue_006F80, 10, 0x005940)   /* jmp $005940(pc) */
+HLE_RANGE_ATOMIC(0x006F80, glue_006F80, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x005940);
 }
 
-HLE_FUNC(0x007008, glue_007008, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007008, glue_007008, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00700A, glue_00700A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00700A, glue_00700A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00703A, glue_00703A, 16)   /* jsr (a1) */
+HLE_FUNC_ATOMIC(0x00703A, glue_00703A, 16)   /* jsr (a1) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[1];
@@ -5852,164 +5853,164 @@ HLE_FUNC(0x00703A, glue_00703A, 16)   /* jsr (a1) */
 	hle_jump(ctx, t);
 }
 
-HLE_FUNC(0x007046, glue_007046, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007046, glue_007046, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007084, glue_007084, 10, 0x00701E)   /* bra $00701E */
+HLE_RANGE_ATOMIC(0x007084, glue_007084, 10, 0x00701E)   /* bra $00701E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00701E);
 }
 
-HLE_RANGE(0x0070B4, glue_0070B4, 20, HLE_EXIT_SP(0x012AF4, -4))   /* jsr $012AF4.l */
+HLE_RANGE_ATOMIC(0x0070B4, glue_0070B4, 20, HLE_EXIT_SP(0x012AF4, -4))   /* jsr $012AF4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0070BA);
 	hle_jump(ctx, 0x012AF4);
 }
 
-HLE_RANGE(0x0070BC, glue_0070BC, 20, HLE_EXIT_SP(0x013E30, -4))   /* jsr $013E30.l */
+HLE_RANGE_ATOMIC(0x0070BC, glue_0070BC, 20, HLE_EXIT_SP(0x013E30, -4))   /* jsr $013E30.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0070C2);
 	hle_jump(ctx, 0x013E30);
 }
 
-HLE_FUNC(0x0070C4, glue_0070C4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0070C4, glue_0070C4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0070C8, glue_0070C8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0070C8, glue_0070C8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0070D0, glue_0070D0, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x0070D0, glue_0070D0, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0070D4);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_FUNC(0x0070E4, glue_0070E4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0070E4, glue_0070E4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0070F4, glue_0070F4, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x0070F4, glue_0070F4, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0070F8);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_FUNC(0x007102, glue_007102, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007102, glue_007102, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007112, glue_007112, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x007112, glue_007112, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007116);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_RANGE(0x00711C, glue_00711C, 18, HLE_EXIT_SP(0x007C7C, -4))   /* bsr $007C7C */
+HLE_RANGE_ATOMIC(0x00711C, glue_00711C, 18, HLE_EXIT_SP(0x007C7C, -4))   /* bsr $007C7C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007120);
 	hle_jump(ctx, 0x007C7C);
 }
 
-HLE_FUNC(0x007120, glue_007120, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007120, glue_007120, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007130, glue_007130, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x007130, glue_007130, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007134);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_FUNC(0x007164, glue_007164, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007164, glue_007164, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007192, glue_007192, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x007192, glue_007192, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007196);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_FUNC(0x0071AA, glue_0071AA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0071AA, glue_0071AA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007212, glue_007212, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x007212, glue_007212, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007216);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_RANGE(0x007222, glue_007222, 10, 0x00711A)   /* bra $00711A */
+HLE_RANGE_ATOMIC(0x007222, glue_007222, 10, 0x00711A)   /* bra $00711A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00711A);
 }
 
-HLE_FUNC(0x007226, glue_007226, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007226, glue_007226, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007236, glue_007236, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x007236, glue_007236, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00723A);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_FUNC(0x007256, glue_007256, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007256, glue_007256, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007298, glue_007298, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
+HLE_RANGE_ATOMIC(0x007298, glue_007298, 18, HLE_EXIT_SP(0x007086, -4))   /* jsr $007086(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00729C);
 	hle_jump(ctx, 0x007086);
 }
 
-HLE_RANGE(0x0072A0, glue_0072A0, 18, HLE_EXIT_SP(0x007C40, -4))   /* jsr $007C40(pc) */
+HLE_RANGE_ATOMIC(0x0072A0, glue_0072A0, 18, HLE_EXIT_SP(0x007C40, -4))   /* jsr $007C40(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0072A4);
 	hle_jump(ctx, 0x007C40);
 }
 
-HLE_RANGE(0x0072A4, glue_0072A4, 18, HLE_EXIT_SP(0x007C54, -4))   /* jsr $007C54(pc) */
+HLE_RANGE_ATOMIC(0x0072A4, glue_0072A4, 18, HLE_EXIT_SP(0x007C54, -4))   /* jsr $007C54(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0072A8);
 	hle_jump(ctx, 0x007C54);
 }
 
-HLE_FUNC(0x0072A8, glue_0072A8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0072A8, glue_0072A8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0072BC, glue_0072BC, 10, 0x007376)   /* bra $007376 */
+HLE_RANGE_ATOMIC(0x0072BC, glue_0072BC, 10, 0x007376)   /* bra $007376 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007376);
 }
 
-HLE_RANGE(0x0072CA, glue_0072CA, 10, 0x007376)   /* bra $007376 */
+HLE_RANGE_ATOMIC(0x0072CA, glue_0072CA, 10, 0x007376)   /* bra $007376 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007376);
 }
 
-HLE_RANGE(0x0072D8, glue_0072D8, 10, 0x007376)   /* bra $007376 */
+HLE_RANGE_ATOMIC(0x0072D8, glue_0072D8, 10, 0x007376)   /* bra $007376 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007376);
 }
 
-HLE_RANGE(0x0072E6, glue_0072E6, 10, 0x007376)   /* bra $007376 */
+HLE_RANGE_ATOMIC(0x0072E6, glue_0072E6, 10, 0x007376)   /* bra $007376 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007376);
 }
 
-HLE_RANGE(0x0072F4, glue_0072F4, 10, 0x007376)   /* bra $007376 */
+HLE_RANGE_ATOMIC(0x0072F4, glue_0072F4, 10, 0x007376)   /* bra $007376 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007376);
 }
 
-HLE_FUNC(0x00739E, glue_00739E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00739E, glue_00739E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0073D6, glue_0073D6, 16)   /* jsr (a0) */
+HLE_FUNC_ATOMIC(0x0073D6, glue_0073D6, 16)   /* jsr (a0) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[0];
@@ -6017,1784 +6018,1784 @@ HLE_FUNC(0x0073D6, glue_0073D6, 16)   /* jsr (a0) */
 	hle_jump(ctx, t);
 }
 
-HLE_FUNC(0x0073E6, glue_0073E6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0073E6, glue_0073E6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0073EC, glue_0073EC, 10, 0x0073C0)   /* bra $0073C0 */
+HLE_RANGE_ATOMIC(0x0073EC, glue_0073EC, 10, 0x0073C0)   /* bra $0073C0 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0073C0);
 }
 
-HLE_RANGE(0x0073F2, glue_0073F2, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0073F2, glue_0073F2, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0073F8);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x007404, glue_007404, 10, 0x0073E4)   /* bra $0073E4 */
+HLE_RANGE_ATOMIC(0x007404, glue_007404, 10, 0x0073E4)   /* bra $0073E4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0073E4);
 }
 
-HLE_RANGE(0x00740C, glue_00740C, 18, HLE_EXIT_SP(0x008162, -4))   /* jsr $008162(pc) */
+HLE_RANGE_ATOMIC(0x00740C, glue_00740C, 18, HLE_EXIT_SP(0x008162, -4))   /* jsr $008162(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007410);
 	hle_jump(ctx, 0x008162);
 }
 
-HLE_RANGE(0x007410, glue_007410, 18, HLE_EXIT_SP(0x0086C4, -4))   /* jsr $0086C4(pc) */
+HLE_RANGE_ATOMIC(0x007410, glue_007410, 18, HLE_EXIT_SP(0x0086C4, -4))   /* jsr $0086C4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007414);
 	hle_jump(ctx, 0x0086C4);
 }
 
-HLE_RANGE(0x007414, glue_007414, 18, HLE_EXIT_SP(0x008B02, -4))   /* jsr $008B02(pc) */
+HLE_RANGE_ATOMIC(0x007414, glue_007414, 18, HLE_EXIT_SP(0x008B02, -4))   /* jsr $008B02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007418);
 	hle_jump(ctx, 0x008B02);
 }
 
-HLE_RANGE(0x007418, glue_007418, 20, HLE_EXIT_SP(0x0FBB00, -4))   /* jsr $0FBB00.l */
+HLE_RANGE_ATOMIC(0x007418, glue_007418, 20, HLE_EXIT_SP(0x0FBB00, -4))   /* jsr $0FBB00.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00741E);
 	hle_jump(ctx, 0x0FBB00);
 }
 
-HLE_RANGE(0x00741E, glue_00741E, 18, HLE_EXIT_SP(0x00884C, -4))   /* jsr $00884C(pc) */
+HLE_RANGE_ATOMIC(0x00741E, glue_00741E, 18, HLE_EXIT_SP(0x00884C, -4))   /* jsr $00884C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007422);
 	hle_jump(ctx, 0x00884C);
 }
 
-HLE_RANGE(0x007426, glue_007426, 18, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A(pc) */
+HLE_RANGE_ATOMIC(0x007426, glue_007426, 18, HLE_EXIT_SP(0x00867A, -4))   /* jsr $00867A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00742A);
 	hle_jump(ctx, 0x00867A);
 }
 
-HLE_RANGE(0x00742A, glue_00742A, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
+HLE_RANGE_ATOMIC(0x00742A, glue_00742A, 18, HLE_EXIT_SP(0x00818C, -4))   /* jsr $00818C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00742E);
 	hle_jump(ctx, 0x00818C);
 }
 
-HLE_RANGE(0x00742E, glue_00742E, 18, HLE_EXIT_SP(0x00800C, -4))   /* jsr $00800C(pc) */
+HLE_RANGE_ATOMIC(0x00742E, glue_00742E, 18, HLE_EXIT_SP(0x00800C, -4))   /* jsr $00800C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007432);
 	hle_jump(ctx, 0x00800C);
 }
 
-HLE_RANGE(0x00743E, glue_00743E, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x00743E, glue_00743E, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007442);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007454, glue_007454, 18, HLE_EXIT_SP(0x003EC8, -4))   /* jsr $003EC8(pc) */
+HLE_RANGE_ATOMIC(0x007454, glue_007454, 18, HLE_EXIT_SP(0x003EC8, -4))   /* jsr $003EC8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007458);
 	hle_jump(ctx, 0x003EC8);
 }
 
-HLE_RANGE(0x007458, glue_007458, 10, 0x000900)   /* jmp $000900(pc) */
+HLE_RANGE_ATOMIC(0x007458, glue_007458, 10, 0x000900)   /* jmp $000900(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x000900);
 }
 
-HLE_RANGE(0x007476, glue_007476, 20, HLE_EXIT_SP(0x01E346, -4))   /* jsr $01E346.l */
+HLE_RANGE_ATOMIC(0x007476, glue_007476, 20, HLE_EXIT_SP(0x01E346, -4))   /* jsr $01E346.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00747C);
 	hle_jump(ctx, 0x01E346);
 }
 
-HLE_RANGE(0x00747C, glue_00747C, 10, 0x007482)   /* bra $007482 */
+HLE_RANGE_ATOMIC(0x00747C, glue_00747C, 10, 0x007482)   /* bra $007482 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007482);
 }
 
-HLE_RANGE(0x00747E, glue_00747E, 18, HLE_EXIT_SP(0x008876, -4))   /* jsr $008876(pc) */
+HLE_RANGE_ATOMIC(0x00747E, glue_00747E, 18, HLE_EXIT_SP(0x008876, -4))   /* jsr $008876(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007482);
 	hle_jump(ctx, 0x008876);
 }
 
-HLE_RANGE(0x00750E, glue_00750E, 18, HLE_EXIT_SP(0x008B1A, -4))   /* jsr $008B1A(pc) */
+HLE_RANGE_ATOMIC(0x00750E, glue_00750E, 18, HLE_EXIT_SP(0x008B1A, -4))   /* jsr $008B1A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007512);
 	hle_jump(ctx, 0x008B1A);
 }
 
-HLE_RANGE(0x007550, glue_007550, 18, HLE_EXIT_SP(0x001D3A, -4))   /* jsr $001D3A(pc) */
+HLE_RANGE_ATOMIC(0x007550, glue_007550, 18, HLE_EXIT_SP(0x001D3A, -4))   /* jsr $001D3A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007554);
 	hle_jump(ctx, 0x001D3A);
 }
 
-HLE_RANGE(0x007554, glue_007554, 18, HLE_EXIT_SP(0x008B3C, -4))   /* bsr $008B3C */
+HLE_RANGE_ATOMIC(0x007554, glue_007554, 18, HLE_EXIT_SP(0x008B3C, -4))   /* bsr $008B3C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007558);
 	hle_jump(ctx, 0x008B3C);
 }
 
-HLE_RANGE(0x00759E, glue_00759E, 20, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8.l */
+HLE_RANGE_ATOMIC(0x00759E, glue_00759E, 20, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0075A4);
 	hle_jump(ctx, 0x008FA8);
 }
 
-HLE_RANGE(0x0075BC, glue_0075BC, 20, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8.l */
+HLE_RANGE_ATOMIC(0x0075BC, glue_0075BC, 20, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0075C2);
 	hle_jump(ctx, 0x008FA8);
 }
 
-HLE_RANGE(0x0075DA, glue_0075DA, 20, HLE_EXIT_SP(0x0131F2, -4))   /* jsr $0131F2.l */
+HLE_RANGE_ATOMIC(0x0075DA, glue_0075DA, 20, HLE_EXIT_SP(0x0131F2, -4))   /* jsr $0131F2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0075E0);
 	hle_jump(ctx, 0x0131F2);
 }
 
-HLE_RANGE(0x0075E0, glue_0075E0, 18, HLE_EXIT_SP(0x007C9A, -4))   /* jsr $007C9A(pc) */
+HLE_RANGE_ATOMIC(0x0075E0, glue_0075E0, 18, HLE_EXIT_SP(0x007C9A, -4))   /* jsr $007C9A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0075E4);
 	hle_jump(ctx, 0x007C9A);
 }
 
-HLE_RANGE(0x0075E4, glue_0075E4, 18, HLE_EXIT_SP(0x007CD8, -4))   /* jsr $007CD8(pc) */
+HLE_RANGE_ATOMIC(0x0075E4, glue_0075E4, 18, HLE_EXIT_SP(0x007CD8, -4))   /* jsr $007CD8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0075E8);
 	hle_jump(ctx, 0x007CD8);
 }
 
-HLE_RANGE(0x0075E8, glue_0075E8, 18, HLE_EXIT_SP(0x008C52, -4))   /* jsr $008C52(pc) */
+HLE_RANGE_ATOMIC(0x0075E8, glue_0075E8, 18, HLE_EXIT_SP(0x008C52, -4))   /* jsr $008C52(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0075EC);
 	hle_jump(ctx, 0x008C52);
 }
 
-HLE_RANGE(0x0075EC, glue_0075EC, 18, HLE_EXIT_SP(0x009186, -4))   /* jsr $009186(pc) */
+HLE_RANGE_ATOMIC(0x0075EC, glue_0075EC, 18, HLE_EXIT_SP(0x009186, -4))   /* jsr $009186(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0075F0);
 	hle_jump(ctx, 0x009186);
 }
 
-HLE_RANGE(0x0075F0, glue_0075F0, 18, HLE_EXIT_SP(0x009104, -4))   /* jsr $009104(pc) */
+HLE_RANGE_ATOMIC(0x0075F0, glue_0075F0, 18, HLE_EXIT_SP(0x009104, -4))   /* jsr $009104(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0075F4);
 	hle_jump(ctx, 0x009104);
 }
 
-HLE_RANGE(0x0075F4, glue_0075F4, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0075F4, glue_0075F4, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0075FA);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0075FA, glue_0075FA, 18, HLE_EXIT_SP(0x009326, -4))   /* jsr $009326(pc) */
+HLE_RANGE_ATOMIC(0x0075FA, glue_0075FA, 18, HLE_EXIT_SP(0x009326, -4))   /* jsr $009326(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0075FE);
 	hle_jump(ctx, 0x009326);
 }
 
-HLE_RANGE(0x0075FE, glue_0075FE, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
+HLE_RANGE_ATOMIC(0x0075FE, glue_0075FE, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007604);
 	hle_jump(ctx, 0x013376);
 }
 
-HLE_RANGE(0x007604, glue_007604, 18, HLE_EXIT_SP(0x00B398, -4))   /* jsr $00B398(pc) */
+HLE_RANGE_ATOMIC(0x007604, glue_007604, 18, HLE_EXIT_SP(0x00B398, -4))   /* jsr $00B398(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007608);
 	hle_jump(ctx, 0x00B398);
 }
 
-HLE_RANGE(0x007608, glue_007608, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
+HLE_RANGE_ATOMIC(0x007608, glue_007608, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00760E);
 	hle_jump(ctx, 0x013272);
 }
 
-HLE_RANGE(0x00760E, glue_00760E, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00760E, glue_00760E, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007614);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x007614, glue_007614, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x007614, glue_007614, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00761A);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x007620, glue_007620, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
+HLE_RANGE_ATOMIC(0x007620, glue_007620, 18, HLE_EXIT_SP(0x008A4C, -4))   /* jsr $008A4C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007624);
 	hle_jump(ctx, 0x008A4C);
 }
 
-HLE_RANGE(0x00762C, glue_00762C, 20, HLE_EXIT_SP(0x013E1A, -4))   /* jsr $013E1A.l */
+HLE_RANGE_ATOMIC(0x00762C, glue_00762C, 20, HLE_EXIT_SP(0x013E1A, -4))   /* jsr $013E1A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007632);
 	hle_jump(ctx, 0x013E1A);
 }
 
-HLE_RANGE(0x00764A, glue_00764A, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x00764A, glue_00764A, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00764E);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007666, glue_007666, 18, HLE_EXIT_SP(0x00E9FA, -4))   /* jsr $00E9FA(pc) */
+HLE_RANGE_ATOMIC(0x007666, glue_007666, 18, HLE_EXIT_SP(0x00E9FA, -4))   /* jsr $00E9FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00766A);
 	hle_jump(ctx, 0x00E9FA);
 }
 
-HLE_RANGE(0x0076E2, glue_0076E2, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x0076E2, glue_0076E2, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0076E8);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007706, glue_007706, 20, HLE_EXIT_SP(0x0FBAD2, -4))   /* jsr $0FBAD2.l */
+HLE_RANGE_ATOMIC(0x007706, glue_007706, 20, HLE_EXIT_SP(0x0FBAD2, -4))   /* jsr $0FBAD2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00770C);
 	hle_jump(ctx, 0x0FBAD2);
 }
 
-HLE_RANGE(0x00770E, glue_00770E, 20, HLE_EXIT_SP(0x007AFE, -4))   /* jsr $007AFE.l */
+HLE_RANGE_ATOMIC(0x00770E, glue_00770E, 20, HLE_EXIT_SP(0x007AFE, -4))   /* jsr $007AFE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007714);
 	hle_jump(ctx, 0x007AFE);
 }
 
-HLE_RANGE(0x007714, glue_007714, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x007714, glue_007714, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00771A);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x00771A, glue_00771A, 18, HLE_EXIT_SP(0x0003DE, -4))   /* jsr $0003DE(pc) */
+HLE_RANGE_ATOMIC(0x00771A, glue_00771A, 18, HLE_EXIT_SP(0x0003DE, -4))   /* jsr $0003DE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00771E);
 	hle_jump(ctx, 0x0003DE);
 }
 
-HLE_RANGE(0x007732, glue_007732, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x007732, glue_007732, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007738);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007738, glue_007738, 18, HLE_EXIT_SP(0x0003DE, -4))   /* jsr $0003DE(pc) */
+HLE_RANGE_ATOMIC(0x007738, glue_007738, 18, HLE_EXIT_SP(0x0003DE, -4))   /* jsr $0003DE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00773C);
 	hle_jump(ctx, 0x0003DE);
 }
 
-HLE_RANGE(0x007776, glue_007776, 18, HLE_EXIT_SP(0x002B5C, -4))   /* jsr $002B5C(pc) */
+HLE_RANGE_ATOMIC(0x007776, glue_007776, 18, HLE_EXIT_SP(0x002B5C, -4))   /* jsr $002B5C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00777A);
 	hle_jump(ctx, 0x002B5C);
 }
 
-HLE_RANGE(0x00777A, glue_00777A, 20, HLE_EXIT_SP(0x0FBAE2, -4))   /* jsr $0FBAE2.l */
+HLE_RANGE_ATOMIC(0x00777A, glue_00777A, 20, HLE_EXIT_SP(0x0FBAE2, -4))   /* jsr $0FBAE2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007780);
 	hle_jump(ctx, 0x0FBAE2);
 }
 
-HLE_RANGE(0x0077A4, glue_0077A4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0077A4, glue_0077A4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0077AA);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0077DC, glue_0077DC, 18, HLE_EXIT_SP(0x007C9A, -4))   /* jsr $007C9A(pc) */
+HLE_RANGE_ATOMIC(0x0077DC, glue_0077DC, 18, HLE_EXIT_SP(0x007C9A, -4))   /* jsr $007C9A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0077E0);
 	hle_jump(ctx, 0x007C9A);
 }
 
-HLE_RANGE(0x0077E0, glue_0077E0, 18, HLE_EXIT_SP(0x007CD8, -4))   /* jsr $007CD8(pc) */
+HLE_RANGE_ATOMIC(0x0077E0, glue_0077E0, 18, HLE_EXIT_SP(0x007CD8, -4))   /* jsr $007CD8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0077E4);
 	hle_jump(ctx, 0x007CD8);
 }
 
-HLE_RANGE(0x0077E4, glue_0077E4, 18, HLE_EXIT_SP(0x008C52, -4))   /* jsr $008C52(pc) */
+HLE_RANGE_ATOMIC(0x0077E4, glue_0077E4, 18, HLE_EXIT_SP(0x008C52, -4))   /* jsr $008C52(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0077E8);
 	hle_jump(ctx, 0x008C52);
 }
 
-HLE_RANGE(0x0077E8, glue_0077E8, 18, HLE_EXIT_SP(0x009186, -4))   /* jsr $009186(pc) */
+HLE_RANGE_ATOMIC(0x0077E8, glue_0077E8, 18, HLE_EXIT_SP(0x009186, -4))   /* jsr $009186(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0077EC);
 	hle_jump(ctx, 0x009186);
 }
 
-HLE_RANGE(0x0077EC, glue_0077EC, 18, HLE_EXIT_SP(0x009104, -4))   /* jsr $009104(pc) */
+HLE_RANGE_ATOMIC(0x0077EC, glue_0077EC, 18, HLE_EXIT_SP(0x009104, -4))   /* jsr $009104(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0077F0);
 	hle_jump(ctx, 0x009104);
 }
 
-HLE_RANGE(0x0077FA, glue_0077FA, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0077FA, glue_0077FA, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007800);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x007800, glue_007800, 18, HLE_EXIT_SP(0x009358, -4))   /* jsr $009358(pc) */
+HLE_RANGE_ATOMIC(0x007800, glue_007800, 18, HLE_EXIT_SP(0x009358, -4))   /* jsr $009358(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007804);
 	hle_jump(ctx, 0x009358);
 }
 
-HLE_RANGE(0x007804, glue_007804, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
+HLE_RANGE_ATOMIC(0x007804, glue_007804, 18, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007808);
 	hle_jump(ctx, 0x004752);
 }
 
-HLE_RANGE(0x007812, glue_007812, 18, HLE_EXIT_SP(0x004916, -4))   /* jsr $004916(pc) */
+HLE_RANGE_ATOMIC(0x007812, glue_007812, 18, HLE_EXIT_SP(0x004916, -4))   /* jsr $004916(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007816);
 	hle_jump(ctx, 0x004916);
 }
 
-HLE_RANGE(0x007820, glue_007820, 18, HLE_EXIT_SP(0x004872, -4))   /* jsr $004872(pc) */
+HLE_RANGE_ATOMIC(0x007820, glue_007820, 18, HLE_EXIT_SP(0x004872, -4))   /* jsr $004872(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007824);
 	hle_jump(ctx, 0x004872);
 }
 
-HLE_RANGE(0x00782E, glue_00782E, 18, HLE_EXIT_SP(0x0048C4, -4))   /* jsr $0048C4(pc) */
+HLE_RANGE_ATOMIC(0x00782E, glue_00782E, 18, HLE_EXIT_SP(0x0048C4, -4))   /* jsr $0048C4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007832);
 	hle_jump(ctx, 0x0048C4);
 }
 
-HLE_RANGE(0x00783C, glue_00783C, 18, HLE_EXIT_SP(0x004820, -4))   /* jsr $004820(pc) */
+HLE_RANGE_ATOMIC(0x00783C, glue_00783C, 18, HLE_EXIT_SP(0x004820, -4))   /* jsr $004820(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007840);
 	hle_jump(ctx, 0x004820);
 }
 
-HLE_RANGE(0x00784A, glue_00784A, 18, HLE_EXIT_SP(0x0047CE, -4))   /* jsr $0047CE(pc) */
+HLE_RANGE_ATOMIC(0x00784A, glue_00784A, 18, HLE_EXIT_SP(0x0047CE, -4))   /* jsr $0047CE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00784E);
 	hle_jump(ctx, 0x0047CE);
 }
 
-HLE_RANGE(0x00784E, glue_00784E, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
+HLE_RANGE_ATOMIC(0x00784E, glue_00784E, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007854);
 	hle_jump(ctx, 0x013376);
 }
 
-HLE_RANGE(0x007854, glue_007854, 20, HLE_EXIT_SP(0x013F7E, -4))   /* jsr $013F7E.l */
+HLE_RANGE_ATOMIC(0x007854, glue_007854, 20, HLE_EXIT_SP(0x013F7E, -4))   /* jsr $013F7E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00785A);
 	hle_jump(ctx, 0x013F7E);
 }
 
-HLE_RANGE(0x00785A, glue_00785A, 18, HLE_EXIT_SP(0x0004B6, -4))   /* jsr $0004B6(pc) */
+HLE_RANGE_ATOMIC(0x00785A, glue_00785A, 18, HLE_EXIT_SP(0x0004B6, -4))   /* jsr $0004B6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00785E);
 	hle_jump(ctx, 0x0004B6);
 }
 
-HLE_RANGE(0x00785E, glue_00785E, 18, HLE_EXIT_SP(0x00074C, -4))   /* jsr $00074C(pc) */
+HLE_RANGE_ATOMIC(0x00785E, glue_00785E, 18, HLE_EXIT_SP(0x00074C, -4))   /* jsr $00074C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007862);
 	hle_jump(ctx, 0x00074C);
 }
 
-HLE_RANGE(0x007862, glue_007862, 20, HLE_EXIT_SP(0x012BB0, -4))   /* jsr $012BB0.l */
+HLE_RANGE_ATOMIC(0x007862, glue_007862, 20, HLE_EXIT_SP(0x012BB0, -4))   /* jsr $012BB0.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007868);
 	hle_jump(ctx, 0x012BB0);
 }
 
-HLE_RANGE(0x007868, glue_007868, 20, HLE_EXIT_SP(0x0123F0, -4))   /* jsr $0123F0.l */
+HLE_RANGE_ATOMIC(0x007868, glue_007868, 20, HLE_EXIT_SP(0x0123F0, -4))   /* jsr $0123F0.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00786E);
 	hle_jump(ctx, 0x0123F0);
 }
 
-HLE_RANGE(0x00786E, glue_00786E, 20, HLE_EXIT_SP(0x01243C, -4))   /* jsr $01243C.l */
+HLE_RANGE_ATOMIC(0x00786E, glue_00786E, 20, HLE_EXIT_SP(0x01243C, -4))   /* jsr $01243C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007874);
 	hle_jump(ctx, 0x01243C);
 }
 
-HLE_RANGE(0x007874, glue_007874, 18, HLE_EXIT_SP(0x00B398, -4))   /* jsr $00B398(pc) */
+HLE_RANGE_ATOMIC(0x007874, glue_007874, 18, HLE_EXIT_SP(0x00B398, -4))   /* jsr $00B398(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007878);
 	hle_jump(ctx, 0x00B398);
 }
 
-HLE_RANGE(0x007878, glue_007878, 20, HLE_EXIT_SP(0x0126B4, -4))   /* jsr $0126B4.l */
+HLE_RANGE_ATOMIC(0x007878, glue_007878, 20, HLE_EXIT_SP(0x0126B4, -4))   /* jsr $0126B4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00787E);
 	hle_jump(ctx, 0x0126B4);
 }
 
-HLE_RANGE(0x00787E, glue_00787E, 20, HLE_EXIT_SP(0x012886, -4))   /* jsr $012886.l */
+HLE_RANGE_ATOMIC(0x00787E, glue_00787E, 20, HLE_EXIT_SP(0x012886, -4))   /* jsr $012886.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007884);
 	hle_jump(ctx, 0x012886);
 }
 
-HLE_RANGE(0x007884, glue_007884, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
+HLE_RANGE_ATOMIC(0x007884, glue_007884, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00788A);
 	hle_jump(ctx, 0x013272);
 }
 
-HLE_RANGE(0x00788A, glue_00788A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x00788A, glue_00788A, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007890);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x0078A0, glue_0078A0, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x0078A0, glue_0078A0, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0078A4);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x0078BC, glue_0078BC, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x0078BC, glue_0078BC, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0078C2);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x0078CC, glue_0078CC, 10, 0x00765E)   /* bra $00765E */
+HLE_RANGE_ATOMIC(0x0078CC, glue_0078CC, 10, 0x00765E)   /* bra $00765E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00765E);
 }
 
-HLE_RANGE(0x0078F6, glue_0078F6, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x0078F6, glue_0078F6, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0078FC);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x0078FC, glue_0078FC, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
+HLE_RANGE_ATOMIC(0x0078FC, glue_0078FC, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007902);
 	hle_jump(ctx, 0x013376);
 }
 
-HLE_RANGE(0x007902, glue_007902, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
+HLE_RANGE_ATOMIC(0x007902, glue_007902, 20, HLE_EXIT_SP(0x013272, -4))   /* jsr $013272.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007908);
 	hle_jump(ctx, 0x013272);
 }
 
-HLE_RANGE(0x007908, glue_007908, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x007908, glue_007908, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00790E);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x00790E, glue_00790E, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x00790E, glue_00790E, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007912);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007912, glue_007912, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x007912, glue_007912, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007918);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x00791A, glue_00791A, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00791A, glue_00791A, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007920);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x00792A, glue_00792A, 18, HLE_EXIT_SP(0x008C68, -4))   /* bsr $008C68 */
+HLE_RANGE_ATOMIC(0x00792A, glue_00792A, 18, HLE_EXIT_SP(0x008C68, -4))   /* bsr $008C68 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00792E);
 	hle_jump(ctx, 0x008C68);
 }
 
-HLE_RANGE(0x007934, glue_007934, 18, HLE_EXIT_SP(0x008C68, -4))   /* bsr $008C68 */
+HLE_RANGE_ATOMIC(0x007934, glue_007934, 18, HLE_EXIT_SP(0x008C68, -4))   /* bsr $008C68 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007938);
 	hle_jump(ctx, 0x008C68);
 }
 
-HLE_RANGE(0x00793C, glue_00793C, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x00793C, glue_00793C, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007942);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x007946, glue_007946, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x007946, glue_007946, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00794A);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x007952, glue_007952, 20, HLE_EXIT_SP(0x0015A2, -4))   /* jsr $0015A2.l */
+HLE_RANGE_ATOMIC(0x007952, glue_007952, 20, HLE_EXIT_SP(0x0015A2, -4))   /* jsr $0015A2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007958);
 	hle_jump(ctx, 0x0015A2);
 }
 
-HLE_RANGE(0x007982, glue_007982, 20, HLE_EXIT_SP(0x0015EC, -4))   /* jsr $0015EC.l */
+HLE_RANGE_ATOMIC(0x007982, glue_007982, 20, HLE_EXIT_SP(0x0015EC, -4))   /* jsr $0015EC.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007988);
 	hle_jump(ctx, 0x0015EC);
 }
 
-HLE_RANGE(0x007996, glue_007996, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
+HLE_RANGE_ATOMIC(0x007996, glue_007996, 20, HLE_EXIT_SP(0x0FBB6C, -4))   /* jsr $0FBB6C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00799C);
 	hle_jump(ctx, 0x0FBB6C);
 }
 
-HLE_RANGE(0x00799C, glue_00799C, 20, HLE_EXIT_SP(0x003360, -4))   /* jsr $003360.l */
+HLE_RANGE_ATOMIC(0x00799C, glue_00799C, 20, HLE_EXIT_SP(0x003360, -4))   /* jsr $003360.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0079A2);
 	hle_jump(ctx, 0x003360);
 }
 
-HLE_RANGE(0x0079CE, glue_0079CE, 18, HLE_EXIT_SP(0x003EFE, -4))   /* bsr $003EFE */
+HLE_RANGE_ATOMIC(0x0079CE, glue_0079CE, 18, HLE_EXIT_SP(0x003EFE, -4))   /* bsr $003EFE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0079D2);
 	hle_jump(ctx, 0x003EFE);
 }
 
-HLE_RANGE(0x0079EC, glue_0079EC, 18, HLE_EXIT_SP(0x003EFE, -4))   /* bsr $003EFE */
+HLE_RANGE_ATOMIC(0x0079EC, glue_0079EC, 18, HLE_EXIT_SP(0x003EFE, -4))   /* bsr $003EFE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0079F0);
 	hle_jump(ctx, 0x003EFE);
 }
 
-HLE_FUNC(0x0079F0, glue_0079F0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0079F0, glue_0079F0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x007A0E, glue_007A0E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007A0E, glue_007A0E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007A42, glue_007A42, 18, HLE_EXIT_SP(0x009326, -4))   /* jsr $009326(pc) */
+HLE_RANGE_ATOMIC(0x007A42, glue_007A42, 18, HLE_EXIT_SP(0x009326, -4))   /* jsr $009326(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007A46);
 	hle_jump(ctx, 0x009326);
 }
 
-HLE_RANGE(0x007A4E, glue_007A4E, 18, HLE_EXIT_SP(0x008B3C, -4))   /* bsr $008B3C */
+HLE_RANGE_ATOMIC(0x007A4E, glue_007A4E, 18, HLE_EXIT_SP(0x008B3C, -4))   /* bsr $008B3C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007A52);
 	hle_jump(ctx, 0x008B3C);
 }
 
-HLE_RANGE(0x007A52, glue_007A52, 18, HLE_EXIT_SP(0x001C4A, -4))   /* jsr $001C4A(pc) */
+HLE_RANGE_ATOMIC(0x007A52, glue_007A52, 18, HLE_EXIT_SP(0x001C4A, -4))   /* jsr $001C4A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007A56);
 	hle_jump(ctx, 0x001C4A);
 }
 
-HLE_RANGE(0x007AA2, glue_007AA2, 10, 0x007AA8)   /* bra $007AA8 */
+HLE_RANGE_ATOMIC(0x007AA2, glue_007AA2, 10, 0x007AA8)   /* bra $007AA8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007AA8);
 }
 
-HLE_RANGE(0x007AA4, glue_007AA4, 18, HLE_EXIT_SP(0x007AD4, -4))   /* jsr $007AD4(pc) */
+HLE_RANGE_ATOMIC(0x007AA4, glue_007AA4, 18, HLE_EXIT_SP(0x007AD4, -4))   /* jsr $007AD4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007AA8);
 	hle_jump(ctx, 0x007AD4);
 }
 
-HLE_FUNC(0x007AD2, glue_007AD2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007AD2, glue_007AD2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x007AE8, glue_007AE8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007AE8, glue_007AE8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007AEA, glue_007AEA, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x007AEA, glue_007AEA, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007AEE);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x007AFA, glue_007AFA, 10, 0x007E08)   /* jmp $007E08(pc) */
+HLE_RANGE_ATOMIC(0x007AFA, glue_007AFA, 10, 0x007E08)   /* jmp $007E08(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x007AFE, glue_007AFE, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x007AFE, glue_007AFE, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007B02);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x007B10, glue_007B10, 10, 0x007E08)   /* jmp $007E08(pc) */
+HLE_RANGE_ATOMIC(0x007B10, glue_007B10, 10, 0x007E08)   /* jmp $007E08(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x007B14, glue_007B14, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x007B14, glue_007B14, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007B18);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x007B24, glue_007B24, 10, 0x007E08)   /* jmp $007E08(pc) */
+HLE_RANGE_ATOMIC(0x007B24, glue_007B24, 10, 0x007E08)   /* jmp $007E08(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x007B28, glue_007B28, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x007B28, glue_007B28, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007B2C);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x007B38, glue_007B38, 10, 0x007E08)   /* jmp $007E08(pc) */
+HLE_RANGE_ATOMIC(0x007B38, glue_007B38, 10, 0x007E08)   /* jmp $007E08(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x007B3C, glue_007B3C, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x007B3C, glue_007B3C, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007B40);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x007B4C, glue_007B4C, 10, 0x007E08)   /* jmp $007E08(pc) */
+HLE_RANGE_ATOMIC(0x007B4C, glue_007B4C, 10, 0x007E08)   /* jmp $007E08(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x007B50, glue_007B50, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x007B50, glue_007B50, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007B54);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x007B60, glue_007B60, 10, 0x007E08)   /* jmp $007E08(pc) */
+HLE_RANGE_ATOMIC(0x007B60, glue_007B60, 10, 0x007E08)   /* jmp $007E08(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x007BD6, glue_007BD6, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x007BD6, glue_007BD6, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007BDA);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x007BE8, glue_007BE8, 10, 0x007EB2)   /* jmp $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x007BE8, glue_007BE8, 10, 0x007EB2)   /* jmp $007EB2(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_RANGE(0x007C02, glue_007C02, 10, 0x007C1E)   /* bra $007C1E */
+HLE_RANGE_ATOMIC(0x007C02, glue_007C02, 10, 0x007C1E)   /* bra $007C1E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007C1E);
 }
 
-HLE_RANGE(0x007C0E, glue_007C0E, 10, 0x007C1E)   /* bra $007C1E */
+HLE_RANGE_ATOMIC(0x007C0E, glue_007C0E, 10, 0x007C1E)   /* bra $007C1E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007C1E);
 }
 
-HLE_FUNC(0x007C2A, glue_007C2A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007C2A, glue_007C2A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x007C3E, glue_007C3E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007C3E, glue_007C3E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007C64, glue_007C64, 10, 0x007D0E)   /* jmp $007D0E(pc) */
+HLE_RANGE_ATOMIC(0x007C64, glue_007C64, 10, 0x007D0E)   /* jmp $007D0E(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007D0E);
 }
 
-HLE_FUNC(0x007C7A, glue_007C7A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007C7A, glue_007C7A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007C84, glue_007C84, 10, 0x007C90)   /* bra $007C90 */
+HLE_RANGE_ATOMIC(0x007C84, glue_007C84, 10, 0x007C90)   /* bra $007C90 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007C90);
 }
 
-HLE_FUNC(0x007C98, glue_007C98, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007C98, glue_007C98, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007CB4, glue_007CB4, 18, HLE_EXIT_SP(0x007D0E, -4))   /* jsr $007D0E(pc) */
+HLE_RANGE_ATOMIC(0x007CB4, glue_007CB4, 18, HLE_EXIT_SP(0x007D0E, -4))   /* jsr $007D0E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007CB8);
 	hle_jump(ctx, 0x007D0E);
 }
 
-HLE_RANGE(0x007CD2, glue_007CD2, 10, 0x007D0E)   /* jmp $007D0E(pc) */
+HLE_RANGE_ATOMIC(0x007CD2, glue_007CD2, 10, 0x007D0E)   /* jmp $007D0E(pc) */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007D0E);
 }
 
-HLE_FUNC(0x007CD6, glue_007CD6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007CD6, glue_007CD6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007CF0, glue_007CF0, 18, HLE_EXIT_SP(0x007D0E, -4))   /* jsr $007D0E(pc) */
+HLE_RANGE_ATOMIC(0x007CF0, glue_007CF0, 18, HLE_EXIT_SP(0x007D0E, -4))   /* jsr $007D0E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007CF4);
 	hle_jump(ctx, 0x007D0E);
 }
 
-HLE_RANGE(0x007D0A, glue_007D0A, 10, 0x007D0E)   /* bra $007D0E */
+HLE_RANGE_ATOMIC(0x007D0A, glue_007D0A, 10, 0x007D0E)   /* bra $007D0E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007D0E);
 }
 
-HLE_FUNC(0x007D0C, glue_007D0C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007D0C, glue_007D0C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007D2E, glue_007D2E, 18, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4(pc) */
+HLE_RANGE_ATOMIC(0x007D2E, glue_007D2E, 18, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007D32);
 	hle_jump(ctx, 0x0087C4);
 }
 
-HLE_RANGE(0x007D4E, glue_007D4E, 18, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4(pc) */
+HLE_RANGE_ATOMIC(0x007D4E, glue_007D4E, 18, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007D52);
 	hle_jump(ctx, 0x0087C4);
 }
 
-HLE_FUNC(0x007D58, glue_007D58, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007D58, glue_007D58, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007D6C, glue_007D6C, 10, 0x007D78)   /* bra $007D78 */
+HLE_RANGE_ATOMIC(0x007D6C, glue_007D6C, 10, 0x007D78)   /* bra $007D78 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007D78);
 }
 
-HLE_RANGE(0x007D8C, glue_007D8C, 10, 0x007DB2)   /* bra $007DB2 */
+HLE_RANGE_ATOMIC(0x007D8C, glue_007D8C, 10, 0x007DB2)   /* bra $007DB2 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007DB2);
 }
 
-HLE_RANGE(0x007D98, glue_007D98, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x007D98, glue_007D98, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007D9E);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x007D9E, glue_007D9E, 18, HLE_EXIT_SP(0x007FA4, -4))   /* jsr $007FA4(pc) */
+HLE_RANGE_ATOMIC(0x007D9E, glue_007D9E, 18, HLE_EXIT_SP(0x007FA4, -4))   /* jsr $007FA4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007DA2);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_RANGE(0x007DA2, glue_007DA2, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x007DA2, glue_007DA2, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007DA8);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x007DA8, glue_007DA8, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x007DA8, glue_007DA8, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007DAC);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007DAC, glue_007DAC, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x007DAC, glue_007DAC, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007DB2);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_RANGE(0x007DC2, glue_007DC2, 10, 0x007DE8)   /* bra $007DE8 */
+HLE_RANGE_ATOMIC(0x007DC2, glue_007DC2, 10, 0x007DE8)   /* bra $007DE8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007DE8);
 }
 
-HLE_RANGE(0x007DCE, glue_007DCE, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x007DCE, glue_007DCE, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007DD4);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x007DD4, glue_007DD4, 18, HLE_EXIT_SP(0x007FA4, -4))   /* jsr $007FA4(pc) */
+HLE_RANGE_ATOMIC(0x007DD4, glue_007DD4, 18, HLE_EXIT_SP(0x007FA4, -4))   /* jsr $007FA4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007DD8);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_RANGE(0x007DD8, glue_007DD8, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x007DD8, glue_007DD8, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007DDE);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x007DDE, glue_007DDE, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x007DDE, glue_007DDE, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007DE2);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007DE2, glue_007DE2, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x007DE2, glue_007DE2, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007DE8);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x007DEC, glue_007DEC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007DEC, glue_007DEC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007E22, glue_007E22, 10, 0x007E0E)   /* bra $007E0E */
+HLE_RANGE_ATOMIC(0x007E22, glue_007E22, 10, 0x007E0E)   /* bra $007E0E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E0E);
 }
 
-HLE_RANGE(0x007E5A, glue_007E5A, 10, 0x007E9E)   /* bra $007E9E */
+HLE_RANGE_ATOMIC(0x007E5A, glue_007E5A, 10, 0x007E9E)   /* bra $007E9E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E9E);
 }
 
-HLE_RANGE(0x007E66, glue_007E66, 10, 0x007E9E)   /* bra $007E9E */
+HLE_RANGE_ATOMIC(0x007E66, glue_007E66, 10, 0x007E9E)   /* bra $007E9E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E9E);
 }
 
-HLE_RANGE(0x007E78, glue_007E78, 10, 0x007E9E)   /* bra $007E9E */
+HLE_RANGE_ATOMIC(0x007E78, glue_007E78, 10, 0x007E9E)   /* bra $007E9E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E9E);
 }
 
-HLE_RANGE(0x007EA4, glue_007EA4, 20, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4.l */
+HLE_RANGE_ATOMIC(0x007EA4, glue_007EA4, 20, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007EAA);
 	hle_jump(ctx, 0x0087C4);
 }
 
-HLE_RANGE(0x007EAC, glue_007EAC, 10, 0x007E0E)   /* bra $007E0E */
+HLE_RANGE_ATOMIC(0x007EAC, glue_007EAC, 10, 0x007E0E)   /* bra $007E0E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007E0E);
 }
 
-HLE_FUNC(0x007EB0, glue_007EB0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007EB0, glue_007EB0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007EC6, glue_007EC6, 20, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4.l */
+HLE_RANGE_ATOMIC(0x007EC6, glue_007EC6, 20, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007ECC);
 	hle_jump(ctx, 0x0087C4);
 }
 
-HLE_RANGE(0x007ECE, glue_007ECE, 10, 0x007EB8)   /* bra $007EB8 */
+HLE_RANGE_ATOMIC(0x007ECE, glue_007ECE, 10, 0x007EB8)   /* bra $007EB8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007EB8);
 }
 
-HLE_FUNC(0x007ED0, glue_007ED0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007ED0, glue_007ED0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007ED2, glue_007ED2, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x007ED2, glue_007ED2, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007ED8);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x007ED8, glue_007ED8, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
+HLE_RANGE_ATOMIC(0x007ED8, glue_007ED8, 18, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007EDC);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x007EE0, glue_007EE0, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x007EE0, glue_007EE0, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007EE6);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x007EE6, glue_007EE6, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x007EE6, glue_007EE6, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007EEC);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x007EEC, glue_007EEC, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x007EEC, glue_007EEC, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007EF0);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007EF0, glue_007EF0, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x007EF0, glue_007EF0, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x007EF4);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x007EF4, glue_007EF4, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x007EF4, glue_007EF4, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x007EFA);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x007EFE, glue_007EFE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007EFE, glue_007EFE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x007F20, glue_007F20, 10, 0x007F06)   /* bra $007F06 */
+HLE_RANGE_ATOMIC(0x007F20, glue_007F20, 10, 0x007F06)   /* bra $007F06 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007F06);
 }
 
-HLE_RANGE(0x007F60, glue_007F60, 10, 0x007FE8)   /* bra $007FE8 */
+HLE_RANGE_ATOMIC(0x007F60, glue_007F60, 10, 0x007FE8)   /* bra $007FE8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007FE8);
 }
 
-HLE_RANGE(0x007F6E, glue_007F6E, 10, 0x007FA4)   /* bra $007FA4 */
+HLE_RANGE_ATOMIC(0x007F6E, glue_007F6E, 10, 0x007FA4)   /* bra $007FA4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_RANGE(0x007F7A, glue_007F7A, 10, 0x007FA4)   /* bra $007FA4 */
+HLE_RANGE_ATOMIC(0x007F7A, glue_007F7A, 10, 0x007FA4)   /* bra $007FA4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_RANGE(0x007F86, glue_007F86, 10, 0x007FA4)   /* bra $007FA4 */
+HLE_RANGE_ATOMIC(0x007F86, glue_007F86, 10, 0x007FA4)   /* bra $007FA4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_RANGE(0x007F92, glue_007F92, 10, 0x007FA4)   /* bra $007FA4 */
+HLE_RANGE_ATOMIC(0x007F92, glue_007F92, 10, 0x007FA4)   /* bra $007FA4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_RANGE(0x007F9E, glue_007F9E, 10, 0x007FA4)   /* bra $007FA4 */
+HLE_RANGE_ATOMIC(0x007F9E, glue_007F9E, 10, 0x007FA4)   /* bra $007FA4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x007FA4);
 }
 
-HLE_FUNC(0x007FF4, glue_007FF4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x007FF4, glue_007FF4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00807A, glue_00807A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00807A, glue_00807A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008128, glue_008128, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008128, glue_008128, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00818A, glue_00818A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00818A, glue_00818A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0081B4, glue_0081B4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0081B4, glue_0081B4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0081D8, glue_0081D8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0081D8, glue_0081D8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008698, glue_008698, 10, 0x008692)   /* bra $008692 */
+HLE_RANGE_ATOMIC(0x008698, glue_008698, 10, 0x008692)   /* bra $008692 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x008692);
 }
 
-HLE_FUNC(0x00869A, glue_00869A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00869A, glue_00869A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0086D6, glue_0086D6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0086D6, glue_0086D6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0086D8, glue_0086D8, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
+HLE_RANGE_ATOMIC(0x0086D8, glue_0086D8, 18, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0086DC);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_FUNC(0x0086E0, glue_0086E0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0086E0, glue_0086E0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0086F4, glue_0086F4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0086F4, glue_0086F4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008716, glue_008716, 10, 0x00873A)   /* bra $00873A */
+HLE_RANGE_ATOMIC(0x008716, glue_008716, 10, 0x00873A)   /* bra $00873A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00873A);
 }
 
-HLE_FUNC(0x00877E, glue_00877E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00877E, glue_00877E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0087C2, glue_0087C2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0087C2, glue_0087C2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0087E4, glue_0087E4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0087E4, glue_0087E4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00881A, glue_00881A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00881A, glue_00881A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00884A, glue_00884A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00884A, glue_00884A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008874, glue_008874, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008874, glue_008874, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00889E, glue_00889E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00889E, glue_00889E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008906, glue_008906, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008906, glue_008906, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00896E, glue_00896E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00896E, glue_00896E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0089FC, glue_0089FC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0089FC, glue_0089FC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008A4C, glue_008A4C, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x008A4C, glue_008A4C, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008A52);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x008A52, glue_008A52, 20, HLE_EXIT_SP(0x008970, -4))   /* jsr $008970.l */
+HLE_RANGE_ATOMIC(0x008A52, glue_008A52, 20, HLE_EXIT_SP(0x008970, -4))   /* jsr $008970.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008A58);
 	hle_jump(ctx, 0x008970);
 }
 
-HLE_RANGE(0x008A58, glue_008A58, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x008A58, glue_008A58, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008A5E);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x008A6C, glue_008A6C, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x008A6C, glue_008A6C, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008A72);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_FUNC(0x008A7A, glue_008A7A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008A7A, glue_008A7A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008A8C, glue_008A8C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008A8C, glue_008A8C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008B18, glue_008B18, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008B18, glue_008B18, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008B1A, glue_008B1A, 18, HLE_EXIT_SP(0x008BBE, -4))   /* bsr $008BBE */
+HLE_RANGE_ATOMIC(0x008B1A, glue_008B1A, 18, HLE_EXIT_SP(0x008BBE, -4))   /* bsr $008BBE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008B1E);
 	hle_jump(ctx, 0x008BBE);
 }
 
-HLE_RANGE(0x008B1E, glue_008B1E, 18, HLE_EXIT_SP(0x008BB4, -4))   /* bsr $008BB4 */
+HLE_RANGE_ATOMIC(0x008B1E, glue_008B1E, 18, HLE_EXIT_SP(0x008BB4, -4))   /* bsr $008BB4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008B22);
 	hle_jump(ctx, 0x008BB4);
 }
 
-HLE_FUNC(0x008B3A, glue_008B3A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008B3A, glue_008B3A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008BB2, glue_008BB2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008BB2, glue_008BB2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008BBA, glue_008BBA, 10, 0x008BC4)   /* bra $008BC4 */
+HLE_RANGE_ATOMIC(0x008BBA, glue_008BBA, 10, 0x008BC4)   /* bra $008BC4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x008BC4);
 }
 
-HLE_RANGE(0x008BC4, glue_008BC4, 18, HLE_EXIT_SP(0x008C0C, -4))   /* bsr $008C0C */
+HLE_RANGE_ATOMIC(0x008BC4, glue_008BC4, 18, HLE_EXIT_SP(0x008C0C, -4))   /* bsr $008C0C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008BC8);
 	hle_jump(ctx, 0x008C0C);
 }
 
-HLE_FUNC(0x008C0A, glue_008C0A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008C0A, glue_008C0A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008C38, glue_008C38, 18, HLE_EXIT_SP(0x007C7C, -4))   /* bsr $007C7C */
+HLE_RANGE_ATOMIC(0x008C38, glue_008C38, 18, HLE_EXIT_SP(0x007C7C, -4))   /* bsr $007C7C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008C3C);
 	hle_jump(ctx, 0x007C7C);
 }
 
-HLE_FUNC(0x008C50, glue_008C50, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008C50, glue_008C50, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008C58, glue_008C58, 18, HLE_EXIT_SP(0x008C8E, -4))   /* bsr $008C8E */
+HLE_RANGE_ATOMIC(0x008C58, glue_008C58, 18, HLE_EXIT_SP(0x008C8E, -4))   /* bsr $008C8E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008C5C);
 	hle_jump(ctx, 0x008C8E);
 }
 
-HLE_RANGE(0x008C62, glue_008C62, 18, HLE_EXIT_SP(0x008C8E, -4))   /* bsr $008C8E */
+HLE_RANGE_ATOMIC(0x008C62, glue_008C62, 18, HLE_EXIT_SP(0x008C8E, -4))   /* bsr $008C8E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008C66);
 	hle_jump(ctx, 0x008C8E);
 }
 
-HLE_FUNC(0x008C66, glue_008C66, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008C66, glue_008C66, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x008C8C, glue_008C8C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008C8C, glue_008C8C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008C9E, glue_008C9E, 20, HLE_EXIT_SP(0x013E02, -4))   /* jsr $013E02.l */
+HLE_RANGE_ATOMIC(0x008C9E, glue_008C9E, 20, HLE_EXIT_SP(0x013E02, -4))   /* jsr $013E02.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008CA4);
 	hle_jump(ctx, 0x013E02);
 }
 
-HLE_RANGE(0x008CAC, glue_008CAC, 20, HLE_EXIT_SP(0x013D90, -4))   /* jsr $013D90.l */
+HLE_RANGE_ATOMIC(0x008CAC, glue_008CAC, 20, HLE_EXIT_SP(0x013D90, -4))   /* jsr $013D90.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008CB2);
 	hle_jump(ctx, 0x013D90);
 }
 
-HLE_RANGE(0x008CCC, glue_008CCC, 18, HLE_EXIT_SP(0x007B50, -4))   /* jsr $007B50(pc) */
+HLE_RANGE_ATOMIC(0x008CCC, glue_008CCC, 18, HLE_EXIT_SP(0x007B50, -4))   /* jsr $007B50(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008CD0);
 	hle_jump(ctx, 0x007B50);
 }
 
-HLE_RANGE(0x008CD2, glue_008CD2, 18, HLE_EXIT_SP(0x007BB8, -4))   /* bsr $007BB8 */
+HLE_RANGE_ATOMIC(0x008CD2, glue_008CD2, 18, HLE_EXIT_SP(0x007BB8, -4))   /* bsr $007BB8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008CD6);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x008D06, glue_008D06, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x008D06, glue_008D06, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008D0A);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x008D52, glue_008D52, 18, HLE_EXIT_SP(0x008F2E, -4))   /* bsr $008F2E */
+HLE_RANGE_ATOMIC(0x008D52, glue_008D52, 18, HLE_EXIT_SP(0x008F2E, -4))   /* bsr $008F2E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008D56);
 	hle_jump(ctx, 0x008F2E);
 }
 
-HLE_RANGE(0x008D5A, glue_008D5A, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x008D5A, glue_008D5A, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008D5E);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_FUNC(0x008D7A, glue_008D7A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008D7A, glue_008D7A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008D92, glue_008D92, 18, HLE_EXIT_SP(0x007AEA, -4))   /* bsr $007AEA */
+HLE_RANGE_ATOMIC(0x008D92, glue_008D92, 18, HLE_EXIT_SP(0x007AEA, -4))   /* bsr $007AEA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008D96);
 	hle_jump(ctx, 0x007AEA);
 }
 
-HLE_RANGE(0x008DA2, glue_008DA2, 18, HLE_EXIT_SP(0x007C2C, -4))   /* jsr $007C2C(pc) */
+HLE_RANGE_ATOMIC(0x008DA2, glue_008DA2, 18, HLE_EXIT_SP(0x007C2C, -4))   /* jsr $007C2C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008DA6);
 	hle_jump(ctx, 0x007C2C);
 }
 
-HLE_RANGE(0x008DA6, glue_008DA6, 18, HLE_EXIT_SP(0x007C54, -4))   /* jsr $007C54(pc) */
+HLE_RANGE_ATOMIC(0x008DA6, glue_008DA6, 18, HLE_EXIT_SP(0x007C54, -4))   /* jsr $007C54(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008DAA);
 	hle_jump(ctx, 0x007C54);
 }
 
-HLE_RANGE(0x008DAA, glue_008DAA, 18, HLE_EXIT_SP(0x008C0C, -4))   /* bsr $008C0C */
+HLE_RANGE_ATOMIC(0x008DAA, glue_008DAA, 18, HLE_EXIT_SP(0x008C0C, -4))   /* bsr $008C0C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008DAE);
 	hle_jump(ctx, 0x008C0C);
 }
 
-HLE_RANGE(0x008DB6, glue_008DB6, 20, HLE_EXIT_SP(0x013E1A, -4))   /* jsr $013E1A.l */
+HLE_RANGE_ATOMIC(0x008DB6, glue_008DB6, 20, HLE_EXIT_SP(0x013E1A, -4))   /* jsr $013E1A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008DBC);
 	hle_jump(ctx, 0x013E1A);
 }
 
-HLE_RANGE(0x008DCC, glue_008DCC, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x008DCC, glue_008DCC, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008DD2);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x008DF8, glue_008DF8, 18, HLE_EXIT_SP(0x002B42, -4))   /* jsr $002B42(pc) */
+HLE_RANGE_ATOMIC(0x008DF8, glue_008DF8, 18, HLE_EXIT_SP(0x002B42, -4))   /* jsr $002B42(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008DFC);
 	hle_jump(ctx, 0x002B42);
 }
 
-HLE_FUNC(0x008DFC, glue_008DFC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008DFC, glue_008DFC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008DFE, glue_008DFE, 18, HLE_EXIT_SP(0x007AEA, -4))   /* bsr $007AEA */
+HLE_RANGE_ATOMIC(0x008DFE, glue_008DFE, 18, HLE_EXIT_SP(0x007AEA, -4))   /* bsr $007AEA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008E02);
 	hle_jump(ctx, 0x007AEA);
 }
 
-HLE_RANGE(0x008E2A, glue_008E2A, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x008E2A, glue_008E2A, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008E2E);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x008E2E, glue_008E2E, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x008E2E, glue_008E2E, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008E34);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x008E36, glue_008E36, 20, HLE_EXIT_SP(0x0003DE, -4))   /* jsr $0003DE.l */
+HLE_RANGE_ATOMIC(0x008E36, glue_008E36, 20, HLE_EXIT_SP(0x0003DE, -4))   /* jsr $0003DE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008E3C);
 	hle_jump(ctx, 0x0003DE);
 }
 
-HLE_RANGE(0x008E56, glue_008E56, 18, HLE_EXIT_SP(0x008F0A, -4))   /* bsr $008F0A */
+HLE_RANGE_ATOMIC(0x008E56, glue_008E56, 18, HLE_EXIT_SP(0x008F0A, -4))   /* bsr $008F0A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008E5A);
 	hle_jump(ctx, 0x008F0A);
 }
 
-HLE_RANGE(0x008E92, glue_008E92, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x008E92, glue_008E92, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008E96);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x008EA4, glue_008EA4, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x008EA4, glue_008EA4, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008EA8);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x008EB6, glue_008EB6, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
+HLE_RANGE_ATOMIC(0x008EB6, glue_008EB6, 18, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008EBA);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x008EBA, glue_008EBA, 20, HLE_EXIT_SP(0x013DEC, -4))   /* jsr $013DEC.l */
+HLE_RANGE_ATOMIC(0x008EBA, glue_008EBA, 20, HLE_EXIT_SP(0x013DEC, -4))   /* jsr $013DEC.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008EC0);
 	hle_jump(ctx, 0x013DEC);
 }
 
-HLE_RANGE(0x008EC4, glue_008EC4, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
+HLE_RANGE_ATOMIC(0x008EC4, glue_008EC4, 18, HLE_EXIT_SP(0x0086D8, -4))   /* jsr $0086D8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008EC8);
 	hle_jump(ctx, 0x0086D8);
 }
 
-HLE_RANGE(0x008F1C, glue_008F1C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F1C, glue_008F1C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F20);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F20, glue_008F20, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F20, glue_008F20, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F24);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F24, glue_008F24, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F24, glue_008F24, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F28);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F28, glue_008F28, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F28, glue_008F28, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F2C);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F40, glue_008F40, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F40, glue_008F40, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F44);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F44, glue_008F44, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F44, glue_008F44, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F48);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F48, glue_008F48, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F48, glue_008F48, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F4C);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F4C, glue_008F4C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F4C, glue_008F4C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F50);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F5C, glue_008F5C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F5C, glue_008F5C, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F60);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F66, glue_008F66, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F66, glue_008F66, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F6A);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F70, glue_008F70, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F70, glue_008F70, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F74);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F7A, glue_008F7A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
+HLE_RANGE_ATOMIC(0x008F7A, glue_008F7A, 18, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008F7E);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x008F82, glue_008F82, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x008F82, glue_008F82, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008F88);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x008F88, glue_008F88, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
+HLE_RANGE_ATOMIC(0x008F88, glue_008F88, 20, HLE_EXIT_SP(0x0086E2, -4))   /* jsr $0086E2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008F8E);
 	hle_jump(ctx, 0x0086E2);
 }
 
-HLE_RANGE(0x008F8E, glue_008F8E, 20, HLE_EXIT_SP(0x008970, -4))   /* jsr $008970.l */
+HLE_RANGE_ATOMIC(0x008F8E, glue_008F8E, 20, HLE_EXIT_SP(0x008970, -4))   /* jsr $008970.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008F94);
 	hle_jump(ctx, 0x008970);
 }
 
-HLE_RANGE(0x008F9A, glue_008F9A, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x008F9A, glue_008F9A, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x008FA0);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_FUNC(0x008FA6, glue_008FA6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x008FA6, glue_008FA6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x008FCE, glue_008FCE, 18, HLE_EXIT_SP(0x007B3C, -4))   /* jsr $007B3C(pc) */
+HLE_RANGE_ATOMIC(0x008FCE, glue_008FCE, 18, HLE_EXIT_SP(0x007B3C, -4))   /* jsr $007B3C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008FD2);
 	hle_jump(ctx, 0x007B3C);
 }
 
-HLE_RANGE(0x008FEA, glue_008FEA, 10, 0x00902C)   /* bra $00902C */
+HLE_RANGE_ATOMIC(0x008FEA, glue_008FEA, 10, 0x00902C)   /* bra $00902C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00902C);
 }
 
-HLE_RANGE(0x008FF8, glue_008FF8, 18, HLE_EXIT_SP(0x007B28, -4))   /* jsr $007B28(pc) */
+HLE_RANGE_ATOMIC(0x008FF8, glue_008FF8, 18, HLE_EXIT_SP(0x007B28, -4))   /* jsr $007B28(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x008FFC);
 	hle_jump(ctx, 0x007B28);
 }
 
-HLE_RANGE(0x009008, glue_009008, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
+HLE_RANGE_ATOMIC(0x009008, glue_009008, 18, HLE_EXIT_SP(0x007BB8, -4))   /* jsr $007BB8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00900C);
 	hle_jump(ctx, 0x007BB8);
 }
 
-HLE_RANGE(0x009018, glue_009018, 18, HLE_EXIT_SP(0x007B50, -4))   /* jsr $007B50(pc) */
+HLE_RANGE_ATOMIC(0x009018, glue_009018, 18, HLE_EXIT_SP(0x007B50, -4))   /* jsr $007B50(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00901C);
 	hle_jump(ctx, 0x007B50);
 }
 
-HLE_FUNC(0x00902C, glue_00902C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00902C, glue_00902C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00903C, glue_00903C, 18, HLE_EXIT_SP(0x0090B2, -4))   /* bsr $0090B2 */
+HLE_RANGE_ATOMIC(0x00903C, glue_00903C, 18, HLE_EXIT_SP(0x0090B2, -4))   /* bsr $0090B2 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009040);
 	hle_jump(ctx, 0x0090B2);
 }
 
-HLE_RANGE(0x00904A, glue_00904A, 18, HLE_EXIT_SP(0x0090B2, -4))   /* bsr $0090B2 */
+HLE_RANGE_ATOMIC(0x00904A, glue_00904A, 18, HLE_EXIT_SP(0x0090B2, -4))   /* bsr $0090B2 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00904E);
 	hle_jump(ctx, 0x0090B2);
 }
 
-HLE_FUNC(0x009052, glue_009052, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009052, glue_009052, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00905C, glue_00905C, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
+HLE_RANGE_ATOMIC(0x00905C, glue_00905C, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009060);
 	hle_jump(ctx, 0x00909C);
 }
 
-HLE_FUNC(0x009064, glue_009064, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009064, glue_009064, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00906E, glue_00906E, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
+HLE_RANGE_ATOMIC(0x00906E, glue_00906E, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009072);
 	hle_jump(ctx, 0x00909C);
 }
 
-HLE_FUNC(0x009076, glue_009076, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009076, glue_009076, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009080, glue_009080, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
+HLE_RANGE_ATOMIC(0x009080, glue_009080, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009084);
 	hle_jump(ctx, 0x00909C);
 }
 
-HLE_FUNC(0x009088, glue_009088, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009088, glue_009088, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009092, glue_009092, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
+HLE_RANGE_ATOMIC(0x009092, glue_009092, 18, HLE_EXIT_SP(0x00909C, -4))   /* bsr $00909C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009096);
 	hle_jump(ctx, 0x00909C);
 }
 
-HLE_FUNC(0x00909A, glue_00909A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00909A, glue_00909A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0090E6, glue_0090E6, 18, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8(pc) */
+HLE_RANGE_ATOMIC(0x0090E6, glue_0090E6, 18, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0090EA);
 	hle_jump(ctx, 0x008FA8);
 }
 
-HLE_RANGE(0x0090EA, glue_0090EA, 10, 0x009102)   /* bra $009102 */
+HLE_RANGE_ATOMIC(0x0090EA, glue_0090EA, 10, 0x009102)   /* bra $009102 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x009102);
 }
 
-HLE_RANGE(0x0090F4, glue_0090F4, 18, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8(pc) */
+HLE_RANGE_ATOMIC(0x0090F4, glue_0090F4, 18, HLE_EXIT_SP(0x008FA8, -4))   /* jsr $008FA8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0090F8);
 	hle_jump(ctx, 0x008FA8);
 }
 
-HLE_RANGE(0x0090F8, glue_0090F8, 20, HLE_EXIT_SP(0x013D92, -4))   /* jsr $013D92.l */
+HLE_RANGE_ATOMIC(0x0090F8, glue_0090F8, 20, HLE_EXIT_SP(0x013D92, -4))   /* jsr $013D92.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0090FE);
 	hle_jump(ctx, 0x013D92);
 }
 
-HLE_FUNC(0x009102, glue_009102, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009102, glue_009102, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009130, glue_009130, 18, HLE_EXIT_SP(0x00920C, -4))   /* jsr $00920C(pc) */
+HLE_RANGE_ATOMIC(0x009130, glue_009130, 18, HLE_EXIT_SP(0x00920C, -4))   /* jsr $00920C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009134);
 	hle_jump(ctx, 0x00920C);
 }
 
-HLE_RANGE(0x00916E, glue_00916E, 18, HLE_EXIT_SP(0x009242, -4))   /* jsr $009242(pc) */
+HLE_RANGE_ATOMIC(0x00916E, glue_00916E, 18, HLE_EXIT_SP(0x009242, -4))   /* jsr $009242(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009172);
 	hle_jump(ctx, 0x009242);
 }
 
-HLE_FUNC(0x009184, glue_009184, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009184, glue_009184, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009194, glue_009194, 18, HLE_EXIT_SP(0x0091C4, -4))   /* bsr $0091C4 */
+HLE_RANGE_ATOMIC(0x009194, glue_009194, 18, HLE_EXIT_SP(0x0091C4, -4))   /* bsr $0091C4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009198);
 	hle_jump(ctx, 0x0091C4);
 }
 
-HLE_RANGE(0x0091A0, glue_0091A0, 18, HLE_EXIT_SP(0x00920C, -4))   /* jsr $00920C(pc) */
+HLE_RANGE_ATOMIC(0x0091A0, glue_0091A0, 18, HLE_EXIT_SP(0x00920C, -4))   /* jsr $00920C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0091A4);
 	hle_jump(ctx, 0x00920C);
 }
 
-HLE_RANGE(0x0091B2, glue_0091B2, 18, HLE_EXIT_SP(0x0091C4, -4))   /* bsr $0091C4 */
+HLE_RANGE_ATOMIC(0x0091B2, glue_0091B2, 18, HLE_EXIT_SP(0x0091C4, -4))   /* bsr $0091C4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0091B6);
 	hle_jump(ctx, 0x0091C4);
 }
 
-HLE_RANGE(0x0091BE, glue_0091BE, 18, HLE_EXIT_SP(0x009242, -4))   /* jsr $009242(pc) */
+HLE_RANGE_ATOMIC(0x0091BE, glue_0091BE, 18, HLE_EXIT_SP(0x009242, -4))   /* jsr $009242(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0091C2);
 	hle_jump(ctx, 0x009242);
 }
 
-HLE_FUNC(0x0091C2, glue_0091C2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0091C2, glue_0091C2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00920A, glue_00920A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00920A, glue_00920A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009220, glue_009220, 18, HLE_EXIT_SP(0x00927A, -4))   /* jsr $00927A(pc) */
+HLE_RANGE_ATOMIC(0x009220, glue_009220, 18, HLE_EXIT_SP(0x00927A, -4))   /* jsr $00927A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009224);
 	hle_jump(ctx, 0x00927A);
 }
 
-HLE_RANGE(0x00923C, glue_00923C, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x00923C, glue_00923C, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009240);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_FUNC(0x009240, glue_009240, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009240, glue_009240, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009256, glue_009256, 18, HLE_EXIT_SP(0x00927A, -4))   /* jsr $00927A(pc) */
+HLE_RANGE_ATOMIC(0x009256, glue_009256, 18, HLE_EXIT_SP(0x00927A, -4))   /* jsr $00927A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00925A);
 	hle_jump(ctx, 0x00927A);
 }
 
-HLE_RANGE(0x009274, glue_009274, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
+HLE_RANGE_ATOMIC(0x009274, glue_009274, 18, HLE_EXIT_SP(0x007EB2, -4))   /* jsr $007EB2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009278);
 	hle_jump(ctx, 0x007EB2);
 }
 
-HLE_FUNC(0x009278, glue_009278, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009278, glue_009278, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00928E, glue_00928E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00928E, glue_00928E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00929C, glue_00929C, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00929C, glue_00929C, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0092A0);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x0092A0, glue_0092A0, 18, HLE_EXIT_SP(0x0092A8, -4))   /* jsr $0092A8(pc) */
+HLE_RANGE_ATOMIC(0x0092A0, glue_0092A0, 18, HLE_EXIT_SP(0x0092A8, -4))   /* jsr $0092A8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0092A4);
 	hle_jump(ctx, 0x0092A8);
 }
 
-HLE_FUNC(0x0092A6, glue_0092A6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0092A6, glue_0092A6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0092B4, glue_0092B4, 18, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92(pc) */
+HLE_RANGE_ATOMIC(0x0092B4, glue_0092B4, 18, HLE_EXIT_SP(0x007A92, -4))   /* jsr $007A92(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0092B8);
 	hle_jump(ctx, 0x007A92);
 }
 
-HLE_RANGE(0x0092D2, glue_0092D2, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x0092D2, glue_0092D2, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0092D6);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_FUNC(0x0092DA, glue_0092DA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0092DA, glue_0092DA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00930C, glue_00930C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00930C, glue_00930C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009324, glue_009324, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009324, glue_009324, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009384, glue_009384, 16)   /* jsr (a1) */
+HLE_FUNC_ATOMIC(0x009384, glue_009384, 16)   /* jsr (a1) */
 {
 	hle_insn(ctx, 16);
 	uint32_t t = ctx->a[1];
@@ -7802,8163 +7803,8163 @@ HLE_FUNC(0x009384, glue_009384, 16)   /* jsr (a1) */
 	hle_jump(ctx, t);
 }
 
-HLE_RANGE(0x009386, glue_009386, 10, 0x00933E)   /* bra $00933E */
+HLE_RANGE_ATOMIC(0x009386, glue_009386, 10, 0x00933E)   /* bra $00933E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00933E);
 }
 
-HLE_RANGE(0x009550, glue_009550, 18, HLE_EXIT_SP(0x00C652, -4))   /* jsr $00C652(pc) */
+HLE_RANGE_ATOMIC(0x009550, glue_009550, 18, HLE_EXIT_SP(0x00C652, -4))   /* jsr $00C652(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009554);
 	hle_jump(ctx, 0x00C652);
 }
 
-HLE_RANGE(0x009566, glue_009566, 10, 0x009570)   /* bra $009570 */
+HLE_RANGE_ATOMIC(0x009566, glue_009566, 10, 0x009570)   /* bra $009570 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x009570);
 }
 
-HLE_FUNC(0x009574, glue_009574, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009574, glue_009574, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009652, glue_009652, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x009652, glue_009652, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009656);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x0096AE, glue_0096AE, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x0096AE, glue_0096AE, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0096B4);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_FUNC(0x0096B4, glue_0096B4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0096B4, glue_0096B4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0097CE, glue_0097CE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0097CE, glue_0097CE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00988C, glue_00988C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00988C, glue_00988C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00990E, glue_00990E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00990E, glue_00990E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009984, glue_009984, 18, HLE_EXIT_SP(0x00998A, -4))   /* jsr $00998A(pc) */
+HLE_RANGE_ATOMIC(0x009984, glue_009984, 18, HLE_EXIT_SP(0x00998A, -4))   /* jsr $00998A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009988);
 	hle_jump(ctx, 0x00998A);
 }
 
-HLE_FUNC(0x009988, glue_009988, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009988, glue_009988, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0099A8, glue_0099A8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0099A8, glue_0099A8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0099C8, glue_0099C8, 18, HLE_EXIT_SP(0x0099D4, -4))   /* bsr $0099D4 */
+HLE_RANGE_ATOMIC(0x0099C8, glue_0099C8, 18, HLE_EXIT_SP(0x0099D4, -4))   /* bsr $0099D4 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0099CC);
 	hle_jump(ctx, 0x0099D4);
 }
 
-HLE_FUNC(0x0099D2, glue_0099D2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0099D2, glue_0099D2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009A02, glue_009A02, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
+HLE_RANGE_ATOMIC(0x009A02, glue_009A02, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009A06);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_RANGE(0x009A0C, glue_009A0C, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
+HLE_RANGE_ATOMIC(0x009A0C, glue_009A0C, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009A10);
 	hle_jump(ctx, 0x009A5E);
 }
 
-HLE_FUNC(0x009A5C, glue_009A5C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009A5C, glue_009A5C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009A5E, glue_009A5E, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x009A5E, glue_009A5E, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009A62);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x009A6C, glue_009A6C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x009A6C, glue_009A6C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009A70);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x009ACA, glue_009ACA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009ACA, glue_009ACA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009B2E, glue_009B2E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009B2E, glue_009B2E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009BBE, glue_009BBE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009BBE, glue_009BBE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009BD0, glue_009BD0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009BD0, glue_009BD0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009C16, glue_009C16, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009C16, glue_009C16, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009C22, glue_009C22, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x009C22, glue_009C22, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009C26);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_FUNC(0x009C28, glue_009C28, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009C28, glue_009C28, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009C34, glue_009C34, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009C34, glue_009C34, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x009CDE, glue_009CDE, 10, 0x009B16)   /* bra $009B16 */
+HLE_RANGE_ATOMIC(0x009CDE, glue_009CDE, 10, 0x009B16)   /* bra $009B16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x009B16);
 }
 
-HLE_RANGE(0x009CEA, glue_009CEA, 10, 0x009B14)   /* bra $009B14 */
+HLE_RANGE_ATOMIC(0x009CEA, glue_009CEA, 10, 0x009B14)   /* bra $009B14 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x009B14);
 }
 
-HLE_RANGE(0x009D1E, glue_009D1E, 10, 0x009B16)   /* bra $009B16 */
+HLE_RANGE_ATOMIC(0x009D1E, glue_009D1E, 10, 0x009B16)   /* bra $009B16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x009B16);
 }
 
-HLE_RANGE(0x009D48, glue_009D48, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
+HLE_RANGE_ATOMIC(0x009D48, glue_009D48, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009D4C);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_RANGE(0x009D9A, glue_009D9A, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
+HLE_RANGE_ATOMIC(0x009D9A, glue_009D9A, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x009D9E);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_RANGE(0x009DFE, glue_009DFE, 10, 0x009E86)   /* bra $009E86 */
+HLE_RANGE_ATOMIC(0x009DFE, glue_009DFE, 10, 0x009E86)   /* bra $009E86 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x009E86);
 }
 
-HLE_RANGE(0x009E92, glue_009E92, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x009E92, glue_009E92, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x009E98);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x009EA0, glue_009EA0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009EA0, glue_009EA0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x009F0A, glue_009F0A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x009F0A, glue_009F0A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00A142, glue_00A142, 8)   /* jmp (a1) */
+HLE_FUNC_ATOMIC(0x00A142, glue_00A142, 8)   /* jmp (a1) */
 {
 	hle_insn(ctx, 8);
 	hle_jump(ctx, ctx->a[1]);
 }
 
-HLE_RANGE(0x00A244, glue_00A244, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00A244, glue_00A244, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00A24A);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x00A24C, glue_00A24C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00A24C, glue_00A24C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00A2BA, glue_00A2BA, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
+HLE_RANGE_ATOMIC(0x00A2BA, glue_00A2BA, 20, HLE_EXIT_SP(0x008A7C, -4))   /* jsr $008A7C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00A2C0);
 	hle_jump(ctx, 0x008A7C);
 }
 
-HLE_RANGE(0x00A2C6, glue_00A2C6, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x00A2C6, glue_00A2C6, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00A2CC);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_FUNC(0x00A2D2, glue_00A2D2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00A2D2, glue_00A2D2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00A544, glue_00A544, 18, HLE_EXIT_SP(0x00A5B2, -4))   /* jsr $00A5B2(pc) */
+HLE_RANGE_ATOMIC(0x00A544, glue_00A544, 18, HLE_EXIT_SP(0x00A5B2, -4))   /* jsr $00A5B2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A548);
 	hle_jump(ctx, 0x00A5B2);
 }
 
-HLE_RANGE(0x00A57C, glue_00A57C, 18, HLE_EXIT_SP(0x00A5B2, -4))   /* jsr $00A5B2(pc) */
+HLE_RANGE_ATOMIC(0x00A57C, glue_00A57C, 18, HLE_EXIT_SP(0x00A5B2, -4))   /* jsr $00A5B2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A580);
 	hle_jump(ctx, 0x00A5B2);
 }
 
-HLE_RANGE(0x00A596, glue_00A596, 18, HLE_EXIT_SP(0x00A5B2, -4))   /* jsr $00A5B2(pc) */
+HLE_RANGE_ATOMIC(0x00A596, glue_00A596, 18, HLE_EXIT_SP(0x00A5B2, -4))   /* jsr $00A5B2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A59A);
 	hle_jump(ctx, 0x00A5B2);
 }
 
-HLE_FUNC(0x00A5B0, glue_00A5B0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00A5B0, glue_00A5B0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00A5B2, glue_00A5B2, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
+HLE_RANGE_ATOMIC(0x00A5B2, glue_00A5B2, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A5B6);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_FUNC(0x00A5F4, glue_00A5F4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00A5F4, glue_00A5F4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00A5FA, glue_00A5FA, 18, HLE_EXIT_SP(0x009A02, -4))   /* bsr $009A02 */
+HLE_RANGE_ATOMIC(0x00A5FA, glue_00A5FA, 18, HLE_EXIT_SP(0x009A02, -4))   /* bsr $009A02 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A5FE);
 	hle_jump(ctx, 0x009A02);
 }
 
-HLE_RANGE(0x00A62C, glue_00A62C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x00A62C, glue_00A62C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00A632);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00A642, glue_00A642, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00A642, glue_00A642, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00A770, glue_00A770, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00A770, glue_00A770, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A774);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_RANGE(0x00A784, glue_00A784, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00A784, glue_00A784, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A788);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_RANGE(0x00A79E, glue_00A79E, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00A79E, glue_00A79E, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A7A2);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_RANGE(0x00A7B8, glue_00A7B8, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00A7B8, glue_00A7B8, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00A7BC);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00A7D4, glue_00A7D4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00A7D4, glue_00A7D4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00AC0A, glue_00AC0A, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00AC0A, glue_00AC0A, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AC0E);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00AC56, glue_00AC56, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00AC56, glue_00AC56, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00ACB4, glue_00ACB4, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00ACB4, glue_00ACB4, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ACB8);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00ACBC, glue_00ACBC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00ACBC, glue_00ACBC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00AD6E, glue_00AD6E, 18, HLE_EXIT_SP(0x00AD9C, -4))   /* jsr $00AD9C(pc) */
+HLE_RANGE_ATOMIC(0x00AD6E, glue_00AD6E, 18, HLE_EXIT_SP(0x00AD9C, -4))   /* jsr $00AD9C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AD72);
 	hle_jump(ctx, 0x00AD9C);
 }
 
-HLE_FUNC(0x00AD9A, glue_00AD9A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00AD9A, glue_00AD9A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00ADD4, glue_00ADD4, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00ADD4, glue_00ADD4, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ADD8);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_RANGE(0x00ADF8, glue_00ADF8, 18, HLE_EXIT_SP(0x00FD0C, -4))   /* jsr $00FD0C(pc) */
+HLE_RANGE_ATOMIC(0x00ADF8, glue_00ADF8, 18, HLE_EXIT_SP(0x00FD0C, -4))   /* jsr $00FD0C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ADFC);
 	hle_jump(ctx, 0x00FD0C);
 }
 
-HLE_FUNC(0x00AE5E, glue_00AE5E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00AE5E, glue_00AE5E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00AE76, glue_00AE76, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00AE76, glue_00AE76, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AE7A);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_RANGE(0x00AEA0, glue_00AEA0, 18, HLE_EXIT_SP(0x00FFC0, -4))   /* jsr $00FFC0(pc) */
+HLE_RANGE_ATOMIC(0x00AEA0, glue_00AEA0, 18, HLE_EXIT_SP(0x00FFC0, -4))   /* jsr $00FFC0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AEA4);
 	hle_jump(ctx, 0x00FFC0);
 }
 
-HLE_FUNC(0x00AEE6, glue_00AEE6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00AEE6, glue_00AEE6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00AF1E, glue_00AF1E, 18, HLE_EXIT_SP(0x00D0F8, -4))   /* jsr $00D0F8(pc) */
+HLE_RANGE_ATOMIC(0x00AF1E, glue_00AF1E, 18, HLE_EXIT_SP(0x00D0F8, -4))   /* jsr $00D0F8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AF22);
 	hle_jump(ctx, 0x00D0F8);
 }
 
-HLE_RANGE(0x00AF3C, glue_00AF3C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00AF3C, glue_00AF3C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AF40);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00AF44, glue_00AF44, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
+HLE_RANGE_ATOMIC(0x00AF44, glue_00AF44, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AF48);
 	hle_jump(ctx, 0x009EF8);
 }
 
-HLE_RANGE(0x00AF4E, glue_00AF4E, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00AF4E, glue_00AF4E, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AF52);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00AF5E, glue_00AF5E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00AF5E, glue_00AF5E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00AF90, glue_00AF90, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00AF90, glue_00AF90, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AF94);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00AF9A, glue_00AF9A, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
+HLE_RANGE_ATOMIC(0x00AF9A, glue_00AF9A, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AF9E);
 	hle_jump(ctx, 0x009EF8);
 }
 
-HLE_RANGE(0x00AFA2, glue_00AFA2, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00AFA2, glue_00AFA2, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00AFA6);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00AFC0, glue_00AFC0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00AFC0, glue_00AFC0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00B0B0, glue_00B0B0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B0B0, glue_00B0B0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B12C, glue_00B12C, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00B12C, glue_00B12C, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B130);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00B15C, glue_00B15C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B15C, glue_00B15C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B196, glue_00B196, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00B196, glue_00B196, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B19A);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00B1BA, glue_00B1BA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B1BA, glue_00B1BA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B20A, glue_00B20A, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00B20A, glue_00B20A, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B20E);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_RANGE(0x00B222, glue_00B222, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
+HLE_RANGE_ATOMIC(0x00B222, glue_00B222, 18, HLE_EXIT_SP(0x0092DC, -4))   /* jsr $0092DC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B226);
 	hle_jump(ctx, 0x0092DC);
 }
 
-HLE_FUNC(0x00B25E, glue_00B25E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B25E, glue_00B25E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B34A, glue_00B34A, 12, 0x012212)   /* jmp $012212.l */
+HLE_RANGE_ATOMIC(0x00B34A, glue_00B34A, 12, 0x012212)   /* jmp $012212.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_FUNC(0x00B3B6, glue_00B3B6, 8)   /* jmp (a0) */
+HLE_FUNC_ATOMIC(0x00B3B6, glue_00B3B6, 8)   /* jmp (a0) */
 {
 	hle_insn(ctx, 8);
 	hle_jump(ctx, ctx->a[0]);
 }
 
-HLE_RANGE(0x00B3BC, glue_00B3BC, 10, 0x00B3AE)   /* bra $00B3AE */
+HLE_RANGE_ATOMIC(0x00B3BC, glue_00B3BC, 10, 0x00B3AE)   /* bra $00B3AE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3AE);
 }
 
-HLE_RANGE(0x00B3C8, glue_00B3C8, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00B3C8, glue_00B3C8, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B3CC);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00B3CC, glue_00B3CC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B3CC, glue_00B3CC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B3D0);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00B3EA, glue_00B3EA, 20, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228.l */
+HLE_RANGE_ATOMIC(0x00B3EA, glue_00B3EA, 20, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B3F0);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B3F6, glue_00B3F6, 20, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228.l */
+HLE_RANGE_ATOMIC(0x00B3F6, glue_00B3F6, 20, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B3FC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B404, glue_00B404, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00B404, glue_00B404, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B408);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B40E, glue_00B40E, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00B40E, glue_00B40E, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B412);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B416, glue_00B416, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B416, glue_00B416, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B41A);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B41C, glue_00B41C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B41C, glue_00B41C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B420);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B438, glue_00B438, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B438, glue_00B438, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B43C, glue_00B43C, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B43C, glue_00B43C, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B440);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00B442, glue_00B442, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B442, glue_00B442, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B446);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B44C, glue_00B44C, 18, HLE_EXIT_SP(0x00B488, -4))   /* jsr $00B488(pc) */
+HLE_RANGE_ATOMIC(0x00B44C, glue_00B44C, 18, HLE_EXIT_SP(0x00B488, -4))   /* jsr $00B488(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B450);
 	hle_jump(ctx, 0x00B488);
 }
 
-HLE_RANGE(0x00B46A, glue_00B46A, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00B46A, glue_00B46A, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B470);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00B470, glue_00B470, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00B470, glue_00B470, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B474);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00B478, glue_00B478, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B478, glue_00B478, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B47C);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B480, glue_00B480, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B480, glue_00B480, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B484);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B494, glue_00B494, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00B494, glue_00B494, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B498);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00B4A4, glue_00B4A4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B4A4, glue_00B4A4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00B4C0, glue_00B4C0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B4C0, glue_00B4C0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B51A, glue_00B51A, 20, HLE_EXIT_SP(0x01277C, -4))   /* jsr $01277C.l */
+HLE_RANGE_ATOMIC(0x00B51A, glue_00B51A, 20, HLE_EXIT_SP(0x01277C, -4))   /* jsr $01277C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B520);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x00B58A, glue_00B58A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B58A, glue_00B58A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B58E);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00B596, glue_00B596, 10, 0x00B59A)   /* bra $00B59A */
+HLE_RANGE_ATOMIC(0x00B596, glue_00B596, 10, 0x00B59A)   /* bra $00B59A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B59A);
 }
 
-HLE_RANGE(0x00B59E, glue_00B59E, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B59E, glue_00B59E, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B5A2);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B5A4, glue_00B5A4, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B5A4, glue_00B5A4, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B5A8);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B5B8, glue_00B5B8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00B5B8, glue_00B5B8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B5BC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B5D8, glue_00B5D8, 10, 0x00B5E8)   /* bra $00B5E8 */
+HLE_RANGE_ATOMIC(0x00B5D8, glue_00B5D8, 10, 0x00B5E8)   /* bra $00B5E8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B5E8);
 }
 
-HLE_RANGE(0x00B5E8, glue_00B5E8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B5E8, glue_00B5E8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B5F6, glue_00B5F6, 18, HLE_EXIT_SP(0x00C652, -4))   /* jsr $00C652(pc) */
+HLE_RANGE_ATOMIC(0x00B5F6, glue_00B5F6, 18, HLE_EXIT_SP(0x00C652, -4))   /* jsr $00C652(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B5FA);
 	hle_jump(ctx, 0x00C652);
 }
 
-HLE_RANGE(0x00B618, glue_00B618, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B618, glue_00B618, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B61C);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B61E, glue_00B61E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B61E, glue_00B61E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B622);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B63C, glue_00B63C, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00B63C, glue_00B63C, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B642);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00B642, glue_00B642, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00B642, glue_00B642, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B646);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00B64A, glue_00B64A, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B64A, glue_00B64A, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B64E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B652, glue_00B652, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B652, glue_00B652, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B656);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B656, glue_00B656, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B656, glue_00B656, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B676, glue_00B676, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B676, glue_00B676, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B67A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B682, glue_00B682, 18, HLE_EXIT_SP(0x01237A, -4))   /* jsr $01237A(pc) */
+HLE_RANGE_ATOMIC(0x00B682, glue_00B682, 18, HLE_EXIT_SP(0x01237A, -4))   /* jsr $01237A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B686);
 	hle_jump(ctx, 0x01237A);
 }
 
-HLE_RANGE(0x00B686, glue_00B686, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B686, glue_00B686, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B6A8, glue_00B6A8, 18, HLE_EXIT_SP(0x012778, -4))   /* jsr $012778(pc) */
+HLE_RANGE_ATOMIC(0x00B6A8, glue_00B6A8, 18, HLE_EXIT_SP(0x012778, -4))   /* jsr $012778(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B6AC);
 	hle_jump(ctx, 0x012778);
 }
 
-HLE_RANGE(0x00B6C0, glue_00B6C0, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
+HLE_RANGE_ATOMIC(0x00B6C0, glue_00B6C0, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B6C4);
 	hle_jump(ctx, 0x01254E);
 }
 
-HLE_RANGE(0x00B6CC, glue_00B6CC, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B6CC, glue_00B6CC, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B6D4, glue_00B6D4, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B6D4, glue_00B6D4, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B6D8);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00B6E0, glue_00B6E0, 10, 0x00B6E4)   /* bra $00B6E4 */
+HLE_RANGE_ATOMIC(0x00B6E0, glue_00B6E0, 10, 0x00B6E4)   /* bra $00B6E4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B6E4);
 }
 
-HLE_RANGE(0x00B6E8, glue_00B6E8, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B6E8, glue_00B6E8, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B6EC);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B6EE, glue_00B6EE, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B6EE, glue_00B6EE, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B6F2);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B702, glue_00B702, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00B702, glue_00B702, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B706);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B71A, glue_00B71A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B71A, glue_00B71A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B728, glue_00B728, 18, HLE_EXIT_SP(0x00B772, -4))   /* jsr $00B772(pc) */
+HLE_RANGE_ATOMIC(0x00B728, glue_00B728, 18, HLE_EXIT_SP(0x00B772, -4))   /* jsr $00B772(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B72C);
 	hle_jump(ctx, 0x00B772);
 }
 
-HLE_RANGE(0x00B730, glue_00B730, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B730, glue_00B730, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B734);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B736, glue_00B736, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B736, glue_00B736, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B73A);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B754, glue_00B754, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00B754, glue_00B754, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B75A);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00B75A, glue_00B75A, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00B75A, glue_00B75A, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B75E);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00B762, glue_00B762, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B762, glue_00B762, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B766);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B76A, glue_00B76A, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B76A, glue_00B76A, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B76E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B76E, glue_00B76E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B76E, glue_00B76E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B77A, glue_00B77A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00B77A, glue_00B77A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B77E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00B78A, glue_00B78A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B78A, glue_00B78A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B79A, glue_00B79A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B79A, glue_00B79A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B79E);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00B7A6, glue_00B7A6, 10, 0x00B7AA)   /* bra $00B7AA */
+HLE_RANGE_ATOMIC(0x00B7A6, glue_00B7A6, 10, 0x00B7AA)   /* bra $00B7AA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B7AA);
 }
 
-HLE_RANGE(0x00B7AE, glue_00B7AE, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B7AE, glue_00B7AE, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B7B2);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B7B4, glue_00B7B4, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B7B4, glue_00B7B4, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B7B8);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B7C8, glue_00B7C8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00B7C8, glue_00B7C8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B7CC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B7E0, glue_00B7E0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B7E0, glue_00B7E0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B7EE, glue_00B7EE, 18, HLE_EXIT_SP(0x00B846, -4))   /* jsr $00B846(pc) */
+HLE_RANGE_ATOMIC(0x00B7EE, glue_00B7EE, 18, HLE_EXIT_SP(0x00B846, -4))   /* jsr $00B846(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B7F2);
 	hle_jump(ctx, 0x00B846);
 }
 
-HLE_RANGE(0x00B804, glue_00B804, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00B804, glue_00B804, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B808);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00B80A, glue_00B80A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00B80A, glue_00B80A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B80E);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00B828, glue_00B828, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00B828, glue_00B828, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00B82E);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00B82E, glue_00B82E, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00B82E, glue_00B82E, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B832);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00B836, glue_00B836, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B836, glue_00B836, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B83A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B83E, glue_00B83E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00B83E, glue_00B83E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B842);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00B842, glue_00B842, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B842, glue_00B842, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B84E, glue_00B84E, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00B84E, glue_00B84E, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B852);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00B85E, glue_00B85E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00B85E, glue_00B85E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00B898, glue_00B898, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
+HLE_RANGE_ATOMIC(0x00B898, glue_00B898, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B89C);
 	hle_jump(ctx, 0x00BABC);
 }
 
-HLE_RANGE(0x00B8A8, glue_00B8A8, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00B8A8, glue_00B8A8, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B8AC);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00B8AE, glue_00B8AE, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
+HLE_RANGE_ATOMIC(0x00B8AE, glue_00B8AE, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B8B2);
 	hle_jump(ctx, 0x00BABC);
 }
 
-HLE_RANGE(0x00B8BE, glue_00B8BE, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00B8BE, glue_00B8BE, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B8C2);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00B8F0, glue_00B8F0, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00B8F0, glue_00B8F0, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B8F4);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00B8F6, glue_00B8F6, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B8F6, glue_00B8F6, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B8FA);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00B92A, glue_00B92A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B92A, glue_00B92A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B97C, glue_00B97C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00B97C, glue_00B97C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B980);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00B98A, glue_00B98A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00B98A, glue_00B98A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00B9BA, glue_00B9BA, 18, HLE_EXIT_SP(0x009078, -4))   /* bsr $009078 */
+HLE_RANGE_ATOMIC(0x00B9BA, glue_00B9BA, 18, HLE_EXIT_SP(0x009078, -4))   /* bsr $009078 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B9BE);
 	hle_jump(ctx, 0x009078);
 }
 
-HLE_RANGE(0x00B9E8, glue_00B9E8, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00B9E8, glue_00B9E8, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B9EC);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00B9F2, glue_00B9F2, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00B9F2, glue_00B9F2, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00B9F6);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00BA22, glue_00BA22, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BA22, glue_00BA22, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BA2C, glue_00BA2C, 18, HLE_EXIT_SP(0x0098FC, -4))   /* jsr $0098FC(pc) */
+HLE_RANGE_ATOMIC(0x00BA2C, glue_00BA2C, 18, HLE_EXIT_SP(0x0098FC, -4))   /* jsr $0098FC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BA30);
 	hle_jump(ctx, 0x0098FC);
 }
 
-HLE_RANGE(0x00BA4A, glue_00BA4A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BA4A, glue_00BA4A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BA4E);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BA56, glue_00BA56, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BA56, glue_00BA56, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BA7C, glue_00BA7C, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00BA7C, glue_00BA7C, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BA80);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00BA8A, glue_00BA8A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BA8A, glue_00BA8A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BA90, glue_00BA90, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
+HLE_RANGE_ATOMIC(0x00BA90, glue_00BA90, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BA94);
 	hle_jump(ctx, 0x00BABC);
 }
 
-HLE_RANGE(0x00BAA0, glue_00BAA0, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00BAA0, glue_00BAA0, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BAA4);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00BAA6, glue_00BAA6, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
+HLE_RANGE_ATOMIC(0x00BAA6, glue_00BAA6, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BAAA);
 	hle_jump(ctx, 0x00BABC);
 }
 
-HLE_RANGE(0x00BAB6, glue_00BAB6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00BAB6, glue_00BAB6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BABA);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x00BAD4, glue_00BAD4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00BAD4, glue_00BAD4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00BAD6, glue_00BAD6, 18, HLE_EXIT_SP(0x009078, -4))   /* bsr $009078 */
+HLE_RANGE_ATOMIC(0x00BAD6, glue_00BAD6, 18, HLE_EXIT_SP(0x009078, -4))   /* bsr $009078 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BADA);
 	hle_jump(ctx, 0x009078);
 }
 
-HLE_RANGE(0x00BB04, glue_00BB04, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00BB04, glue_00BB04, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BB08);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00BB0A, glue_00BB0A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00BB0A, glue_00BB0A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BB0E);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00BB4A, glue_00BB4A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BB4A, glue_00BB4A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BB54, glue_00BB54, 18, HLE_EXIT_SP(0x00998A, -4))   /* jsr $00998A(pc) */
+HLE_RANGE_ATOMIC(0x00BB54, glue_00BB54, 18, HLE_EXIT_SP(0x00998A, -4))   /* jsr $00998A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BB58);
 	hle_jump(ctx, 0x00998A);
 }
 
-HLE_RANGE(0x00BB72, glue_00BB72, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BB72, glue_00BB72, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BB76);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BB7E, glue_00BB7E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BB7E, glue_00BB7E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BB9C, glue_00BB9C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BB9C, glue_00BB9C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BBA0);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BBAA, glue_00BBAA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BBAA, glue_00BBAA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BBB0, glue_00BBB0, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
+HLE_RANGE_ATOMIC(0x00BBB0, glue_00BBB0, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BBB4);
 	hle_jump(ctx, 0x00BABC);
 }
 
-HLE_RANGE(0x00BBC0, glue_00BBC0, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00BBC0, glue_00BBC0, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BBC4);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00BBC6, glue_00BBC6, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
+HLE_RANGE_ATOMIC(0x00BBC6, glue_00BBC6, 18, HLE_EXIT_SP(0x00BABC, -4))   /* jsr $00BABC(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BBCA);
 	hle_jump(ctx, 0x00BABC);
 }
 
-HLE_RANGE(0x00BBD6, glue_00BBD6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00BBD6, glue_00BBD6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BBDA);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00BBDA, glue_00BBDA, 18, HLE_EXIT_SP(0x009078, -4))   /* bsr $009078 */
+HLE_RANGE_ATOMIC(0x00BBDA, glue_00BBDA, 18, HLE_EXIT_SP(0x009078, -4))   /* bsr $009078 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BBDE);
 	hle_jump(ctx, 0x009078);
 }
 
-HLE_RANGE(0x00BC08, glue_00BC08, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BC08, glue_00BC08, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BC0C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BC0E, glue_00BC0E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00BC0E, glue_00BC0E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BC12);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00BC4E, glue_00BC4E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BC4E, glue_00BC4E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BC58, glue_00BC58, 18, HLE_EXIT_SP(0x00998A, -4))   /* jsr $00998A(pc) */
+HLE_RANGE_ATOMIC(0x00BC58, glue_00BC58, 18, HLE_EXIT_SP(0x00998A, -4))   /* jsr $00998A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BC5C);
 	hle_jump(ctx, 0x00998A);
 }
 
-HLE_RANGE(0x00BC76, glue_00BC76, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BC76, glue_00BC76, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BC7A);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BC82, glue_00BC82, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BC82, glue_00BC82, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BCD8, glue_00BCD8, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
+HLE_RANGE_ATOMIC(0x00BCD8, glue_00BCD8, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BCDC);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x00BCF0, glue_00BCF0, 18, HLE_EXIT_SP(0x01254E, -4))   /* bsr $01254E */
+HLE_RANGE_ATOMIC(0x00BCF0, glue_00BCF0, 18, HLE_EXIT_SP(0x01254E, -4))   /* bsr $01254E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BCF4);
 	hle_jump(ctx, 0x01254E);
 }
 
-HLE_FUNC(0x00BCF4, glue_00BCF4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00BCF4, glue_00BCF4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00BD10, glue_00BD10, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BD10, glue_00BD10, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BD14);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BD1E, glue_00BD1E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BD1E, glue_00BD1E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BD84, glue_00BD84, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BD84, glue_00BD84, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BD88);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BDA2, glue_00BDA2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00BDA2, glue_00BDA2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BDA6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BDB2, glue_00BDB2, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00BDB2, glue_00BDB2, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BDB6);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00BDEA, glue_00BDEA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BDEA, glue_00BDEA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BE30, glue_00BE30, 18, HLE_EXIT_SP(0x009866, -4))   /* jsr $009866(pc) */
+HLE_RANGE_ATOMIC(0x00BE30, glue_00BE30, 18, HLE_EXIT_SP(0x009866, -4))   /* jsr $009866(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BE34);
 	hle_jump(ctx, 0x009866);
 }
 
-HLE_RANGE(0x00BE34, glue_00BE34, 18, HLE_EXIT_SP(0x00BE42, -4))   /* jsr $00BE42(pc) */
+HLE_RANGE_ATOMIC(0x00BE34, glue_00BE34, 18, HLE_EXIT_SP(0x00BE42, -4))   /* jsr $00BE42(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BE38);
 	hle_jump(ctx, 0x00BE42);
 }
 
-HLE_RANGE(0x00BE3E, glue_00BE3E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BE3E, glue_00BE3E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BE64, glue_00BE64, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00BE64, glue_00BE64, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00BE6A);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00BE84, glue_00BE84, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
+HLE_RANGE_ATOMIC(0x00BE84, glue_00BE84, 20, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00BE8A);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x00BE92, glue_00BE92, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00BE92, glue_00BE92, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00BF5E, glue_00BF5E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00BF5E, glue_00BF5E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00BF7C, glue_00BF7C, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00BF7C, glue_00BF7C, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BF80);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00BF8A, glue_00BF8A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00BF8A, glue_00BF8A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00BFF0, glue_00BFF0, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00BFF0, glue_00BFF0, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00BFF4);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00C00E, glue_00C00E, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00C00E, glue_00C00E, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C012);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00C01E, glue_00C01E, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00C01E, glue_00C01E, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C022);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00C056, glue_00C056, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C056, glue_00C056, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C0D4, glue_00C0D4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C0D4, glue_00C0D4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C0D8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C0E4, glue_00C0E4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C0E4, glue_00C0E4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C112, glue_00C112, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00C112, glue_00C112, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00C118);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00C15E, glue_00C15E, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00C15E, glue_00C15E, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C162);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00C18C, glue_00C18C, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00C18C, glue_00C18C, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C190);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00C192, glue_00C192, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C192, glue_00C192, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C202, glue_00C202, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00C202, glue_00C202, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C206);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x00C208, glue_00C208, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00C208, glue_00C208, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00C244, glue_00C244, 18, HLE_EXIT_SP(0x00C1E6, -4))   /* jsr $00C1E6(pc) */
+HLE_RANGE_ATOMIC(0x00C244, glue_00C244, 18, HLE_EXIT_SP(0x00C1E6, -4))   /* jsr $00C1E6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C248);
 	hle_jump(ctx, 0x00C1E6);
 }
 
-HLE_RANGE(0x00C24E, glue_00C24E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C24E, glue_00C24E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C282, glue_00C282, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00C282, glue_00C282, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C286);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00C28C, glue_00C28C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00C28C, glue_00C28C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C290);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00C2AA, glue_00C2AA, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
+HLE_RANGE_ATOMIC(0x00C2AA, glue_00C2AA, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C2AE);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00C338, glue_00C338, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00C338, glue_00C338, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C33C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00C340, glue_00C340, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C340, glue_00C340, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C344);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C344, glue_00C344, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C344, glue_00C344, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C376, glue_00C376, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C376, glue_00C376, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C37A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C37A, glue_00C37A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C37A, glue_00C37A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C37E, glue_00C37E, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
+HLE_RANGE_ATOMIC(0x00C37E, glue_00C37E, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C382);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x00C386, glue_00C386, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00C386, glue_00C386, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00C38C);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00C39A, glue_00C39A, 10, 0x00C3AC)   /* bra $00C3AC */
+HLE_RANGE_ATOMIC(0x00C39A, glue_00C39A, 10, 0x00C3AC)   /* bra $00C3AC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C3AC);
 }
 
-HLE_RANGE(0x00C3BE, glue_00C3BE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C3BE, glue_00C3BE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C3C2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C3C2, glue_00C3C2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C3C2, glue_00C3C2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C3C6, glue_00C3C6, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00C3C6, glue_00C3C6, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C3CA);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00C3F4, glue_00C3F4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C3F4, glue_00C3F4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C3F8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C3F8, glue_00C3F8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C3F8, glue_00C3F8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C40A, glue_00C40A, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
+HLE_RANGE_ATOMIC(0x00C40A, glue_00C40A, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C40E);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x00C412, glue_00C412, 20, HLE_EXIT_SP(0x013CC4, -4))   /* jsr $013CC4.l */
+HLE_RANGE_ATOMIC(0x00C412, glue_00C412, 20, HLE_EXIT_SP(0x013CC4, -4))   /* jsr $013CC4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00C418);
 	hle_jump(ctx, 0x013CC4);
 }
 
-HLE_RANGE(0x00C418, glue_00C418, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C418, glue_00C418, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C442, glue_00C442, 18, HLE_EXIT_SP(0x00C48E, -4))   /* jsr $00C48E(pc) */
+HLE_RANGE_ATOMIC(0x00C442, glue_00C442, 18, HLE_EXIT_SP(0x00C48E, -4))   /* jsr $00C48E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C446);
 	hle_jump(ctx, 0x00C48E);
 }
 
-HLE_RANGE(0x00C466, glue_00C466, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C466, glue_00C466, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C46A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C480, glue_00C480, 20, HLE_EXIT_SP(0x013CC4, -4))   /* jsr $013CC4.l */
+HLE_RANGE_ATOMIC(0x00C480, glue_00C480, 20, HLE_EXIT_SP(0x013CC4, -4))   /* jsr $013CC4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00C486);
 	hle_jump(ctx, 0x013CC4);
 }
 
-HLE_RANGE(0x00C486, glue_00C486, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
+HLE_RANGE_ATOMIC(0x00C486, glue_00C486, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C48A);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_FUNC(0x00C4DA, glue_00C4DA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00C4DA, glue_00C4DA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00C4DE, glue_00C4DE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00C4DE, glue_00C4DE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00C4E8, glue_00C4E8, 10, 0x00C4F4)   /* bra $00C4F4 */
+HLE_RANGE_ATOMIC(0x00C4E8, glue_00C4E8, 10, 0x00C4F4)   /* bra $00C4F4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C4F4);
 }
 
-HLE_RANGE(0x00C4FE, glue_00C4FE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C4FE, glue_00C4FE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C502);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C50C, glue_00C50C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00C50C, glue_00C50C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C510);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00C516, glue_00C516, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00C516, glue_00C516, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C51A);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00C534, glue_00C534, 18, HLE_EXIT_SP(0x012560, -4))   /* jsr $012560(pc) */
+HLE_RANGE_ATOMIC(0x00C534, glue_00C534, 18, HLE_EXIT_SP(0x012560, -4))   /* jsr $012560(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C538);
 	hle_jump(ctx, 0x012560);
 }
 
-HLE_RANGE(0x00C546, glue_00C546, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C546, glue_00C546, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C554, glue_00C554, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
+HLE_RANGE_ATOMIC(0x00C554, glue_00C554, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C558);
 	hle_jump(ctx, 0x01254E);
 }
 
-HLE_RANGE(0x00C560, glue_00C560, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C560, glue_00C560, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C56C, glue_00C56C, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00C56C, glue_00C56C, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C570);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00C572, glue_00C572, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00C572, glue_00C572, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C576);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00C576, glue_00C576, 18, HLE_EXIT_SP(0x00C48E, -4))   /* jsr $00C48E(pc) */
+HLE_RANGE_ATOMIC(0x00C576, glue_00C576, 18, HLE_EXIT_SP(0x00C48E, -4))   /* jsr $00C48E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C57A);
 	hle_jump(ctx, 0x00C48E);
 }
 
-HLE_RANGE(0x00C5A2, glue_00C5A2, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C5A2, glue_00C5A2, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C5A6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C5AA, glue_00C5AA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C5AA, glue_00C5AA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C5FA, glue_00C5FA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C5FA, glue_00C5FA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C5FE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C640, glue_00C640, 18, HLE_EXIT_SP(0x00C652, -4))   /* jsr $00C652(pc) */
+HLE_RANGE_ATOMIC(0x00C640, glue_00C640, 18, HLE_EXIT_SP(0x00C652, -4))   /* jsr $00C652(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C644);
 	hle_jump(ctx, 0x00C652);
 }
 
-HLE_RANGE(0x00C64A, glue_00C64A, 10, 0x00B5C2)   /* bra $00B5C2 */
+HLE_RANGE_ATOMIC(0x00C64A, glue_00C64A, 10, 0x00B5C2)   /* bra $00B5C2 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B5C2);
 }
 
-HLE_RANGE(0x00C65A, glue_00C65A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00C65A, glue_00C65A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C65E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00C66A, glue_00C66A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00C66A, glue_00C66A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00C6CE, glue_00C6CE, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00C6CE, glue_00C6CE, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C6D2);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00C740, glue_00C740, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00C740, glue_00C740, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C744);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C744, glue_00C744, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C744, glue_00C744, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00C7FE, glue_00C7FE, 10, 0x00C6FA)   /* bra $00C6FA */
+HLE_RANGE_ATOMIC(0x00C7FE, glue_00C7FE, 10, 0x00C6FA)   /* bra $00C6FA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C6FA);
 }
 
-HLE_RANGE(0x00C822, glue_00C822, 10, 0x00C8A8)   /* bra $00C8A8 */
+HLE_RANGE_ATOMIC(0x00C822, glue_00C822, 10, 0x00C8A8)   /* bra $00C8A8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C8A8);
 }
 
-HLE_RANGE(0x00C842, glue_00C842, 10, 0x00C8A8)   /* bra $00C8A8 */
+HLE_RANGE_ATOMIC(0x00C842, glue_00C842, 10, 0x00C8A8)   /* bra $00C8A8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C8A8);
 }
 
-HLE_RANGE(0x00C882, glue_00C882, 10, 0x00C8A8)   /* bra $00C8A8 */
+HLE_RANGE_ATOMIC(0x00C882, glue_00C882, 10, 0x00C8A8)   /* bra $00C8A8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C8A8);
 }
 
-HLE_RANGE(0x00C8A8, glue_00C8A8, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00C8A8, glue_00C8A8, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C8AC);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00C8AE, glue_00C8AE, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00C8AE, glue_00C8AE, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C8B2);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00C8B2, glue_00C8B2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00C8B2, glue_00C8B2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C8B6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00C8CA, glue_00C8CA, 18, HLE_EXIT_SP(0x012A16, -4))   /* jsr $012A16(pc) */
+HLE_RANGE_ATOMIC(0x00C8CA, glue_00C8CA, 18, HLE_EXIT_SP(0x012A16, -4))   /* jsr $012A16(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C8CE);
 	hle_jump(ctx, 0x012A16);
 }
 
-HLE_RANGE(0x00C8EC, glue_00C8EC, 10, 0x00C8A8)   /* bra $00C8A8 */
+HLE_RANGE_ATOMIC(0x00C8EC, glue_00C8EC, 10, 0x00C8A8)   /* bra $00C8A8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C8A8);
 }
 
-HLE_RANGE(0x00C95A, glue_00C95A, 10, 0x00C8A8)   /* bra $00C8A8 */
+HLE_RANGE_ATOMIC(0x00C95A, glue_00C95A, 10, 0x00C8A8)   /* bra $00C8A8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00C8A8);
 }
 
-HLE_RANGE(0x00C9E0, glue_00C9E0, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00C9E0, glue_00C9E0, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00C9E4);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00C9E6, glue_00C9E6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00C9E6, glue_00C9E6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CA0E, glue_00CA0E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CA0E, glue_00CA0E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CA30, glue_00CA30, 18, HLE_EXIT_SP(0x012772, -4))   /* jsr $012772(pc) */
+HLE_RANGE_ATOMIC(0x00CA30, glue_00CA30, 18, HLE_EXIT_SP(0x012772, -4))   /* jsr $012772(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CA34);
 	hle_jump(ctx, 0x012772);
 }
 
-HLE_RANGE(0x00CA48, glue_00CA48, 18, HLE_EXIT_SP(0x01276C, -4))   /* jsr $01276C(pc) */
+HLE_RANGE_ATOMIC(0x00CA48, glue_00CA48, 18, HLE_EXIT_SP(0x01276C, -4))   /* jsr $01276C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CA4C);
 	hle_jump(ctx, 0x01276C);
 }
 
-HLE_RANGE(0x00CA64, glue_00CA64, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
+HLE_RANGE_ATOMIC(0x00CA64, glue_00CA64, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CA68);
 	hle_jump(ctx, 0x01254E);
 }
 
-HLE_RANGE(0x00CA88, glue_00CA88, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00CA88, glue_00CA88, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CA8C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00CA96, glue_00CA96, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CA96, glue_00CA96, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CABA, glue_00CABA, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00CABA, glue_00CABA, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CABE);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00CAC0, glue_00CAC0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00CAC0, glue_00CAC0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CAC4);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00CAD4, glue_00CAD4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00CAD4, glue_00CAD4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CAD8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00CAF2, glue_00CAF2, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
+HLE_RANGE_ATOMIC(0x00CAF2, glue_00CAF2, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CAF6);
 	hle_jump(ctx, 0x009A02);
 }
 
-HLE_RANGE(0x00CAF8, glue_00CAF8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CAF8, glue_00CAF8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CB3E, glue_00CB3E, 18, HLE_EXIT_SP(0x00CD66, -4))   /* jsr $00CD66(pc) */
+HLE_RANGE_ATOMIC(0x00CB3E, glue_00CB3E, 18, HLE_EXIT_SP(0x00CD66, -4))   /* jsr $00CD66(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CB42);
 	hle_jump(ctx, 0x00CD66);
 }
 
-HLE_RANGE(0x00CB72, glue_00CB72, 18, HLE_EXIT_SP(0x0081B6, -4))   /* jsr $0081B6(pc) */
+HLE_RANGE_ATOMIC(0x00CB72, glue_00CB72, 18, HLE_EXIT_SP(0x0081B6, -4))   /* jsr $0081B6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CB76);
 	hle_jump(ctx, 0x0081B6);
 }
 
-HLE_RANGE(0x00CB7E, glue_00CB7E, 18, HLE_EXIT_SP(0x00881C, -4))   /* bsr $00881C */
+HLE_RANGE_ATOMIC(0x00CB7E, glue_00CB7E, 18, HLE_EXIT_SP(0x00881C, -4))   /* bsr $00881C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CB82);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00CB9A, glue_00CB9A, 10, 0x00CBE8)   /* bra $00CBE8 */
+HLE_RANGE_ATOMIC(0x00CB9A, glue_00CB9A, 10, 0x00CBE8)   /* bra $00CBE8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00CBE8);
 }
 
-HLE_RANGE(0x00CBA8, glue_00CBA8, 18, HLE_EXIT_SP(0x00CD66, -4))   /* jsr $00CD66(pc) */
+HLE_RANGE_ATOMIC(0x00CBA8, glue_00CBA8, 18, HLE_EXIT_SP(0x00CD66, -4))   /* jsr $00CD66(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CBAC);
 	hle_jump(ctx, 0x00CD66);
 }
 
-HLE_RANGE(0x00CBCC, glue_00CBCC, 18, HLE_EXIT_SP(0x00881C, -4))   /* bsr $00881C */
+HLE_RANGE_ATOMIC(0x00CBCC, glue_00CBCC, 18, HLE_EXIT_SP(0x00881C, -4))   /* bsr $00881C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CBD0);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00CBE4, glue_00CBE4, 10, 0x00CBE8)   /* bra $00CBE8 */
+HLE_RANGE_ATOMIC(0x00CBE4, glue_00CBE4, 10, 0x00CBE8)   /* bra $00CBE8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00CBE8);
 }
 
-HLE_RANGE(0x00CC1A, glue_00CC1A, 18, HLE_EXIT_SP(0x00CC3C, -4))   /* jsr $00CC3C(pc) */
+HLE_RANGE_ATOMIC(0x00CC1A, glue_00CC1A, 18, HLE_EXIT_SP(0x00CC3C, -4))   /* jsr $00CC3C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CC1E);
 	hle_jump(ctx, 0x00CC3C);
 }
 
-HLE_RANGE(0x00CC22, glue_00CC22, 18, HLE_EXIT_SP(0x00CC3C, -4))   /* jsr $00CC3C(pc) */
+HLE_RANGE_ATOMIC(0x00CC22, glue_00CC22, 18, HLE_EXIT_SP(0x00CC3C, -4))   /* jsr $00CC3C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CC26);
 	hle_jump(ctx, 0x00CC3C);
 }
 
-HLE_RANGE(0x00CC2A, glue_00CC2A, 18, HLE_EXIT_SP(0x00CC6A, -4))   /* jsr $00CC6A(pc) */
+HLE_RANGE_ATOMIC(0x00CC2A, glue_00CC2A, 18, HLE_EXIT_SP(0x00CC6A, -4))   /* jsr $00CC6A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CC2E);
 	hle_jump(ctx, 0x00CC6A);
 }
 
-HLE_RANGE(0x00CC32, glue_00CC32, 18, HLE_EXIT_SP(0x00CC6A, -4))   /* jsr $00CC6A(pc) */
+HLE_RANGE_ATOMIC(0x00CC32, glue_00CC32, 18, HLE_EXIT_SP(0x00CC6A, -4))   /* jsr $00CC6A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CC36);
 	hle_jump(ctx, 0x00CC6A);
 }
 
-HLE_RANGE(0x00CC38, glue_00CC38, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CC38, glue_00CC38, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CC5A, glue_00CC5A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00CC5A, glue_00CC5A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CC5E);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x00CC60, glue_00CC60, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00CC60, glue_00CC60, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00CC88, glue_00CC88, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00CC88, glue_00CC88, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CC8C);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_FUNC(0x00CC8E, glue_00CC8E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00CC8E, glue_00CC8E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00CCB2, glue_00CCB2, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00CCB2, glue_00CCB2, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CCB6);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00CCCE, glue_00CCCE, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00CCCE, glue_00CCCE, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CCD2);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00CCEC, glue_00CCEC, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00CCEC, glue_00CCEC, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CCF0);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00CCF6, glue_00CCF6, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00CCF6, glue_00CCF6, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CCFA);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00CD0A, glue_00CD0A, 18, HLE_EXIT_SP(0x012494, -4))   /* jsr $012494(pc) */
+HLE_RANGE_ATOMIC(0x00CD0A, glue_00CD0A, 18, HLE_EXIT_SP(0x012494, -4))   /* jsr $012494(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CD0E);
 	hle_jump(ctx, 0x012494);
 }
 
-HLE_RANGE(0x00CD18, glue_00CD18, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CD18, glue_00CD18, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CD36, glue_00CD36, 18, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E(pc) */
+HLE_RANGE_ATOMIC(0x00CD36, glue_00CD36, 18, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CD3A);
 	hle_jump(ctx, 0x00933E);
 }
 
-HLE_RANGE(0x00CDA6, glue_00CDA6, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00CDA6, glue_00CDA6, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CDAA);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00CDAC, glue_00CDAC, 10, 0x00CDFC)   /* bra $00CDFC */
+HLE_RANGE_ATOMIC(0x00CDAC, glue_00CDAC, 10, 0x00CDFC)   /* bra $00CDFC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00CDFC);
 }
 
-HLE_RANGE(0x00CDDE, glue_00CDDE, 10, 0x00CD88)   /* bra $00CD88 */
+HLE_RANGE_ATOMIC(0x00CDDE, glue_00CDDE, 10, 0x00CD88)   /* bra $00CD88 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00CD88);
 }
 
-HLE_RANGE(0x00CDF6, glue_00CDF6, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
+HLE_RANGE_ATOMIC(0x00CDF6, glue_00CDF6, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CDFA);
 	hle_jump(ctx, 0x009A02);
 }
 
-HLE_FUNC(0x00CDFC, glue_00CDFC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00CDFC, glue_00CDFC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00CE08, glue_00CE08, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CE08, glue_00CE08, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CE94, glue_00CE94, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00CE94, glue_00CE94, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CE98);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00CE98, glue_00CE98, 10, 0x00CE9E)   /* bra $00CE9E */
+HLE_RANGE_ATOMIC(0x00CE98, glue_00CE98, 10, 0x00CE9E)   /* bra $00CE9E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00CE9E);
 }
 
-HLE_RANGE(0x00CEA0, glue_00CEA0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CEA0, glue_00CEA0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CF38, glue_00CF38, 18, HLE_EXIT_SP(0x012494, -4))   /* jsr $012494(pc) */
+HLE_RANGE_ATOMIC(0x00CF38, glue_00CF38, 18, HLE_EXIT_SP(0x012494, -4))   /* jsr $012494(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CF3C);
 	hle_jump(ctx, 0x012494);
 }
 
-HLE_RANGE(0x00CF3C, glue_00CF3C, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CF3C, glue_00CF3C, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00CF8A, glue_00CF8A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00CF8A, glue_00CF8A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CF8E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00CF96, glue_00CF96, 18, HLE_EXIT_SP(0x0099D4, -4))   /* jsr $0099D4(pc) */
+HLE_RANGE_ATOMIC(0x00CF96, glue_00CF96, 18, HLE_EXIT_SP(0x0099D4, -4))   /* jsr $0099D4(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CF9A);
 	hle_jump(ctx, 0x0099D4);
 }
 
-HLE_FUNC(0x00CF9C, glue_00CF9C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00CF9C, glue_00CF9C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00CFB2, glue_00CFB2, 10, 0x00CFB8)   /* bra $00CFB8 */
+HLE_RANGE_ATOMIC(0x00CFB2, glue_00CFB2, 10, 0x00CFB8)   /* bra $00CFB8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00CFB8);
 }
 
-HLE_RANGE(0x00CFCE, glue_00CFCE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00CFCE, glue_00CFCE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00CFD2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00CFD2, glue_00CFD2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00CFD2, glue_00CFD2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D052, glue_00D052, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00D052, glue_00D052, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D056);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D056, glue_00D056, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D056, glue_00D056, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D068, glue_00D068, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D068, glue_00D068, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D0A6, glue_00D0A6, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00D0A6, glue_00D0A6, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D0AA);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D0AA, glue_00D0AA, 10, 0x00D0B8)   /* bra $00D0B8 */
+HLE_RANGE_ATOMIC(0x00D0AA, glue_00D0AA, 10, 0x00D0B8)   /* bra $00D0B8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D0B8);
 }
 
-HLE_RANGE(0x00D0B4, glue_00D0B4, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
+HLE_RANGE_ATOMIC(0x00D0B4, glue_00D0B4, 18, HLE_EXIT_SP(0x00908A, -4))   /* bsr $00908A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D0B8);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x00D0B8, glue_00D0B8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D0B8, glue_00D0B8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D0E0, glue_00D0E0, 20, HLE_EXIT_SP(0x00902E, -4))   /* jsr $00902E.l */
+HLE_RANGE_ATOMIC(0x00D0E0, glue_00D0E0, 20, HLE_EXIT_SP(0x00902E, -4))   /* jsr $00902E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00D0E6);
 	hle_jump(ctx, 0x00902E);
 }
 
-HLE_RANGE(0x00D0F4, glue_00D0F4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D0F4, glue_00D0F4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_FUNC(0x00D110, glue_00D110, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D110, glue_00D110, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00D120, glue_00D120, 18, HLE_EXIT_SP(0x00D322, -4))   /* jsr $00D322(pc) */
+HLE_RANGE_ATOMIC(0x00D120, glue_00D120, 18, HLE_EXIT_SP(0x00D322, -4))   /* jsr $00D322(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D124);
 	hle_jump(ctx, 0x00D322);
 }
 
-HLE_RANGE(0x00D164, glue_00D164, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00D164, glue_00D164, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D168);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00D192, glue_00D192, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00D192, glue_00D192, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D196);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00D1A8, glue_00D1A8, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00D1A8, glue_00D1A8, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D1AC);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00D1CA, glue_00D1CA, 18, HLE_EXIT_SP(0x00D1D2, -4))   /* jsr $00D1D2(pc) */
+HLE_RANGE_ATOMIC(0x00D1CA, glue_00D1CA, 18, HLE_EXIT_SP(0x00D1D2, -4))   /* jsr $00D1D2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D1CE);
 	hle_jump(ctx, 0x00D1D2);
 }
 
-HLE_RANGE(0x00D1CE, glue_00D1CE, 10, 0x00D2B8)   /* bra $00D2B8 */
+HLE_RANGE_ATOMIC(0x00D1CE, glue_00D1CE, 10, 0x00D2B8)   /* bra $00D2B8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D2B8);
 }
 
-HLE_RANGE(0x00D1D2, glue_00D1D2, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00D1D2, glue_00D1D2, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D1D6);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00D1E4, glue_00D1E4, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
+HLE_RANGE_ATOMIC(0x00D1E4, glue_00D1E4, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D1E8);
 	hle_jump(ctx, 0x011F58);
 }
 
-HLE_RANGE(0x00D210, glue_00D210, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00D210, glue_00D210, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D214);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00D222, glue_00D222, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00D222, glue_00D222, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D226);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00D230, glue_00D230, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D230, glue_00D230, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00D234, glue_00D234, 10, 0x00D238)   /* bra $00D238 */
+HLE_RANGE_ATOMIC(0x00D234, glue_00D234, 10, 0x00D238)   /* bra $00D238 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D238);
 }
 
-HLE_RANGE(0x00D268, glue_00D268, 10, 0x00D278)   /* bra $00D278 */
+HLE_RANGE_ATOMIC(0x00D268, glue_00D268, 10, 0x00D278)   /* bra $00D278 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D278);
 }
 
-HLE_FUNC(0x00D278, glue_00D278, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D278, glue_00D278, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00D29C, glue_00D29C, 18, HLE_EXIT_SP(0x00D1D2, -4))   /* jsr $00D1D2(pc) */
+HLE_RANGE_ATOMIC(0x00D29C, glue_00D29C, 18, HLE_EXIT_SP(0x00D1D2, -4))   /* jsr $00D1D2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D2A0);
 	hle_jump(ctx, 0x00D1D2);
 }
 
-HLE_RANGE(0x00D2A8, glue_00D2A8, 10, 0x00D2B8)   /* bra $00D2B8 */
+HLE_RANGE_ATOMIC(0x00D2A8, glue_00D2A8, 10, 0x00D2B8)   /* bra $00D2B8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D2B8);
 }
 
-HLE_RANGE(0x00D2DA, glue_00D2DA, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00D2DA, glue_00D2DA, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D2DE);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00D2F4, glue_00D2F4, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00D2F4, glue_00D2F4, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D2F8);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00D302, glue_00D302, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00D302, glue_00D302, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D306);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D32A, glue_00D32A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00D32A, glue_00D32A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D32E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00D33C, glue_00D33C, 18, HLE_EXIT_SP(0x00D46E, -4))   /* jsr $00D46E(pc) */
+HLE_RANGE_ATOMIC(0x00D33C, glue_00D33C, 18, HLE_EXIT_SP(0x00D46E, -4))   /* jsr $00D46E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D340);
 	hle_jump(ctx, 0x00D46E);
 }
 
-HLE_RANGE(0x00D34C, glue_00D34C, 18, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E(pc) */
+HLE_RANGE_ATOMIC(0x00D34C, glue_00D34C, 18, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D350);
 	hle_jump(ctx, 0x00933E);
 }
 
-HLE_RANGE(0x00D354, glue_00D354, 10, 0x00D3E2)   /* bra $00D3E2 */
+HLE_RANGE_ATOMIC(0x00D354, glue_00D354, 10, 0x00D3E2)   /* bra $00D3E2 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D3E2);
 }
 
-HLE_RANGE(0x00D374, glue_00D374, 18, HLE_EXIT_SP(0x00D444, -4))   /* jsr $00D444(pc) */
+HLE_RANGE_ATOMIC(0x00D374, glue_00D374, 18, HLE_EXIT_SP(0x00D444, -4))   /* jsr $00D444(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D378);
 	hle_jump(ctx, 0x00D444);
 }
 
-HLE_RANGE(0x00D3AE, glue_00D3AE, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00D3AE, glue_00D3AE, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D3B2);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00D3B4, glue_00D3B4, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00D3B4, glue_00D3B4, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D3B8);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00D3DC, glue_00D3DC, 18, HLE_EXIT_SP(0x00D444, -4))   /* jsr $00D444(pc) */
+HLE_RANGE_ATOMIC(0x00D3DC, glue_00D3DC, 18, HLE_EXIT_SP(0x00D444, -4))   /* jsr $00D444(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D3E0);
 	hle_jump(ctx, 0x00D444);
 }
 
-HLE_FUNC(0x00D3E0, glue_00D3E0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D3E0, glue_00D3E0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x00D3E2, glue_00D3E2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D3E2, glue_00D3E2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00D462, glue_00D462, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
+HLE_RANGE_ATOMIC(0x00D462, glue_00D462, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00D468);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_FUNC(0x00D46C, glue_00D46C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D46C, glue_00D46C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00D472, glue_00D472, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
+HLE_RANGE_ATOMIC(0x00D472, glue_00D472, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D476);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_FUNC(0x00D4E4, glue_00D4E4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00D4E4, glue_00D4E4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00D55A, glue_00D55A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00D55A, glue_00D55A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D55E);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00D560, glue_00D560, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D560, glue_00D560, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D584, glue_00D584, 20, HLE_EXIT_SP(0x013DA8, -4))   /* jsr $013DA8.l */
+HLE_RANGE_ATOMIC(0x00D584, glue_00D584, 20, HLE_EXIT_SP(0x013DA8, -4))   /* jsr $013DA8.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00D58A);
 	hle_jump(ctx, 0x013DA8);
 }
 
-HLE_RANGE(0x00D592, glue_00D592, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x00D592, glue_00D592, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D596);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x00D5AC, glue_00D5AC, 10, 0x00D60A)   /* bra $00D60A */
+HLE_RANGE_ATOMIC(0x00D5AC, glue_00D5AC, 10, 0x00D60A)   /* bra $00D60A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D60A);
 }
 
-HLE_RANGE(0x00D5B8, glue_00D5B8, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x00D5B8, glue_00D5B8, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D5BC);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x00D628, glue_00D628, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00D628, glue_00D628, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D62C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00D62C, glue_00D62C, 10, 0x00D636)   /* bra $00D636 */
+HLE_RANGE_ATOMIC(0x00D62C, glue_00D62C, 10, 0x00D636)   /* bra $00D636 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D636);
 }
 
-HLE_RANGE(0x00D632, glue_00D632, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x00D632, glue_00D632, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D636);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x00D638, glue_00D638, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D638, glue_00D638, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D67C, glue_00D67C, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00D67C, glue_00D67C, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D680);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00D682, glue_00D682, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00D682, glue_00D682, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D686);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00D698, glue_00D698, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D698, glue_00D698, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D69C);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D6A2, glue_00D6A2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D6A2, glue_00D6A2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6A6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D6A6, glue_00D6A6, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00D6A6, glue_00D6A6, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6AA);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00D6C2, glue_00D6C2, 18, HLE_EXIT_SP(0x013D04, -4))   /* bsr $013D04 */
+HLE_RANGE_ATOMIC(0x00D6C2, glue_00D6C2, 18, HLE_EXIT_SP(0x013D04, -4))   /* bsr $013D04 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6C6);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00D6C6, glue_00D6C6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D6C6, glue_00D6C6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D6D2, glue_00D6D2, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00D6D2, glue_00D6D2, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6D6);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00D6D8, glue_00D6D8, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00D6D8, glue_00D6D8, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6DC);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00D6EE, glue_00D6EE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D6EE, glue_00D6EE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6F2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D6F2, glue_00D6F2, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00D6F2, glue_00D6F2, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D6F6);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00D70A, glue_00D70A, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00D70A, glue_00D70A, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D70E);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00D70E, glue_00D70E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D70E, glue_00D70E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D734, glue_00D734, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
+HLE_RANGE_ATOMIC(0x00D734, glue_00D734, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D738);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x00D738, glue_00D738, 10, 0x00D742)   /* bra $00D742 */
+HLE_RANGE_ATOMIC(0x00D738, glue_00D738, 10, 0x00D742)   /* bra $00D742 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D742);
 }
 
-HLE_RANGE(0x00D742, glue_00D742, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D742, glue_00D742, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D75A, glue_00D75A, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D75A, glue_00D75A, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D75E);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D75E, glue_00D75E, 10, 0x00D7B6)   /* bra $00D7B6 */
+HLE_RANGE_ATOMIC(0x00D75E, glue_00D75E, 10, 0x00D7B6)   /* bra $00D7B6 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D7B6);
 }
 
-HLE_RANGE(0x00D770, glue_00D770, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D770, glue_00D770, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D774);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D774, glue_00D774, 10, 0x00D7B6)   /* bra $00D7B6 */
+HLE_RANGE_ATOMIC(0x00D774, glue_00D774, 10, 0x00D7B6)   /* bra $00D7B6 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D7B6);
 }
 
-HLE_RANGE(0x00D786, glue_00D786, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D786, glue_00D786, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D78A);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D78A, glue_00D78A, 10, 0x00D7B6)   /* bra $00D7B6 */
+HLE_RANGE_ATOMIC(0x00D78A, glue_00D78A, 10, 0x00D7B6)   /* bra $00D7B6 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D7B6);
 }
 
-HLE_RANGE(0x00D79C, glue_00D79C, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D79C, glue_00D79C, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D7A0);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D7B2, glue_00D7B2, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D7B2, glue_00D7B2, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D7B6);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D7CA, glue_00D7CA, 10, 0x00D7FC)   /* bra $00D7FC */
+HLE_RANGE_ATOMIC(0x00D7CA, glue_00D7CA, 10, 0x00D7FC)   /* bra $00D7FC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D7FC);
 }
 
-HLE_RANGE(0x00D7E4, glue_00D7E4, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
+HLE_RANGE_ATOMIC(0x00D7E4, glue_00D7E4, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D7E8);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x00D7E8, glue_00D7E8, 10, 0x00D7FC)   /* bra $00D7FC */
+HLE_RANGE_ATOMIC(0x00D7E8, glue_00D7E8, 10, 0x00D7FC)   /* bra $00D7FC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D7FC);
 }
 
-HLE_RANGE(0x00D7F8, glue_00D7F8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D7F8, glue_00D7F8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D7FC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D7FC, glue_00D7FC, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D7FC, glue_00D7FC, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D81C, glue_00D81C, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x00D81C, glue_00D81C, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D820);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x00D828, glue_00D828, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x00D828, glue_00D828, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D82C);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x00D82C, glue_00D82C, 10, 0x00D86E)   /* bra $00D86E */
+HLE_RANGE_ATOMIC(0x00D82C, glue_00D82C, 10, 0x00D86E)   /* bra $00D86E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D86E);
 }
 
-HLE_RANGE(0x00D840, glue_00D840, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D840, glue_00D840, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D844);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D856, glue_00D856, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
+HLE_RANGE_ATOMIC(0x00D856, glue_00D856, 18, HLE_EXIT_SP(0x007DEE, -4))   /* jsr $007DEE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D85A);
 	hle_jump(ctx, 0x007DEE);
 }
 
-HLE_RANGE(0x00D85C, glue_00D85C, 18, HLE_EXIT_SP(0x013D04, -4))   /* bsr $013D04 */
+HLE_RANGE_ATOMIC(0x00D85C, glue_00D85C, 18, HLE_EXIT_SP(0x013D04, -4))   /* bsr $013D04 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D860);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00D860, glue_00D860, 10, 0x00D86E)   /* bra $00D86E */
+HLE_RANGE_ATOMIC(0x00D860, glue_00D860, 10, 0x00D86E)   /* bra $00D86E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D86E);
 }
 
-HLE_RANGE(0x00D86A, glue_00D86A, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x00D86A, glue_00D86A, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D86E);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x00D896, glue_00D896, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D896, glue_00D896, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D89A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D89A, glue_00D89A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D89A, glue_00D89A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D8C4, glue_00D8C4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D8C4, glue_00D8C4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D8C8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D8C8, glue_00D8C8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D8C8, glue_00D8C8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D8F4, glue_00D8F4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D8F4, glue_00D8F4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D8F8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D8F8, glue_00D8F8, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00D8F8, glue_00D8F8, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D8FC);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00D90A, glue_00D90A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D90A, glue_00D90A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D91C, glue_00D91C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D91C, glue_00D91C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D920);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D93A, glue_00D93A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D93A, glue_00D93A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D968, glue_00D968, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00D968, glue_00D968, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D96C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00D970, glue_00D970, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D970, glue_00D970, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D974);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D974, glue_00D974, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D974, glue_00D974, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D982, glue_00D982, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D982, glue_00D982, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D986);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D98A, glue_00D98A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D98A, glue_00D98A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D98E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D992, glue_00D992, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D992, glue_00D992, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D996);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D9AE, glue_00D9AE, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00D9AE, glue_00D9AE, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00D9B8, glue_00D9B8, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00D9B8, glue_00D9B8, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D9BC);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00D9DC, glue_00D9DC, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00D9DC, glue_00D9DC, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00D9E2);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00D9E2, glue_00D9E2, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00D9E2, glue_00D9E2, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D9E6);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00D9E8, glue_00D9E8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D9E8, glue_00D9E8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D9EC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D9F0, glue_00D9F0, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D9F0, glue_00D9F0, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D9F4);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00D9F8, glue_00D9F8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00D9F8, glue_00D9F8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00D9FC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA14, glue_00DA14, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DA14, glue_00DA14, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DA22, glue_00DA22, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DA22, glue_00DA22, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA26);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA2A, glue_00DA2A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DA2A, glue_00DA2A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA2E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA32, glue_00DA32, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DA32, glue_00DA32, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA36);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA44, glue_00DA44, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DA44, glue_00DA44, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DA68, glue_00DA68, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DA68, glue_00DA68, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA6C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DA6C, glue_00DA6C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DA6C, glue_00DA6C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA70);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA74, glue_00DA74, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DA74, glue_00DA74, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA78);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA7C, glue_00DA7C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DA7C, glue_00DA7C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DA80);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DA8E, glue_00DA8E, 10, 0x00D9FC)   /* bra $00D9FC */
+HLE_RANGE_ATOMIC(0x00DA8E, glue_00DA8E, 10, 0x00D9FC)   /* bra $00D9FC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00D9FC);
 }
 
-HLE_RANGE(0x00DADE, glue_00DADE, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00DADE, glue_00DADE, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DAE2);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00DAE6, glue_00DAE6, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00DAE6, glue_00DAE6, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DAEA);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DAEA, glue_00DAEA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DAEA, glue_00DAEA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DB36, glue_00DB36, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00DB36, glue_00DB36, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB3A);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00DB3C, glue_00DB3C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DB3C, glue_00DB3C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB40);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DB52, glue_00DB52, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00DB52, glue_00DB52, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB56);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DB6A, glue_00DB6A, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
+HLE_RANGE_ATOMIC(0x00DB6A, glue_00DB6A, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB6E);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00DB76, glue_00DB76, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00DB76, glue_00DB76, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB7A);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00DB7C, glue_00DB7C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DB7C, glue_00DB7C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB80);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DB84, glue_00DB84, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00DB84, glue_00DB84, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB88);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DB92, glue_00DB92, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DB92, glue_00DB92, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DB96);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DBAC, glue_00DBAC, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00DBAC, glue_00DBAC, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DBB0);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DBB0, glue_00DBB0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DBB0, glue_00DBB0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DBE6, glue_00DBE6, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DBE6, glue_00DBE6, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DBEA);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DBEE, glue_00DBEE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00DBEE, glue_00DBEE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DBF2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00DBF2, glue_00DBF2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DBF2, glue_00DBF2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DC02, glue_00DC02, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DC02, glue_00DC02, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DC34, glue_00DC34, 18, HLE_EXIT_SP(0x00AC06, -4))   /* jsr $00AC06(pc) */
+HLE_RANGE_ATOMIC(0x00DC34, glue_00DC34, 18, HLE_EXIT_SP(0x00AC06, -4))   /* jsr $00AC06(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DC38);
 	hle_jump(ctx, 0x00AC06);
 }
 
-HLE_RANGE(0x00DC3A, glue_00DC3A, 10, 0x00DC5A)   /* bra $00DC5A */
+HLE_RANGE_ATOMIC(0x00DC3A, glue_00DC3A, 10, 0x00DC5A)   /* bra $00DC5A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00DC5A);
 }
 
-HLE_RANGE(0x00DC54, glue_00DC54, 18, HLE_EXIT_SP(0x00A5FA, -4))   /* jsr $00A5FA(pc) */
+HLE_RANGE_ATOMIC(0x00DC54, glue_00DC54, 18, HLE_EXIT_SP(0x00A5FA, -4))   /* jsr $00A5FA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DC58);
 	hle_jump(ctx, 0x00A5FA);
 }
 
-HLE_RANGE(0x00DC5A, glue_00DC5A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DC5A, glue_00DC5A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DC7A, glue_00DC7A, 10, 0x00DC9E)   /* bra $00DC9E */
+HLE_RANGE_ATOMIC(0x00DC7A, glue_00DC7A, 10, 0x00DC9E)   /* bra $00DC9E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00DC9E);
 }
 
-HLE_RANGE(0x00DCD2, glue_00DCD2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00DCD2, glue_00DCD2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DCD6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00DCD8, glue_00DCD8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DCD8, glue_00DCD8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DCE2, glue_00DCE2, 10, 0x00DCEA)   /* bra $00DCEA */
+HLE_RANGE_ATOMIC(0x00DCE2, glue_00DCE2, 10, 0x00DCEA)   /* bra $00DCEA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00DCEA);
 }
 
-HLE_RANGE(0x00DCF2, glue_00DCF2, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00DCF2, glue_00DCF2, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DCF6);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00DD3A, glue_00DD3A, 18, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E(pc) */
+HLE_RANGE_ATOMIC(0x00DD3A, glue_00DD3A, 18, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DD3E);
 	hle_jump(ctx, 0x00933E);
 }
 
-HLE_RANGE(0x00DD60, glue_00DD60, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00DD60, glue_00DD60, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00DD90, glue_00DD90, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
+HLE_RANGE_ATOMIC(0x00DD90, glue_00DD90, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00DD96);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00DDDE, glue_00DDDE, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00DDDE, glue_00DDDE, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DDE2);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00DDE2, glue_00DDE2, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DDE2, glue_00DDE2, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00DE0E, glue_00DE0E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DE0E, glue_00DE0E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DE12);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DE26, glue_00DE26, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00DE26, glue_00DE26, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DE2A);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00DE40, glue_00DE40, 18, HLE_EXIT_SP(0x00E108, -4))   /* jsr $00E108(pc) */
+HLE_RANGE_ATOMIC(0x00DE40, glue_00DE40, 18, HLE_EXIT_SP(0x00E108, -4))   /* jsr $00E108(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DE44);
 	hle_jump(ctx, 0x00E108);
 }
 
-HLE_RANGE(0x00DE5E, glue_00DE5E, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00DE5E, glue_00DE5E, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DE62);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00DE68, glue_00DE68, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DE68, glue_00DE68, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00DE6C, glue_00DE6C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00DE6C, glue_00DE6C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DE70);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00DE96, glue_00DE96, 18, HLE_EXIT_SP(0x009A7A, -4))   /* jsr $009A7A(pc) */
+HLE_RANGE_ATOMIC(0x00DE96, glue_00DE96, 18, HLE_EXIT_SP(0x009A7A, -4))   /* jsr $009A7A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DE9A);
 	hle_jump(ctx, 0x009A7A);
 }
 
-HLE_RANGE(0x00DE9A, glue_00DE9A, 10, 0x00DEA0)   /* bra $00DEA0 */
+HLE_RANGE_ATOMIC(0x00DE9A, glue_00DE9A, 10, 0x00DEA0)   /* bra $00DEA0 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00DEA0);
 }
 
-HLE_RANGE(0x00DE9C, glue_00DE9C, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
+HLE_RANGE_ATOMIC(0x00DE9C, glue_00DE9C, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DEA0);
 	hle_jump(ctx, 0x009A5E);
 }
 
-HLE_FUNC(0x00DEB8, glue_00DEB8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00DEB8, glue_00DEB8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00DEC0, glue_00DEC0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DEC0, glue_00DEC0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DEC4);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DED8, glue_00DED8, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00DED8, glue_00DED8, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DEDC);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00DEF2, glue_00DEF2, 18, HLE_EXIT_SP(0x00E108, -4))   /* jsr $00E108(pc) */
+HLE_RANGE_ATOMIC(0x00DEF2, glue_00DEF2, 18, HLE_EXIT_SP(0x00E108, -4))   /* jsr $00E108(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DEF6);
 	hle_jump(ctx, 0x00E108);
 }
 
-HLE_RANGE(0x00DF26, glue_00DF26, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00DF26, glue_00DF26, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00DF2C);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00DF2C, glue_00DF2C, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00DF2C, glue_00DF2C, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DF30);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00DF34, glue_00DF34, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00DF34, glue_00DF34, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DF38);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00DF3E, glue_00DF3E, 18, HLE_EXIT_SP(0x00DE6C, -4))   /* bsr $00DE6C */
+HLE_RANGE_ATOMIC(0x00DF3E, glue_00DF3E, 18, HLE_EXIT_SP(0x00DE6C, -4))   /* bsr $00DE6C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DF42);
 	hle_jump(ctx, 0x00DE6C);
 }
 
-HLE_RANGE(0x00DF42, glue_00DF42, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DF42, glue_00DF42, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00DF4C, glue_00DF4C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DF4C, glue_00DF4C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DF50);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DF66, glue_00DF66, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00DF66, glue_00DF66, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DF6A);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00DF7A, glue_00DF7A, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DF7A, glue_00DF7A, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00DF98, glue_00DF98, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DF98, glue_00DF98, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00DFA2, glue_00DFA2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00DFA2, glue_00DFA2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DFA6);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00DFBC, glue_00DFBC, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00DFBC, glue_00DFBC, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00DFC0);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00DFCA, glue_00DFCA, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DFCA, glue_00DFCA, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00DFEC, glue_00DFEC, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00DFEC, glue_00DFEC, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00E002, glue_00E002, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00E002, glue_00E002, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E006);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00E006, glue_00E006, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00E006, glue_00E006, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00E022, glue_00E022, 10, 0x00DFFE)   /* bra $00DFFE */
+HLE_RANGE_ATOMIC(0x00E022, glue_00E022, 10, 0x00DFFE)   /* bra $00DFFE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00DFFE);
 }
 
-HLE_RANGE(0x00E038, glue_00E038, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
+HLE_RANGE_ATOMIC(0x00E038, glue_00E038, 18, HLE_EXIT_SP(0x00E0E8, -4))   /* jsr $00E0E8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E03C);
 	hle_jump(ctx, 0x00E0E8);
 }
 
-HLE_RANGE(0x00E03C, glue_00E03C, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00E03C, glue_00E03C, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00E062, glue_00E062, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00E062, glue_00E062, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E066);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00E09C, glue_00E09C, 18, HLE_EXIT_SP(0x00E0F8, -4))   /* jsr $00E0F8(pc) */
+HLE_RANGE_ATOMIC(0x00E09C, glue_00E09C, 18, HLE_EXIT_SP(0x00E0F8, -4))   /* jsr $00E0F8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E0A0);
 	hle_jump(ctx, 0x00E0F8);
 }
 
-HLE_RANGE(0x00E0A0, glue_00E0A0, 10, 0x00E146)   /* bra $00E146 */
+HLE_RANGE_ATOMIC(0x00E0A0, glue_00E0A0, 10, 0x00E146)   /* bra $00E146 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E146);
 }
 
-HLE_RANGE(0x00E0F2, glue_00E0F2, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00E0F2, glue_00E0F2, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E0F6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_FUNC(0x00E0F6, glue_00E0F6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00E0F6, glue_00E0F6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00E102, glue_00E102, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00E102, glue_00E102, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E106);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x00E106, glue_00E106, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00E106, glue_00E106, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00E10A, glue_00E10A, 10, 0x00E10E)   /* bra $00E10E */
+HLE_RANGE_ATOMIC(0x00E10A, glue_00E10A, 10, 0x00E10E)   /* bra $00E10E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E10E);
 }
 
-HLE_RANGE(0x00E13E, glue_00E13E, 10, 0x00E144)   /* bra $00E144 */
+HLE_RANGE_ATOMIC(0x00E13E, glue_00E13E, 10, 0x00E144)   /* bra $00E144 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E144);
 }
 
-HLE_FUNC(0x00E144, glue_00E144, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00E144, glue_00E144, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00E162, glue_00E162, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E162, glue_00E162, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E16C, glue_00E16C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00E16C, glue_00E16C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E170);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00E170, glue_00E170, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E170, glue_00E170, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E254, glue_00E254, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00E254, glue_00E254, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E258);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00E25A, glue_00E25A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00E25A, glue_00E25A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E25E);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00E262, glue_00E262, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00E262, glue_00E262, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E266);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00E27A, glue_00E27A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E27A, glue_00E27A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E27E, glue_00E27E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00E27E, glue_00E27E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E282);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00E284, glue_00E284, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00E284, glue_00E284, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E288);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00E288, glue_00E288, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00E288, glue_00E288, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E28C);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00E290, glue_00E290, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00E290, glue_00E290, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E294);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00E2A8, glue_00E2A8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E2A8, glue_00E2A8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E2AC, glue_00E2AC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00E2AC, glue_00E2AC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E2B0);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00E2B2, glue_00E2B2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00E2B2, glue_00E2B2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E2B6);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00E2B6, glue_00E2B6, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x00E2B6, glue_00E2B6, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E2BA);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x00E2BE, glue_00E2BE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00E2BE, glue_00E2BE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E2C2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00E2FA, glue_00E2FA, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
+HLE_RANGE_ATOMIC(0x00E2FA, glue_00E2FA, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E2FE);
 	hle_jump(ctx, 0x009A02);
 }
 
-HLE_RANGE(0x00E300, glue_00E300, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00E300, glue_00E300, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E304);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00E310, glue_00E310, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E310, glue_00E310, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E46E, glue_00E46E, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00E46E, glue_00E46E, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E472);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00E474, glue_00E474, 10, 0x00E4A0)   /* bra $00E4A0 */
+HLE_RANGE_ATOMIC(0x00E474, glue_00E474, 10, 0x00E4A0)   /* bra $00E4A0 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E4A0);
 }
 
-HLE_RANGE(0x00E4A0, glue_00E4A0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E4A0, glue_00E4A0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E588, glue_00E588, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00E588, glue_00E588, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E58C);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00E59E, glue_00E59E, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00E59E, glue_00E59E, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E5A2);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x00E5A2, glue_00E5A2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E5A2, glue_00E5A2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E742, glue_00E742, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E742, glue_00E742, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E756, glue_00E756, 10, 0x00E75E)   /* bra $00E75E */
+HLE_RANGE_ATOMIC(0x00E756, glue_00E756, 10, 0x00E75E)   /* bra $00E75E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00E75E);
 }
 
-HLE_RANGE(0x00E784, glue_00E784, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
+HLE_RANGE_ATOMIC(0x00E784, glue_00E784, 18, HLE_EXIT_SP(0x009A02, -4))   /* jsr $009A02(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E788);
 	hle_jump(ctx, 0x009A02);
 }
 
-HLE_RANGE(0x00E78A, glue_00E78A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00E78A, glue_00E78A, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E78E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00E79A, glue_00E79A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E79A, glue_00E79A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E884, glue_00E884, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
+HLE_RANGE_ATOMIC(0x00E884, glue_00E884, 18, HLE_EXIT_SP(0x01254E, -4))   /* jsr $01254E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E888);
 	hle_jump(ctx, 0x01254E);
 }
 
-HLE_RANGE(0x00E8A6, glue_00E8A6, 18, HLE_EXIT_SP(0x0124D2, -4))   /* jsr $0124D2(pc) */
+HLE_RANGE_ATOMIC(0x00E8A6, glue_00E8A6, 18, HLE_EXIT_SP(0x0124D2, -4))   /* jsr $0124D2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E8AA);
 	hle_jump(ctx, 0x0124D2);
 }
 
-HLE_RANGE(0x00E8AA, glue_00E8AA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E8AA, glue_00E8AA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E8C0, glue_00E8C0, 18, HLE_EXIT_SP(0x0124B8, -4))   /* jsr $0124B8(pc) */
+HLE_RANGE_ATOMIC(0x00E8C0, glue_00E8C0, 18, HLE_EXIT_SP(0x0124B8, -4))   /* jsr $0124B8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00E8C4);
 	hle_jump(ctx, 0x0124B8);
 }
 
-HLE_RANGE(0x00E8C4, glue_00E8C4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E8C4, glue_00E8C4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E9C0, glue_00E9C0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E9C0, glue_00E9C0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00E9D2, glue_00E9D2, 20, HLE_EXIT_SP(0x008970, -4))   /* jsr $008970.l */
+HLE_RANGE_ATOMIC(0x00E9D2, glue_00E9D2, 20, HLE_EXIT_SP(0x008970, -4))   /* jsr $008970.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00E9D8);
 	hle_jump(ctx, 0x008970);
 }
 
-HLE_RANGE(0x00E9DE, glue_00E9DE, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x00E9DE, glue_00E9DE, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00E9E4);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_RANGE(0x00E9F6, glue_00E9F6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00E9F6, glue_00E9F6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EA1E, glue_00EA1E, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
+HLE_RANGE_ATOMIC(0x00EA1E, glue_00EA1E, 20, HLE_EXIT_SP(0x0080FE, -4))   /* jsr $0080FE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00EA24);
 	hle_jump(ctx, 0x0080FE);
 }
 
-HLE_FUNC(0x00EA24, glue_00EA24, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00EA24, glue_00EA24, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00EA2A, glue_00EA2A, 10, 0x00EC16)   /* bra $00EC16 */
+HLE_RANGE_ATOMIC(0x00EA2A, glue_00EA2A, 10, 0x00EC16)   /* bra $00EC16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EC16);
 }
 
-HLE_RANGE(0x00EA3E, glue_00EA3E, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
+HLE_RANGE_ATOMIC(0x00EA3E, glue_00EA3E, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA42);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00EA48, glue_00EA48, 18, HLE_EXIT_SP(0x012A9C, -4))   /* jsr $012A9C(pc) */
+HLE_RANGE_ATOMIC(0x00EA48, glue_00EA48, 18, HLE_EXIT_SP(0x012A9C, -4))   /* jsr $012A9C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA4C);
 	hle_jump(ctx, 0x012A9C);
 }
 
-HLE_RANGE(0x00EA5A, glue_00EA5A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EA5A, glue_00EA5A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA5E);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EA62, glue_00EA62, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EA62, glue_00EA62, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA66);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EA66, glue_00EA66, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EA66, glue_00EA66, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EA6E, glue_00EA6E, 10, 0x00EC16)   /* bra $00EC16 */
+HLE_RANGE_ATOMIC(0x00EA6E, glue_00EA6E, 10, 0x00EC16)   /* bra $00EC16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EC16);
 }
 
-HLE_RANGE(0x00EA82, glue_00EA82, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
+HLE_RANGE_ATOMIC(0x00EA82, glue_00EA82, 18, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA86);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00EA86, glue_00EA86, 18, HLE_EXIT_SP(0x012A78, -4))   /* jsr $012A78(pc) */
+HLE_RANGE_ATOMIC(0x00EA86, glue_00EA86, 18, HLE_EXIT_SP(0x012A78, -4))   /* jsr $012A78(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA8A);
 	hle_jump(ctx, 0x012A78);
 }
 
-HLE_RANGE(0x00EA98, glue_00EA98, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EA98, glue_00EA98, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EA9C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EAA0, glue_00EAA0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EAA0, glue_00EAA0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EAA4);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EAA4, glue_00EAA4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EAA4, glue_00EAA4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EAAC, glue_00EAAC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00EAAC, glue_00EAAC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EAB0);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00EAB2, glue_00EAB2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EAB2, glue_00EAB2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EAB6);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EABA, glue_00EABA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EABA, glue_00EABA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EABE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EACE, glue_00EACE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EACE, glue_00EACE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EAD2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EAD2, glue_00EAD2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EAD2, glue_00EAD2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EAF0, glue_00EAF0, 10, 0x00EC16)   /* bra $00EC16 */
+HLE_RANGE_ATOMIC(0x00EAF0, glue_00EAF0, 10, 0x00EC16)   /* bra $00EC16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EC16);
 }
 
-HLE_RANGE(0x00EB32, glue_00EB32, 10, 0x00EC16)   /* bra $00EC16 */
+HLE_RANGE_ATOMIC(0x00EB32, glue_00EB32, 10, 0x00EC16)   /* bra $00EC16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EC16);
 }
 
-HLE_RANGE(0x00EB40, glue_00EB40, 18, HLE_EXIT_SP(0x012A16, -4))   /* jsr $012A16(pc) */
+HLE_RANGE_ATOMIC(0x00EB40, glue_00EB40, 18, HLE_EXIT_SP(0x012A16, -4))   /* jsr $012A16(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EB44);
 	hle_jump(ctx, 0x012A16);
 }
 
-HLE_RANGE(0x00EB52, glue_00EB52, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EB52, glue_00EB52, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EB56);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EB5A, glue_00EB5A, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EB5A, glue_00EB5A, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EB5E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EB5E, glue_00EB5E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EB5E, glue_00EB5E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EB68, glue_00EB68, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EB68, glue_00EB68, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EB6C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EB70, glue_00EB70, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EB70, glue_00EB70, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EB74);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EB74, glue_00EB74, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EB74, glue_00EB74, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EB88, glue_00EB88, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x00EB88, glue_00EB88, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EB8C);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x00EB9A, glue_00EB9A, 10, 0x00EC16)   /* bra $00EC16 */
+HLE_RANGE_ATOMIC(0x00EB9A, glue_00EB9A, 10, 0x00EC16)   /* bra $00EC16 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EC16);
 }
 
-HLE_RANGE(0x00EBA6, glue_00EBA6, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EBA6, glue_00EBA6, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EBAA);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EBB8, glue_00EBB8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EBB8, glue_00EBB8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EBC2, glue_00EBC2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EBC2, glue_00EBC2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EBC6);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EBCA, glue_00EBCA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EBCA, glue_00EBCA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EBCE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EBCE, glue_00EBCE, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EBCE, glue_00EBCE, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EBDA, glue_00EBDA, 18, HLE_EXIT_SP(0x012A16, -4))   /* jsr $012A16(pc) */
+HLE_RANGE_ATOMIC(0x00EBDA, glue_00EBDA, 18, HLE_EXIT_SP(0x012A16, -4))   /* jsr $012A16(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EBDE);
 	hle_jump(ctx, 0x012A16);
 }
 
-HLE_RANGE(0x00EC1C, glue_00EC1C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EC1C, glue_00EC1C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EC20);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EC20, glue_00EC20, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EC20, glue_00EC20, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EC24);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EC24, glue_00EC24, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EC24, glue_00EC24, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EC62, glue_00EC62, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00EC62, glue_00EC62, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EC66);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EC7E, glue_00EC7E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EC7E, glue_00EC7E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EC88, glue_00EC88, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EC88, glue_00EC88, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EC8C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00ECA8, glue_00ECA8, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00ECA8, glue_00ECA8, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00ECAE);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00ECAE, glue_00ECAE, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00ECAE, glue_00ECAE, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ECB2);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00ECBA, glue_00ECBA, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00ECBA, glue_00ECBA, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ECBE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00ECBE, glue_00ECBE, 18, HLE_EXIT_SP(0x00ED04, -4))   /* bsr $00ED04 */
+HLE_RANGE_ATOMIC(0x00ECBE, glue_00ECBE, 18, HLE_EXIT_SP(0x00ED04, -4))   /* bsr $00ED04 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ECC2);
 	hle_jump(ctx, 0x00ED04);
 }
 
-HLE_RANGE(0x00ECC6, glue_00ECC6, 10, 0x00ECCC)   /* bra $00ECCC */
+HLE_RANGE_ATOMIC(0x00ECC6, glue_00ECC6, 10, 0x00ECCC)   /* bra $00ECCC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00ECCC);
 }
 
-HLE_RANGE(0x00ECC8, glue_00ECC8, 18, HLE_EXIT_SP(0x00ED04, -4))   /* bsr $00ED04 */
+HLE_RANGE_ATOMIC(0x00ECC8, glue_00ECC8, 18, HLE_EXIT_SP(0x00ED04, -4))   /* bsr $00ED04 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ECCC);
 	hle_jump(ctx, 0x00ED04);
 }
 
-HLE_RANGE(0x00ECE4, glue_00ECE4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00ECE4, glue_00ECE4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00ECEE, glue_00ECEE, 18, HLE_EXIT_SP(0x00ED04, -4))   /* bsr $00ED04 */
+HLE_RANGE_ATOMIC(0x00ECEE, glue_00ECEE, 18, HLE_EXIT_SP(0x00ED04, -4))   /* bsr $00ED04 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ECF2);
 	hle_jump(ctx, 0x00ED04);
 }
 
-HLE_RANGE(0x00ED00, glue_00ED00, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00ED00, glue_00ED00, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00ED10, glue_00ED10, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00ED10, glue_00ED10, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ED14);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00ED20, glue_00ED20, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00ED20, glue_00ED20, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ED24);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00ED28, glue_00ED28, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00ED28, glue_00ED28, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ED2C);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_FUNC(0x00ED2C, glue_00ED2C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00ED2C, glue_00ED2C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00ED6E, glue_00ED6E, 18, HLE_EXIT_SP(0x01272A, -4))   /* jsr $01272A(pc) */
+HLE_RANGE_ATOMIC(0x00ED6E, glue_00ED6E, 18, HLE_EXIT_SP(0x01272A, -4))   /* jsr $01272A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ED72);
 	hle_jump(ctx, 0x01272A);
 }
 
-HLE_RANGE(0x00ED82, glue_00ED82, 18, HLE_EXIT_SP(0x01277C, -4))   /* jsr $01277C(pc) */
+HLE_RANGE_ATOMIC(0x00ED82, glue_00ED82, 18, HLE_EXIT_SP(0x01277C, -4))   /* jsr $01277C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ED86);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x00ED94, glue_00ED94, 18, HLE_EXIT_SP(0x01277C, -4))   /* jsr $01277C(pc) */
+HLE_RANGE_ATOMIC(0x00ED94, glue_00ED94, 18, HLE_EXIT_SP(0x01277C, -4))   /* jsr $01277C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00ED98);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x00EDB0, glue_00EDB0, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
+HLE_RANGE_ATOMIC(0x00EDB0, glue_00EDB0, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00EDB6);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00EDCA, glue_00EDCA, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
+HLE_RANGE_ATOMIC(0x00EDCA, glue_00EDCA, 20, HLE_EXIT_SP(0x01253C, -4))   /* jsr $01253C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00EDD0);
 	hle_jump(ctx, 0x01253C);
 }
 
-HLE_RANGE(0x00EDD0, glue_00EDD0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EDD0, glue_00EDD0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EDD8, glue_00EDD8, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00EDD8, glue_00EDD8, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EDDC);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00EDF8, glue_00EDF8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00EDF8, glue_00EDF8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EDFC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EDFC, glue_00EDFC, 10, 0x00EE08)   /* bra $00EE08 */
+HLE_RANGE_ATOMIC(0x00EDFC, glue_00EDFC, 10, 0x00EE08)   /* bra $00EE08 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EE08);
 }
 
-HLE_RANGE(0x00EE04, glue_00EE04, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00EE04, glue_00EE04, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EE08);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EE0A, glue_00EE0A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EE0A, glue_00EE0A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EE0E);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EE12, glue_00EE12, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00EE12, glue_00EE12, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EE16);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00EE2A, glue_00EE2A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EE2A, glue_00EE2A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EE56, glue_00EE56, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00EE56, glue_00EE56, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00EE5C);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00EE5C, glue_00EE5C, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00EE5C, glue_00EE5C, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EE60);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00EE6E, glue_00EE6E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EE6E, glue_00EE6E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EE72);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EE80, glue_00EE80, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00EE80, glue_00EE80, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EE84);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EE84, glue_00EE84, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EE84, glue_00EE84, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00EFA8, glue_00EFA8, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00EFA8, glue_00EFA8, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EFAC);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00EFC8, glue_00EFC8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00EFC8, glue_00EFC8, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EFCC);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EFCC, glue_00EFCC, 10, 0x00EFD8)   /* bra $00EFD8 */
+HLE_RANGE_ATOMIC(0x00EFCC, glue_00EFCC, 10, 0x00EFD8)   /* bra $00EFD8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00EFD8);
 }
 
-HLE_RANGE(0x00EFD4, glue_00EFD4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00EFD4, glue_00EFD4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EFD8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00EFDC, glue_00EFDC, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00EFDC, glue_00EFDC, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EFE0);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00EFE2, glue_00EFE2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00EFE2, glue_00EFE2, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00EFE6);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00EFFA, glue_00EFFA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00EFFA, glue_00EFFA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F026, glue_00F026, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00F026, glue_00F026, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00F02C);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00F02C, glue_00F02C, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00F02C, glue_00F02C, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F030);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00F03E, glue_00F03E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F03E, glue_00F03E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F042);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F050, glue_00F050, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F050, glue_00F050, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F054);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F054, glue_00F054, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F054, glue_00F054, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F090, glue_00F090, 10, 0x00F0FA)   /* bra $00F0FA */
+HLE_RANGE_ATOMIC(0x00F090, glue_00F090, 10, 0x00F0FA)   /* bra $00F0FA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F0FA);
 }
 
-HLE_RANGE(0x00F0CE, glue_00F0CE, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00F0CE, glue_00F0CE, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F0D2);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00F138, glue_00F138, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F138, glue_00F138, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F13C);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F13C, glue_00F13C, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F13C, glue_00F13C, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F18E, glue_00F18E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00F18E, glue_00F18E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F192);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00F1AE, glue_00F1AE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F1AE, glue_00F1AE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F1B2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F1B2, glue_00F1B2, 10, 0x00F1BE)   /* bra $00F1BE */
+HLE_RANGE_ATOMIC(0x00F1B2, glue_00F1B2, 10, 0x00F1BE)   /* bra $00F1BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F1BE);
 }
 
-HLE_RANGE(0x00F1BA, glue_00F1BA, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F1BA, glue_00F1BA, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F1BE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F1C2, glue_00F1C2, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00F1C2, glue_00F1C2, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F1C6);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00F1C8, glue_00F1C8, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00F1C8, glue_00F1C8, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F1CC);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00F1E0, glue_00F1E0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F1E0, glue_00F1E0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F20C, glue_00F20C, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00F20C, glue_00F20C, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00F212);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00F212, glue_00F212, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00F212, glue_00F212, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F216);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00F224, glue_00F224, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F224, glue_00F224, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F228);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F236, glue_00F236, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F236, glue_00F236, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F23A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F23A, glue_00F23A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F23A, glue_00F23A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F276, glue_00F276, 10, 0x00F2E0)   /* bra $00F2E0 */
+HLE_RANGE_ATOMIC(0x00F276, glue_00F276, 10, 0x00F2E0)   /* bra $00F2E0 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F2E0);
 }
 
-HLE_RANGE(0x00F31E, glue_00F31E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F31E, glue_00F31E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F322);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F322, glue_00F322, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F322, glue_00F322, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F370, glue_00F370, 18, HLE_EXIT_SP(0x00D232, -4))   /* jsr $00D232(pc) */
+HLE_RANGE_ATOMIC(0x00F370, glue_00F370, 18, HLE_EXIT_SP(0x00D232, -4))   /* jsr $00D232(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F374);
 	hle_jump(ctx, 0x00D232);
 }
 
-HLE_RANGE(0x00F374, glue_00F374, 18, HLE_EXIT_SP(0x00E10C, -4))   /* jsr $00E10C(pc) */
+HLE_RANGE_ATOMIC(0x00F374, glue_00F374, 18, HLE_EXIT_SP(0x00E10C, -4))   /* jsr $00E10C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F378);
 	hle_jump(ctx, 0x00E10C);
 }
 
-HLE_RANGE(0x00F392, glue_00F392, 18, HLE_EXIT_SP(0x00F452, -4))   /* jsr $00F452(pc) */
+HLE_RANGE_ATOMIC(0x00F392, glue_00F392, 18, HLE_EXIT_SP(0x00F452, -4))   /* jsr $00F452(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F396);
 	hle_jump(ctx, 0x00F452);
 }
 
-HLE_RANGE(0x00F3A4, glue_00F3A4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F3A4, glue_00F3A4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F3BC, glue_00F3BC, 10, 0x00F3A0)   /* bra $00F3A0 */
+HLE_RANGE_ATOMIC(0x00F3BC, glue_00F3BC, 10, 0x00F3A0)   /* bra $00F3A0 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F3A0);
 }
 
-HLE_RANGE(0x00F3DA, glue_00F3DA, 18, HLE_EXIT_SP(0x00F452, -4))   /* jsr $00F452(pc) */
+HLE_RANGE_ATOMIC(0x00F3DA, glue_00F3DA, 18, HLE_EXIT_SP(0x00F452, -4))   /* jsr $00F452(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F3DE);
 	hle_jump(ctx, 0x00F452);
 }
 
-HLE_RANGE(0x00F3F8, glue_00F3F8, 18, HLE_EXIT_SP(0x0124D2, -4))   /* jsr $0124D2(pc) */
+HLE_RANGE_ATOMIC(0x00F3F8, glue_00F3F8, 18, HLE_EXIT_SP(0x0124D2, -4))   /* jsr $0124D2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F3FC);
 	hle_jump(ctx, 0x0124D2);
 }
 
-HLE_RANGE(0x00F41A, glue_00F41A, 18, HLE_EXIT_SP(0x00F4B0, -4))   /* jsr $00F4B0(pc) */
+HLE_RANGE_ATOMIC(0x00F41A, glue_00F41A, 18, HLE_EXIT_SP(0x00F4B0, -4))   /* jsr $00F4B0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F41E);
 	hle_jump(ctx, 0x00F4B0);
 }
 
-HLE_RANGE(0x00F424, glue_00F424, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
+HLE_RANGE_ATOMIC(0x00F424, glue_00F424, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00F42A);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x00F432, glue_00F432, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F432, glue_00F432, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F47A, glue_00F47A, 10, 0x00F4AC)   /* bra $00F4AC */
+HLE_RANGE_ATOMIC(0x00F47A, glue_00F47A, 10, 0x00F4AC)   /* bra $00F4AC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F4AC);
 }
 
-HLE_RANGE(0x00F4AC, glue_00F4AC, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F4AC, glue_00F4AC, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F4B0);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F4DE, glue_00F4DE, 10, 0x00F4EC)   /* bra $00F4EC */
+HLE_RANGE_ATOMIC(0x00F4DE, glue_00F4DE, 10, 0x00F4EC)   /* bra $00F4EC */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F4EC);
 }
 
-HLE_RANGE(0x00F4F6, glue_00F4F6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x00F4F6, glue_00F4F6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F4FA);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x00F500, glue_00F500, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00F500, glue_00F500, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00F5CE, glue_00F5CE, 10, 0x00F648)   /* bra $00F648 */
+HLE_RANGE_ATOMIC(0x00F5CE, glue_00F5CE, 10, 0x00F648)   /* bra $00F648 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F648);
 }
 
-HLE_RANGE(0x00F5FA, glue_00F5FA, 18, HLE_EXIT_SP(0x009A5E, -4))   /* bsr $009A5E */
+HLE_RANGE_ATOMIC(0x00F5FA, glue_00F5FA, 18, HLE_EXIT_SP(0x009A5E, -4))   /* bsr $009A5E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F5FE);
 	hle_jump(ctx, 0x009A5E);
 }
 
-HLE_RANGE(0x00F630, glue_00F630, 10, 0x00DDBA)   /* bra $00DDBA */
+HLE_RANGE_ATOMIC(0x00F630, glue_00F630, 10, 0x00DDBA)   /* bra $00DDBA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00DDBA);
 }
 
-HLE_RANGE(0x00F636, glue_00F636, 10, 0x00F648)   /* bra $00F648 */
+HLE_RANGE_ATOMIC(0x00F636, glue_00F636, 10, 0x00F648)   /* bra $00F648 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00F648);
 }
 
-HLE_RANGE(0x00F648, glue_00F648, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00F648, glue_00F648, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F64C);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00F64E, glue_00F64E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00F64E, glue_00F64E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F652);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00F652, glue_00F652, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F652, glue_00F652, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F656);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F6C2, glue_00F6C2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F6C2, glue_00F6C2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F6C6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F6C6, glue_00F6C6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F6C6, glue_00F6C6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F71A, glue_00F71A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F71A, glue_00F71A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F71E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F71E, glue_00F71E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F71E, glue_00F71E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F864, glue_00F864, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F864, glue_00F864, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F868);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F86C, glue_00F86C, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00F86C, glue_00F86C, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F870);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00F87E, glue_00F87E, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00F87E, glue_00F87E, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F882);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F89A, glue_00F89A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F89A, glue_00F89A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F8B0, glue_00F8B0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00F8B0, glue_00F8B0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F8B4);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00F8DA, glue_00F8DA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00F8DA, glue_00F8DA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F8DE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00F8DE, glue_00F8DE, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00F8DE, glue_00F8DE, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00F94C, glue_00F94C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x00F94C, glue_00F94C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F950);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x00F95C, glue_00F95C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00F95C, glue_00F95C, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F960);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x00F966, glue_00F966, 10, 0x00FA86)   /* bra $00FA86 */
+HLE_RANGE_ATOMIC(0x00F966, glue_00F966, 10, 0x00FA86)   /* bra $00FA86 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FA86);
 }
 
-HLE_RANGE(0x00F984, glue_00F984, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x00F984, glue_00F984, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00F988);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x00F9A6, glue_00F9A6, 10, 0x00FA86)   /* bra $00FA86 */
+HLE_RANGE_ATOMIC(0x00F9A6, glue_00F9A6, 10, 0x00FA86)   /* bra $00FA86 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FA86);
 }
 
-HLE_RANGE(0x00FA9E, glue_00FA9E, 18, HLE_EXIT_SP(0x0092A8, -4))   /* jsr $0092A8(pc) */
+HLE_RANGE_ATOMIC(0x00FA9E, glue_00FA9E, 18, HLE_EXIT_SP(0x0092A8, -4))   /* jsr $0092A8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FAA2);
 	hle_jump(ctx, 0x0092A8);
 }
 
-HLE_RANGE(0x00FABC, glue_00FABC, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
+HLE_RANGE_ATOMIC(0x00FABC, glue_00FABC, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FAC0);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x00FAC4, glue_00FAC4, 10, 0x00FAE6)   /* bra $00FAE6 */
+HLE_RANGE_ATOMIC(0x00FAC4, glue_00FAC4, 10, 0x00FAE6)   /* bra $00FAE6 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FAE6);
 }
 
-HLE_RANGE(0x00FADC, glue_00FADC, 20, HLE_EXIT_SP(0x0124EC, -4))   /* jsr $0124EC.l */
+HLE_RANGE_ATOMIC(0x00FADC, glue_00FADC, 20, HLE_EXIT_SP(0x0124EC, -4))   /* jsr $0124EC.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00FAE2);
 	hle_jump(ctx, 0x0124EC);
 }
 
-HLE_RANGE(0x00FAEA, glue_00FAEA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FAEA, glue_00FAEA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FB64, glue_00FB64, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00FB64, glue_00FB64, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FB68);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00FB6A, glue_00FB6A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00FB6A, glue_00FB6A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FB6E);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00FB6E, glue_00FB6E, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FB6E, glue_00FB6E, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FB72);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FB92, glue_00FB92, 10, 0x00FB98)   /* bra $00FB98 */
+HLE_RANGE_ATOMIC(0x00FB92, glue_00FB92, 10, 0x00FB98)   /* bra $00FB98 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FB98);
 }
 
-HLE_RANGE(0x00FB98, glue_00FB98, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00FB98, glue_00FB98, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FB9C);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00FB9E, glue_00FB9E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00FB9E, glue_00FB9E, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBA2);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00FBA2, glue_00FBA2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FBA2, glue_00FBA2, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBA6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FBAE, glue_00FBAE, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00FBAE, glue_00FBAE, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBB2);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00FBCE, glue_00FBCE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FBCE, glue_00FBCE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBD2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FBD2, glue_00FBD2, 10, 0x00FBDE)   /* bra $00FBDE */
+HLE_RANGE_ATOMIC(0x00FBD2, glue_00FBD2, 10, 0x00FBDE)   /* bra $00FBDE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FBDE);
 }
 
-HLE_RANGE(0x00FBDA, glue_00FBDA, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FBDA, glue_00FBDA, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBDE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FBE0, glue_00FBE0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00FBE0, glue_00FBE0, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBE4);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00FBE8, glue_00FBE8, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00FBE8, glue_00FBE8, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FBEC);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00FBFA, glue_00FBFA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FBFA, glue_00FBFA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FC02, glue_00FC02, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00FC02, glue_00FC02, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FC06);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00FC18, glue_00FC18, 10, 0x00FC3A)   /* bra $00FC3A */
+HLE_RANGE_ATOMIC(0x00FC18, glue_00FC18, 10, 0x00FC3A)   /* bra $00FC3A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FC3A);
 }
 
-HLE_RANGE(0x00FC28, glue_00FC28, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00FC28, glue_00FC28, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FC2C);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00FC48, glue_00FC48, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FC48, glue_00FC48, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FC4C);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FC54, glue_00FC54, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FC54, glue_00FC54, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FC58);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FC5A, glue_00FC5A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00FC5A, glue_00FC5A, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FC5E);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00FC62, glue_00FC62, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00FC62, glue_00FC62, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FC66);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00FC74, glue_00FC74, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FC74, glue_00FC74, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FCA4, glue_00FCA4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00FCA4, glue_00FCA4, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00FCAA);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00FCAA, glue_00FCAA, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00FCAA, glue_00FCAA, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FCAE);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00FCB2, glue_00FCB2, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00FCB2, glue_00FCB2, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FCB6);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FCBA, glue_00FCBA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00FCBA, glue_00FCBA, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FCBE);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FCBE, glue_00FCBE, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FCBE, glue_00FCBE, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FCEE, glue_00FCEE, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x00FCEE, glue_00FCEE, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x00FCF4);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x00FCF4, glue_00FCF4, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
+HLE_RANGE_ATOMIC(0x00FCF4, glue_00FCF4, 18, HLE_EXIT_SP(0x009054, -4))   /* bsr $009054 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FCF8);
 	hle_jump(ctx, 0x009054);
 }
 
-HLE_RANGE(0x00FCFC, glue_00FCFC, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00FCFC, glue_00FCFC, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FD00);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FD04, glue_00FD04, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00FD04, glue_00FD04, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FD08);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FD08, glue_00FD08, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FD08, glue_00FD08, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FD14, glue_00FD14, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00FD14, glue_00FD14, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FD18);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00FD24, glue_00FD24, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00FD24, glue_00FD24, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x00FD9C, glue_00FD9C, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x00FD9C, glue_00FD9C, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FDA0);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x00FE04, glue_00FE04, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00FE04, glue_00FE04, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FE08);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FE08, glue_00FE08, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FE08, glue_00FE08, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FE62, glue_00FE62, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FE62, glue_00FE62, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FE66);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FE66, glue_00FE66, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FE66, glue_00FE66, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FF16, glue_00FF16, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x00FF16, glue_00FF16, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF1A);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x00FF36, glue_00FF36, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FF36, glue_00FF36, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF3A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FF3A, glue_00FF3A, 10, 0x00FF46)   /* bra $00FF46 */
+HLE_RANGE_ATOMIC(0x00FF3A, glue_00FF3A, 10, 0x00FF46)   /* bra $00FF46 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00FF46);
 }
 
-HLE_RANGE(0x00FF42, glue_00FF42, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x00FF42, glue_00FF42, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF46);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FF48, glue_00FF48, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x00FF48, glue_00FF48, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF4C);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x00FF50, glue_00FF50, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
+HLE_RANGE_ATOMIC(0x00FF50, glue_00FF50, 18, HLE_EXIT_SP(0x012342, -4))   /* jsr $012342(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF54);
 	hle_jump(ctx, 0x012342);
 }
 
-HLE_RANGE(0x00FF68, glue_00FF68, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FF68, glue_00FF68, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FF76, glue_00FF76, 18, HLE_EXIT_SP(0x00FFC0, -4))   /* jsr $00FFC0(pc) */
+HLE_RANGE_ATOMIC(0x00FF76, glue_00FF76, 18, HLE_EXIT_SP(0x00FFC0, -4))   /* jsr $00FFC0(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF7A);
 	hle_jump(ctx, 0x00FFC0);
 }
 
-HLE_RANGE(0x00FF8C, glue_00FF8C, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x00FF8C, glue_00FF8C, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF90);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x00FF98, glue_00FF98, 18, HLE_EXIT_SP(0x012352, -4))   /* jsr $012352(pc) */
+HLE_RANGE_ATOMIC(0x00FF98, glue_00FF98, 18, HLE_EXIT_SP(0x012352, -4))   /* jsr $012352(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FF9C);
 	hle_jump(ctx, 0x012352);
 }
 
-HLE_RANGE(0x00FF9C, glue_00FF9C, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x00FF9C, glue_00FF9C, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x00FFC8, glue_00FFC8, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x00FFC8, glue_00FFC8, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x00FFCC);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x00FFD8, glue_00FFD8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x00FFD8, glue_00FFD8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x010004, glue_010004, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x010004, glue_010004, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010008);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x010008, glue_010008, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010008, glue_010008, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x01003E, glue_01003E, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x01003E, glue_01003E, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010042);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x0100A4, glue_0100A4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x0100A4, glue_0100A4, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0100A8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0100A8, glue_0100A8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0100A8, glue_0100A8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0100F6, glue_0100F6, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x0100F6, glue_0100F6, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0100FA);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0100FA, glue_0100FA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0100FA, glue_0100FA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010102, glue_010102, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x010102, glue_010102, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010106);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01011E, glue_01011E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x01011E, glue_01011E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010126, glue_010126, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x010126, glue_010126, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01012A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01012A, glue_01012A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x01012A, glue_01012A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01012E);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x010146, glue_010146, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010146, glue_010146, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010158, glue_010158, 10, 0x010126)   /* bra $010126 */
+HLE_RANGE_ATOMIC(0x010158, glue_010158, 10, 0x010126)   /* bra $010126 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010126);
 }
 
-HLE_RANGE(0x01023C, glue_01023C, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x01023C, glue_01023C, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010240);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x010250, glue_010250, 18, HLE_EXIT_SP(0x01042C, -4))   /* jsr $01042C(pc) */
+HLE_RANGE_ATOMIC(0x010250, glue_010250, 18, HLE_EXIT_SP(0x01042C, -4))   /* jsr $01042C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010254);
 	hle_jump(ctx, 0x01042C);
 }
 
-HLE_RANGE(0x01028A, glue_01028A, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
+HLE_RANGE_ATOMIC(0x01028A, glue_01028A, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01028E);
 	hle_jump(ctx, 0x0102A6);
 }
 
-HLE_RANGE(0x0102A2, glue_0102A2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0102A2, glue_0102A2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0102BE, glue_0102BE, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x0102BE, glue_0102BE, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0102C2);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x0102CE, glue_0102CE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0102CE, glue_0102CE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0102D4, glue_0102D4, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
+HLE_RANGE_ATOMIC(0x0102D4, glue_0102D4, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0102D8);
 	hle_jump(ctx, 0x0102A6);
 }
 
-HLE_RANGE(0x01030C, glue_01030C, 18, HLE_EXIT_SP(0x01042C, -4))   /* jsr $01042C(pc) */
+HLE_RANGE_ATOMIC(0x01030C, glue_01030C, 18, HLE_EXIT_SP(0x01042C, -4))   /* jsr $01042C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010310);
 	hle_jump(ctx, 0x01042C);
 }
 
-HLE_RANGE(0x010310, glue_010310, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010310, glue_010310, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010322, glue_010322, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
+HLE_RANGE_ATOMIC(0x010322, glue_010322, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010326);
 	hle_jump(ctx, 0x0102A6);
 }
 
-HLE_RANGE(0x01032C, glue_01032C, 18, HLE_EXIT_SP(0x010408, -4))   /* jsr $010408(pc) */
+HLE_RANGE_ATOMIC(0x01032C, glue_01032C, 18, HLE_EXIT_SP(0x010408, -4))   /* jsr $010408(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010330);
 	hle_jump(ctx, 0x010408);
 }
 
-HLE_RANGE(0x01036A, glue_01036A, 10, 0x010302)   /* bra $010302 */
+HLE_RANGE_ATOMIC(0x01036A, glue_01036A, 10, 0x010302)   /* bra $010302 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010302);
 }
 
-HLE_RANGE(0x0103B0, glue_0103B0, 18, HLE_EXIT_SP(0x01042C, -4))   /* bsr $01042C */
+HLE_RANGE_ATOMIC(0x0103B0, glue_0103B0, 18, HLE_EXIT_SP(0x01042C, -4))   /* bsr $01042C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0103B4);
 	hle_jump(ctx, 0x01042C);
 }
 
-HLE_RANGE(0x0103C2, glue_0103C2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0103C2, glue_0103C2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0103CA, glue_0103CA, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
+HLE_RANGE_ATOMIC(0x0103CA, glue_0103CA, 18, HLE_EXIT_SP(0x0102A6, -4))   /* jsr $0102A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0103CE);
 	hle_jump(ctx, 0x0102A6);
 }
 
-HLE_RANGE(0x0103E4, glue_0103E4, 18, HLE_EXIT_SP(0x01042C, -4))   /* bsr $01042C */
+HLE_RANGE_ATOMIC(0x0103E4, glue_0103E4, 18, HLE_EXIT_SP(0x01042C, -4))   /* bsr $01042C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0103E8);
 	hle_jump(ctx, 0x01042C);
 }
 
-HLE_RANGE(0x010404, glue_010404, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010404, glue_010404, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010410, glue_010410, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x010410, glue_010410, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010414);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x01042A, glue_01042A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01042A, glue_01042A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x010474, glue_010474, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x010474, glue_010474, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010478);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_FUNC(0x010478, glue_010478, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x010478, glue_010478, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0104BA, glue_0104BA, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x0104BA, glue_0104BA, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0104BE);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x0104CE, glue_0104CE, 18, HLE_EXIT_SP(0x010666, -4))   /* jsr $010666(pc) */
+HLE_RANGE_ATOMIC(0x0104CE, glue_0104CE, 18, HLE_EXIT_SP(0x010666, -4))   /* jsr $010666(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0104D2);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x0104D2, glue_0104D2, 18, HLE_EXIT_SP(0x0104EE, -4))   /* jsr $0104EE(pc) */
+HLE_RANGE_ATOMIC(0x0104D2, glue_0104D2, 18, HLE_EXIT_SP(0x0104EE, -4))   /* jsr $0104EE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0104D6);
 	hle_jump(ctx, 0x0104EE);
 }
 
-HLE_RANGE(0x0104EA, glue_0104EA, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0104EA, glue_0104EA, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010506, glue_010506, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
+HLE_RANGE_ATOMIC(0x010506, glue_010506, 18, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01050A);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x010516, glue_010516, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x010516, glue_010516, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x010522, glue_010522, 18, HLE_EXIT_SP(0x010666, -4))   /* jsr $010666(pc) */
+HLE_RANGE_ATOMIC(0x010522, glue_010522, 18, HLE_EXIT_SP(0x010666, -4))   /* jsr $010666(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010526);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x010526, glue_010526, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010526, glue_010526, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010536, glue_010536, 18, HLE_EXIT_SP(0x0104EE, -4))   /* jsr $0104EE(pc) */
+HLE_RANGE_ATOMIC(0x010536, glue_010536, 18, HLE_EXIT_SP(0x0104EE, -4))   /* jsr $0104EE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01053A);
 	hle_jump(ctx, 0x0104EE);
 }
 
-HLE_RANGE(0x01057E, glue_01057E, 10, 0x010518)   /* bra $010518 */
+HLE_RANGE_ATOMIC(0x01057E, glue_01057E, 10, 0x010518)   /* bra $010518 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010518);
 }
 
-HLE_RANGE(0x0105E0, glue_0105E0, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
+HLE_RANGE_ATOMIC(0x0105E0, glue_0105E0, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0105E4);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x0105F2, glue_0105F2, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0105F2, glue_0105F2, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010676, glue_010676, 10, 0x010682)   /* bra $010682 */
+HLE_RANGE_ATOMIC(0x010676, glue_010676, 10, 0x010682)   /* bra $010682 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010682);
 }
 
-HLE_RANGE(0x0106BE, glue_0106BE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x0106BE, glue_0106BE, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0106C2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_FUNC(0x0106C2, glue_0106C2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0106C2, glue_0106C2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0107AC, glue_0107AC, 18, HLE_EXIT_SP(0x010812, -4))   /* jsr $010812(pc) */
+HLE_RANGE_ATOMIC(0x0107AC, glue_0107AC, 18, HLE_EXIT_SP(0x010812, -4))   /* jsr $010812(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0107B0);
 	hle_jump(ctx, 0x010812);
 }
 
-HLE_RANGE(0x0107D6, glue_0107D6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0107D6, glue_0107D6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010816, glue_010816, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
+HLE_RANGE_ATOMIC(0x010816, glue_010816, 18, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01081A);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x01081A, glue_01081A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x01081A, glue_01081A, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01081E);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x01082C, glue_01082C, 10, 0x010666)   /* bra $010666 */
+HLE_RANGE_ATOMIC(0x01082C, glue_01082C, 10, 0x010666)   /* bra $010666 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x010860, glue_010860, 18, HLE_EXIT_SP(0x010812, -4))   /* jsr $010812(pc) */
+HLE_RANGE_ATOMIC(0x010860, glue_010860, 18, HLE_EXIT_SP(0x010812, -4))   /* jsr $010812(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010864);
 	hle_jump(ctx, 0x010812);
 }
 
-HLE_RANGE(0x01087A, glue_01087A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x01087A, glue_01087A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x01089C, glue_01089C, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x01089C, glue_01089C, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0108A0, glue_0108A0, 18, HLE_EXIT_SP(0x010812, -4))   /* jsr $010812(pc) */
+HLE_RANGE_ATOMIC(0x0108A0, glue_0108A0, 18, HLE_EXIT_SP(0x010812, -4))   /* jsr $010812(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0108A4);
 	hle_jump(ctx, 0x010812);
 }
 
-HLE_RANGE(0x0108C6, glue_0108C6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0108C6, glue_0108C6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0108CC, glue_0108CC, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
+HLE_RANGE_ATOMIC(0x0108CC, glue_0108CC, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0108D0);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x0108D8, glue_0108D8, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0108D8, glue_0108D8, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0108E0, glue_0108E0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x0108E0, glue_0108E0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0108E4);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x010902, glue_010902, 10, 0x010912)   /* bra $010912 */
+HLE_RANGE_ATOMIC(0x010902, glue_010902, 10, 0x010912)   /* bra $010912 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010912);
 }
 
-HLE_RANGE(0x01090C, glue_01090C, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x01090C, glue_01090C, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010910);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x010916, glue_010916, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x010916, glue_010916, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01091A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01094A, glue_01094A, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x01094A, glue_01094A, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01094E);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x010964, glue_010964, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x010964, glue_010964, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010968);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x01096C, glue_01096C, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x01096C, glue_01096C, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010970);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x010974, glue_010974, 18, HLE_EXIT_SP(0x0109AC, -4))   /* bsr $0109AC */
+HLE_RANGE_ATOMIC(0x010974, glue_010974, 18, HLE_EXIT_SP(0x0109AC, -4))   /* bsr $0109AC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010978);
 	hle_jump(ctx, 0x0109AC);
 }
 
-HLE_RANGE(0x010986, glue_010986, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x010986, glue_010986, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01098A);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x010992, glue_010992, 18, HLE_EXIT_SP(0x0109AC, -4))   /* bsr $0109AC */
+HLE_RANGE_ATOMIC(0x010992, glue_010992, 18, HLE_EXIT_SP(0x0109AC, -4))   /* bsr $0109AC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010996);
 	hle_jump(ctx, 0x0109AC);
 }
 
-HLE_RANGE(0x0109A4, glue_0109A4, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x0109A4, glue_0109A4, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0109A8);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x0109C6, glue_0109C6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0109C6, glue_0109C6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0109DE, glue_0109DE, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
+HLE_RANGE_ATOMIC(0x0109DE, glue_0109DE, 18, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0109E2);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_RANGE(0x0109E2, glue_0109E2, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
+HLE_RANGE_ATOMIC(0x0109E2, glue_0109E2, 18, HLE_EXIT_SP(0x009A5E, -4))   /* jsr $009A5E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0109E6);
 	hle_jump(ctx, 0x009A5E);
 }
 
-HLE_RANGE(0x010A0E, glue_010A0E, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x010A0E, glue_010A0E, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x010A14);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x010A1C, glue_010A1C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x010A1C, glue_010A1C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x010A22);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x010A60, glue_010A60, 18, HLE_EXIT_SP(0x00902E, -4))   /* jsr $00902E(pc) */
+HLE_RANGE_ATOMIC(0x010A60, glue_010A60, 18, HLE_EXIT_SP(0x00902E, -4))   /* jsr $00902E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010A64);
 	hle_jump(ctx, 0x00902E);
 }
 
-HLE_RANGE(0x010A86, glue_010A86, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010A86, glue_010A86, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010AA0, glue_010AA0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x010AA0, glue_010AA0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010AA4);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x010AA4, glue_010AA4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010AA4, glue_010AA4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010AB0, glue_010AB0, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x010AB0, glue_010AB0, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x010AF4, glue_010AF4, 10, 0x010908)   /* bra $010908 */
+HLE_RANGE_ATOMIC(0x010AF4, glue_010AF4, 10, 0x010908)   /* bra $010908 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010908);
 }
 
-HLE_RANGE(0x010B80, glue_010B80, 10, 0x010C96)   /* bra $010C96 */
+HLE_RANGE_ATOMIC(0x010B80, glue_010B80, 10, 0x010C96)   /* bra $010C96 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010C96);
 }
 
-HLE_RANGE(0x010B8C, glue_010B8C, 18, HLE_EXIT_SP(0x00E10C, -4))   /* jsr $00E10C(pc) */
+HLE_RANGE_ATOMIC(0x010B8C, glue_010B8C, 18, HLE_EXIT_SP(0x00E10C, -4))   /* jsr $00E10C(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010B90);
 	hle_jump(ctx, 0x00E10C);
 }
 
-HLE_RANGE(0x010B90, glue_010B90, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
+HLE_RANGE_ATOMIC(0x010B90, glue_010B90, 18, HLE_EXIT_SP(0x00D236, -4))   /* jsr $00D236(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010B94);
 	hle_jump(ctx, 0x00D236);
 }
 
-HLE_RANGE(0x010BE0, glue_010BE0, 10, 0x010C96)   /* bra $010C96 */
+HLE_RANGE_ATOMIC(0x010BE0, glue_010BE0, 10, 0x010C96)   /* bra $010C96 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010C96);
 }
 
-HLE_RANGE(0x010C9E, glue_010C9E, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
+HLE_RANGE_ATOMIC(0x010C9E, glue_010C9E, 20, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x010CA4);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x010CF2, glue_010CF2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x010CF2, glue_010CF2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010CF6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x010CF8, glue_010CF8, 10, 0x010D20)   /* bra $010D20 */
+HLE_RANGE_ATOMIC(0x010CF8, glue_010CF8, 10, 0x010D20)   /* bra $010D20 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010D20);
 }
 
-HLE_RANGE(0x010D0C, glue_010D0C, 18, HLE_EXIT_SP(0x00D0F8, -4))   /* jsr $00D0F8(pc) */
+HLE_RANGE_ATOMIC(0x010D0C, glue_010D0C, 18, HLE_EXIT_SP(0x00D0F8, -4))   /* jsr $00D0F8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010D10);
 	hle_jump(ctx, 0x00D0F8);
 }
 
-HLE_RANGE(0x010D12, glue_010D12, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
+HLE_RANGE_ATOMIC(0x010D12, glue_010D12, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010D16);
 	hle_jump(ctx, 0x009EF8);
 }
 
-HLE_RANGE(0x010D1A, glue_010D1A, 12, 0x0081B6)   /* jmp $0081B6.l */
+HLE_RANGE_ATOMIC(0x010D1A, glue_010D1A, 12, 0x0081B6)   /* jmp $0081B6.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x0081B6);
 }
 
-HLE_RANGE(0x010D2C, glue_010D2C, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
+HLE_RANGE_ATOMIC(0x010D2C, glue_010D2C, 18, HLE_EXIT_SP(0x009EF8, -4))   /* jsr $009EF8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010D30);
 	hle_jump(ctx, 0x009EF8);
 }
 
-HLE_RANGE(0x010D3E, glue_010D3E, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
+HLE_RANGE_ATOMIC(0x010D3E, glue_010D3E, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010D42);
 	hle_jump(ctx, 0x011F58);
 }
 
-HLE_RANGE(0x010DEA, glue_010DEA, 10, 0x010D20)   /* bra $010D20 */
+HLE_RANGE_ATOMIC(0x010DEA, glue_010DEA, 10, 0x010D20)   /* bra $010D20 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010D20);
 }
 
-HLE_RANGE(0x010E14, glue_010E14, 10, 0x010D20)   /* bra $010D20 */
+HLE_RANGE_ATOMIC(0x010E14, glue_010E14, 10, 0x010D20)   /* bra $010D20 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x010D20);
 }
 
-HLE_RANGE(0x010E7E, glue_010E7E, 10, 0x011092)   /* bra $011092 */
+HLE_RANGE_ATOMIC(0x010E7E, glue_010E7E, 10, 0x011092)   /* bra $011092 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011092);
 }
 
-HLE_RANGE(0x010F82, glue_010F82, 10, 0x011092)   /* bra $011092 */
+HLE_RANGE_ATOMIC(0x010F82, glue_010F82, 10, 0x011092)   /* bra $011092 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011092);
 }
 
-HLE_RANGE(0x010FF4, glue_010FF4, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x010FF4, glue_010FF4, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x010FF8);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x010FF8, glue_010FF8, 10, 0x011010)   /* bra $011010 */
+HLE_RANGE_ATOMIC(0x010FF8, glue_010FF8, 10, 0x011010)   /* bra $011010 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011010);
 }
 
-HLE_RANGE(0x01100C, glue_01100C, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x01100C, glue_01100C, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011010);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x011048, glue_011048, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
+HLE_RANGE_ATOMIC(0x011048, glue_011048, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01104C);
 	hle_jump(ctx, 0x011072);
 }
 
-HLE_RANGE(0x011050, glue_011050, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
+HLE_RANGE_ATOMIC(0x011050, glue_011050, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011054);
 	hle_jump(ctx, 0x011072);
 }
 
-HLE_RANGE(0x011062, glue_011062, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
+HLE_RANGE_ATOMIC(0x011062, glue_011062, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011066);
 	hle_jump(ctx, 0x011072);
 }
 
-HLE_RANGE(0x01106A, glue_01106A, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
+HLE_RANGE_ATOMIC(0x01106A, glue_01106A, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01106E);
 	hle_jump(ctx, 0x011072);
 }
 
-HLE_RANGE(0x01106E, glue_01106E, 10, 0x011092)   /* bra $011092 */
+HLE_RANGE_ATOMIC(0x01106E, glue_01106E, 10, 0x011092)   /* bra $011092 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011092);
 }
 
-HLE_RANGE(0x01108C, glue_01108C, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x01108C, glue_01108C, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011090);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x011090, glue_011090, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011090, glue_011090, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0110A4, glue_0110A4, 18, HLE_EXIT_SP(0x01114C, -4))   /* bsr $01114C */
+HLE_RANGE_ATOMIC(0x0110A4, glue_0110A4, 18, HLE_EXIT_SP(0x01114C, -4))   /* bsr $01114C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0110A8);
 	hle_jump(ctx, 0x01114C);
 }
 
-HLE_RANGE(0x0110D8, glue_0110D8, 18, HLE_EXIT_SP(0x01114C, -4))   /* bsr $01114C */
+HLE_RANGE_ATOMIC(0x0110D8, glue_0110D8, 18, HLE_EXIT_SP(0x01114C, -4))   /* bsr $01114C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0110DC);
 	hle_jump(ctx, 0x01114C);
 }
 
-HLE_RANGE(0x0110F0, glue_0110F0, 18, HLE_EXIT_SP(0x011146, -4))   /* bsr $011146 */
+HLE_RANGE_ATOMIC(0x0110F0, glue_0110F0, 18, HLE_EXIT_SP(0x011146, -4))   /* bsr $011146 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0110F4);
 	hle_jump(ctx, 0x011146);
 }
 
-HLE_RANGE(0x011124, glue_011124, 18, HLE_EXIT_SP(0x011146, -4))   /* bsr $011146 */
+HLE_RANGE_ATOMIC(0x011124, glue_011124, 18, HLE_EXIT_SP(0x011146, -4))   /* bsr $011146 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011128);
 	hle_jump(ctx, 0x011146);
 }
 
-HLE_RANGE(0x01113E, glue_01113E, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
+HLE_RANGE_ATOMIC(0x01113E, glue_01113E, 18, HLE_EXIT_SP(0x011072, -4))   /* bsr $011072 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011142);
 	hle_jump(ctx, 0x011072);
 }
 
-HLE_RANGE(0x011176, glue_011176, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x011176, glue_011176, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01117C);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x0111B2, glue_0111B2, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x0111B2, glue_0111B2, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0111B6);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x0111BC, glue_0111BC, 18, HLE_EXIT_SP(0x012ABE, -4))   /* jsr $012ABE(pc) */
+HLE_RANGE_ATOMIC(0x0111BC, glue_0111BC, 18, HLE_EXIT_SP(0x012ABE, -4))   /* jsr $012ABE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0111C0);
 	hle_jump(ctx, 0x012ABE);
 }
 
-HLE_RANGE(0x0111C6, glue_0111C6, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0111C6, glue_0111C6, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0111E6, glue_0111E6, 18, HLE_EXIT_SP(0x0112A8, -4))   /* bsr $0112A8 */
+HLE_RANGE_ATOMIC(0x0111E6, glue_0111E6, 18, HLE_EXIT_SP(0x0112A8, -4))   /* bsr $0112A8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0111EA);
 	hle_jump(ctx, 0x0112A8);
 }
 
-HLE_RANGE(0x0111F8, glue_0111F8, 18, HLE_EXIT_SP(0x0112A8, -4))   /* bsr $0112A8 */
+HLE_RANGE_ATOMIC(0x0111F8, glue_0111F8, 18, HLE_EXIT_SP(0x0112A8, -4))   /* bsr $0112A8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0111FC);
 	hle_jump(ctx, 0x0112A8);
 }
 
-HLE_RANGE(0x011200, glue_011200, 18, HLE_EXIT_SP(0x0112BE, -4))   /* bsr $0112BE */
+HLE_RANGE_ATOMIC(0x011200, glue_011200, 18, HLE_EXIT_SP(0x0112BE, -4))   /* bsr $0112BE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011204);
 	hle_jump(ctx, 0x0112BE);
 }
 
-HLE_RANGE(0x011208, glue_011208, 18, HLE_EXIT_SP(0x0112BE, -4))   /* bsr $0112BE */
+HLE_RANGE_ATOMIC(0x011208, glue_011208, 18, HLE_EXIT_SP(0x0112BE, -4))   /* bsr $0112BE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01120C);
 	hle_jump(ctx, 0x0112BE);
 }
 
-HLE_RANGE(0x01120C, glue_01120C, 10, 0x0112A4)   /* bra $0112A4 */
+HLE_RANGE_ATOMIC(0x01120C, glue_01120C, 10, 0x0112A4)   /* bra $0112A4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0112A4);
 }
 
-HLE_RANGE(0x011292, glue_011292, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
+HLE_RANGE_ATOMIC(0x011292, glue_011292, 18, HLE_EXIT_SP(0x012212, -4))   /* jsr $012212(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011296);
 	hle_jump(ctx, 0x012212);
 }
 
-HLE_RANGE(0x01129A, glue_01129A, 18, HLE_EXIT_SP(0x0112DE, -4))   /* bsr $0112DE */
+HLE_RANGE_ATOMIC(0x01129A, glue_01129A, 18, HLE_EXIT_SP(0x0112DE, -4))   /* bsr $0112DE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01129E);
 	hle_jump(ctx, 0x0112DE);
 }
 
-HLE_RANGE(0x01129E, glue_01129E, 10, 0x0112A4)   /* bra $0112A4 */
+HLE_RANGE_ATOMIC(0x01129E, glue_01129E, 10, 0x0112A4)   /* bra $0112A4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0112A4);
 }
 
-HLE_RANGE(0x0112A4, glue_0112A4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x0112A4, glue_0112A4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0112B6, glue_0112B6, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x0112B6, glue_0112B6, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0112BA);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x0112BC, glue_0112BC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0112BC, glue_0112BC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0112D6, glue_0112D6, 18, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA(pc) */
+HLE_RANGE_ATOMIC(0x0112D6, glue_0112D6, 18, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0112DA);
 	hle_jump(ctx, 0x0122CA);
 }
 
-HLE_FUNC(0x0112DC, glue_0112DC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0112DC, glue_0112DC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0112F6, glue_0112F6, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x0112F6, glue_0112F6, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0112FA);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x0112FC, glue_0112FC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0112FC, glue_0112FC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011302, glue_011302, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x011302, glue_011302, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011306);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x011314, glue_011314, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x011314, glue_011314, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011318);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x011318, glue_011318, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
+HLE_RANGE_ATOMIC(0x011318, glue_011318, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01131C);
 	hle_jump(ctx, 0x011334);
 }
 
-HLE_RANGE(0x011330, glue_011330, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x011330, glue_011330, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x01134C, glue_01134C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x01134C, glue_01134C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011352);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x01135E, glue_01135E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01135E, glue_01135E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011364, glue_011364, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x011364, glue_011364, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011368);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x01137A, glue_01137A, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x01137A, glue_01137A, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01137E);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x01137E, glue_01137E, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
+HLE_RANGE_ATOMIC(0x01137E, glue_01137E, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011382);
 	hle_jump(ctx, 0x011334);
 }
 
-HLE_RANGE(0x011390, glue_011390, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x011390, glue_011390, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x0113A2, glue_0113A2, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x0113A2, glue_0113A2, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0113A6);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x0113A6, glue_0113A6, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
+HLE_RANGE_ATOMIC(0x0113A6, glue_0113A6, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0113AA);
 	hle_jump(ctx, 0x011334);
 }
 
-HLE_RANGE(0x0113B4, glue_0113B4, 18, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04(pc) */
+HLE_RANGE_ATOMIC(0x0113B4, glue_0113B4, 18, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0113B8);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0113B8, glue_0113B8, 20, HLE_EXIT_SP(0x009066, -4))   /* jsr $009066.l */
+HLE_RANGE_ATOMIC(0x0113B8, glue_0113B8, 20, HLE_EXIT_SP(0x009066, -4))   /* jsr $009066.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0113BE);
 	hle_jump(ctx, 0x009066);
 }
 
-HLE_RANGE(0x0113CC, glue_0113CC, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x0113CC, glue_0113CC, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x0113E6, glue_0113E6, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x0113E6, glue_0113E6, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0113EA);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x0113EA, glue_0113EA, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
+HLE_RANGE_ATOMIC(0x0113EA, glue_0113EA, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0113EE);
 	hle_jump(ctx, 0x011334);
 }
 
-HLE_RANGE(0x01140A, glue_01140A, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
+HLE_RANGE_ATOMIC(0x01140A, glue_01140A, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01140E);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x011414, glue_011414, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x011414, glue_011414, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01141A);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x01141A, glue_01141A, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
+HLE_RANGE_ATOMIC(0x01141A, glue_01141A, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011420);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x011420, glue_011420, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
+HLE_RANGE_ATOMIC(0x011420, glue_011420, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011426);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x011434, glue_011434, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x011434, glue_011434, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x01144C, glue_01144C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x01144C, glue_01144C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011452);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x01148C, glue_01148C, 18, HLE_EXIT_SP(0x0115FA, -4))   /* bsr $0115FA */
+HLE_RANGE_ATOMIC(0x01148C, glue_01148C, 18, HLE_EXIT_SP(0x0115FA, -4))   /* bsr $0115FA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011490);
 	hle_jump(ctx, 0x0115FA);
 }
 
-HLE_RANGE(0x011490, glue_011490, 10, 0x0114BA)   /* bra $0114BA */
+HLE_RANGE_ATOMIC(0x011490, glue_011490, 10, 0x0114BA)   /* bra $0114BA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0114BA);
 }
 
-HLE_FUNC(0x0114BE, glue_0114BE, 8)   /* jmp (a1) */
+HLE_FUNC_ATOMIC(0x0114BE, glue_0114BE, 8)   /* jmp (a1) */
 {
 	hle_insn(ctx, 8);
 	hle_jump(ctx, ctx->a[1]);
 }
 
-HLE_RANGE(0x011510, glue_011510, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x011510, glue_011510, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x011520, glue_011520, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
+HLE_RANGE_ATOMIC(0x011520, glue_011520, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011524);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x011532, glue_011532, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x011532, glue_011532, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x011602, glue_011602, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x011602, glue_011602, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011608);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x011614, glue_011614, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011614, glue_011614, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011624, glue_011624, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011624, glue_011624, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011628);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x01162C, glue_01162C, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x01162C, glue_01162C, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011630);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x011640, glue_011640, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x011640, glue_011640, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01164C, glue_01164C, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x01164C, glue_01164C, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011650);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x011654, glue_011654, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x011654, glue_011654, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011658);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x01165C, glue_01165C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x01165C, glue_01165C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011660);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011664, glue_011664, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x011664, glue_011664, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011670, glue_011670, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011670, glue_011670, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011674);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x011678, glue_011678, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x011678, glue_011678, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011688, glue_011688, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011688, glue_011688, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01168C);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x011690, glue_011690, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x011690, glue_011690, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011694);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x011698, glue_011698, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x011698, glue_011698, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0116AA, glue_0116AA, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x0116AA, glue_0116AA, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0116AE);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x0116BE, glue_0116BE, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x0116BE, glue_0116BE, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0116C4, glue_0116C4, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x0116C4, glue_0116C4, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0116C8);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x0116CC, glue_0116CC, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x0116CC, glue_0116CC, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0116DC, glue_0116DC, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x0116DC, glue_0116DC, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0116E0);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x0116E6, glue_0116E6, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x0116E6, glue_0116E6, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0116F2, glue_0116F2, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x0116F2, glue_0116F2, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0116F6);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x0116FA, glue_0116FA, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x0116FA, glue_0116FA, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0116FE);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x011702, glue_011702, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x011702, glue_011702, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011706);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01170A, glue_01170A, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x01170A, glue_01170A, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011716, glue_011716, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011716, glue_011716, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01171A);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x01171E, glue_01171E, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x01171E, glue_01171E, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011722);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x011726, glue_011726, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x011726, glue_011726, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01172A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01172E, glue_01172E, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x01172E, glue_01172E, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01174A, glue_01174A, 18, HLE_EXIT_SP(0x0118C0, -4))   /* bsr $0118C0 */
+HLE_RANGE_ATOMIC(0x01174A, glue_01174A, 18, HLE_EXIT_SP(0x0118C0, -4))   /* bsr $0118C0 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01174E);
 	hle_jump(ctx, 0x0118C0);
 }
 
-HLE_RANGE(0x011752, glue_011752, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x011752, glue_011752, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011756);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01176A, glue_01176A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x01176A, glue_01176A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01176E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011782, glue_011782, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x011782, glue_011782, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011786);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011792, glue_011792, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x011792, glue_011792, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011796);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0117AC, glue_0117AC, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x0117AC, glue_0117AC, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0117B0);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0117BC, glue_0117BC, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x0117BC, glue_0117BC, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0117C0);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0117DE, glue_0117DE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x0117DE, glue_0117DE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0117E2);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0117F2, glue_0117F2, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x0117F2, glue_0117F2, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0117F6);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x01180C, glue_01180C, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x01180C, glue_01180C, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011810);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x011816, glue_011816, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x011816, glue_011816, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011826, glue_011826, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011826, glue_011826, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01182A);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x011840, glue_011840, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011840, glue_011840, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011844);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x011848, glue_011848, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x011848, glue_011848, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01184C);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x011852, glue_011852, 10, 0x013228)   /* bra $013228 */
+HLE_RANGE_ATOMIC(0x011852, glue_011852, 10, 0x013228)   /* bra $013228 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011862, glue_011862, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
+HLE_RANGE_ATOMIC(0x011862, glue_011862, 18, HLE_EXIT_SP(0x0118EA, -4))   /* bsr $0118EA */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011866);
 	hle_jump(ctx, 0x0118EA);
 }
 
-HLE_RANGE(0x01187A, glue_01187A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x01187A, glue_01187A, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01187E);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x01188A, glue_01188A, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x01188A, glue_01188A, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01188E);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x011892, glue_011892, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x011892, glue_011892, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011896);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0118AC, glue_0118AC, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
+HLE_RANGE_ATOMIC(0x0118AC, glue_0118AC, 18, HLE_EXIT_SP(0x0118DC, -4))   /* bsr $0118DC */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0118B0);
 	hle_jump(ctx, 0x0118DC);
 }
 
-HLE_RANGE(0x0118B4, glue_0118B4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x0118B4, glue_0118B4, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0118B8);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0118CA, glue_0118CA, 10, 0x0118F4)   /* bra $0118F4 */
+HLE_RANGE_ATOMIC(0x0118CA, glue_0118CA, 10, 0x0118F4)   /* bra $0118F4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0118F4);
 }
 
-HLE_RANGE(0x0118E6, glue_0118E6, 10, 0x0118F4)   /* bra $0118F4 */
+HLE_RANGE_ATOMIC(0x0118E6, glue_0118E6, 10, 0x0118F4)   /* bra $0118F4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0118F4);
 }
 
-HLE_FUNC(0x011926, glue_011926, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011926, glue_011926, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011A6E, glue_011A6E, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
+HLE_RANGE_ATOMIC(0x011A6E, glue_011A6E, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011A72);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x011A72, glue_011A72, 10, 0x011B10)   /* bra $011B10 */
+HLE_RANGE_ATOMIC(0x011A72, glue_011A72, 10, 0x011B10)   /* bra $011B10 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011B10);
 }
 
-HLE_RANGE(0x011AA4, glue_011AA4, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x011AA4, glue_011AA4, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011AA8);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x011AA8, glue_011AA8, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
+HLE_RANGE_ATOMIC(0x011AA8, glue_011AA8, 18, HLE_EXIT_SP(0x011334, -4))   /* jsr $011334(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011AAC);
 	hle_jump(ctx, 0x011334);
 }
 
-HLE_RANGE(0x011AEC, glue_011AEC, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x011AEC, glue_011AEC, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x011B0C, glue_011B0C, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x011B0C, glue_011B0C, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x011B4A, glue_011B4A, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x011B4A, glue_011B4A, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x011B70, glue_011B70, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x011B70, glue_011B70, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011B74);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x011BB2, glue_011BB2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x011BB2, glue_011BB2, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011BB6);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x011BCC, glue_011BCC, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x011BCC, glue_011BCC, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011BD0);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x011BD0, glue_011BD0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011BD0, glue_011BD0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011C24, glue_011C24, 18, HLE_EXIT_SP(0x011B4E, -4))   /* bsr $011B4E */
+HLE_RANGE_ATOMIC(0x011C24, glue_011C24, 18, HLE_EXIT_SP(0x011B4E, -4))   /* bsr $011B4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011C28);
 	hle_jump(ctx, 0x011B4E);
 }
 
-HLE_RANGE(0x011C28, glue_011C28, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x011C28, glue_011C28, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x011C8E, glue_011C8E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x011C8E, glue_011C8E, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011C92);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x011CA6, glue_011CA6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x011CA6, glue_011CA6, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011CAA);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x011CD4, glue_011CD4, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x011CD4, glue_011CD4, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x011D08, glue_011D08, 20, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240.l */
+HLE_RANGE_ATOMIC(0x011D08, glue_011D08, 20, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011D0E);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_RANGE(0x011D0E, glue_011D0E, 10, 0x00B3BE)   /* bra $00B3BE */
+HLE_RANGE_ATOMIC(0x011D0E, glue_011D0E, 10, 0x00B3BE)   /* bra $00B3BE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_FUNC(0x011D26, glue_011D26, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011D26, glue_011D26, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x011D30, glue_011D30, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011D30, glue_011D30, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x011D3C, glue_011D3C, 14)   /* jmp (2,pc,x) */
+HLE_FUNC_ATOMIC(0x011D3C, glue_011D3C, 14)   /* jmp (2,pc,x) */
 {
 	hle_insn(ctx, 14);
 	hle_jump(ctx, 0x011D3Eu + (uint32_t)(int32_t)(2) + (uint32_t)(int32_t)(int16_t)ctx->d[0]);
 }
 
-HLE_RANGE(0x011D40, glue_011D40, 10, 0x011D64)   /* bra $011D64 */
+HLE_RANGE_ATOMIC(0x011D40, glue_011D40, 10, 0x011D64)   /* bra $011D64 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D64);
 }
 
-HLE_RANGE(0x011D44, glue_011D44, 10, 0x012068)   /* bra $012068 */
+HLE_RANGE_ATOMIC(0x011D44, glue_011D44, 10, 0x012068)   /* bra $012068 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012068);
 }
 
-HLE_RANGE(0x011D48, glue_011D48, 10, 0x011D70)   /* bra $011D70 */
+HLE_RANGE_ATOMIC(0x011D48, glue_011D48, 10, 0x011D70)   /* bra $011D70 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D70);
 }
 
-HLE_RANGE(0x011D4C, glue_011D4C, 10, 0x011D90)   /* bra $011D90 */
+HLE_RANGE_ATOMIC(0x011D4C, glue_011D4C, 10, 0x011D90)   /* bra $011D90 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D90);
 }
 
-HLE_RANGE(0x011D50, glue_011D50, 10, 0x011D9E)   /* bra $011D9E */
+HLE_RANGE_ATOMIC(0x011D50, glue_011D50, 10, 0x011D9E)   /* bra $011D9E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D9E);
 }
 
-HLE_RANGE(0x011D58, glue_011D58, 10, 0x0120BA)   /* bra $0120BA */
+HLE_RANGE_ATOMIC(0x011D58, glue_011D58, 10, 0x0120BA)   /* bra $0120BA */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0120BA);
 }
 
-HLE_RANGE(0x011D5C, glue_011D5C, 10, 0x011E48)   /* bra $011E48 */
+HLE_RANGE_ATOMIC(0x011D5C, glue_011D5C, 10, 0x011E48)   /* bra $011E48 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011E48);
 }
 
-HLE_RANGE(0x011D60, glue_011D60, 10, 0x011F6E)   /* bra $011F6E */
+HLE_RANGE_ATOMIC(0x011D60, glue_011D60, 10, 0x011F6E)   /* bra $011F6E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011F6E);
 }
 
-HLE_FUNC(0x011D6E, glue_011D6E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011D6E, glue_011D6E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011D76, glue_011D76, 20, HLE_EXIT_SP(0x008782, -4))   /* jsr $008782.l */
+HLE_RANGE_ATOMIC(0x011D76, glue_011D76, 20, HLE_EXIT_SP(0x008782, -4))   /* jsr $008782.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011D7C);
 	hle_jump(ctx, 0x008782);
 }
 
-HLE_RANGE(0x011D7C, glue_011D7C, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x011D7C, glue_011D7C, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_RANGE(0x011D94, glue_011D94, 20, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4.l */
+HLE_RANGE_ATOMIC(0x011D94, glue_011D94, 20, HLE_EXIT_SP(0x0087C4, -4))   /* jsr $0087C4.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x011D9A);
 	hle_jump(ctx, 0x0087C4);
 }
 
-HLE_RANGE(0x011D9A, glue_011D9A, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x011D9A, glue_011D9A, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_RANGE(0x011DFA, glue_011DFA, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x011DFA, glue_011DFA, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_RANGE(0x011EC0, glue_011EC0, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x011EC0, glue_011EC0, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_FUNC(0x011F6C, glue_011F6C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011F6C, glue_011F6C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x011F90, glue_011F90, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x011F90, glue_011F90, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_RANGE(0x011F98, glue_011F98, 18, HLE_EXIT_SP(0x011FA2, -4))   /* jsr $011FA2(pc) */
+HLE_RANGE_ATOMIC(0x011F98, glue_011F98, 18, HLE_EXIT_SP(0x011FA2, -4))   /* jsr $011FA2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x011F9C);
 	hle_jump(ctx, 0x011FA2);
 }
 
-HLE_FUNC(0x011FA0, glue_011FA0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x011FA0, glue_011FA0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012066, glue_012066, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012066, glue_012066, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0120B6, glue_0120B6, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x0120B6, glue_0120B6, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_RANGE(0x012104, glue_012104, 10, 0x011D38)   /* bra $011D38 */
+HLE_RANGE_ATOMIC(0x012104, glue_012104, 10, 0x011D38)   /* bra $011D38 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x011D38);
 }
 
-HLE_RANGE(0x0121E6, glue_0121E6, 18, HLE_EXIT_SP(0x011D12, -4))   /* bsr $011D12 */
+HLE_RANGE_ATOMIC(0x0121E6, glue_0121E6, 18, HLE_EXIT_SP(0x011D12, -4))   /* bsr $011D12 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0121EA);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x012208, glue_012208, 18, HLE_EXIT_SP(0x011D28, -4))   /* bsr $011D28 */
+HLE_RANGE_ATOMIC(0x012208, glue_012208, 18, HLE_EXIT_SP(0x011D28, -4))   /* bsr $011D28 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01220C);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x01220C, glue_01220C, 18, HLE_EXIT_SP(0x011D32, -4))   /* bsr $011D32 */
+HLE_RANGE_ATOMIC(0x01220C, glue_01220C, 18, HLE_EXIT_SP(0x011D32, -4))   /* bsr $011D32 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012210);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x012210, glue_012210, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012210, glue_012210, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012232, glue_012232, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012232, glue_012232, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012278, glue_012278, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012278, glue_012278, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0122C8, glue_0122C8, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0122C8, glue_0122C8, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012314, glue_012314, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012314, glue_012314, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012330, glue_012330, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012330, glue_012330, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012340, glue_012340, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012340, glue_012340, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012350, glue_012350, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012350, glue_012350, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01237C, glue_01237C, 20, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E.l */
+HLE_RANGE_ATOMIC(0x01237C, glue_01237C, 20, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x012382);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_FUNC(0x0123EE, glue_0123EE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0123EE, glue_0123EE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012408, glue_012408, 14)   /* jmp (2,pc,x) */
+HLE_FUNC_ATOMIC(0x012408, glue_012408, 14)   /* jmp (2,pc,x) */
 {
 	hle_insn(ctx, 14);
 	hle_jump(ctx, 0x01240Au + (uint32_t)(int32_t)(2) + (uint32_t)(int32_t)(int16_t)ctx->d[0]);
 }
 
-HLE_RANGE(0x012430, glue_012430, 10, 0x012402)   /* bra $012402 */
+HLE_RANGE_ATOMIC(0x012430, glue_012430, 10, 0x012402)   /* bra $012402 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012402);
 }
 
-HLE_FUNC(0x01243A, glue_01243A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01243A, glue_01243A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01245E, glue_01245E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x01245E, glue_01245E, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012462);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x01246E, glue_01246E, 18, HLE_EXIT_SP(0x013240, -4))   /* bsr $013240 */
+HLE_RANGE_ATOMIC(0x01246E, glue_01246E, 18, HLE_EXIT_SP(0x013240, -4))   /* bsr $013240 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012472);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x01247A, glue_01247A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01247A, glue_01247A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012480, glue_012480, 10, 0x01244C)   /* bra $01244C */
+HLE_RANGE_ATOMIC(0x012480, glue_012480, 10, 0x01244C)   /* bra $01244C */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01244C);
 }
 
-HLE_RANGE(0x01248A, glue_01248A, 10, 0x012472)   /* bra $012472 */
+HLE_RANGE_ATOMIC(0x01248A, glue_01248A, 10, 0x012472)   /* bra $012472 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012472);
 }
 
-HLE_RANGE(0x012490, glue_012490, 10, 0x01257A)   /* bra $01257A */
+HLE_RANGE_ATOMIC(0x012490, glue_012490, 10, 0x01257A)   /* bra $01257A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_RANGE(0x012498, glue_012498, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
+HLE_RANGE_ATOMIC(0x012498, glue_012498, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01249C);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_RANGE(0x01249C, glue_01249C, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
+HLE_RANGE_ATOMIC(0x01249C, glue_01249C, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124A0);
 	hle_jump(ctx, 0x012502);
 }
 
-HLE_RANGE(0x0124B0, glue_0124B0, 12, 0x013CC4)   /* jmp $013CC4.l */
+HLE_RANGE_ATOMIC(0x0124B0, glue_0124B0, 12, 0x013CC4)   /* jmp $013CC4.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x013CC4);
 }
 
-HLE_RANGE(0x0124BC, glue_0124BC, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
+HLE_RANGE_ATOMIC(0x0124BC, glue_0124BC, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124C0);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_RANGE(0x0124C0, glue_0124C0, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
+HLE_RANGE_ATOMIC(0x0124C0, glue_0124C0, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124C4);
 	hle_jump(ctx, 0x012502);
 }
 
-HLE_FUNC(0x0124D0, glue_0124D0, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0124D0, glue_0124D0, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0124D6, glue_0124D6, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
+HLE_RANGE_ATOMIC(0x0124D6, glue_0124D6, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124DA);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_RANGE(0x0124DA, glue_0124DA, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
+HLE_RANGE_ATOMIC(0x0124DA, glue_0124DA, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124DE);
 	hle_jump(ctx, 0x012502);
 }
 
-HLE_FUNC(0x0124EA, glue_0124EA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0124EA, glue_0124EA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0124F0, glue_0124F0, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
+HLE_RANGE_ATOMIC(0x0124F0, glue_0124F0, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124F4);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_RANGE(0x0124F4, glue_0124F4, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
+HLE_RANGE_ATOMIC(0x0124F4, glue_0124F4, 18, HLE_EXIT_SP(0x012502, -4))   /* bsr $012502 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0124F8);
 	hle_jump(ctx, 0x012502);
 }
 
-HLE_RANGE(0x0124FC, glue_0124FC, 12, 0x013CC4)   /* jmp $013CC4.l */
+HLE_RANGE_ATOMIC(0x0124FC, glue_0124FC, 12, 0x013CC4)   /* jmp $013CC4.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x013CC4);
 }
 
-HLE_RANGE(0x012508, glue_012508, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x012508, glue_012508, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01250E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x012526, glue_012526, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x012526, glue_012526, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01252C);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x01253A, glue_01253A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01253A, glue_01253A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012552, glue_012552, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
+HLE_RANGE_ATOMIC(0x012552, glue_012552, 18, HLE_EXIT_SP(0x01257A, -4))   /* bsr $01257A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012556);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_RANGE(0x01255A, glue_01255A, 12, 0x013CC4)   /* jmp $013CC4.l */
+HLE_RANGE_ATOMIC(0x01255A, glue_01255A, 12, 0x013CC4)   /* jmp $013CC4.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x013CC4);
 }
 
-HLE_RANGE(0x012564, glue_012564, 10, 0x01257A)   /* bra $01257A */
+HLE_RANGE_ATOMIC(0x012564, glue_012564, 10, 0x01257A)   /* bra $01257A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01257A);
 }
 
-HLE_FUNC(0x0125B4, glue_0125B4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0125B4, glue_0125B4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01270C, glue_01270C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x01270C, glue_01270C, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012710);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_FUNC(0x012718, glue_012718, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012718, glue_012718, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01271E, glue_01271E, 10, 0x0126C4)   /* bra $0126C4 */
+HLE_RANGE_ATOMIC(0x01271E, glue_01271E, 10, 0x0126C4)   /* bra $0126C4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0126C4);
 }
 
-HLE_RANGE(0x012728, glue_012728, 10, 0x012710)   /* bra $012710 */
+HLE_RANGE_ATOMIC(0x012728, glue_012728, 10, 0x012710)   /* bra $012710 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012710);
 }
 
-HLE_RANGE(0x012780, glue_012780, 18, HLE_EXIT_SP(0x012956, -4))   /* jsr $012956(pc) */
+HLE_RANGE_ATOMIC(0x012780, glue_012780, 18, HLE_EXIT_SP(0x012956, -4))   /* jsr $012956(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012784);
 	hle_jump(ctx, 0x012956);
 }
 
-HLE_RANGE(0x0127A0, glue_0127A0, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x0127A0, glue_0127A0, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0127A6);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x0127AE, glue_0127AE, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x0127AE, glue_0127AE, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0127B4);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x0127C4, glue_0127C4, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x0127C4, glue_0127C4, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0127CA);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x0127D8, glue_0127D8, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x0127D8, glue_0127D8, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0127DE);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x0127F4, glue_0127F4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0127F4, glue_0127F4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0128E4, glue_0128E4, 18, HLE_EXIT_SP(0x013240, -4))   /* bsr $013240 */
+HLE_RANGE_ATOMIC(0x0128E4, glue_0128E4, 18, HLE_EXIT_SP(0x013240, -4))   /* bsr $013240 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0128E8);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x0128FC, glue_0128FC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0128FC, glue_0128FC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012902, glue_012902, 10, 0x012896)   /* bra $012896 */
+HLE_RANGE_ATOMIC(0x012902, glue_012902, 10, 0x012896)   /* bra $012896 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012896);
 }
 
-HLE_RANGE(0x01290C, glue_01290C, 10, 0x0128F4)   /* bra $0128F4 */
+HLE_RANGE_ATOMIC(0x01290C, glue_01290C, 10, 0x0128F4)   /* bra $0128F4 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0128F4);
 }
 
-HLE_FUNC(0x012924, glue_012924, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012924, glue_012924, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x01293C, glue_01293C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01293C, glue_01293C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012A26, glue_012A26, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x012A26, glue_012A26, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A2A);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x012A2E, glue_012A2E, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x012A2E, glue_012A2E, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A32);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x012A36, glue_012A36, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x012A36, glue_012A36, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A3A);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x012A3E, glue_012A3E, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x012A3E, glue_012A3E, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A42);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_FUNC(0x012A44, glue_012A44, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012A44, glue_012A44, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012A46, glue_012A46, 18, HLE_EXIT_SP(0x01296E, -4))   /* jsr $01296E(pc) */
+HLE_RANGE_ATOMIC(0x012A46, glue_012A46, 18, HLE_EXIT_SP(0x01296E, -4))   /* jsr $01296E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A4A);
 	hle_jump(ctx, 0x01296E);
 }
 
-HLE_FUNC(0x012A76, glue_012A76, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012A76, glue_012A76, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012A8A, glue_012A8A, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x012A8A, glue_012A8A, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A8E);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x012A94, glue_012A94, 18, HLE_EXIT_SP(0x012ABE, -4))   /* jsr $012ABE(pc) */
+HLE_RANGE_ATOMIC(0x012A94, glue_012A94, 18, HLE_EXIT_SP(0x012ABE, -4))   /* jsr $012ABE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012A98);
 	hle_jump(ctx, 0x012ABE);
 }
 
-HLE_FUNC(0x012A9A, glue_012A9A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012A9A, glue_012A9A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012AAC, glue_012AAC, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
+HLE_RANGE_ATOMIC(0x012AAC, glue_012AAC, 18, HLE_EXIT_SP(0x012A46, -4))   /* jsr $012A46(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012AB0);
 	hle_jump(ctx, 0x012A46);
 }
 
-HLE_RANGE(0x012AB6, glue_012AB6, 18, HLE_EXIT_SP(0x012ABE, -4))   /* jsr $012ABE(pc) */
+HLE_RANGE_ATOMIC(0x012AB6, glue_012AB6, 18, HLE_EXIT_SP(0x012ABE, -4))   /* jsr $012ABE(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012ABA);
 	hle_jump(ctx, 0x012ABE);
 }
 
-HLE_FUNC(0x012ABC, glue_012ABC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012ABC, glue_012ABC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012AF2, glue_012AF2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012AF2, glue_012AF2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012B16, glue_012B16, 10, 0x012B20)   /* bra $012B20 */
+HLE_RANGE_ATOMIC(0x012B16, glue_012B16, 10, 0x012B20)   /* bra $012B20 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012B20);
 }
 
-HLE_FUNC(0x012B5A, glue_012B5A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012B5A, glue_012B5A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x012BAE, glue_012BAE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012BAE, glue_012BAE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012BFC, glue_012BFC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x012BFC, glue_012BFC, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012C00);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x012C10, glue_012C10, 10, 0x012C96)   /* bra $012C96 */
+HLE_RANGE_ATOMIC(0x012C10, glue_012C10, 10, 0x012C96)   /* bra $012C96 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012C96);
 }
 
-HLE_RANGE(0x012C14, glue_012C14, 10, 0x012C54)   /* bra $012C54 */
+HLE_RANGE_ATOMIC(0x012C14, glue_012C14, 10, 0x012C54)   /* bra $012C54 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012C54);
 }
 
-HLE_RANGE(0x012C92, glue_012C92, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x012C92, glue_012C92, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012C96);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_FUNC(0x012C9E, glue_012C9E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012C9E, glue_012C9E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012CC0, glue_012CC0, 10, 0x012BC2)   /* bra $012BC2 */
+HLE_RANGE_ATOMIC(0x012CC0, glue_012CC0, 10, 0x012BC2)   /* bra $012BC2 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012BC2);
 }
 
-HLE_RANGE(0x012CD4, glue_012CD4, 10, 0x012C54)   /* bra $012C54 */
+HLE_RANGE_ATOMIC(0x012CD4, glue_012CD4, 10, 0x012C54)   /* bra $012C54 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012C54);
 }
 
-HLE_RANGE(0x012D10, glue_012D10, 18, HLE_EXIT_SP(0x01290E, -4))   /* jsr $01290E(pc) */
+HLE_RANGE_ATOMIC(0x012D10, glue_012D10, 18, HLE_EXIT_SP(0x01290E, -4))   /* jsr $01290E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012D14);
 	hle_jump(ctx, 0x01290E);
 }
 
-HLE_RANGE(0x012D94, glue_012D94, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x012D94, glue_012D94, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x012D9A);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x012DA0, glue_012DA0, 10, 0x012DA8)   /* bra $012DA8 */
+HLE_RANGE_ATOMIC(0x012DA0, glue_012DA0, 10, 0x012DA8)   /* bra $012DA8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012DA8);
 }
 
-HLE_RANGE(0x012DCE, glue_012DCE, 20, HLE_EXIT_SP(0x0073A0, -4))   /* jsr $0073A0.l */
+HLE_RANGE_ATOMIC(0x012DCE, glue_012DCE, 20, HLE_EXIT_SP(0x0073A0, -4))   /* jsr $0073A0.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x012DD4);
 	hle_jump(ctx, 0x0073A0);
 }
 
-HLE_FUNC(0x012DDA, glue_012DDA, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x012DDA, glue_012DDA, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x012FC8, glue_012FC8, 18, HLE_EXIT_SP(0x00C48E, -4))   /* jsr $00C48E(pc) */
+HLE_RANGE_ATOMIC(0x012FC8, glue_012FC8, 18, HLE_EXIT_SP(0x00C48E, -4))   /* jsr $00C48E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x012FCC);
 	hle_jump(ctx, 0x00C48E);
 }
 
-HLE_RANGE(0x013006, glue_013006, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x013006, glue_013006, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01300A);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x013016, glue_013016, 18, HLE_EXIT_SP(0x01293E, -4))   /* jsr $01293E(pc) */
+HLE_RANGE_ATOMIC(0x013016, glue_013016, 18, HLE_EXIT_SP(0x01293E, -4))   /* jsr $01293E(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01301A);
 	hle_jump(ctx, 0x01293E);
 }
 
-HLE_RANGE(0x01303E, glue_01303E, 10, 0x012432)   /* bra $012432 */
+HLE_RANGE_ATOMIC(0x01303E, glue_01303E, 10, 0x012432)   /* bra $012432 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012432);
 }
 
-HLE_RANGE(0x013078, glue_013078, 20, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892.l */
+HLE_RANGE_ATOMIC(0x013078, glue_013078, 20, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01307E);
 	hle_jump(ctx, 0x005892);
 }
 
-HLE_RANGE(0x013094, glue_013094, 10, 0x01303E)   /* bra $01303E */
+HLE_RANGE_ATOMIC(0x013094, glue_013094, 10, 0x01303E)   /* bra $01303E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01303E);
 }
 
-HLE_RANGE(0x0130A0, glue_0130A0, 10, 0x01303E)   /* bra $01303E */
+HLE_RANGE_ATOMIC(0x0130A0, glue_0130A0, 10, 0x01303E)   /* bra $01303E */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01303E);
 }
 
-HLE_RANGE(0x0130B8, glue_0130B8, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x0130B8, glue_0130B8, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0130BE);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x0130F4, glue_0130F4, 20, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892.l */
+HLE_RANGE_ATOMIC(0x0130F4, glue_0130F4, 20, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0130FA);
 	hle_jump(ctx, 0x005892);
 }
 
-HLE_RANGE(0x01310C, glue_01310C, 10, 0x012432)   /* bra $012432 */
+HLE_RANGE_ATOMIC(0x01310C, glue_01310C, 10, 0x012432)   /* bra $012432 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012432);
 }
 
-HLE_RANGE(0x013128, glue_013128, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x013128, glue_013128, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01312E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x013168, glue_013168, 20, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892.l */
+HLE_RANGE_ATOMIC(0x013168, glue_013168, 20, HLE_EXIT_SP(0x005892, -4))   /* jsr $005892.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01316E);
 	hle_jump(ctx, 0x005892);
 }
 
-HLE_RANGE(0x013176, glue_013176, 10, 0x013188)   /* bra $013188 */
+HLE_RANGE_ATOMIC(0x013176, glue_013176, 10, 0x013188)   /* bra $013188 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013188);
 }
 
-HLE_RANGE(0x0131A0, glue_0131A0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
+HLE_RANGE_ATOMIC(0x0131A0, glue_0131A0, 18, HLE_EXIT_SP(0x013228, -4))   /* jsr $013228(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0131A4);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x0131A4, glue_0131A4, 10, 0x012432)   /* bra $012432 */
+HLE_RANGE_ATOMIC(0x0131A4, glue_0131A4, 10, 0x012432)   /* bra $012432 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x012432);
 }
 
-HLE_RANGE(0x0131B0, glue_0131B0, 10, 0x013192)   /* bra $013192 */
+HLE_RANGE_ATOMIC(0x0131B0, glue_0131B0, 10, 0x013192)   /* bra $013192 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013192);
 }
 
-HLE_FUNC(0x013208, glue_013208, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013208, glue_013208, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013222, glue_013222, 18, HLE_EXIT_SP(0x011FA2, -4))   /* jsr $011FA2(pc) */
+HLE_RANGE_ATOMIC(0x013222, glue_013222, 18, HLE_EXIT_SP(0x011FA2, -4))   /* jsr $011FA2(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x013226);
 	hle_jump(ctx, 0x011FA2);
 }
 
-HLE_FUNC(0x013226, glue_013226, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013226, glue_013226, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013238, glue_013238, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
+HLE_RANGE_ATOMIC(0x013238, glue_013238, 18, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01323C);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x01323E, glue_01323E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01323E, glue_01323E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x013270, glue_013270, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013270, glue_013270, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013338, glue_013338, 10, 0x0132E8)   /* bra $0132E8 */
+HLE_RANGE_ATOMIC(0x013338, glue_013338, 10, 0x0132E8)   /* bra $0132E8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0132E8);
 }
 
-HLE_FUNC(0x013362, glue_013362, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013362, glue_013362, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013372, glue_013372, 10, 0x013340)   /* bra $013340 */
+HLE_RANGE_ATOMIC(0x013372, glue_013372, 10, 0x013340)   /* bra $013340 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013340);
 }
 
-HLE_FUNC(0x013392, glue_013392, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013392, glue_013392, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0133D4, glue_0133D4, 10, 0x013394)   /* bra $013394 */
+HLE_RANGE_ATOMIC(0x0133D4, glue_0133D4, 10, 0x013394)   /* bra $013394 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013394);
 }
 
-HLE_FUNC(0x0133D6, glue_0133D6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0133D6, glue_0133D6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01347C, glue_01347C, 10, 0x013866)   /* bra $013866 */
+HLE_RANGE_ATOMIC(0x01347C, glue_01347C, 10, 0x013866)   /* bra $013866 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013866);
 }
 
-HLE_RANGE(0x013882, glue_013882, 20, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E.l */
+HLE_RANGE_ATOMIC(0x013882, glue_013882, 20, HLE_EXIT_SP(0x00930E, -4))   /* jsr $00930E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013888);
 	hle_jump(ctx, 0x00930E);
 }
 
-HLE_RANGE(0x013904, glue_013904, 10, 0x01387A)   /* bra $01387A */
+HLE_RANGE_ATOMIC(0x013904, glue_013904, 10, 0x01387A)   /* bra $01387A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01387A);
 }
 
-HLE_FUNC(0x01390C, glue_01390C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01390C, glue_01390C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013C7C, glue_013C7C, 18, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12(pc) */
+HLE_RANGE_ATOMIC(0x013C7C, glue_013C7C, 18, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x013C80);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x013C80, glue_013C80, 20, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752.l */
+HLE_RANGE_ATOMIC(0x013C80, glue_013C80, 20, HLE_EXIT_SP(0x004752, -4))   /* jsr $004752.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013C86);
 	hle_jump(ctx, 0x004752);
 }
 
-HLE_RANGE(0x013C90, glue_013C90, 20, HLE_EXIT_SP(0x004820, -4))   /* jsr $004820.l */
+HLE_RANGE_ATOMIC(0x013C90, glue_013C90, 20, HLE_EXIT_SP(0x004820, -4))   /* jsr $004820.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013C96);
 	hle_jump(ctx, 0x004820);
 }
 
-HLE_RANGE(0x013CA0, glue_013CA0, 20, HLE_EXIT_SP(0x0047CE, -4))   /* jsr $0047CE.l */
+HLE_RANGE_ATOMIC(0x013CA0, glue_013CA0, 20, HLE_EXIT_SP(0x0047CE, -4))   /* jsr $0047CE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013CA6);
 	hle_jump(ctx, 0x0047CE);
 }
 
-HLE_RANGE(0x013CA6, glue_013CA6, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
+HLE_RANGE_ATOMIC(0x013CA6, glue_013CA6, 20, HLE_EXIT_SP(0x013376, -4))   /* jsr $013376.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013CAC);
 	hle_jump(ctx, 0x013376);
 }
 
-HLE_RANGE(0x013CAC, glue_013CAC, 20, HLE_EXIT_SP(0x00B398, -4))   /* jsr $00B398.l */
+HLE_RANGE_ATOMIC(0x013CAC, glue_013CAC, 20, HLE_EXIT_SP(0x00B398, -4))   /* jsr $00B398.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013CB2);
 	hle_jump(ctx, 0x00B398);
 }
 
-HLE_RANGE(0x013CB2, glue_013CB2, 18, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28(pc) */
+HLE_RANGE_ATOMIC(0x013CB2, glue_013CB2, 18, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x013CB6);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x013CB6, glue_013CB6, 18, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32(pc) */
+HLE_RANGE_ATOMIC(0x013CB6, glue_013CB6, 18, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x013CBA);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x013CC2, glue_013CC2, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013CC2, glue_013CC2, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013CF8, glue_013CF8, 20, HLE_EXIT_SP(0x0FBBAE, -4))   /* jsr $0FBBAE.l */
+HLE_RANGE_ATOMIC(0x013CF8, glue_013CF8, 20, HLE_EXIT_SP(0x0FBBAE, -4))   /* jsr $0FBBAE.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013CFE);
 	hle_jump(ctx, 0x0FBBAE);
 }
 
-HLE_FUNC(0x013D02, glue_013D02, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013D02, glue_013D02, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013D24, glue_013D24, 20, HLE_EXIT_SP(0x0FBB96, -4))   /* jsr $0FBB96.l */
+HLE_RANGE_ATOMIC(0x013D24, glue_013D24, 20, HLE_EXIT_SP(0x0FBB96, -4))   /* jsr $0FBB96.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013D2A);
 	hle_jump(ctx, 0x0FBB96);
 }
 
-HLE_FUNC(0x013D2E, glue_013D2E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013D2E, glue_013D2E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x013D90, glue_013D90, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013D90, glue_013D90, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013DA4, glue_013DA4, 10, 0x013D56)   /* bra $013D56 */
+HLE_RANGE_ATOMIC(0x013DA4, glue_013DA4, 10, 0x013D56)   /* bra $013D56 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013D56);
 }
 
-HLE_RANGE(0x013DBA, glue_013DBA, 10, 0x013D56)   /* bra $013D56 */
+HLE_RANGE_ATOMIC(0x013DBA, glue_013DBA, 10, 0x013D56)   /* bra $013D56 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013D56);
 }
 
-HLE_RANGE(0x013DD0, glue_013DD0, 10, 0x013D56)   /* bra $013D56 */
+HLE_RANGE_ATOMIC(0x013DD0, glue_013DD0, 10, 0x013D56)   /* bra $013D56 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013D56);
 }
 
-HLE_FUNC(0x013DD4, glue_013DD4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013DD4, glue_013DD4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013DE8, glue_013DE8, 10, 0x013D56)   /* bra $013D56 */
+HLE_RANGE_ATOMIC(0x013DE8, glue_013DE8, 10, 0x013D56)   /* bra $013D56 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013D56);
 }
 
-HLE_RANGE(0x013DFE, glue_013DFE, 10, 0x013D56)   /* bra $013D56 */
+HLE_RANGE_ATOMIC(0x013DFE, glue_013DFE, 10, 0x013D56)   /* bra $013D56 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013D56);
 }
 
-HLE_FUNC(0x013E02, glue_013E02, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013E02, glue_013E02, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013E2C, glue_013E2C, 10, 0x013D56)   /* bra $013D56 */
+HLE_RANGE_ATOMIC(0x013E2C, glue_013E2C, 10, 0x013D56)   /* bra $013D56 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x013D56);
 }
 
-HLE_FUNC(0x013E5E, glue_013E5E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013E5E, glue_013E5E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013F28, glue_013F28, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x013F28, glue_013F28, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013F2E);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x013F7C, glue_013F7C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x013F7C, glue_013F7C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x013F88, glue_013F88, 20, HLE_EXIT_SP(0x009290, -4))   /* jsr $009290.l */
+HLE_RANGE_ATOMIC(0x013F88, glue_013F88, 20, HLE_EXIT_SP(0x009290, -4))   /* jsr $009290.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x013F8E);
 	hle_jump(ctx, 0x009290);
 }
 
-HLE_RANGE(0x014008, glue_014008, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
+HLE_RANGE_ATOMIC(0x014008, glue_014008, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01400E);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_RANGE(0x014042, glue_014042, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x014042, glue_014042, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014046);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x014048, glue_014048, 18, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA(pc) */
+HLE_RANGE_ATOMIC(0x014048, glue_014048, 18, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01404C);
 	hle_jump(ctx, 0x0122CA);
 }
 
-HLE_RANGE(0x01409E, glue_01409E, 18, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA(pc) */
+HLE_RANGE_ATOMIC(0x01409E, glue_01409E, 18, HLE_EXIT_SP(0x0122CA, -4))   /* jsr $0122CA(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0140A2);
 	hle_jump(ctx, 0x0122CA);
 }
 
-HLE_RANGE(0x0140CA, glue_0140CA, 18, HLE_EXIT_SP(0x014510, -4))   /* jsr $014510(pc) */
+HLE_RANGE_ATOMIC(0x0140CA, glue_0140CA, 18, HLE_EXIT_SP(0x014510, -4))   /* jsr $014510(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0140CE);
 	hle_jump(ctx, 0x014510);
 }
 
-HLE_FUNC(0x014120, glue_014120, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x014120, glue_014120, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x014136, glue_014136, 18, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8(pc) */
+HLE_RANGE_ATOMIC(0x014136, glue_014136, 18, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01413A);
 	hle_jump(ctx, 0x0141B8);
 }
 
-HLE_RANGE(0x014150, glue_014150, 18, HLE_EXIT_SP(0x0141E6, -4))   /* jsr $0141E6(pc) */
+HLE_RANGE_ATOMIC(0x014150, glue_014150, 18, HLE_EXIT_SP(0x0141E6, -4))   /* jsr $0141E6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014154);
 	hle_jump(ctx, 0x0141E6);
 }
 
-HLE_RANGE(0x01415C, glue_01415C, 20, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8.l */
+HLE_RANGE_ATOMIC(0x01415C, glue_01415C, 20, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x014162);
 	hle_jump(ctx, 0x0141B8);
 }
 
-HLE_RANGE(0x01417A, glue_01417A, 18, HLE_EXIT_SP(0x0141E6, -4))   /* jsr $0141E6(pc) */
+HLE_RANGE_ATOMIC(0x01417A, glue_01417A, 18, HLE_EXIT_SP(0x0141E6, -4))   /* jsr $0141E6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01417E);
 	hle_jump(ctx, 0x0141E6);
 }
 
-HLE_RANGE(0x014194, glue_014194, 18, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8(pc) */
+HLE_RANGE_ATOMIC(0x014194, glue_014194, 18, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014198);
 	hle_jump(ctx, 0x0141B8);
 }
 
-HLE_RANGE(0x01419C, glue_01419C, 18, HLE_EXIT_SP(0x0141E6, -4))   /* jsr $0141E6(pc) */
+HLE_RANGE_ATOMIC(0x01419C, glue_01419C, 18, HLE_EXIT_SP(0x0141E6, -4))   /* jsr $0141E6(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0141A0);
 	hle_jump(ctx, 0x0141E6);
 }
 
-HLE_RANGE(0x0141A8, glue_0141A8, 20, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8.l */
+HLE_RANGE_ATOMIC(0x0141A8, glue_0141A8, 20, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0141AE);
 	hle_jump(ctx, 0x0141B8);
 }
 
-HLE_RANGE(0x0141DE, glue_0141DE, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
+HLE_RANGE_ATOMIC(0x0141DE, glue_0141DE, 20, HLE_EXIT_SP(0x007E08, -4))   /* jsr $007E08.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0141E4);
 	hle_jump(ctx, 0x007E08);
 }
 
-HLE_FUNC(0x0141E4, glue_0141E4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0141E4, glue_0141E4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0141F0, glue_0141F0, 18, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8(pc) */
+HLE_RANGE_ATOMIC(0x0141F0, glue_0141F0, 18, HLE_EXIT_SP(0x0141B8, -4))   /* jsr $0141B8(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0141F4);
 	hle_jump(ctx, 0x0141B8);
 }
 
-HLE_FUNC(0x0141F6, glue_0141F6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0141F6, glue_0141F6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01423A, glue_01423A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x01423A, glue_01423A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01423E);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x014268, glue_014268, 20, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240.l */
+HLE_RANGE_ATOMIC(0x014268, glue_014268, 20, HLE_EXIT_SP(0x013240, -4))   /* jsr $013240.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01426E);
 	hle_jump(ctx, 0x013240);
 }
 
-HLE_FUNC(0x014524, glue_014524, 14)   /* jmp (2,pc,x) */
+HLE_FUNC_ATOMIC(0x014524, glue_014524, 14)   /* jmp (2,pc,x) */
 {
 	hle_insn(ctx, 14);
 	hle_jump(ctx, 0x014526u + (uint32_t)(int32_t)(2) + (uint32_t)(int32_t)(int16_t)ctx->d[0]);
 }
 
-HLE_RANGE(0x014568, glue_014568, 20, HLE_EXIT_SP(0x007C7C, -4))   /* jsr $007C7C.l */
+HLE_RANGE_ATOMIC(0x014568, glue_014568, 20, HLE_EXIT_SP(0x007C7C, -4))   /* jsr $007C7C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01456E);
 	hle_jump(ctx, 0x007C7C);
 }
 
-HLE_FUNC(0x01456E, glue_01456E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01456E, glue_01456E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x014574, glue_014574, 20, HLE_EXIT_SP(0x013E30, -4))   /* jsr $013E30.l */
+HLE_RANGE_ATOMIC(0x014574, glue_014574, 20, HLE_EXIT_SP(0x013E30, -4))   /* jsr $013E30.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01457A);
 	hle_jump(ctx, 0x013E30);
 }
 
-HLE_FUNC(0x014580, glue_014580, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x014580, glue_014580, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x014588, glue_014588, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x014588, glue_014588, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01458E, glue_01458E, 20, HLE_EXIT_SP(0x013E30, -4))   /* jsr $013E30.l */
+HLE_RANGE_ATOMIC(0x01458E, glue_01458E, 20, HLE_EXIT_SP(0x013E30, -4))   /* jsr $013E30.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x014594);
 	hle_jump(ctx, 0x013E30);
 }
 
-HLE_RANGE(0x014594, glue_014594, 12, 0x00719A)   /* jmp $00719A.l */
+HLE_RANGE_ATOMIC(0x014594, glue_014594, 12, 0x00719A)   /* jmp $00719A.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00719A);
 }
 
-HLE_RANGE(0x0145C4, glue_0145C4, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
+HLE_RANGE_ATOMIC(0x0145C4, glue_0145C4, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0145C8);
 	hle_jump(ctx, 0x011F58);
 }
 
-HLE_RANGE(0x0145D4, glue_0145D4, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
+HLE_RANGE_ATOMIC(0x0145D4, glue_0145D4, 18, HLE_EXIT_SP(0x011F58, -4))   /* jsr $011F58(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0145D8);
 	hle_jump(ctx, 0x011F58);
 }
 
-HLE_RANGE(0x0145D8, glue_0145D8, 18, HLE_EXIT_SP(0x00D0F8, -4))   /* bsr $00D0F8 */
+HLE_RANGE_ATOMIC(0x0145D8, glue_0145D8, 18, HLE_EXIT_SP(0x00D0F8, -4))   /* bsr $00D0F8 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0145DC);
 	hle_jump(ctx, 0x00D0F8);
 }
 
-HLE_RANGE(0x0145E0, glue_0145E0, 20, HLE_EXIT_SP(0x00A4B2, -4))   /* jsr $00A4B2.l */
+HLE_RANGE_ATOMIC(0x0145E0, glue_0145E0, 20, HLE_EXIT_SP(0x00A4B2, -4))   /* jsr $00A4B2.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0145E6);
 	hle_jump(ctx, 0x00A4B2);
 }
 
-HLE_RANGE(0x0145F6, glue_0145F6, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x0145F6, glue_0145F6, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014628, glue_014628, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x014628, glue_014628, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01462C);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x014640, glue_014640, 18, HLE_EXIT_SP(0x014750, -4))   /* bsr $014750 */
+HLE_RANGE_ATOMIC(0x014640, glue_014640, 18, HLE_EXIT_SP(0x014750, -4))   /* bsr $014750 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014644);
 	hle_jump(ctx, 0x014750);
 }
 
-HLE_RANGE(0x01464E, glue_01464E, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
+HLE_RANGE_ATOMIC(0x01464E, glue_01464E, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014652);
 	hle_jump(ctx, 0x01477C);
 }
 
-HLE_RANGE(0x014666, glue_014666, 18, HLE_EXIT_SP(0x014750, -4))   /* bsr $014750 */
+HLE_RANGE_ATOMIC(0x014666, glue_014666, 18, HLE_EXIT_SP(0x014750, -4))   /* bsr $014750 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01466A);
 	hle_jump(ctx, 0x014750);
 }
 
-HLE_RANGE(0x014674, glue_014674, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
+HLE_RANGE_ATOMIC(0x014674, glue_014674, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014678);
 	hle_jump(ctx, 0x01477C);
 }
 
-HLE_RANGE(0x01468C, glue_01468C, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
+HLE_RANGE_ATOMIC(0x01468C, glue_01468C, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014690);
 	hle_jump(ctx, 0x01477C);
 }
 
-HLE_RANGE(0x0146B4, glue_0146B4, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x0146B4, glue_0146B4, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0146B8);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_RANGE(0x0146C2, glue_0146C2, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
+HLE_RANGE_ATOMIC(0x0146C2, glue_0146C2, 18, HLE_EXIT_SP(0x01477C, -4))   /* bsr $01477C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0146C6);
 	hle_jump(ctx, 0x01477C);
 }
 
-HLE_RANGE(0x0146D0, glue_0146D0, 18, HLE_EXIT_SP(0x014766, -4))   /* bsr $014766 */
+HLE_RANGE_ATOMIC(0x0146D0, glue_0146D0, 18, HLE_EXIT_SP(0x014766, -4))   /* bsr $014766 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0146D4);
 	hle_jump(ctx, 0x014766);
 }
 
-HLE_RANGE(0x0146E8, glue_0146E8, 18, HLE_EXIT_SP(0x01473A, -4))   /* bsr $01473A */
+HLE_RANGE_ATOMIC(0x0146E8, glue_0146E8, 18, HLE_EXIT_SP(0x01473A, -4))   /* bsr $01473A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0146EC);
 	hle_jump(ctx, 0x01473A);
 }
 
-HLE_RANGE(0x0146F6, glue_0146F6, 18, HLE_EXIT_SP(0x014766, -4))   /* bsr $014766 */
+HLE_RANGE_ATOMIC(0x0146F6, glue_0146F6, 18, HLE_EXIT_SP(0x014766, -4))   /* bsr $014766 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0146FA);
 	hle_jump(ctx, 0x014766);
 }
 
-HLE_RANGE(0x01470E, glue_01470E, 18, HLE_EXIT_SP(0x014766, -4))   /* bsr $014766 */
+HLE_RANGE_ATOMIC(0x01470E, glue_01470E, 18, HLE_EXIT_SP(0x014766, -4))   /* bsr $014766 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014712);
 	hle_jump(ctx, 0x014766);
 }
 
-HLE_RANGE(0x01472E, glue_01472E, 10, 0x014732)   /* bra $014732 */
+HLE_RANGE_ATOMIC(0x01472E, glue_01472E, 10, 0x014732)   /* bra $014732 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x014732);
 }
 
-HLE_RANGE(0x014734, glue_014734, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014734, glue_014734, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x01474A, glue_01474A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x01474A, glue_01474A, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01474E);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x01474E, glue_01474E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01474E, glue_01474E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x014760, glue_014760, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x014760, glue_014760, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014764);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x014764, glue_014764, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x014764, glue_014764, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x014776, glue_014776, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x014776, glue_014776, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01477A);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x01477A, glue_01477A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01477A, glue_01477A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01478C, glue_01478C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x01478C, glue_01478C, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014790);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_FUNC(0x014790, glue_014790, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x014790, glue_014790, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01479E, glue_01479E, 18, HLE_EXIT_SP(0x01480A, -4))   /* bsr $01480A */
+HLE_RANGE_ATOMIC(0x01479E, glue_01479E, 18, HLE_EXIT_SP(0x01480A, -4))   /* bsr $01480A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0147A2);
 	hle_jump(ctx, 0x01480A);
 }
 
-HLE_RANGE(0x0147AC, glue_0147AC, 18, HLE_EXIT_SP(0x01480A, -4))   /* bsr $01480A */
+HLE_RANGE_ATOMIC(0x0147AC, glue_0147AC, 18, HLE_EXIT_SP(0x01480A, -4))   /* bsr $01480A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0147B0);
 	hle_jump(ctx, 0x01480A);
 }
 
-HLE_RANGE(0x0147DE, glue_0147DE, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x0147DE, glue_0147DE, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0147E2);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x0147E4, glue_0147E4, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x0147E4, glue_0147E4, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014832, glue_014832, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
+HLE_RANGE_ATOMIC(0x014832, glue_014832, 18, HLE_EXIT_SP(0x012234, -4))   /* jsr $012234(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014836);
 	hle_jump(ctx, 0x012234);
 }
 
-HLE_RANGE(0x014836, glue_014836, 10, 0x014844)   /* bra $014844 */
+HLE_RANGE_ATOMIC(0x014836, glue_014836, 10, 0x014844)   /* bra $014844 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x014844);
 }
 
-HLE_RANGE(0x014840, glue_014840, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
+HLE_RANGE_ATOMIC(0x014840, glue_014840, 18, HLE_EXIT_SP(0x01227A, -4))   /* jsr $01227A(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014844);
 	hle_jump(ctx, 0x01227A);
 }
 
-HLE_FUNC(0x014844, glue_014844, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x014844, glue_014844, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x014866, glue_014866, 20, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6.l */
+HLE_RANGE_ATOMIC(0x014866, glue_014866, 20, HLE_EXIT_SP(0x00B4A6, -4))   /* jsr $00B4A6.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01486C);
 	hle_jump(ctx, 0x00B4A6);
 }
 
-HLE_RANGE(0x01487C, glue_01487C, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x01487C, glue_01487C, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014880);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x0148A8, glue_0148A8, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x0148A8, glue_0148A8, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0148BC, glue_0148BC, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x0148BC, glue_0148BC, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0148C0);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x0148CA, glue_0148CA, 18, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04(pc) */
+HLE_RANGE_ATOMIC(0x0148CA, glue_0148CA, 18, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0148CE);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x0148CE, glue_0148CE, 20, HLE_EXIT_SP(0x009066, -4))   /* jsr $009066.l */
+HLE_RANGE_ATOMIC(0x0148CE, glue_0148CE, 20, HLE_EXIT_SP(0x009066, -4))   /* jsr $009066.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0148D4);
 	hle_jump(ctx, 0x009066);
 }
 
-HLE_RANGE(0x0148E2, glue_0148E2, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x0148E2, glue_0148E2, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0148FE, glue_0148FE, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x0148FE, glue_0148FE, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014902);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x01491E, glue_01491E, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
+HLE_RANGE_ATOMIC(0x01491E, glue_01491E, 18, HLE_EXIT_SP(0x01277C, -4))   /* bsr $01277C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014922);
 	hle_jump(ctx, 0x01277C);
 }
 
-HLE_RANGE(0x014928, glue_014928, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
+HLE_RANGE_ATOMIC(0x014928, glue_014928, 20, HLE_EXIT_SP(0x013D04, -4))   /* jsr $013D04.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01492E);
 	hle_jump(ctx, 0x013D04);
 }
 
-HLE_RANGE(0x01492E, glue_01492E, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
+HLE_RANGE_ATOMIC(0x01492E, glue_01492E, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x014934);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x014934, glue_014934, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
+HLE_RANGE_ATOMIC(0x014934, glue_014934, 20, HLE_EXIT_SP(0x00908A, -4))   /* jsr $00908A.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01493A);
 	hle_jump(ctx, 0x00908A);
 }
 
-HLE_RANGE(0x014948, glue_014948, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014948, glue_014948, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x01495A, glue_01495A, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x01495A, glue_01495A, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x014960);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_RANGE(0x014978, glue_014978, 10, 0x0149AE)   /* bra $0149AE */
+HLE_RANGE_ATOMIC(0x014978, glue_014978, 10, 0x0149AE)   /* bra $0149AE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0149AE);
 }
 
-HLE_RANGE(0x014990, glue_014990, 10, 0x0149AE)   /* bra $0149AE */
+HLE_RANGE_ATOMIC(0x014990, glue_014990, 10, 0x0149AE)   /* bra $0149AE */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0149AE);
 }
 
-HLE_RANGE(0x01499C, glue_01499C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
+HLE_RANGE_ATOMIC(0x01499C, glue_01499C, 20, HLE_EXIT_SP(0x00881C, -4))   /* jsr $00881C.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0149A2);
 	hle_jump(ctx, 0x00881C);
 }
 
-HLE_FUNC(0x0149B2, glue_0149B2, 8)   /* jmp (a1) */
+HLE_FUNC_ATOMIC(0x0149B2, glue_0149B2, 8)   /* jmp (a1) */
 {
 	hle_insn(ctx, 8);
 	hle_jump(ctx, ctx->a[1]);
 }
 
-HLE_RANGE(0x014A42, glue_014A42, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x014A42, glue_014A42, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014A46);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x014A76, glue_014A76, 20, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E.l */
+HLE_RANGE_ATOMIC(0x014A76, glue_014A76, 20, HLE_EXIT_SP(0x00933E, -4))   /* jsr $00933E.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x014A7C);
 	hle_jump(ctx, 0x00933E);
 }
 
-HLE_RANGE(0x014A98, glue_014A98, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014A98, glue_014A98, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014AA8, glue_014AA8, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
+HLE_RANGE_ATOMIC(0x014AA8, glue_014AA8, 18, HLE_EXIT_SP(0x011616, -4))   /* jsr $011616(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014AAC);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x014AAC, glue_014AAC, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014AAC, glue_014AAC, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014AD8, glue_014AD8, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
+HLE_RANGE_ATOMIC(0x014AD8, glue_014AD8, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014ADC);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x014ADC, glue_014ADC, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014ADC, glue_014ADC, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014AE6, glue_014AE6, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
+HLE_RANGE_ATOMIC(0x014AE6, glue_014AE6, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014AEA);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x014AF8, glue_014AF8, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014AF8, glue_014AF8, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014D8C, glue_014D8C, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
+HLE_RANGE_ATOMIC(0x014D8C, glue_014D8C, 18, HLE_EXIT_SP(0x011616, -4))   /* bsr $011616 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014D90);
 	hle_jump(ctx, 0x011616);
 }
 
-HLE_RANGE(0x014D9E, glue_014D9E, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014D9E, glue_014D9E, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014E6C, glue_014E6C, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
+HLE_RANGE_ATOMIC(0x014E6C, glue_014E6C, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014E70);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x014E7E, glue_014E7E, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014E7E, glue_014E7E, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x014E86, glue_014E86, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
+HLE_RANGE_ATOMIC(0x014E86, glue_014E86, 18, HLE_EXIT_SP(0x010666, -4))   /* bsr $010666 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x014E8A);
 	hle_jump(ctx, 0x010666);
 }
 
-HLE_RANGE(0x014E8A, glue_014E8A, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x014E8A, glue_014E8A, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x0151F4, glue_0151F4, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x0151F4, glue_0151F4, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0151F8);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x0151FA, glue_0151FA, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x0151FA, glue_0151FA, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0151FE);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x0151FE, glue_0151FE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x0151FE, glue_0151FE, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x015202);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x015202, glue_015202, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x015202, glue_015202, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x015216, glue_015216, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
+HLE_RANGE_ATOMIC(0x015216, glue_015216, 18, HLE_EXIT_SP(0x012316, -4))   /* jsr $012316(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01521A);
 	hle_jump(ctx, 0x012316);
 }
 
-HLE_RANGE(0x01521C, glue_01521C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
+HLE_RANGE_ATOMIC(0x01521C, glue_01521C, 18, HLE_EXIT_SP(0x012332, -4))   /* jsr $012332(pc) */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x015220);
 	hle_jump(ctx, 0x012332);
 }
 
-HLE_RANGE(0x015220, glue_015220, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
+HLE_RANGE_ATOMIC(0x015220, glue_015220, 18, HLE_EXIT_SP(0x013228, -4))   /* bsr $013228 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x015224);
 	hle_jump(ctx, 0x013228);
 }
 
-HLE_RANGE(0x015224, glue_015224, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x015224, glue_015224, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x01525A, glue_01525A, 18, HLE_EXIT_SP(0x015272, -4))   /* bsr $015272 */
+HLE_RANGE_ATOMIC(0x01525A, glue_01525A, 18, HLE_EXIT_SP(0x015272, -4))   /* bsr $015272 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01525E);
 	hle_jump(ctx, 0x015272);
 }
 
-HLE_RANGE(0x015268, glue_015268, 18, HLE_EXIT_SP(0x015272, -4))   /* bsr $015272 */
+HLE_RANGE_ATOMIC(0x015268, glue_015268, 18, HLE_EXIT_SP(0x015272, -4))   /* bsr $015272 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01526C);
 	hle_jump(ctx, 0x015272);
 }
 
-HLE_RANGE(0x01526C, glue_01526C, 12, 0x00B3BE)   /* jmp $00B3BE.l */
+HLE_RANGE_ATOMIC(0x01526C, glue_01526C, 12, 0x00B3BE)   /* jmp $00B3BE.l */
 {
 	hle_insn(ctx, 12);
 	hle_jump(ctx, 0x00B3BE);
 }
 
-HLE_RANGE(0x015282, glue_015282, 18, HLE_EXIT_SP(0x01528A, -4))   /* bsr $01528A */
+HLE_RANGE_ATOMIC(0x015282, glue_015282, 18, HLE_EXIT_SP(0x01528A, -4))   /* bsr $01528A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x015286);
 	hle_jump(ctx, 0x01528A);
 }
 
-HLE_FUNC(0x015288, glue_015288, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x015288, glue_015288, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01528A, glue_01528A, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
+HLE_RANGE_ATOMIC(0x01528A, glue_01528A, 20, HLE_EXIT_SP(0x011D12, -4))   /* jsr $011D12.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x015290);
 	hle_jump(ctx, 0x011D12);
 }
 
-HLE_RANGE(0x015290, glue_015290, 20, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00.l */
+HLE_RANGE_ATOMIC(0x015290, glue_015290, 20, HLE_EXIT_SP(0x007F00, -4))   /* jsr $007F00.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x015296);
 	hle_jump(ctx, 0x007F00);
 }
 
-HLE_RANGE(0x015296, glue_015296, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
+HLE_RANGE_ATOMIC(0x015296, glue_015296, 20, HLE_EXIT_SP(0x011D28, -4))   /* jsr $011D28.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x01529C);
 	hle_jump(ctx, 0x011D28);
 }
 
-HLE_RANGE(0x01529C, glue_01529C, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
+HLE_RANGE_ATOMIC(0x01529C, glue_01529C, 20, HLE_EXIT_SP(0x011D32, -4))   /* jsr $011D32.l */
 {
 	hle_insn(ctx, 20);
 	push32(ctx, 0x0152A2);
 	hle_jump(ctx, 0x011D32);
 }
 
-HLE_FUNC(0x0152A6, glue_0152A6, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0152A6, glue_0152A6, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01DB54, glue_01DB54, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
+HLE_RANGE_ATOMIC(0x01DB54, glue_01DB54, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DB58);
 	hle_jump(ctx, 0x01DC4E);
 }
 
-HLE_RANGE(0x01DB58, glue_01DB58, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
+HLE_RANGE_ATOMIC(0x01DB58, glue_01DB58, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DB5C);
 	hle_jump(ctx, 0x01DC4E);
 }
 
-HLE_RANGE(0x01DBF0, glue_01DBF0, 18, HLE_EXIT_SP(0x01DC3A, -4))   /* bsr $01DC3A */
+HLE_RANGE_ATOMIC(0x01DBF0, glue_01DBF0, 18, HLE_EXIT_SP(0x01DC3A, -4))   /* bsr $01DC3A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DBF2);
 	hle_jump(ctx, 0x01DC3A);
 }
 
-HLE_RANGE(0x01DBF4, glue_01DBF4, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
+HLE_RANGE_ATOMIC(0x01DBF4, glue_01DBF4, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DBF6);
 	hle_jump(ctx, 0x01DC4E);
 }
 
-HLE_RANGE(0x01DC02, glue_01DC02, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
+HLE_RANGE_ATOMIC(0x01DC02, glue_01DC02, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DC04);
 	hle_jump(ctx, 0x01DC4E);
 }
 
-HLE_RANGE(0x01DC26, glue_01DC26, 18, HLE_EXIT_SP(0x01DC3A, -4))   /* bsr $01DC3A */
+HLE_RANGE_ATOMIC(0x01DC26, glue_01DC26, 18, HLE_EXIT_SP(0x01DC3A, -4))   /* bsr $01DC3A */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DC28);
 	hle_jump(ctx, 0x01DC3A);
 }
 
-HLE_RANGE(0x01DC2A, glue_01DC2A, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
+HLE_RANGE_ATOMIC(0x01DC2A, glue_01DC2A, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DC2C);
 	hle_jump(ctx, 0x01DC4E);
 }
 
-HLE_FUNC(0x01DC38, glue_01DC38, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01DC38, glue_01DC38, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01DC3A, glue_01DC3A, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
+HLE_RANGE_ATOMIC(0x01DC3A, glue_01DC3A, 18, HLE_EXIT_SP(0x01DC4E, -4))   /* bsr $01DC4E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01DC3C);
 	hle_jump(ctx, 0x01DC4E);
 }
 
-HLE_FUNC(0x01DC4C, glue_01DC4C, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01DC4C, glue_01DC4C, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x01DC66, glue_01DC66, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01DC66, glue_01DC66, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01E370, glue_01E370, 18, HLE_EXIT_SP(0x01E3B0, -4))   /* bsr $01E3B0 */
+HLE_RANGE_ATOMIC(0x01E370, glue_01E370, 18, HLE_EXIT_SP(0x01E3B0, -4))   /* bsr $01E3B0 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x01E374);
 	hle_jump(ctx, 0x01E3B0);
 }
 
-HLE_FUNC(0x01E3AE, glue_01E3AE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01E3AE, glue_01E3AE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x01E3FC, glue_01E3FC, 10, 0x01E3E8)   /* bra $01E3E8 */
+HLE_RANGE_ATOMIC(0x01E3FC, glue_01E3FC, 10, 0x01E3E8)   /* bra $01E3E8 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01E3E8);
 }
 
-HLE_RANGE(0x01E412, glue_01E412, 10, 0x01E400)   /* bra $01E400 */
+HLE_RANGE_ATOMIC(0x01E412, glue_01E412, 10, 0x01E400)   /* bra $01E400 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01E400);
 }
 
-HLE_RANGE(0x01E434, glue_01E434, 10, 0x01E416)   /* bra $01E416 */
+HLE_RANGE_ATOMIC(0x01E434, glue_01E434, 10, 0x01E416)   /* bra $01E416 */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01E416);
 }
 
-HLE_RANGE(0x01E43C, glue_01E43C, 10, 0x01E42A)   /* bra $01E42A */
+HLE_RANGE_ATOMIC(0x01E43C, glue_01E43C, 10, 0x01E42A)   /* bra $01E42A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x01E42A);
 }
 
-HLE_FUNC(0x01E440, glue_01E440, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x01E440, glue_01E440, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0FBB1E, glue_0FBB1E, 18, HLE_EXIT_SP(0x0FC350, -4))   /* bsr $0FC350 */
+HLE_RANGE_ATOMIC(0x0FBB1E, glue_0FBB1E, 18, HLE_EXIT_SP(0x0FC350, -4))   /* bsr $0FC350 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FBB22);
 	hle_jump(ctx, 0x0FC350);
 }
 
-HLE_RANGE(0x0FBB2A, glue_0FBB2A, 18, HLE_EXIT_SP(0x0FC408, -4))   /* bsr $0FC408 */
+HLE_RANGE_ATOMIC(0x0FBB2A, glue_0FBB2A, 18, HLE_EXIT_SP(0x0FC408, -4))   /* bsr $0FC408 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FBB2E);
 	hle_jump(ctx, 0x0FC408);
 }
 
-HLE_RANGE(0x0FBB60, glue_0FBB60, 18, HLE_EXIT_SP(0x0FC428, -4))   /* bsr $0FC428 */
+HLE_RANGE_ATOMIC(0x0FBB60, glue_0FBB60, 18, HLE_EXIT_SP(0x0FC428, -4))   /* bsr $0FC428 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FBB64);
 	hle_jump(ctx, 0x0FC428);
 }
 
-HLE_RANGE(0x0FBB64, glue_0FBB64, 18, HLE_EXIT_SP(0x0FC438, -4))   /* bsr $0FC438 */
+HLE_RANGE_ATOMIC(0x0FBB64, glue_0FBB64, 18, HLE_EXIT_SP(0x0FC438, -4))   /* bsr $0FC438 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FBB68);
 	hle_jump(ctx, 0x0FC438);
 }
 
-HLE_FUNC(0x0FBB6A, glue_0FBB6A, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FBB6A, glue_0FBB6A, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0FBBAC, glue_0FBBAC, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FBBAC, glue_0FBBAC, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0FBBBC, glue_0FBBBC, 18, HLE_EXIT_SP(0x0FC0FE, -4))   /* bsr $0FC0FE */
+HLE_RANGE_ATOMIC(0x0FBBBC, glue_0FBBBC, 18, HLE_EXIT_SP(0x0FC0FE, -4))   /* bsr $0FC0FE */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FBBC0);
 	hle_jump(ctx, 0x0FC0FE);
 }
 
-HLE_FUNC(0x0FBBCE, glue_0FBBCE, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FBBCE, glue_0FBBCE, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0FC34E, glue_0FC34E, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FC34E, glue_0FC34E, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0FC350, glue_0FC350, 18, HLE_EXIT_SP(0x0FC32E, -4))   /* bsr $0FC32E */
+HLE_RANGE_ATOMIC(0x0FC350, glue_0FC350, 18, HLE_EXIT_SP(0x0FC32E, -4))   /* bsr $0FC32E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FC352);
 	hle_jump(ctx, 0x0FC32E);
 }
 
-HLE_RANGE(0x0FC376, glue_0FC376, 18, HLE_EXIT_SP(0x0FC3E6, -4))   /* bsr $0FC3E6 */
+HLE_RANGE_ATOMIC(0x0FC376, glue_0FC376, 18, HLE_EXIT_SP(0x0FC3E6, -4))   /* bsr $0FC3E6 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FC37A);
 	hle_jump(ctx, 0x0FC3E6);
 }
 
-HLE_RANGE(0x0FC3A2, glue_0FC3A2, 10, 0x0FC37A)   /* bra $0FC37A */
+HLE_RANGE_ATOMIC(0x0FC3A2, glue_0FC3A2, 10, 0x0FC37A)   /* bra $0FC37A */
 {
 	hle_insn(ctx, 10);
 	hle_jump(ctx, 0x0FC37A);
 }
 
-HLE_RANGE(0x0FC3A4, glue_0FC3A4, 18, HLE_EXIT_SP(0x0FC32E, -4))   /* bsr $0FC32E */
+HLE_RANGE_ATOMIC(0x0FC3A4, glue_0FC3A4, 18, HLE_EXIT_SP(0x0FC32E, -4))   /* bsr $0FC32E */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FC3A8);
 	hle_jump(ctx, 0x0FC32E);
 }
 
-HLE_RANGE(0x0FC3DC, glue_0FC3DC, 18, HLE_EXIT_SP(0x0FC3E6, -4))   /* bsr $0FC3E6 */
+HLE_RANGE_ATOMIC(0x0FC3DC, glue_0FC3DC, 18, HLE_EXIT_SP(0x0FC3E6, -4))   /* bsr $0FC3E6 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FC3DE);
 	hle_jump(ctx, 0x0FC3E6);
 }
 
-HLE_FUNC(0x0FC3E4, glue_0FC3E4, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FC3E4, glue_0FC3E4, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_FUNC(0x0FC406, glue_0FC406, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FC406, glue_0FC406, 16) { hle_insn(ctx, 16); }   /* rts */
 
-HLE_RANGE(0x0FC43C, glue_0FC43C, 18, HLE_EXIT_SP(0x0FC59C, -4))   /* bsr $0FC59C */
+HLE_RANGE_ATOMIC(0x0FC43C, glue_0FC43C, 18, HLE_EXIT_SP(0x0FC59C, -4))   /* bsr $0FC59C */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FC440);
 	hle_jump(ctx, 0x0FC59C);
 }
 
-HLE_RANGE(0x0FC474, glue_0FC474, 18, HLE_EXIT_SP(0x0FC428, -4))   /* bsr $0FC428 */
+HLE_RANGE_ATOMIC(0x0FC474, glue_0FC474, 18, HLE_EXIT_SP(0x0FC428, -4))   /* bsr $0FC428 */
 {
 	hle_insn(ctx, 18);
 	push32(ctx, 0x0FC478);
 	hle_jump(ctx, 0x0FC428);
 }
 
-HLE_FUNC(0x0FC478, glue_0FC478, 16) { hle_insn(ctx, 16); }   /* rts */
+HLE_FUNC_ATOMIC(0x0FC478, glue_0FC478, 16) { hle_insn(ctx, 16); }   /* rts */
 

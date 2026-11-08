@@ -82,7 +82,15 @@ enum { HLE_F_WAIT = 1,
         * list code does) at every point where an interrupt may land: run_def runs it as a coroutine that
         * yields to the frame loop at the CPU's slice end (docs/porting.md, "Yielding") instead of
         * declining or bailing. HLE_F_BAIL functions do the same. */
-       HLE_F_YIELD = 16 };
+       HLE_F_YIELD = 16,
+       /* the function is ONE 68k instruction with an exact charge (glue blocks: jsr, rts, jmp...) that does not
+        * touch SR: an interrupt can only be taken before or after it, never inside, so the layer never declines
+        * it for an interrupt or the frame end */
+       HLE_F_ATOMIC = 32,
+       /* with HLE_F_YIELD: a short block (a few instructions, `cycles` is a true bound of its length): it is a
+        * coroutine only when an event falls inside its declared span, not inside the 60000-cycle window a
+        * whole-function port gets (the blocks run millions of times, a coroutine for each would be slow) */
+       HLE_F_SHORT = 64 };
 
 /* Range exit with a declared stack delta (docs/porting.md, "Ranges that push or pop"):
  * the range leaves at ADDR with SP = entry SP + DELTA. DELTA is even, -256..+254: negative
@@ -180,11 +188,57 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
 
+/* HLE_FUNC_ATOMIC / HLE_RANGE_ATOMIC: with HLE_F_ATOMIC (see above) */
+#define HLE_FUNC_ATOMIC(ADDR, NAME, CYCLES)                                             \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_ATOMIC };                             \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+#define HLE_RANGE_ATOMIC(ADDR, NAME, CYCLES, ...)                                       \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const uint32_t hle_exits_##NAME[] = { __VA_ARGS__, 0 };                      \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__,   \
+	                                        hle_exits_##NAME, 0, HLE_F_ATOMIC };        \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_YS / HLE_RANGE_YS: YIELD | SHORT (see above) */
+#define HLE_FUNC_YS(ADDR, NAME, CYCLES)                                                 \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_YIELD | HLE_F_SHORT };                \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+#define HLE_RANGE_YS(ADDR, NAME, CYCLES, ...)                                           \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const uint32_t hle_exits_##NAME[] = { __VA_ARGS__, 0 };                      \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__,   \
+	                                        hle_exits_##NAME, 0, HLE_F_YIELD | HLE_F_SHORT }; \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+/* one word of per-coroutine state for the code of a yielding block (game/auto2.c: "this block opened the VDP
+ * session"): saved when the call yields, restored when it resumes (0 for a new call) */
+extern int hle_cor_slot;
+
 /* HLE_FUNC_LOWMASK: an HLE_FUNC with HLE_F_LOWMASK (see above) */
 #define HLE_FUNC_LOWMASK(ADDR, NAME, CYCLES)                                            \
 	void NAME(hle_ctx *ctx);                                                            \
 	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
 	                                        HLE_F_LOWMASK };                            \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_LOWMASK_YIELD: a coroutine that also lowers the interrupt mask itself (ReadPad) */
+#define HLE_FUNC_LOWMASK_YIELD(ADDR, NAME, CYCLES)                                      \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_LOWMASK | HLE_F_YIELD };              \
 	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
@@ -281,6 +335,8 @@ void hle_bail_to(hle_ctx *ctx, uint32_t pc);
  * itself; hle_insn/hle_pre/hle_post do it on their own). */
 bool hle_yielding(void);
 void hle_yield_point(void);
+/* a coroutine that lowered the mask in ctx->sr: yield now if an interrupt is pending above it (after the charge) */
+void hle_irq_poll(hle_ctx *ctx);
 /* delayed IRQ of a VDP control port write (docs/porting.md, "Yielding"): hle_irqd_enable() opts the running
  * coroutine in, hle_irqd_note(mclk) tells it what the last instruction cost, hle_irqd_nested() is true while
  * the instruction after the write runs (the original does no refresh check for it) */

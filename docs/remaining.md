@@ -36,6 +36,45 @@ The tables further down are the new measurement.
   lockstep input script (`lockstep.write_script`) from each state; the title run twice (3000 and 6000 frames), the
   cold boot as the script `run 9000`; merged with `port/tools/profmerge.py` over the 16 stderr logs.
 
+## w4_2: no declines, no bails, no nested 68k left in the coroutines
+
+`--hle all` over the 92 gate states (`port/tools/declines.py --frames 1500 <all 92 states>`, `T2_HLE_DECLINES=1`
+`T2_HLE_PROFILE=1`, the lockstep input script; the script now also sums the `bails:` and `nested68k:` lines)
+**no longer hands any call to the 68k**: 0 declines, 0 bails, no `nested68k:` line. Main 16257d8 against this branch:
+
+| | main 16257d8 | now |
+|---|---|---|
+| declines (all functions) | 93437 | 0 |
+| ... VDP-wait / boot blocks (`bt_Auto_01DC56`, `01DC5C`, `bt_Boot_00025C`, `bt_Boot_0FC3B6`, other `bt_*`) | 92652 (frame end) | 0 |
+| ... ReadInputAim / ReadPad1 / BgStreamLayers / GunpowerHud / MissilesRun / MissilesSlot | 324 / 44 / 203 / 42 / 35 / 30 | 0 |
+| ... glue blocks (`glue_*`, one instruction each) | 107 | 0 |
+| bails | MissilesRun 2958, MissilesSlot 2197, GunpowerHud 646, BgStreamLayers 152 | 0 |
+| nested 68k in a coroutine (`nested68k:`) | $009066 (68) | none |
+| real 68k, busy time (profile, 92 states x 1500 frames) | 6.82% | 1.10% (VramClearDma 0.84%, the rest PalFade/CramUpload/sub_010666 called from non-coroutine C) |
+| gates | wide 92/92, five route gates | wide 92/92 (4 x OK), coldboot 9000, ringstate 53768, pause 5738, levelflow 43913, screens 34882 frames identical; lockstep + `--z80` six states; mousetest ALL PASS |
+
+What changed, function by function:
+
+| function | was | now |
+|---|---|---|
+| ReadPad1 $0088A0, ReadPad2 $008908 | `HLE_FUNC`, declined (irqwin 44) | `HLE_FUNC_LOWMASK_YIELD`: SR is `$2700` from the first instruction on and `$2000` after the last move to SR (where `hle_irq_poll` yields when an interrupt is pending); effects before charges |
+| ReadInput $0003DE, ReadInputAim $0004B6 | `LOWMASK`, batch-charged `HLE_SEQ` groups, declined (irqwin 324) | `LOWMASK_YIELD`; every memory access first in its group, split into one charge per instruction |
+| MenacerReadXY $01E442 | `PURE`, charged the prologue and the ring reads in batches | `YIELD`; the ring is read by the instruction that reads it (the gun interrupt writes it), the stores come before their charges |
+| BgStreamLayers $00498A | `BAIL` (bailed 152, declined 203) | `YIELD`, bail logic removed; the `add.w d1,(a6)` read-modify-write and the two stores are split |
+| MissilesRun $0123F0, MissilesSlot $012402 | `BAIL` (bailed 5155, declined 65) | `YIELD`, `MSL_BAIL` removed (the body was already exact) |
+| GunpowerHud $009186 | `BAIL` (646 bails) | `BAIL_YIELD`; the old "one instruction late in 2p_gun_06" was the missing boundary after a callee's `rts` (fixed in `hle_callc`) |
+| TruckMain $00D112, BgStructFree $00BE2E | `HLE_RANGE` (declined, nested 68k inside) | `HLE_RANGE_YIELD` |
+| TruckDamage $00D322 | `#if 0` (generated pieces; "diverged in misc_t3") | on: the divergence was the nested 68k of sub_00D46E, which spawns 16 objects (96000 mclk) inside the coroutine |
+| sub_00BE42, sub_00D444, sub_00D46E, sub_009066, sub_0099C8, sub_00636E, sub_0122CA, sub_0072EA, sub_010D0C | census ranges with a stack delta, so `hle_callc` ran them as nested 68k | whole-function `YIELD` ports (callees4.c, callees5.c, `piecegen.py funcs`) |
+| the $00D444 nested call of TruckDamage | nested 68k | direct C call (above) |
+| `glue_*` (2232 one-instruction blocks) | `HLE_RANGE`/`HLE_FUNC`, declined when a slice end fell inside | `HLE_F_ATOMIC`: an interrupt cannot fall inside one instruction, so no decline; callable by `hle_callc` (rte excepted: it lowers the mask) |
+| boot and VDP-poll census blocks (auto2.c 303, boot.c 49) | `HLE_RANGE`, 92652 frame-end declines | `HLE_RANGE_YS` (YIELD + SHORT): a coroutine only when an event is inside the declared span; the "this block opened the VDP session" flag is `hle_cor_slot`, per coroutine |
+| VBlankInt $000308, ExtInt $00039E | `HLE_RANGE` (1 frame-end decline) | `HLE_RANGE_YS`, effects before charges |
+
+Not done (not in this task): VramClearDma $00800C and DmaFillAt $00807C (`#if 0` in vdpfill.c, the other agent's); PalFade,
+CramUpload and a few helpers are still called as nested 68k by non-coroutine C (0.16% of busy). `T2_NATIVE=1` is unchanged
+(misc_t3 runs 254809 C blocks, 0 instructions on a 68k core; gun_01 / pad_05 / 2p_gun_06 still stop at VramClearDma).
+
 ## Idle (not work)
 
 | addr | name | % of all | note |
@@ -55,10 +94,8 @@ GunpowerHud, the PURE functions with an exact timeline (their interrupt-window d
 ranges of ai_*.c and onhit_*.c, and the 68k helpers they called, ported as C (callees2.c, callees3.c,
 queues2.c, pickup2.c, hudtext2.c, bcdhelp.c): DONE. VramClearDma $00800C, DmaFillAt $00807C, DmaToVram
 $011FA2, DmaToVramSave $011F94 and VdpVScrollWrite $0081B6 are C coroutines too (vdpfill.c): DONE.
-Still declining / bailing: ReadPad1/2, ReadInput, ReadInputAim, MenacerReadXY (I/O sequences that charge in
-batches or are LOWMASK), BgStreamLayers (bails to the 68k around its heavy path), PalFade (nested
-CramUpload), GunpowerHud (bail again: exactness across the frame wrap), TruckDamage (generated pieces), and the
-rest listed by `T2_HLE_DECLINES` in the final report. Merged with the P5/P5b native runner: wide 92/92, route gates
+Declines, bails and nested 68k of these are gone as well (w4_2, above).
+Merged with the P5/P5b native runner: wide 92/92, route gates
 identical, `T2_NATIVE=1` 51 of 92 states fully native (the others stop at VramClearDma).
 
 ## Already in C but declined (10.3% of busy, 2.3% of all; was 9.7% / 2.1% at the previous measurement)

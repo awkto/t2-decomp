@@ -131,7 +131,7 @@ static inline int plain(uint32_t a)
 	return a >= 0xE00000u || a < 0x400000u;
 }
 static uint32_t g_next_pc;   /* the word behind the instruction that makes the I/O access (the prefetch queue) */
-static int g_own_sess;       /* this block started a VDP session (below) */
+#define g_own_sess hle_cor_slot   /* this block started a VDP session (below); per coroutine, see hle.h */
 static void io_pre(hle_ctx *ctx, unsigned op, uint32_t next_pc)
 {
 	hle_pre(ctx);
@@ -613,52 +613,52 @@ L_0FC478:
 	hle_jump(ctx, 0x0FC478); return;  /* 0FC478 rts */
 }
 
-HLE_RANGE(0x000200, bt_Reset, 430, 0x000238, 0x000300) { boot_run(ctx, 0x000200); block_end(); }
-HLE_RANGE(0x000238, bt_Boot_000238, 186, 0x000238, 0x00024A) { boot_run(ctx, 0x000238); block_end(); }
-HLE_RANGE(0x00024A, bt_Boot_00024A, 100, 0x00024A, 0x000250) { boot_run(ctx, 0x00024A); block_end(); }
-HLE_RANGE(0x000250, bt_Boot_000250, 140, 0x000250, 0x00025C) { boot_run(ctx, 0x000250); block_end(); }
-HLE_RANGE(0x00025C, bt_Boot_00025C, 160, 0x00025C, 0x000268) { boot_run(ctx, 0x00025C); block_end(); }
-HLE_RANGE(0x000268, bt_Boot_000268, 134, 0x000268, 0x000272) { boot_run(ctx, 0x000268); block_end(); }
-HLE_RANGE(0x000272, bt_Boot_000272, 108, 0x000272, 0x00027A) { boot_run(ctx, 0x000272); block_end(); }
-HLE_RANGE(0x00027A, bt_Boot_00027A, 276, 0x00027A, 0x00028C) { boot_run(ctx, 0x00027A); block_end(); }
-HLE_RANGE(0x00028C, bt_Boot_00028C, 116, 0x000300) { boot_run(ctx, 0x00028C); block_end(); }
-HLE_RANGE(0x001BE8, bt_ReadPort2Id, 564, 0x001C48) { boot_run(ctx, 0x001BE8); block_end(); }
-HLE_RANGE(0x007406, bt_Boot, 102, 0x00740C) { boot_run(ctx, 0x007406); block_end(); }
-HLE_RANGE(0x007422, bt_Boot_007422, 98, 0x007426) { boot_run(ctx, 0x007422); block_end(); }
-HLE_RANGE(0x007432, bt_Boot_007432, 108, 0x00743E) { boot_run(ctx, 0x007432); block_end(); }
-HLE_RANGE(0x007442, bt_Boot_007442, 164, 0x007454) { boot_run(ctx, 0x007442); block_end(); }
-HLE_RANGE(0x008162, bt_CramClear, 150, 0x00817A) { boot_run(ctx, 0x008162); block_end(); }
-HLE_RANGE(0x00817A, bt_Boot_00817A, 166, 0x00817A, 0x00818A) { boot_run(ctx, 0x00817A); block_end(); }
-HLE_RANGE(0x00818C, bt_VsramClear, 140, 0x0081A2) { boot_run(ctx, 0x00818C); block_end(); }
-HLE_RANGE(0x0081A2, bt_Boot_0081A2, 170, 0x0081A2, 0x0081B4) { boot_run(ctx, 0x0081A2); block_end(); }
-HLE_RANGE(0x0081B6, bt_VdpSetScroll2, 130, 0x0081CA) { boot_run(ctx, 0x0081B6); block_end(); }
-HLE_RANGE(0x0081CA, bt_Boot_0081CA, 160, 0x0081CA, 0x0081D8) { boot_run(ctx, 0x0081CA); block_end(); }
-HLE_RANGE(0x00867A, bt_VdpSetRegs, 180, 0x008692) { boot_run(ctx, 0x00867A); block_end(); }
-HLE_RANGE(0x008692, bt_Boot_008692, 142, 0x008692, 0x00869A) { boot_run(ctx, 0x008692); block_end(); }
-HLE_RANGE(0x0086F6, bt_VramClearAlt, 192, 0x00873A) { boot_run(ctx, 0x0086F6); block_end(); }
-HLE_RANGE(0x00871A, bt_VramClear, 176, 0x00873A) { boot_run(ctx, 0x00871A); block_end(); }
-HLE_RANGE(0x00884C, bt_InitPort1, 222, 0x008874) { boot_run(ctx, 0x00884C); block_end(); }
-HLE_RANGE(0x0FBB00, bt_SndBoot, 102, HLE_EXIT_SP(0x0FBB06, -2)) { boot_run(ctx, 0x0FBB00); block_end(); }
-HLE_RANGE(0x0FBB06, bt_Boot_0FBB06, 110, 0x0FBB16) { boot_run(ctx, 0x0FBB06); block_end(); }
-HLE_RANGE(0x0FBB16, bt_Boot_0FBB16, 132, 0x0FBB16, 0x0FBB1E) { boot_run(ctx, 0x0FBB16); block_end(); }
-HLE_RANGE(0x0FBB22, bt_Boot_0FBB22, 74, 0x0FBB26) { boot_run(ctx, 0x0FBB22); block_end(); }
-HLE_RANGE(0x0FBB26, bt_Boot_0FBB26, 104, 0x0FBB26, 0x0FBB2A) { boot_run(ctx, 0x0FBB26); block_end(); }
-HLE_RANGE(0x0FBB2E, bt_Boot_0FBB2E, 310, 0x0FBB60) { boot_run(ctx, 0x0FBB2E); block_end(); }
-HLE_RANGE(0x0FBB68, bt_Boot_0FBB68, 82, HLE_EXIT_SP(0x0FBB6A, 2)) { boot_run(ctx, 0x0FBB68); block_end(); }
-HLE_RANGE(0x0FC32E, bt_Z80Reset, 122, 0x0FC340) { boot_run(ctx, 0x0FC32E); block_end(); }
-HLE_RANGE(0x0FC340, bt_Boot_0FC340, 138, 0x0FC340, 0x0FC34E) { boot_run(ctx, 0x0FC340); block_end(); }
-HLE_RANGE(0x0FC352, bt_Boot_0FC352, 102, 0x0FC35E) { boot_run(ctx, 0x0FC352); block_end(); }
-HLE_RANGE(0x0FC35E, bt_Boot_0FC35E, 178, 0x0FC35E, 0x0FC370) { boot_run(ctx, 0x0FC35E); block_end(); }
-HLE_RANGE(0x0FC370, bt_Boot_0FC370, 122, 0x0FC370, 0x0FC376) { boot_run(ctx, 0x0FC370); block_end(); }
-HLE_RANGE(0x0FC37A, bt_Boot_0FC37A, 70, 0x0FC37C) { boot_run(ctx, 0x0FC37A); block_end(); }
-HLE_RANGE(0x0FC37C, bt_Boot_0FC37C, 106, 0x0FC37C, 0x0FC388) { boot_run(ctx, 0x0FC37C); block_end(); }
-HLE_RANGE(0x0FC388, bt_Boot_0FC388, 206, 0x0FC37A, 0x0FC388, 0x0FC3A4) { boot_run(ctx, 0x0FC388); block_end(); }
-HLE_RANGE(0x0FC3A8, bt_Boot_0FC3A8, 106, 0x0FC3B6) { boot_run(ctx, 0x0FC3A8); block_end(); }
-HLE_RANGE(0x0FC3B6, bt_Boot_0FC3B6, 226, 0x0FC3B6, 0x0FC3DC) { boot_run(ctx, 0x0FC3B6); block_end(); }
-HLE_RANGE(0x0FC3DE, bt_Boot_0FC3DE, 108, 0x0FC3E4) { boot_run(ctx, 0x0FC3DE); block_end(); }
-HLE_RANGE(0x0FC3E6, bt_Z80Reset2, 122, 0x0FC3F8) { boot_run(ctx, 0x0FC3E6); block_end(); }
-HLE_RANGE(0x0FC3F8, bt_Boot_0FC3F8, 138, 0x0FC3F8, 0x0FC406) { boot_run(ctx, 0x0FC3F8); block_end(); }
-HLE_RANGE(0x0FC438, bt_SndBoot2, 98, 0x0FC43C) { boot_run(ctx, 0x0FC438); block_end(); }
-HLE_RANGE(0x0FC440, bt_Boot_0FC440, 92, 0x0FC44A) { boot_run(ctx, 0x0FC440); block_end(); }
-HLE_RANGE(0x0FC44A, bt_Boot_0FC44A, 162, 0x0FC44A, 0x0FC462) { boot_run(ctx, 0x0FC44A); block_end(); }
-HLE_RANGE(0x0FC462, bt_Boot_0FC462, 170, 0x0FC462, 0x0FC474) { boot_run(ctx, 0x0FC462); block_end(); }
+HLE_RANGE_YS(0x000200, bt_Reset, 430, 0x000238, 0x000300) { boot_run(ctx, 0x000200); block_end(); }
+HLE_RANGE_YS(0x000238, bt_Boot_000238, 186, 0x000238, 0x00024A) { boot_run(ctx, 0x000238); block_end(); }
+HLE_RANGE_YS(0x00024A, bt_Boot_00024A, 100, 0x00024A, 0x000250) { boot_run(ctx, 0x00024A); block_end(); }
+HLE_RANGE_YS(0x000250, bt_Boot_000250, 140, 0x000250, 0x00025C) { boot_run(ctx, 0x000250); block_end(); }
+HLE_RANGE_YS(0x00025C, bt_Boot_00025C, 160, 0x00025C, 0x000268) { boot_run(ctx, 0x00025C); block_end(); }
+HLE_RANGE_YS(0x000268, bt_Boot_000268, 134, 0x000268, 0x000272) { boot_run(ctx, 0x000268); block_end(); }
+HLE_RANGE_YS(0x000272, bt_Boot_000272, 108, 0x000272, 0x00027A) { boot_run(ctx, 0x000272); block_end(); }
+HLE_RANGE_YS(0x00027A, bt_Boot_00027A, 276, 0x00027A, 0x00028C) { boot_run(ctx, 0x00027A); block_end(); }
+HLE_RANGE_YS(0x00028C, bt_Boot_00028C, 116, 0x000300) { boot_run(ctx, 0x00028C); block_end(); }
+HLE_RANGE_YS(0x001BE8, bt_ReadPort2Id, 564, 0x001C48) { boot_run(ctx, 0x001BE8); block_end(); }
+HLE_RANGE_YS(0x007406, bt_Boot, 102, 0x00740C) { boot_run(ctx, 0x007406); block_end(); }
+HLE_RANGE_YS(0x007422, bt_Boot_007422, 98, 0x007426) { boot_run(ctx, 0x007422); block_end(); }
+HLE_RANGE_YS(0x007432, bt_Boot_007432, 108, 0x00743E) { boot_run(ctx, 0x007432); block_end(); }
+HLE_RANGE_YS(0x007442, bt_Boot_007442, 164, 0x007454) { boot_run(ctx, 0x007442); block_end(); }
+HLE_RANGE_YS(0x008162, bt_CramClear, 150, 0x00817A) { boot_run(ctx, 0x008162); block_end(); }
+HLE_RANGE_YS(0x00817A, bt_Boot_00817A, 166, 0x00817A, 0x00818A) { boot_run(ctx, 0x00817A); block_end(); }
+HLE_RANGE_YS(0x00818C, bt_VsramClear, 140, 0x0081A2) { boot_run(ctx, 0x00818C); block_end(); }
+HLE_RANGE_YS(0x0081A2, bt_Boot_0081A2, 170, 0x0081A2, 0x0081B4) { boot_run(ctx, 0x0081A2); block_end(); }
+HLE_RANGE_YS(0x0081B6, bt_VdpSetScroll2, 130, 0x0081CA) { boot_run(ctx, 0x0081B6); block_end(); }
+HLE_RANGE_YS(0x0081CA, bt_Boot_0081CA, 160, 0x0081CA, 0x0081D8) { boot_run(ctx, 0x0081CA); block_end(); }
+HLE_RANGE_YS(0x00867A, bt_VdpSetRegs, 180, 0x008692) { boot_run(ctx, 0x00867A); block_end(); }
+HLE_RANGE_YS(0x008692, bt_Boot_008692, 142, 0x008692, 0x00869A) { boot_run(ctx, 0x008692); block_end(); }
+HLE_RANGE_YS(0x0086F6, bt_VramClearAlt, 192, 0x00873A) { boot_run(ctx, 0x0086F6); block_end(); }
+HLE_RANGE_YS(0x00871A, bt_VramClear, 176, 0x00873A) { boot_run(ctx, 0x00871A); block_end(); }
+HLE_RANGE_YS(0x00884C, bt_InitPort1, 222, 0x008874) { boot_run(ctx, 0x00884C); block_end(); }
+HLE_RANGE_YS(0x0FBB00, bt_SndBoot, 102, HLE_EXIT_SP(0x0FBB06, -2)) { boot_run(ctx, 0x0FBB00); block_end(); }
+HLE_RANGE_YS(0x0FBB06, bt_Boot_0FBB06, 110, 0x0FBB16) { boot_run(ctx, 0x0FBB06); block_end(); }
+HLE_RANGE_YS(0x0FBB16, bt_Boot_0FBB16, 132, 0x0FBB16, 0x0FBB1E) { boot_run(ctx, 0x0FBB16); block_end(); }
+HLE_RANGE_YS(0x0FBB22, bt_Boot_0FBB22, 74, 0x0FBB26) { boot_run(ctx, 0x0FBB22); block_end(); }
+HLE_RANGE_YS(0x0FBB26, bt_Boot_0FBB26, 104, 0x0FBB26, 0x0FBB2A) { boot_run(ctx, 0x0FBB26); block_end(); }
+HLE_RANGE_YS(0x0FBB2E, bt_Boot_0FBB2E, 310, 0x0FBB60) { boot_run(ctx, 0x0FBB2E); block_end(); }
+HLE_RANGE_YS(0x0FBB68, bt_Boot_0FBB68, 82, HLE_EXIT_SP(0x0FBB6A, 2)) { boot_run(ctx, 0x0FBB68); block_end(); }
+HLE_RANGE_YS(0x0FC32E, bt_Z80Reset, 122, 0x0FC340) { boot_run(ctx, 0x0FC32E); block_end(); }
+HLE_RANGE_YS(0x0FC340, bt_Boot_0FC340, 138, 0x0FC340, 0x0FC34E) { boot_run(ctx, 0x0FC340); block_end(); }
+HLE_RANGE_YS(0x0FC352, bt_Boot_0FC352, 102, 0x0FC35E) { boot_run(ctx, 0x0FC352); block_end(); }
+HLE_RANGE_YS(0x0FC35E, bt_Boot_0FC35E, 178, 0x0FC35E, 0x0FC370) { boot_run(ctx, 0x0FC35E); block_end(); }
+HLE_RANGE_YS(0x0FC370, bt_Boot_0FC370, 122, 0x0FC370, 0x0FC376) { boot_run(ctx, 0x0FC370); block_end(); }
+HLE_RANGE_YS(0x0FC37A, bt_Boot_0FC37A, 70, 0x0FC37C) { boot_run(ctx, 0x0FC37A); block_end(); }
+HLE_RANGE_YS(0x0FC37C, bt_Boot_0FC37C, 106, 0x0FC37C, 0x0FC388) { boot_run(ctx, 0x0FC37C); block_end(); }
+HLE_RANGE_YS(0x0FC388, bt_Boot_0FC388, 206, 0x0FC37A, 0x0FC388, 0x0FC3A4) { boot_run(ctx, 0x0FC388); block_end(); }
+HLE_RANGE_YS(0x0FC3A8, bt_Boot_0FC3A8, 106, 0x0FC3B6) { boot_run(ctx, 0x0FC3A8); block_end(); }
+HLE_RANGE_YS(0x0FC3B6, bt_Boot_0FC3B6, 226, 0x0FC3B6, 0x0FC3DC) { boot_run(ctx, 0x0FC3B6); block_end(); }
+HLE_RANGE_YS(0x0FC3DE, bt_Boot_0FC3DE, 108, 0x0FC3E4) { boot_run(ctx, 0x0FC3DE); block_end(); }
+HLE_RANGE_YS(0x0FC3E6, bt_Z80Reset2, 122, 0x0FC3F8) { boot_run(ctx, 0x0FC3E6); block_end(); }
+HLE_RANGE_YS(0x0FC3F8, bt_Boot_0FC3F8, 138, 0x0FC3F8, 0x0FC406) { boot_run(ctx, 0x0FC3F8); block_end(); }
+HLE_RANGE_YS(0x0FC438, bt_SndBoot2, 98, 0x0FC43C) { boot_run(ctx, 0x0FC438); block_end(); }
+HLE_RANGE_YS(0x0FC440, bt_Boot_0FC440, 92, 0x0FC44A) { boot_run(ctx, 0x0FC440); block_end(); }
+HLE_RANGE_YS(0x0FC44A, bt_Boot_0FC44A, 162, 0x0FC44A, 0x0FC462) { boot_run(ctx, 0x0FC44A); block_end(); }
+HLE_RANGE_YS(0x0FC462, bt_Boot_0FC462, 170, 0x0FC462, 0x0FC474) { boot_run(ctx, 0x0FC462); block_end(); }

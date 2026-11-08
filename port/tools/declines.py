@@ -12,6 +12,8 @@ ap.add_argument("states", nargs="*", default=L.DEFAULT_STATES + ["pad_05", "gun_
 a = ap.parse_args()
 env = dict(os.environ, T2_HLE_DECLINES="1", T2_HLE_PROFILE="1")
 tab = collections.OrderedDict()
+bails = collections.Counter()
+nested = collections.Counter()
 logs = []
 tmp = tempfile.mkdtemp()
 for st in a.states:
@@ -26,6 +28,10 @@ for st in a.states:
     logs.append(log)
     for line in r.stderr.decode(errors="replace").splitlines():
         p = line.split()
+        if len(p) == 3 and p[0] == "bails:":
+            bails[p[1]] += int(p[2])
+        elif len(p) == 4 and p[0] == "nested68k:":
+            nested[p[1] + " " + p[2]] += int(p[3])
         if len(p) == 12 and p[0] == "declines:" and p[1] != "function":
             e = tab.setdefault(p[1], [0] * 9)
             for i in range(9):
@@ -33,4 +39,6 @@ for st in a.states:
 print("%-20s %8s %8s %8s | %6s %6s %6s %6s %6s %6s" % ("function", "frameend", "irqwin", "pendirq", "dma", "vint", "vclr", "hint", "gun", "other"))
 for k, e in sorted(tab.items(), key=lambda kv: -sum(kv[1])):
     print("%-20s %8d %8d %8d | %6d %6d %6d %6d %6d %6d" % (k, *e[:3], *e[3:]))
+print("bails (a bail hands the stretch around an event to the 68k): " + (", ".join("%s %d" % kv for kv in bails.most_common()) or "none"))
+print("nested 68k (a C coroutine calls code that is not C): " + (", ".join("%s %d" % kv for kv in nested.most_common()) or "none"))
 subprocess.run([sys.executable, "-I", os.path.join(L.ROOT, "port/tools/profmerge.py"), "-n", "12"] + logs)

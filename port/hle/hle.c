@@ -6,7 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/fiber.h>   /* the browser build: Asyncify fibers instead of ucontext (docs/web.md) */
+#define COR_ASYNC_STACK (96 * 1024)
+#else
 #include <ucontext.h>
+#endif
 #include <signal.h>
 #include <unistd.h>
 
@@ -89,7 +94,8 @@ void hle_register_def(const hle_def *def)
 		/* a whole-function port that yields (HLE_F_YIELD) supersedes a piece of the same entry: the census
 		 * generators (auto1/auto2/glue) cover the addresses that were still 68k, the yielding port covers them
 		 * exactly at interrupts; two of the same kind is a mistake */
-		bool ny = (def->flags & HLE_F_YIELD) != 0, ey = (e->def.flags & HLE_F_YIELD) != 0;
+		bool ny = (def->flags & HLE_F_YIELD) && !(def->flags & HLE_F_SHORT);
+		bool ey = (e->def.flags & HLE_F_YIELD) && !(e->def.flags & HLE_F_SHORT);   /* a short block is a census piece */
 		if (ny != ey) {
 			if (ny)
 				e->def = *def;
@@ -662,7 +668,16 @@ struct rs {
 	int clock0;
 	int y_nest;
 	bool y_sess, y_timed;
+	int user;                  /* hle_cor_slot while suspended */
+	bool sr_pend;              /* the yield lowered the mask with an interrupt pending: applied at the resume hook */
+	uint16_t sr_val;
+	int sr_back;               /* mclk of the move to SR (the core takes the interrupt before it adds them) */
+#ifdef __EMSCRIPTEN__
+	emscripten_fiber_t uc, back;
+	char *astack_uc, *astack_back;
+#else
 	ucontext_t uc, back;
+#endif
 	char *stack;
 };
 static rs g_pool[COR_MAX];
@@ -672,6 +687,7 @@ static rs *g_cor;              /* the coroutine whose function is running now */
 static int g_cor_block;        /* >0 inside hle_call68k / hle_run68k_until made by the function */
 static bool g_cor_on = true;   /* T2_HLE_NOCOR=1: decline / bail as before */
 unsigned long g_yields;
+int hle_cor_slot;
 
 static char g_nocor_file[1024];  /* T2_HLE_NOCOR_FILE=a.c,b.c (debugging) */
 static char g_nocor_fn[1024];  /* T2_HLE_NOCOR_FN=name,name: these decline / bail as before (debugging) */
@@ -744,6 +760,11 @@ static void lh_hook(int type, int width, unsigned addr, unsigned value)
 		lh_emit(gx_m68k_cycles());
 }
 
+#ifdef __EMSCRIPTEN__
+#define COR_SWAP(from, to) emscripten_fiber_swap((from), (to))
+#else
+#define COR_SWAP(from, to) swapcontext((from), (to))
+#endif
 static void cor_do_yield(rs *s)
 {
 	tl_flush(&s->c);
@@ -751,12 +772,25 @@ static void cor_do_yield(rs *s)
 	dstat(s->def, 8);
 	if (getenv("T2_HLE_YLOG"))
 		fprintf(stderr, "yield %s clock %d end %d sp %06X frame %ld\n", s->def->name, gx_m68k_cycles(), gx_m68k_cycle_end(), s->c.a[7], g_frames_run);
-	swapcontext(&s->uc, &s->back);
+	COR_SWAP(&s->uc, &s->back);
 }
 static void cor_check(hle_ctx *c)
 {
 	if (g_cor && c == &g_cor->c && !g_cor_block && gx_m68k_cycles() + (int)c->tl >= gx_m68k_cycle_end())
 		cor_do_yield(g_cor);
+}
+/* call after a coroutine has lowered the mask in ctx->sr (and charged that instruction): an interrupt that is
+ * pending above the new mask is taken at this boundary, as the core does after a move to SR */
+static int g_irq_back;
+void hle_irq_poll(hle_ctx *c)
+{
+	if (g_cor && c == &g_cor->c && !g_cor_block && !c->dry) {
+		int lvl = gx_m68k_pending_irq();
+		if (lvl && lvl > ((c->sr >> 8) & 7)) {
+			g_irq_back = (int)c->tl_last;
+			cor_do_yield(g_cor);
+		}
+	}
 }
 /* The delayed IRQ of a VDP control port write (m68k_set_irq_delay, gpgx-irqdelay.patch): a write that enables
  * the frame/line interrupt while one is pending makes the original core run the NEXT instruction and then take the
@@ -802,7 +836,7 @@ void hle_yield_point(void)
 		cor_do_yield(g_cor);
 }
 
-static void cor_entry(void)
+static void cor_entry(void *arg_unused)
 {
 	rs *s = g_cor;
 	s->def->fn(&s->c);
@@ -811,21 +845,30 @@ static void cor_entry(void)
 		fprintf(stderr, "hle: %s ended with a delayed IRQ armed (state %d)\n", s->def->name, g_irqd);
 		g_irqd = 0;
 	}
-	swapcontext(&s->uc, &s->back);
+	COR_SWAP(&s->uc, &s->back);
 }
 static void cor_run(rs *s, bool start)
 {
 	if (start) {
 		if (!s->stack)
 			s->stack = malloc(COR_STACK);
+#ifdef __EMSCRIPTEN__
+		if (!s->astack_uc) {
+			s->astack_uc = malloc(COR_ASYNC_STACK);
+			s->astack_back = malloc(COR_ASYNC_STACK);
+			emscripten_fiber_init_from_current_context(&s->back, s->astack_back, COR_ASYNC_STACK);
+		}
+		emscripten_fiber_init(&s->uc, cor_entry, NULL, s->stack, COR_STACK, s->astack_uc, COR_ASYNC_STACK);
+#else
 		getcontext(&s->uc);
 		s->uc.uc_stack.ss_sp = s->stack;
 		s->uc.uc_stack.ss_size = COR_STACK;
 		s->uc.uc_link = NULL;
-		makecontext(&s->uc, cor_entry, 0);
+		makecontext(&s->uc, (void (*)(void))cor_entry, 0);
+#endif
 	}
 	g_cor = s;
-	swapcontext(&s->back, &s->uc);
+	COR_SWAP(&s->back, &s->uc);
 	g_cor = NULL;
 }
 
@@ -868,7 +911,8 @@ static int run_def(const hle_def *def, entry *e)
 	/* the native runner has no declines, but an exact-clock session function (cycles 0: VDP code, the DMA
 	 * routines that poll a busy flag the frame loop clears) still has to hand the machine to the frame loop */
 	bool nat_cor = native_active && cor_ok_early(def) && nat_cor_file(def) && top && !hle_post_access && !def_is_orig(def);
-	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt;
+	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt &&
+	             !(def->flags & HLE_F_ATOMIC);   /* one instruction: no interrupt can fall inside */
 	const char *fbase = strrchr(def->file ? def->file : "", '/');
 	fbase = fbase ? fbase + 1 : (def->file ? def->file : "");
 	bool cor_ok = g_cor_on && !name_listed(g_nocor_fn, def->name) && !name_listed(g_nocor_file, fbase);
@@ -921,10 +965,20 @@ static int run_def(const hle_def *def, entry *e)
 			/* the declared cycles of a generated whole-function port (piecegen: 4000) is not a bound: a loop in
 			 * it (SpawnRowB's ObjAlloc spawns) can run across the frame end. Judge by a generous span, so an
 			 * event that falls inside makes it a coroutine. */
-			if (span < YIELD_SPAN)
+			if (def->flags & HLE_F_SHORT)
+				span += 400;                /* a Z80 stall or two at the slice ends inside the block */
+			else if (span < YIELD_SPAN)
 				span = YIELD_SPAN;
-			if (irq_mask < 6)
+			if (lowmask) {
+				/* the function lowers the mask itself (ReadPad: $2700 ... $2000): what is pending or raised
+				 * after that point is taken inside it, whatever SR it was entered with */
+				irq_mask = 0;
 				window = span;
+				if (gx_m68k_pending_irq())
+					cor = true;
+			} else if (irq_mask < 6) {
+				window = span;
+			}
 		} else if (irq_mask < 6 || lowmask) {
 			window = span;
 			if (lowmask) {
@@ -1063,6 +1117,8 @@ static int rs_finish(rs *s)
 		 * charge, the session (if the function has one) ends and is re-opened on resume */
 		int lvl = gx_m68k_pending_irq();
 		s->y_nest = g_nest;
+		s->user = hle_cor_slot;
+		hle_cor_slot = 0;
 		s->y_sess = g_sess;
 		s->y_timed = g_sess_timed;
 		long nested = sess_end(c.tl_used);
@@ -1076,7 +1132,19 @@ static int rs_finish(rs *s)
 		c.cycles = 0;
 		uint32_t pc_keep = c.pc;
 		c.pc = YIELD_PC;
+		/* A mask lowered below a pending interrupt (hle_irq_poll: the move to SR of ReadPad) must be taken on the
+		 * CPU clock after this call's charge is added, as the core does it after the instruction, not here (the
+		 * session was rewound just now): the resume hook applies the SR. */
+		uint16_t want = c.sr, cur = (uint16_t)m68k_hle_get_sr();
+		s->sr_pend = false;
+		if ((want & 0x0700) < (cur & 0x0700) && lvl > ((want >> 8) & 7)) {
+			s->sr_pend = true;
+			s->sr_val = want;
+			s->sr_back = g_irq_back;
+			c.sr = (uint16_t)((want & 0x00FF) | (cur & 0xFF00));
+		}
 		ctx_store(cp);
+		c.sr = want;
 		c.pc = pc_keep;
 		g_susp[g_nsusp++] = s;
 		return (int)total;
@@ -1160,7 +1228,20 @@ static int resume_cor(void)
 		fprintf(stderr, "hle: YIELD_PC reached with no suspended function\n");
 		abort();
 	}
-	rs *s = g_susp[--g_nsusp];
+	rs *s = g_susp[g_nsusp - 1];
+	if (s->sr_pend) {
+		s->sr_pend = false;
+		uint32_t pc0 = gx_m68k_pc();
+		/* the core takes the interrupt inside the move to SR, before it adds that instruction's cycles, and the
+		 * interrupt latency depends on the clock then (m68ki_cycle_interrupts[(cycles/MUL) % 10]) */
+		gx_m68k_set_cycles(gx_m68k_cycles() - s->sr_back);
+		m68k_hle_set_sr(s->sr_val);
+		gx_m68k_set_cycles(gx_m68k_cycles() + s->sr_back);
+		if (gx_m68k_pc() != pc0)       /* the interrupt was taken: its handler returns to YIELD_PC */
+			return 0;
+	}
+	g_nsusp--;
+	hle_cor_slot = s->user;
 	if (m68k_hle_irq_extra) {            /* the delayed IRQ was masked: the held-back instruction is charged now */
 		gx_m68k_set_cycles(gx_m68k_cycles() + m68k_hle_irq_extra);
 		m68k_hle_irq_extra = 0;
@@ -1195,13 +1276,14 @@ static int g_callc_nfb;
  * plain function does)? */
 static bool callc_exact(entry *e, hle_ctx *c)
 {
-	if (!e || !e->enabled || (e->def.flags & (HLE_F_WAIT | HLE_F_LOWMASK)))
+	if (!e || !e->enabled || (e->def.flags & HLE_F_WAIT) ||
+	    ((e->def.flags & HLE_F_LOWMASK) && !(e->def.flags & HLE_F_YIELD)))
 		return false;
 	if (e->def.exits)                  /* a range: only if every exit leaves with the stack as it was */
 		for (const uint32_t *x = e->def.exits; *x; x++)
 			if (hle_exit_sp_delta(*x) != 0)
 				return false;
-	if (e->def.flags & HLE_F_YIELD)
+	if (e->def.flags & (HLE_F_YIELD | HLE_F_ATOMIC))   /* an atomic block is one instruction with an exact charge */
 		return true;
 	if (e->def.flags & HLE_F_PURE) {   /* exact when the dry run keeps a timeline */
 		hle_ctx d = *c;
@@ -1238,6 +1320,9 @@ void hle_callc(hle_ctx *c, uint32_t addr)
 				fn(c);
 				if (!c->jumped) {              /* the rts */
 					c->a[7] += 4;
+					/* a callee that advances the real clock itself (the VDP printers) checks at the start of
+					 * its instructions only: the boundary after its rts is the caller's to take */
+					hle_yield_point();
 					return;
 				}
 				uint32_t t = c->pc;            /* a tail jump */

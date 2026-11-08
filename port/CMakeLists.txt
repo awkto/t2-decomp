@@ -35,7 +35,7 @@ if(EMSCRIPTEN)
   set_target_properties(t2_web PROPERTIES OUTPUT_NAME t2 SUFFIX ".js")
   target_link_options(t2_web PRIVATE ${WEB_SDL} -O3
     -sENVIRONMENT=web -sINVOKE_RUN=0 -sEXIT_RUNTIME=0
-    -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB -sSTACK_SIZE=1MB
+    -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB -sSTACK_SIZE=1MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=98304
     -sFORCE_FILESYSTEM=1 -lidbfs.js
     "-sEXPORTED_FUNCTIONS=_main,_web_rom_check,_web_frame_count,_web_ram16,_web_gun_state,_web_set_option,_web_screen,_web_hle_count"
     "-sEXPORTED_RUNTIME_METHODS=FS,IDBFS,callMain,ccall,UTF8ToString,addRunDependency,removeRunDependency")
