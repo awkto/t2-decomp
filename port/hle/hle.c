@@ -25,7 +25,7 @@ extern void m68k_hle_set_ccr(unsigned int v);
 extern void m68k_hle_set_sr(unsigned int v);
 extern int m68k_step_one(void);
 
-#define MAX_DEFS 4096
+#define MAX_DEFS 8192   /* glue.c and auto1.c (t2-decomp#11) brought the registry past 4096 */
 #define SENTINEL_RET 0x0000F0u   /* return address used for hle_call68k (never executed) */
 #define STALL_PC     0x0000F4u   /* "burn the rest of a long C function's cost" trap (#31) */
 #define STALL_SLICE  256       /* 68k cycles burnt per STALL_PC visit. Must stay below a scanline (~488 68k cycles): a
@@ -84,8 +84,10 @@ void hle_register_def(const hle_def *def)
 		fprintf(stderr, "hle: $%06X registered twice (%s, %s)\n", def->addr, e->def.name, def->name);
 		abort();
 	}
-	if (g_n == MAX_DEFS)
+	if (g_n == MAX_DEFS) {
+		fprintf(stderr, "hle: registry full (%d definitions)\n", MAX_DEFS);
 		abort();
+	}
 	e = &g_ent[g_n++];
 	unsigned h = hash_slot(def->addr);
 	while (g_hash[h])
@@ -598,8 +600,10 @@ void hle_bail_to(hle_ctx *c, uint32_t pc)
 	c->bail = 1;
 }
 
+static const hle_def *g_last_entered;
 static int run_def(const hle_def *def, entry *e)
 {
+	g_last_entered = def;
 	hle_ctx c;
 	const hle_def *outer_def = g_cur_def;
 	bool top = g_nest == 0 && !g_top;
@@ -1074,8 +1078,23 @@ static void declines_print(void)
 	}
 }
 
+#include <signal.h>
+#include <unistd.h>
+/* T2_HLE_WATCHDOG=N: after N seconds say which C block was running and stop (a piece that never returns) */
+static void watchdog(int sig)
+{
+	(void)sig;
+	fprintf(stderr, "hle watchdog: last entered %s ($%06X); in %s ($%06X), pc $%06X\n", g_last_entered ? g_last_entered->name : "-", g_last_entered ? g_last_entered->addr : 0, g_cur_def ? g_cur_def->name : "(68k)",
+	        g_cur_def ? g_cur_def->addr : 0, gx_m68k_pc());
+	_exit(3);
+}
+
 void hle_install(void)
 {
+	if (getenv("T2_HLE_WATCHDOG")) {
+		signal(SIGALRM, watchdog);
+		alarm((unsigned)atoi(getenv("T2_HLE_WATCHDOG")));
+	}
 	const char *o = getenv("T2_HLE_ORIG");
 	if (o)
 		snprintf(g_orig, sizeof g_orig, "%s", o);

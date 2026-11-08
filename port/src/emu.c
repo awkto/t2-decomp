@@ -507,7 +507,22 @@ bool emu_state_load_file(const char *path)
 		fclose(f);
 	}
 	free(buf);
+	if (ok && native_active && getenv("T2_NATIVE_SETTLE"))
+		native_settle();
 	return ok;
+}
+
+/* T2_NATIVE_SETTLE=1 (a development aid for measuring routes from savestates): a state made by the 68k
+ * usually stops in the middle of a 68k function, where the native runner has no block. Run the emulated CPU
+ * (with the C replacements on, as the census does) frame by frame until the PC is at a C block and no nested
+ * call is in progress, then hand over to the native runner. The game advances a few frames meanwhile. */
+void native_settle(void)
+{
+	native_active = 0;
+	for (int f = 0; f < 12 && !(hle_nest_depth() == 0 && hle_pc_replaced(gx_m68k_pc())); f++)
+		emu_run_frame();
+	native_active = 1;
+	fprintf(stderr, "native: settled at $%06X\n", gx_m68k_pc());
 }
 
 /* ------------------------------------------------------------------ dumps */

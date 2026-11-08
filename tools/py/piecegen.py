@@ -55,7 +55,17 @@ class Insn:
         self.addr, self.words, self.text, self.sym = addr, words, text, []
 
 
+_DIS = None
+
+
 def disassemble_r():
+    global _DIS
+    if _DIS is None:
+        _DIS = _disassemble_r()
+    return _DIS
+
+
+def _disassemble_r():
     root = cc.ROOT
     with tempfile.TemporaryDirectory() as td:
         with open(os.path.join(td, "baserom.md"), "wb") as f:
@@ -385,6 +395,16 @@ class Gen:
             bitexpr = ("%d" % (s[1] & 7)) if s[0] == "i" else "(ctx->d[%d] & 7)" % s[1]
             act = {"btst": "", "bset": "st8(eaD, v | m);", "bclr": "st8(eaD, v & ~m);", "bchg": "st8(eaD, v ^ m);"}[mn]
             return line("{ %s unsigned b = %s; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z); %s } hle_insn(ctx, %d);" % (pre, bitexpr, act, base))
+        if mn == "nop":
+            return line("hle_insn(ctx, %d);" % base)
+        if mn == "exg":
+            x, y = parse_op(args[0]), parse_op(args[1])
+            nx = ("ctx->d[%d]" if x[0] == "d" else "ctx->a[%d]") % x[1]
+            ny = ("ctx->d[%d]" if y[0] == "d" else "ctx->a[%d]") % y[1]
+            return line("{ uint32_t t_ = %s; %s = %s; %s = t_; } hle_insn(ctx, %d);" % (nx, nx, ny, ny, base))
+        if mn == "swap":
+            r = parse_op(args[0])[1]
+            return line("{ ctx->d[%d] = (ctx->d[%d] << 16) | (ctx->d[%d] >> 16); cc_logic32(ctx, ctx->d[%d]); } hle_insn(ctx, %d);" % (r, r, r, r, base))
         m = re.fullmatch(r"ext([wl])", mn)
         if m:
             r = parse_op(args[0])[1]
@@ -555,9 +575,8 @@ static inline void st32(uint32_t a, uint32_t v) { RAM32_W(a, v); }
 """
 
 
-def main():
-    name = sys.argv[1]
-    spec = SPECS[name]
+def gen_spec(spec, runname="pc_run"):
+    """-> (text of the pieces, instruction count, set of exit instruction addresses); raises on anything unsupported"""
     g = Gen(spec)
     entries, reached = g.walk()
     labels = set(entries)
@@ -571,22 +590,128 @@ def main():
     for e in list(entries):
         if g.kind(g.ins[e])[0] == "stop":
             del entries[e]
-    out = [HEADER % dict(title=spec["title"])]
-    out.append("static void pc_run(hle_ctx *ctx, uint32_t pc)\n{\n\tswitch (pc) {")
+    out = []
+    out.append("static void %s(hle_ctx *ctx, uint32_t pc)\n{\n\tswitch (pc) {" % runname)
     for e in sorted(entries):
         out.append("\tcase 0x%06X: goto L_%06X;" % (e, e))
     out.append("\tdefault: __builtin_trap();\n\t}")
     for a in sorted(reached):
         out.append(g.emit(g.ins[a], labels))
     out.append("}\n")
+    barriers = set()
     for e in sorted(entries):
         nm = spec["entries"].get(e, "%s_%06X" % (spec["prefix"], e))
         ex = []
         for (xa, d) in sorted(entries[e]):
             ex.append("HLE_EXIT_SP(0x%06X, %d)" % (xa, d) if d else "0x%06X" % xa)
-        out.append("HLE_RANGE_PURE(0x%06X, %s, 200, %s) { pc_run(ctx, 0x%06X); }" % (e, nm, ", ".join(ex), e))
-    print("\n".join(out))
-    sys.stderr.write("%d instructions, %d entries\n" % (len(reached), len(entries)))
+            if xa in g.ins and g.kind(g.ins[xa])[0] == "stop":
+                barriers.add(xa)
+        out.append("HLE_RANGE_PURE(0x%06X, %s, 200, %s) { %s(ctx, 0x%06X); }" % (e, nm, ", ".join(ex), runname, e))
+    return "\n".join(out), len(reached), barriers
+
+
+HW = re.compile(r"(?<![0-9a-fx#%@(])[a-d][0-9a-f]{5}\b|0x[a-d][0-9a-f]{5}\b|%a5@|%sr|%usp|\bstop\b|\btrap|\brte\b|\bmovep|\btas\b")
+
+
+def touches_hw(txt):
+    """hardware by number: an operand in $A00000-$DFFFFF given in decimal (objdump prints immediates that way)"""
+    for m in re.finditer(r"#(-?\d+)\b", txt):
+        v = int(m.group(1)) & 0xFFFFFFFF
+        if 0xA00000 <= v < 0xE00000:
+            return True
+    return False
+
+
+def has_spin(body):
+    """a backward branch whose loop body only compares/tests/loads (and no store): it waits for an interrupt or
+    another agent to change memory, which cannot happen inside a piece"""
+    ins = sorted(body, key=lambda i: i.addr)
+    for b in ins:
+        t = clean(b.text)
+        m = re.match(r"b(?:ra|eq|ne|cc|cs|hi|ls|pl|mi|ge|lt|gt|le|vc|vs)[sw]?\s+([0-9a-f]+)$", t.replace("0x", ""))
+        if not m:
+            continue
+        tgt = int(m.group(1), 16)
+        if tgt > b.addr:
+            continue
+        loop = [i for i in ins if tgt <= i.addr <= b.addr]
+        ok = True
+        for i in loop:
+            mn = clean(i.text).split()[0]
+            args = clean(i.text).split(None, 1)[1] if len(clean(i.text).split()) > 1 else ""
+            if re.match(r"(cmp|tst|btst|b(ra|eq|ne|cc|cs|hi|ls|pl|mi|ge|lt|gt|le|vc|vs))", mn):
+                continue
+            if re.match(r"move[bwl]$", mn) and re.search(r",%d\d$", args):
+                continue
+            ok = False
+            break
+        if ok:
+            return True
+    return False
+
+
+def auto(addrs, registered):
+    """one function per address from data/functions.txt: pieces for every function piecegen can translate and that
+    touches no hardware (absolute I/O or VDP addresses, a5-relative VDP pointer, SR, traps); the others are listed"""
+    funcs = {}
+    for line in open(os.path.join(cc.ROOT, "data/functions.txt")):
+        if line.startswith("#") or not line.strip():
+            continue
+        main_, _, comment = line.partition("#")
+        f = main_.split()
+        rngs = [(int(f[0], 16), int(f[0], 16) + int(f[1]))]
+        for m in re.finditer(r"\+([0-9a-f]+):(\d+)", comment):
+            rngs.append((int(m.group(1), 16), int(m.group(1), 16) + int(m.group(2))))
+        funcs[int(f[0], 16)] = (f[2], rngs)
+    texts, skipped, barriers, total = [], [], set(), 0
+    insns = disassemble_r()
+    for a in addrs:
+        name, rngs = funcs[a]
+        if any(a2 in registered for r0, r1 in rngs for a2 in range(r0, r1, 2)):
+            skipped.append((a, name, "already has a C block inside"))
+            continue
+        txt = " ".join(i.text for i in insns if any(x <= i.addr < y for x, y in rngs))
+        if HW.search(txt) or touches_hw(txt) or 0x0FBAD2 <= a < 0x0FC5CC:
+            skipped.append((a, name, "touches hardware (or the sound driver's boot code)"))
+            continue
+        if has_spin([i for i in insns if any(x <= i.addr < y for x, y in rngs)]):
+            skipped.append((a, name, "spin loop (waits for an interrupt)"))
+            continue
+        spec = dict(ranges=rngs, entries={a: "Auto_%06X" % a}, prefix="Auto")
+        try:
+            t, n, bar = gen_spec(spec, "pc_run_%06X" % a)
+        except (AssertionError, KeyError, ValueError) as e:
+            skipped.append((a, name, "unsupported: %s" % str(e)[:60]))
+            continue
+        texts.append(t)
+        total += n
+        barriers |= bar
+    return texts, skipped, barriers, total
+
+
+def main():
+    if sys.argv[1] == "auto":
+        # piecegen.py auto UNPORTED.txt REGISTERED.txt OUTBARRIERS.txt > port/game/auto1.c
+        addrs = [int(x.split()[0], 16) for x in open(sys.argv[2]) if x.strip()]
+        reg = set(int(x.split()[0], 16) for x in open(sys.argv[3]) if x.strip())
+        texts, skipped, barriers, total = auto(addrs, reg)
+        spec = dict(title="Routines that were still 68k (docs/remaining68k.md \"no C block\"), translated without changes by\n * `piecegen.py auto`: %d functions, %d instructions; the functions that touch hardware or use an instruction the\n * generator does not know stay 68k (docs/remaining68k.md)." % (len(texts), total))
+        print(HEADER % dict(title=spec["title"]))
+        print('#pragma GCC diagnostic ignored "-Wunused-label"\n#pragma GCC diagnostic ignored "-Wunused-variable"\n')
+        print("\n".join(texts))
+        with open(sys.argv[4], "w") as f:
+            for b in sorted(barriers):
+                f.write("%06X\n" % b)
+        for a, n, why in skipped:
+            sys.stderr.write("skip $%06X %s: %s\n" % (a, n, why))
+        sys.stderr.write("%d functions, %d instructions, %d skipped\n" % (len(texts), total, len(skipped)))
+        return
+    name = sys.argv[1]
+    spec = SPECS[name]
+    t, n, _ = gen_spec(spec)
+    print(HEADER % dict(title=spec["title"]))
+    print(t)
+    sys.stderr.write("%d instructions\n" % n)
 
 
 if __name__ == "__main__":

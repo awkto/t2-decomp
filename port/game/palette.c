@@ -67,6 +67,8 @@
  * RAM (data/ram.txt): pal_cycle_on $FFA0A4, pal_changed $FFA0F4 (64 B), pal_target $FFA134
  * (128 B), pal_cur $FFA1B4 (128 B), pal_fading $FFA246; vblank_count $FFA0EE. */
 #include "hle.h"
+#include "gx.h"
+#include "native.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -279,6 +281,14 @@ HLE_RANGE_PURE(0x00E9FA, PalCycle, 160, 0x00EA1E)
  * then CramUpload must happen at the real raster time), then leave ctx at `stop` for C. */
 static void pal_run_to(hle_ctx *ctx, uint32_t start, uint32_t stop)
 {
+	if (native_active) {          /* moveq #$64,d0 / nop / dbf d0,*: d0.w = -1, 4 + 101 * 4 + 100 * 10 + 14 cycles */
+		set_w(&ctx->d[0], 0xFFFF);
+		gx_m68k_set_cycles(gx_m68k_cycles() + 1422 * 7);
+		cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, 0);
+		ctx->jumped = 0;
+		ctx->pc = stop;
+		return;
+	}
 	uint32_t exits[2] = { stop, 0 };
 	ctx->pc = start;
 	hle_run68k_until(ctx, exits);

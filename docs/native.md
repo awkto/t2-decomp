@@ -77,3 +77,38 @@ bailed. `tools/py/remaining68k.py` groups the addresses by reason:
 | barrier jsr/bsr/jmp/rts/rte between C pieces | closed by `glue.c` |
 | gap in a ported function | an instruction no piece covers |
 | wait spin: C block in the native runner only | `natwaits.c` |
+
+## Results (end of the infrastructure step)
+
+Census over 97 runs (the 92 wide-gate states x 3000 frames and the five route gates, 423,301 frames), `--hle all`:
+
+| | before | after |
+|---|---|---|
+| distinct 68k addresses interpreted | 9827 | 5953 |
+| interpreted instructions, top level / nested | 2,596,124,938 / 14,431,437 | 2,573,501,147 / 12,811,990 |
+| of which wait spins (native-only blocks, idle) | 2.50 G | 2.50 G |
+| barrier jsr/bsr/jmp/rts/rte addresses | 1282 | 34 |
+| functions with no C block at all | 377 | 6 (+ the 96 hardware / sound-boot / spin functions `piecegen auto` leaves) |
+
+The remaining rows are mostly "declined/bailed tail" (the interrupt-inside-C task) and the hardware functions
+(VDP/DMA/Z80/I-O ports: `VramClearDma`, `VsramClear`, `DmaToVram`, `VdpQueueVScroll`, the sound driver's Z80 boot
+code, `Reset`), which need hand-written C with exact port timing.
+
+Native runner (`T2_NATIVE=1 T2_NATIVE_SETTLE=1`, 97 routes, `OUT=runs/native port/tools/ipprof.sh`): before this step
+every route stopped at the first wait spin (frame 0). Now the first "no C block" is:
+
+| PC | routes | what |
+|---|---|---|
+| $008DFC | 53 | savestate PC inside a 68k screen routine, not a block start (settle does not reach one) |
+| $00818C | 39 | `VsramClear` (VDP port loop), after the 12-16 settle frames |
+| $011F58 | 2 | `VdpQueueVScroll`, frame 194-195 |
+| $000200 | 2 | `Reset` (cold boot, coldboot/ringstate routes): boot code is not C |
+| $00871A | 1 | frame 76 |
+
+`T2_NATIVE_SETTLE=1` (a development aid, `emu.c native_settle`) lets a state that was saved in the middle of a 68k
+function run on the emulated CPU until the PC is at a C block; states made with `--hle none` cannot be loaded
+otherwise. In native mode the guards that decline a call for an interrupt (`safe_run`, `head_ok`, `due`) answer
+"safe", i.e. interrupts are taken between blocks; making that exact is the interrupt-inside-C task.
+`T2_HLE_WATCHDOG=N` (hle.c) reports the C block that is still running after N seconds.
+
+`port/hle/native_core.c` (the CPU API for a build without the 68k core, as Scooby's P3) is carried over but not built yet.

@@ -313,9 +313,13 @@ def main():
     for k, n, fr, t, ne, na in sorted(per_run):
         w("| %s | %s | %d | %d | %d | %d |" % (k, n, fr, t, ne, na))
     w("")
+    wait_funcs = {x["fi"] for x in rows if x["why"].startswith("wait")}
+    with open(os.path.join(d, "unported_functions.txt"), "w") as f:     # input of `piecegen.py auto`
+        for fi in sorted({x["fi"] for x in rows if x["why"].startswith("no C block")} - wait_funcs):
+            f.write("%06X %s\n" % (funcs[fi]["entry"], funcs[fi]["name"]))
     with open(os.path.join(d, "glue_candidates.txt"), "w") as f:     # input of tools/py/gluegen.py
         for r in rows:
-            if r["why"].startswith("barrier") and r["cls"] in ("jsr", "bsr", "jmp", "rts", "rte"):
+            if not r["why"].startswith("wait") and r["cls"] in ("jsr", "bsr", "jmp", "rts", "rte", "bra"):
                 f.write("%06X\n" % r["addr"])
     print("\n".join(out))
 

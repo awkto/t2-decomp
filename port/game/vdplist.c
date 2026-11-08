@@ -40,6 +40,7 @@
  * command call counts of a run (used to show every command is exercised by the captures).
  */
 #include "hle.h"
+#include "native.h"
 #include "gx.h"
 
 #include <stdint.h>
@@ -186,6 +187,8 @@ static void sess_finish(void) { hle_dma_end(); }
 static int sr_why = 15;   /* why the last safe_run() said no (hle_decline_why codes) */
 static int safe_run(int bound_cycles)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 1;
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
 	if (hle_post_access)
@@ -214,6 +217,8 @@ static int g_nobail = -1; /* T2_NOBAIL=1: decline whole commands as before (A/B 
 static long g_tog;      /* absolute clock of the next event */
 static int due(int slack)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 0;
 	/* the frame loop's line step (and the Z80 run, whose bus accesses delay the 68k) comes
 	 * between the instruction that crossed a line start and the loop test of the next one */
 	if (g_armed)
@@ -223,6 +228,8 @@ static int due(int slack)
 /* margin-free guard for the fixed-length head of a bail-capable command (cycles) */
 static int head_ok(int head_cycles)
 {
+	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
+		return 1;
 	if (hle_chk_on)
 		hle_chk_note(head_cycles);
 	if (hle_post_access)
@@ -296,8 +303,61 @@ static void jsr_tick(void) { tick(20); }
 
 /* Run the original 68k from `start` up to `stop` (the argument reads), then leave ctx at
  * `stop` for C. */
+/* The same stretches in C for the native runner (no 68k to run them): straight-line argument reads from the
+ * list pointer a6 and the VDP setup of cmd 8, each instruction on the real clock like the helpers above. */
+static void rd_w(hle_ctx *ctx, int dreg)             /* move.w (a6)+,dN: 8 */
+{
+	uint16_t v = RAM16(ctx->a[6]);
+	ctx->a[6] += 2;
+	set_w(&ctx->d[dreg], v);
+	cc_logic16(ctx, v);
+	tick(8);
+}
+static void rd_al(hle_ctx *ctx, int areg)            /* movea.l (a6)+,aN: 12 */
+{
+	ctx->a[areg] = RAM32(ctx->a[6]);
+	ctx->a[6] += 4;
+	tick(12);
+}
+static void lea_a5(hle_ctx *ctx) { ctx->a[5] = 0xC00000; tick(12); }   /* lea.l (vdp_data).l,a5 */
+static void native_run_to(hle_ctx *ctx, uint32_t start)
+{
+	switch (start) {
+	case 0x012068: rd_w(ctx, 4); rd_al(ctx, 1); rd_w(ctx, 2); lea_a5(ctx); break;
+	case 0x011D70: rd_w(ctx, 1); rd_w(ctx, 2); ctx->d[6] = 0; cc_logic32(ctx, 0); tick(4); break;
+	case 0x011D80: rd_w(ctx, 1); rd_w(ctx, 2); rd_w(ctx, 6); break;
+	case 0x011D90: rd_w(ctx, 0); rd_w(ctx, 2); break;
+	case 0x011D9E: {                                  /* move.l #$c000,d1 / or.w (a6)+,d1 / swap d1 / movea.l (a6)+,a0 / lea */
+		ctx->d[1] = 0xC000; cc_logic32(ctx, 0xC000); tick(12);
+		uint16_t v = RAM16(ctx->a[6]); ctx->a[6] += 2;
+		uint16_t r = (uint16_t)((ctx->d[1] & 0xFFFF) | v);
+		set_w(&ctx->d[1], r); cc_logic16(ctx, r); tick(8);
+		ctx->d[1] = (ctx->d[1] << 16) | (ctx->d[1] >> 16); cc_logic32(ctx, ctx->d[1]); tick(4);
+		rd_al(ctx, 0); lea_a5(ctx);
+		break;
+	}
+	case 0x0120BA: rd_w(ctx, 4); rd_al(ctx, 1); rd_w(ctx, 3); rd_w(ctx, 6); lea_a5(ctx); break;
+	case 0x011E48: rd_w(ctx, 1); rd_al(ctx, 1); rd_w(ctx, 5); lea_a5(ctx); break;
+	case 0x011F6E:                                    /* lea / move.w #$8f02,(4,a5) / move.l #$40000010,(4,a5) */
+		lea_a5(ctx);
+		wr_ctrl(0x8F02, 16);
+		pre(); vdp_ctrl_w32(0x40000010); post(28);
+		break;
+	case 0x011DD8: poll_status(ctx, 1, 0x011DE2); break;   /* move.w (4,a5),d1 / btst #1,d1 / bne.s */
+	default:
+		fprintf(stderr, "vdplist: no native version of the 68k stretch at $%06X\n", start);
+		abort();
+	}
+}
+
 static void run_to(hle_ctx *ctx, uint32_t start, uint32_t stop)
 {
+	if (native_active) {
+		native_run_to(ctx, start);
+		ctx->jumped = 0;
+		ctx->pc = stop;
+		return;
+	}
 	uint32_t exits[2];
 	exits[0] = stop;
 	exits[1] = 0;
