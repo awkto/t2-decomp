@@ -46,6 +46,7 @@ void gx_z80_freeze(void);        /* make bus requests not run the Z80 (sandbox) 
 void gx_vdp_untimed_begin(void); /* bracket a VDP data port write made by C code */
 void gx_vdp_untimed_end(void);
 void gx_vdp_follow_cpu(void);
+int gx_vdp_toggle_kind(void);             /* kind of the toggle the last gx_vdp_next_toggle_clock() found */
 int gx_vdp_next_toggle_clock(void);       /* start of the next VBLANK-set / VBLANK-clear / wrap line */
 unsigned gx_vdp_line_base(void);         /* mcycles_vdp */
 int gx_vdp_vcounter(void);

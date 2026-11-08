@@ -92,20 +92,31 @@ unsigned gx_vdp_line_base(void) { return mcycles_vdp; }
  * (fifo reset, clock rebase); the light gun's lines (input_refresh: HV latch, external interrupt, on its line and the next one);
  * every line when the H-Int is enabled. A C replacement that runs across one of them cannot
  * be interleaved with it the way the real CPU is. */
+static int g_toggle_kind;   /* what gx_vdp_next_toggle_clock() last found: 1 V-Int line, 2 VBLANK-clear/wrap, 3 H-Int, 4 light gun */
+int gx_vdp_toggle_kind(void) { return g_toggle_kind; }
 int gx_vdp_next_toggle_clock(void)
 {
 	int l = v_counter, h = bitmap.viewport.h, last = lines_per_frame - 1;
 	int t = l < h ? h : (l < last ? last : last + 1);
-	if (l == h)                      /* the V-Int is raised a little after this line starts */
+	g_toggle_kind = l < h ? 1 : 2;
+	if (l == h) {                    /* the V-Int is raised a little after this line starts */
+		g_toggle_kind = 1;
 		return (int)mcycles_vdp;
-	if (reg[0] & 0x10)
+	}
+	if (reg[0] & 0x10) {
 		t = l + 1;
+		g_toggle_kind = 3;
+	}
 	for (int port = 4; port < 6; port++) {
 		int y = input.analog[port][1] + input.y_offset;
-		if (y > l && y < t)
+		if (y > l && y < t) {
 			t = y;
-		if (y + 1 > l && y + 1 < t)
+			g_toggle_kind = 4;
+		}
+		if (y + 1 > l && y + 1 < t) {
 			t = y + 1;
+			g_toggle_kind = 4;
+		}
 	}
 	return (int)mcycles_vdp + (t - l) * MCYCLES_PER_LINE;
 }

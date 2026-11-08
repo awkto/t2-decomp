@@ -41,6 +41,7 @@ typedef struct hle_ctx {
 	int tl_flushed;     /* the timeline was put on the CPU clock (an access or a slice end happened) */
 	int dry;            /* dry run (HLE_F_PURE): only the length of the timeline is wanted, no clock/Z80 effects */
 	const struct hle_def *def;
+	int bail;           /* HLE_RANGE: hle_jump() went to an instruction in the middle of the range (a bail, game/vdplist.c); not checked against the exits */
 } hle_ctx;
 
 typedef void (*hle_fn)(hle_ctx *ctx);
@@ -240,6 +241,9 @@ void hle_exact_session(void);
  * the entry address normally. For code whose timing the frame loop must be able to
  * interleave with (it cannot run while C executes). Ignored in the difftest sandbox. */
 void hle_decline(void);
+/* hle_decline_why(): same, with a reason code (T2_HLE_DECLINES statistics): 10 DMA in flight,
+ * 11 V-Int line, 12 VBLANK-clear/wrap, 13 H-Int, 14 light gun, 15 other */
+void hle_decline_why(int why);
 /* T2_HLE_BOUNDS=1 check mode (docs/porting.md): a guard reports the bound (cycles) it just used */
 extern bool hle_chk_on;
 void hle_chk_note(int bound_cycles);

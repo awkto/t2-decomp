@@ -292,7 +292,7 @@ against the span up to the next note or the end of the call. Zero cost when the 
 and merges the tables; re-run it after changing a bound or adding a non-pure replacement, and
 raise any bound that is OVER or near (observed max x 1.5, with the observed value in a comment).
 
-`T2_HLE_DECLINES=1` prints each decline and the total; `T2_HLE_NODECLINE=1` turns the fallback off
+`T2_HLE_DECLINES=1` prints each decline and, at exit, a table of declines per function and reason (frame end, interrupt window, pending irq; for the VDP list: DMA, V-Int line, VBLANK-clear/wrap, H-Int, light gun; `port/tools/declines.py` runs it over several states together with `T2_HLE_PROFILE`); `T2_HLE_NODECLINE=1` turns the fallback off
 (seqcmp does, to get comparable runs). The difftest sandbox never declines.
 
 ## Result so far
@@ -628,7 +628,22 @@ cycles at a level load; the old lump charge was 2204. What makes the C version i
   on its duration (`cmd_bound`: ~72 cycles per VDP word, 110 for VramFillWords, plus a one line
   margin) against the next such line, so a loose bound only means the 68k runs the command; it
   can never make the result differ. Typical outcome: the short commands in the middle of a frame
-  run as C; the long level-load copies that span VBlank stay 68k.
+  run as C.
+- **Bail out at the event (copy words, hscroll).** The VDP list does not run right after VBlank
+  starts: the game logic takes ~26 lines, so the list starts about 10 lines before the frame wrap
+  and its commands cross VBLANK-clear and the wrap. Declining whole commands for that (the
+  worst-case bound is ~10 lines) made 99% of the hscroll and half of the copy calls run as 68k.
+  Commands 1 and 7 therefore run their loops in C instruction by instruction and, at the first
+  instruction boundary at or after the event's clock (`g_tog` = `gx_vdp_next_toggle_clock()` at
+  entry, checked by `due()` before each instruction, i.e. where the core's `m68k_run` slice ends),
+  mirror every register and the CCR into the context and jump into the original code at that
+  instruction (`hle_ctx.bail`, allowed by `run_def` whatever the declared exits). The 68k then
+  finishes the command after the frame loop has done its work, as in the original. Only the
+  fixed-length head (arguments, control port writes, ~300 cycles) is guarded up front
+  (`head_ok`, 450 cycles, no margin). The end command (0) is guarded too: its dispatch and rewind
+  must not slip across the event (an unguarded one made `vdp_list_ptr` differ for one frame).
+  Commands 2-6 and 8 still need to fit whole. `T2_NOBAIL=1` restores the old all-or-nothing
+  behaviour (A/B measurements).
 
 **Result.** `port/tools/lockstep.sh --hle VdpListRun,VdpCmd0End,VdpCmd1CopyWords,VdpCmd2FillZero,
 VdpCmd3WriteWord,VdpCmd4CramLine,VdpCmd5FillValue,VdpCmd6TileRect,VdpCmd7HScroll,VdpCmd8VScroll`
