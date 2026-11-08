@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ucontext.h>
-#include <execinfo.h>
 #include <signal.h>
 #include <unistd.h>
 
