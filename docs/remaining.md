@@ -53,12 +53,18 @@ medium = VDP port I/O or nested calls (the vdplist.c pattern); hard = Z80 bus / 
 
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
-| $00800C | VramClearDma | 15.9 | 1.10 | 24 | DMA fill of VRAM; polls DMA busy, ~660k cycles per call | medium: VDP DMA + wait, lump charge |
-| $008782 | VramFillWords | 11.4 | 0.79 | 4252 | d1 bytes at VRAM d2 = word d6, one VramWriteWord per word | easy-medium: VDP data port loop |
-| $0080FE | CramUpload | 10.0 | 0.69 | 2848 | 64 CRAM words from (a0) | easy: VDP only |
-| $00873A, $00874E | (VRAM fill loops) | 3.6, 3.8 | 0.25, 0.26 | 37, 39 | fill with `move.w d2,(a5)` + status poll per word | medium: poll loops |
-| $011FA2 | DmaToVram | 3.3 | 0.23 | 193 | 68k to VRAM DMA | medium: DMA timing |
-| $0086C4 | RamClear | 1.1 | 0.07 | 1 | clears work RAM at boot | easy |
+| $00800C | VramClearDma | 15.9 | 1.10 | 24 | DMA fill of VRAM; polls DMA busy, ~660k cycles per call | left 68k: see below |
+| $011FA2 | DmaToVram | 3.3 | 0.23 | 193 | 68k to VRAM DMA | left 68k: see below |
+
+Done (game/vdpfill.c): CramUpload $0080FE, VramFillWords $008782, the fill loops $00873A and $00874E, RamClear
+$0086C4 (the boot clear is before any gate state, checked with cold-boot frame hashes, see porting.md).
+
+VramClearDma and DmaToVram stay 68k because their time is DMA time. VramClearDma starts a 65520-byte fill and spins
+on the DMA-busy flag for ~660k cycles, i.e. five frames with five VBlank interrupts and the frame loop's
+per-line DMA stepping inside the poll; a C function cannot run the frame loop, and the doc's "completes at once"
+shortcut (hle_dma_complete) does not reproduce the status the poll reads or the interrupt phase, so it cannot be
+lockstep-exact. DmaToVram is a 68k-to-VRAM DMA whose length (up to a whole tile set) halts the 68k per line while
+the frame loop advances the DMA, followed by a busy poll; same reason, and only 0.23% of busy.
 
 Level setup proper (LevelLoad*, script loaders) is only a few calls and does not show; levelflow.c covers it.
 

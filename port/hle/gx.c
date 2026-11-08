@@ -23,6 +23,7 @@ int gx_m68k_cycles(void) { return m68k.cycles; }
 void gx_m68k_set_cycles(int c) { m68k.cycles = c; }
 int gx_m68k_refresh_cycles(void) { return m68k.refresh_cycles; }
 void gx_m68k_set_refresh_cycles(int c) { m68k.refresh_cycles = c; }
+void gx_m68k_set_ir(unsigned op) { m68k.ir = op; }
 /* after rewinding the CPU clock: FIFO entries stamped in the (now) future would stall the
  * next VDP data write until then */
 void gx_vdp_fifo_clamp(void)

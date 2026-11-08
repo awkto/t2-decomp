@@ -24,6 +24,8 @@ void gx_m68k_set_usp(uint32_t v);      /* move An,usp */
 int gx_m68k_cycles(void);        /* master clocks (7 per 68k cycle) */
 int gx_m68k_refresh_cycles(void);        /* 68k bus refresh threshold (mcycles) */
 void gx_m68k_set_refresh_cycles(int c);
+/* the opcode word the core believes it is executing: a VDP status read adds its cost (m68k_cycles()) */
+void gx_m68k_set_ir(unsigned op);
 void gx_vdp_fifo_clamp(void);    /* FIFO read-out stamps <= CPU clock (after a rewind) */
 void gx_m68k_set_cycles(int c);  /* rewind the CPU clock (hle.c, after nested calls) */
 void gx_m68k_clear_irq(void);
