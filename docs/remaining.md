@@ -132,14 +132,14 @@ $012234, PickupsRun $012BB0) are C now (game/misc2.c) and no longer show.
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
 | $00B3AE | (object loop dispatch) | 4.2 | 0.32 | 623 | `jmp (a0)` into object handlers; structural | n/a (indirect jump; ObjRunAll owns it) |
-| $013376 | SpriteQueueReset | 4.2 | 0.32 | 44061 | resets sprite queue | easy |
-| $011D38 | VdpListNext | 4.2 | 0.32 | 127128 | VdpList helper, 3 instructions | easy, but per-call gain small |
+| $013376 | SpriteQueueReset | 4.2 | 0.32 | 44061 | resets sprite queue | DONE in C (game/vdphelp.c) |
+| $011D38 | VdpListNext | 4.2 | 0.32 | 127128 | VdpList helper, 3 instructions | DONE in C (game/vdphelp.c) |
 | $013F7E | (event ring consumer) | 4.1 | 0.29 | 43549 | drains byte-pair ring at $FF80A0 (head $FF80B0, tail $FF80B2); Random, VdpQueueTileRect, QueueSprite | DONE in C (game/ringevt.c): pieces between the jsr's, with the producer $013E30 and the text rows $0141B8/$0141E6 |
-| $011D12 | VdpListReset | 3.5 | 0.27 | 47757 | VdpList helper | easy, per-call gain small |
-| $011D28 | VdpListEnd | 2.4 | 0.18 | 47757 | VdpList helper | easy, per-call gain small |
+| $011D12 | VdpListReset | 3.5 | 0.27 | 47757 | VdpList helper | DONE in C (game/vdphelp.c) |
+| $011D28 | VdpListEnd | 2.4 | 0.18 | 47757 | VdpList helper | DONE in C (game/vdphelp.c) |
 | $004916, $0048C4, $004820, $004872 | BgStreamL1, L4, L5, L2 | 2.7, 1.8, 1.3, 0.6 | 0.21 to 0.05 | 11659, 8773, 6336, 2943 | per-layer wrappers that `bsr` into BgStreamLayers (C) | DONE in C (game/helpers.c): pieces around the `bsr`s |
 | $00DB36 | (object helper) | 1.4 | 0.11 | 11003 | | DONE in C (game/helpers.c): pieces between the jsr's |
-| $013188 | (sprite queue helper) | 1.2 | 0.09 | 10052 | calls the object animation step $00C48E | easy |
+| $013188 | (sprite queue helper) | 1.2 | 0.09 | 10052 | calls the object animation step $00C48E | DONE in C (game/pools.c MissileTail) |
 | $00D238 | (truck helper) | 1.0 | 0.07 | 3714 | | DONE in C (game/helpers.c) |
 | $00920C | (HUD bar helper) | 0.9 | 0.07 | 3198 | builds the bar string, then StringPrint (C) | DONE in C (game/helpers.c): pieces around the jsr's |
 | $00B3C6, $009356, $00C442 | (object loop, script tick, animation helpers) | 0.7, 0.7, 0.7 | 0.06 to 0.05 | 44059, 43562, 4347 | | DONE in C: $00B3C6 and $009356 are bare `rts` stubs (game/rtsstubs.c), $00C442 pieces in game/helpers.c |
