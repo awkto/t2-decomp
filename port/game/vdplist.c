@@ -16,7 +16,7 @@
  * a handler alone still works: the 68k VdpListRun jumps to it, the hook runs the C range and
  * it hle_jump()s back to VdpListNext.
  *
- * Callees. VramFillWords $008782 (commands 2 and 5) and VramWriteWord $0087C4 (command 3)
+ * Callees. VramFillWords $008782 (commands 2 and 5) and VramWriteWord $0087C4 (command 3; C in textprint.c)
  * are not ported, so the bodies call them through hle_call68k: the nested 68k runs exactly as
  * the original `jsr` (registers, flags, RAM and the ordered VDP writes are identical) and the
  * layer adds its cycles to the charge. The other commands' VDP writes are inline in the
