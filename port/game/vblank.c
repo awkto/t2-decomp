@@ -10,9 +10,9 @@
  *   sub_0FBAD2, sub_0FBAE2, sub_0FBB6C, sub_0FBB96, sub_0FBBAE, sub_0FC0FE, sub_0FC27C
  *                       the small work-RAM-only sound queue routines they use
  *
- * Not ported: the sound engine itself (sub_0FBBD0 -> sub_0FBBFE ..., which bus-requests the Z80,
- * writes Z80 RAM and the YM/PSG ports with polling loops) stays 68k. VBlankInt is therefore an
- * HLE_RANGE from its entry to right before `jsr sub_0FBBD0` ($000396): the real 68k runs the jsr and
+ * The sound engine tick (sub_0FBBD0 -> sub_0FBBFE ..., which bus-requests the Z80, writes Z80 RAM and
+ * spins on BUSACK / the Z80 command byte) is in sound.c. VBlankInt is an HLE_RANGE from its entry to
+ * right before `jsr sub_0FBBD0` ($000396): the real 68k runs the jsr (which the sound.c hook takes) and
  * the rte. Interrupt entry (stacking SR/PC, the mask) is done by the core before the range starts.
  *
  * VBlankInt and ExtInt reach hardware (I/O port 2 data, the VDP HV counter), so every such access

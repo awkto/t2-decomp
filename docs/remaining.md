@@ -58,23 +58,17 @@ medium = VDP port I/O or nested calls (the vdplist.c pattern); hard = Z80 bus / 
 
 Level setup proper (LevelLoad*, script loaders) is only a few calls and does not show; levelflow.c covers it.
 
-### Sound engine ($0F8000-$0FC5CC, 8.0% of busy)
+### Sound engine ($0F8000-$0FC5CC, 8.0% of busy): now in C (game/sound.c)
 
-Driver tick (`$0FBBD0` from VBlankInt, every frame) feeding the Z80 blob at $0FC5CC. Everything here is one
-unit: sequence data in the $0F8000 bank, the 68k side of the driver pokes Z80 RAM / YM2612 through the Z80
-bus. Hard as a whole (Z80 bus handshake, ~2 KB of code), but self-contained and no wait on the main thread
-except the BUSREQ spin.
-
-| addr | name | Mcyc | % | calls | what | difficulty |
-|---|---|---|---|---|---|---|
-| $0FBBFE | driver tick body | 35.8 | 2.48 | 56494 | per-frame tick: channel loop, calls the helpers below | hard: biggest piece, Z80 RAM writes |
-| $0FBF58 | channel event reader | 18.1 | 1.25 | 88212 | next event from sequence table `dat_0F8022` | medium: ROM reads + Z80 writes |
-| $0FBE18 | channel update | 10.4 | 0.72 | 47030 | per-channel update, calls 0FBF26/0FC408/0FC428 | medium |
-| $0FBF26 | note data fetch | 9.6 | 0.67 | 24792 | 6-byte entries per channel | easy-medium |
-| $0FC4FA | channel flag check | 9.0 | 0.63 | 20906 | ORs channel state words, branches to upload | medium |
-| $0FC408 / $0FC428 | Z80 BUSREQ acquire / release | 6.9 / 3.4 | 0.48 / 0.23 | 59875 / 59617 | `$A11100` request + spin until granted / release | hard: blocking wait, bus timing |
-| $0FBBD0 | tick wrapper | 6.0 | 0.42 | 56494 | takes the Z80 bus, runs $0FBBFE, releases | hard (same) |
-| $0FC496, $0FC59C, $0FBDF0, $0FC10C, $0FBF08 | helpers | 5.8, 2.3, 2.3, 1.5, 0.9 | 0.40 to 0.06 | 8k-37k | small channel/Z80 helpers | medium |
+The 68k side of the driver tick ($0FBBD0 from VBlankInt, every frame, with the tick body $0FBBFE, the
+channel update / note fetch / event reader, the sfx tick, the command slots, the Z80 BUSREQ acquire /
+release with its BUSACK spin and the wait for the Z80 command byte) is ported as 24 entries of one
+generated function, `snd_run()`; every Z80 / YM access goes through hle_pre()/hle_post() in the original
+order and the spins iterate one pass at a time. Lockstep is exact with `--z80`. Details and gates:
+docs/porting.md. Left as 68k: nothing in the tick path. What stays outside the C: the driver's reset /
+Z80 boot code ($0FBB00, $0FC32E, $0FC350, $0FC3E6, $0FC438 and the Z80 blob at $0FC5CC), which runs at
+boot only and is not reached by the tick; and the Z80 program itself, which is Z80 code, not 68k.
+The sequence data in the $0F8000 bank is read by the C straight from the ROM.
 
 Request side (`SndRequest` $013D04, `SndMusicRequest`, `SndSlotRequest`) is already in C.
 
@@ -111,5 +105,5 @@ TitleScreen, WaitStartWindow, CheatCodeCheck: under 0.05 Mcyc each) but is wait-
    VdpCmd1CopyWords (47%) run as 68k; a nested/timed session instead of a decline could move up to ~25% of busy to C.
 2. Text/HUD printing with VramWriteWord (8.8%): easy, one cluster ($007C9A..$007EB2, $0087C4).
 3. Object animation step and PickupsRun (2.5%): pure RAM.
-4. Sound engine as one unit (8%): hard, self-contained, one VBlank entry.
+4. (done) Sound engine tick: game/sound.c. The boot-time Z80 loader ($0FBB00 and callees) is the only sound code left.
 5. VDP upload helpers (3.4%): medium; mostly load-time.
