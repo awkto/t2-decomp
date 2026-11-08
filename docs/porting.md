@@ -170,6 +170,19 @@ runs even when the game state is identical, and without the exclusion every func
 at frame 1. The six default states are `gun_01 gun_02 gun_04 gun_05 gun_07 title`; the whole gate
 (6 states × 3000 frames × 2 runs) takes ~30 s.
 
+**Cold-boot gate.** Every other gate starts from a savestate or a route taken after boot, so the
+power-on path (RamClear, logos, story, title, the first attract demo) needs its own run:
+
+    python3 -I port/tools/scriptgate.py port/scripts/coldboot_gate.txt --hle all   # 9000 frames identical
+
+The script is `run 9000` from power-on with no input (~25 s on the VM; `T2_HASH_Z80=1` adds the sound
+state: also identical). Caution when reading `--framehash` files by hand: column 2 is the hash of the
+*full* work RAM including the dead system stack, and it differs between `--hle none` and `--hle all`
+at a few frames (cold boot: frames 241, 247, ...; one dead-stack byte such as `$FFFF93`) even though
+nothing the gate compares differs. Compare the combined column (ALL) or use `lockstep.py`/`scriptgate.py`,
+which do; a bare `cmp` of two hash files reports false divergences. `--hle none` is deterministic
+(two cold boots give identical hash files).
+
 **Cycle charges and the bus refresh.** The charge is the sum of the original instructions' GPGX
 68000 costs. Two systematic errors were found and fixed with the gate:
 
