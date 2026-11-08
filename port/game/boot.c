@@ -14,8 +14,6 @@
 #include "gx.h"
 
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #pragma GCC diagnostic ignored "-Wunused-label"
 
@@ -198,7 +196,7 @@ static inline void st16(uint32_t a, uint32_t v)
 {
 	uint32_t p = a & 0xFFFFFFu;
 	if (p >= 0xE00000u) { RAM16(p) = (uint16_t)v; return; }
-	if (is_vdp(p)) { vdp_enter(); if (getenv("T2_BTRACE")) fprintf(stderr, "st16 %06X <- %04X clk %d\n", p, v & 0xFFFF, gx_m68k_cycles()); hle_vdp_timed(1); bus_w16(p, (uint16_t)v); hle_vdp_timed(0); return; }
+	if (is_vdp(p)) { vdp_enter(); hle_vdp_timed(1); bus_w16(p, (uint16_t)v); hle_vdp_timed(0); return; }
 	bus_w16(p, (uint16_t)v);
 }
 static inline void st32(uint32_t a, uint32_t v)
@@ -282,6 +280,7 @@ L_00022E:
 	{ ctx->a[6] = (ctx->d[0] & 0xFFFFFFFFu); } hle_insn(ctx, 4);  /* 000232 moveal %d0,%fp */
 	hle_insn(ctx, 4); hle_set_usp(ctx->a[6]);  /* 000234 movel %fp,%usp */
 	{ ctx->d[1] = 0x00000017u; cc_logic32(ctx, ctx->d[1]); } hle_insn(ctx, 4);  /* 000236 moveq #23,%d1 */
+	hle_jump(ctx, 0x000238); return;
 L_000238:
 	{ uint32_t eaS = ctx->a[5]; ctx->a[5] += 1; int io = !plain(eaS); if (io) io_pre(ctx, 0x1A1D, 0x00023A); uint32_t v = ld8(eaS); set_b(&ctx->d[5], v); cc_logic8(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 000238 moveb %a5@+,%d5 */
 	{ uint32_t eaD = ctx->a[4]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3885, 0x00023C); uint32_t v = (ctx->d[5] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 00023A movew %d5,%a4@ */
@@ -291,31 +290,37 @@ L_000238:
 	{ uint32_t eaD = ctx->a[3]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3680, 0x000246); uint32_t v = (ctx->d[0] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 000244 movew %d0,%a3@ */
 	{ uint32_t eaD = ctx->a[1]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3287, 0x000248); uint32_t v = (ctx->d[7] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 000246 movew %d7,%a1@ */
 	{ uint32_t eaD = ctx->a[2]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3487, 0x00024A); uint32_t v = (ctx->d[7] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 000248 movew %d7,%a2@ */
+	hle_jump(ctx, 0x00024A); return;
 L_00024A:
 	{ uint32_t eaD = ctx->a[1];  int io = !plain(eaD); if (io) io_pre(ctx, 0x0111, 0x00024C); unsigned b = (ctx->d[0] & 7); uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z);  if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 00024A btst %d0,%a1@ */
 	if (COND_NE) { hle_insn(ctx, 10); hle_jump(ctx, 0x00024A); return; } hle_insn(ctx, 8);  /* 00024C bnes 24a */
 	{ ctx->d[2] = 0x00000025u; cc_logic32(ctx, ctx->d[2]); } hle_insn(ctx, 4);  /* 00024E moveq #37,%d2 */
+	hle_jump(ctx, 0x000250); return;
 L_000250:
 	{ uint32_t eaS = ctx->a[5]; ctx->a[5] += 1; uint32_t eaD = ctx->a[0]; ctx->a[0] += 1; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x10DD, 0x000252); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 000250 moveb %a5@+,%a0@+ */
 	{ uint16_t v = (uint16_t)ctx->d[2] - 1; set_w(&ctx->d[2], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x000250); return; } hle_insn(ctx, 14); }  /* 000252 dbf %d2,250 */
 	{ uint32_t eaD = ctx->a[2]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3480, 0x000258); uint32_t v = (ctx->d[0] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 000256 movew %d0,%a2@ */
 	{ uint32_t eaD = ctx->a[1]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3280, 0x00025A); uint32_t v = (ctx->d[0] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 000258 movew %d0,%a1@ */
 	{ uint32_t eaD = ctx->a[2]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3487, 0x00025C); uint32_t v = (ctx->d[7] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 00025A movew %d7,%a2@ */
+	hle_jump(ctx, 0x00025C); return;
 L_00025C:
 	{ ctx->a[6] -= 4; uint32_t eaD = ctx->a[6]; int io = !plain(eaD); if (io) io_pre(ctx, 0x2D00, 0x00025E); uint32_t v = (ctx->d[0] & 0xFFFFFFFFu); st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 00025C movel %d0,%fp@- */
 	{ uint16_t v = (uint16_t)ctx->d[6] - 1; set_w(&ctx->d[6], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x00025C); return; } hle_insn(ctx, 14); }  /* 00025E dbf %d6,25c */
 	{ uint32_t eaS = ctx->a[5]; ctx->a[5] += 4; uint32_t eaD = ctx->a[4]; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x289D, 0x000264); uint32_t v = ld32(eaS); st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 000262 movel %a5@+,%a4@ */
 	{ uint32_t eaS = ctx->a[5]; ctx->a[5] += 4; uint32_t eaD = ctx->a[4]; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x289D, 0x000266); uint32_t v = ld32(eaS); st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 000264 movel %a5@+,%a4@ */
 	{ ctx->d[3] = 0x0000001Fu; cc_logic32(ctx, ctx->d[3]); } hle_insn(ctx, 4);  /* 000266 moveq #31,%d3 */
+	hle_jump(ctx, 0x000268); return;
 L_000268:
 	{ uint32_t eaD = ctx->a[3]; int io = !plain(eaD); if (io) io_pre(ctx, 0x2680, 0x00026A); uint32_t v = (ctx->d[0] & 0xFFFFFFFFu); st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 000268 movel %d0,%a3@ */
 	{ uint16_t v = (uint16_t)ctx->d[3] - 1; set_w(&ctx->d[3], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x000268); return; } hle_insn(ctx, 14); }  /* 00026A dbf %d3,268 */
 	{ uint32_t eaS = ctx->a[5]; ctx->a[5] += 4; uint32_t eaD = ctx->a[4]; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x289D, 0x000270); uint32_t v = ld32(eaS); st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 00026E movel %a5@+,%a4@ */
 	{ ctx->d[4] = 0x00000013u; cc_logic32(ctx, ctx->d[4]); } hle_insn(ctx, 4);  /* 000270 moveq #19,%d4 */
+	hle_jump(ctx, 0x000272); return;
 L_000272:
 	{ uint32_t eaD = ctx->a[3]; int io = !plain(eaD); if (io) io_pre(ctx, 0x2680, 0x000274); uint32_t v = (ctx->d[0] & 0xFFFFFFFFu); st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 000272 movel %d0,%a3@ */
 	{ uint16_t v = (uint16_t)ctx->d[4] - 1; set_w(&ctx->d[4], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x000272); return; } hle_insn(ctx, 14); }  /* 000274 dbf %d4,272 */
 	{ ctx->d[5] = 0x00000003u; cc_logic32(ctx, ctx->d[5]); } hle_insn(ctx, 4);  /* 000278 moveq #3,%d5 */
+	hle_jump(ctx, 0x00027A); return;
 L_00027A:
 	{ uint32_t eaS = ctx->a[5]; ctx->a[5] += 1; uint32_t eaD = ctx->a[3] + (uint32_t)(int32_t)(17); int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x175D, 0x00027E); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 16); else hle_insn(ctx, 16); }  /* 00027A moveb %a5@+,%a3@(17) */
 	{ uint16_t v = (uint16_t)ctx->d[5] - 1; set_w(&ctx->d[5], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x00027A); return; } hle_insn(ctx, 14); }  /* 00027E dbf %d5,27a */
@@ -400,6 +405,7 @@ L_008162:
 	{ uint32_t eaD = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaD); if (io) io_pre(ctx, 0x2B7C, 0x008176); uint32_t v = 0xC0000000u; st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 24); else hle_insn(ctx, 24); }  /* 00816E movel #-1073741824,%a5@(4) */
 	{ ctx->d[2] = 0x00000000u; cc_logic32(ctx, ctx->d[2]); } hle_insn(ctx, 4);  /* 008176 moveq #0,%d2 */
 	{ ctx->d[0] = 0x0000003Fu; cc_logic32(ctx, ctx->d[0]); } hle_insn(ctx, 4);  /* 008178 moveq #63,%d0 */
+	hle_jump(ctx, 0x00817A); return;
 L_00817A:
 	{ uint32_t eaS = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaS); if (io) io_pre(ctx, 0x322D, 0x00817E); uint32_t v = ld16(eaS); set_w(&ctx->d[1], v); cc_logic16(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 00817A movew %a5@(4),%d1 */
 	{ unsigned b = 1; uint32_t m = 1u << b; cc_set(ctx, CC_Z, (ctx->d[1] & m) ? 0 : CC_Z);  hle_insn(ctx, 10); }  /* 00817E btst #1,%d1 */
@@ -412,6 +418,7 @@ L_00818C:
 	{ uint32_t eaD = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaD); if (io) io_pre(ctx, 0x3B7C, 0x008198); uint32_t v = 0x8F02u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 16); else hle_insn(ctx, 16); }  /* 008192 movew #-28926,%a5@(4) */
 	{ uint32_t eaD = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaD); if (io) io_pre(ctx, 0x2B7C, 0x0081A0); uint32_t v = 0x40000010u; st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 24); else hle_insn(ctx, 24); }  /* 008198 movel #1073741840,%a5@(4) */
 	{ ctx->d[0] = 0x0000004Fu; cc_logic32(ctx, ctx->d[0]); } hle_insn(ctx, 4);  /* 0081A0 moveq #79,%d0 */
+	hle_jump(ctx, 0x0081A2); return;
 L_0081A2:
 	{ uint32_t eaS = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaS); if (io) io_pre(ctx, 0x322D, 0x0081A6); uint32_t v = ld16(eaS); set_w(&ctx->d[1], v); cc_logic16(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0081A2 movew %a5@(4),%d1 */
 	{ unsigned b = 1; uint32_t m = 1u << b; cc_set(ctx, CC_Z, (ctx->d[1] & m) ? 0 : CC_Z);  hle_insn(ctx, 10); }  /* 0081A6 btst #1,%d1 */
@@ -423,6 +430,7 @@ L_0081B6:
 	{ uint32_t eaS = 0x00C00000u; ctx->a[5] = eaS; } hle_insn(ctx, 12);  /* 0081B6 lea c00000,%a5 */
 	{ uint32_t eaD = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaD); if (io) io_pre(ctx, 0x3B7C, 0x0081C2); uint32_t v = 0x8F02u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 16); else hle_insn(ctx, 16); }  /* 0081BC movew #-28926,%a5@(4) */
 	{ uint32_t eaD = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaD); if (io) io_pre(ctx, 0x2B7C, 0x0081CA); uint32_t v = 0x40000010u; st32(eaD, v); cc_logic32(ctx, v); if (io) hle_post(ctx, 24); else hle_insn(ctx, 24); }  /* 0081C2 movel #1073741840,%a5@(4) */
+	hle_jump(ctx, 0x0081CA); return;
 L_0081CA:
 	{ uint32_t eaS = ctx->a[5] + (uint32_t)(int32_t)(4); int io = !plain(eaS); if (io) io_pre(ctx, 0x342D, 0x0081CE); uint32_t v = ld16(eaS); set_w(&ctx->d[2], v); cc_logic16(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0081CA movew %a5@(4),%d2 */
 	{ unsigned b = 1; uint32_t m = 1u << b; cc_set(ctx, CC_Z, (ctx->d[2] & m) ? 0 : CC_Z);  hle_insn(ctx, 10); }  /* 0081CE btst #1,%d2 */
@@ -439,6 +447,7 @@ L_00867A:
 	{ uint32_t eaS = ctx->a[1]; ctx->a[1] += 2; int io = !plain(eaS); if (io) io_pre(ctx, 0x3219, 0x00868E); uint32_t v = ld16(eaS); set_w(&ctx->d[1], v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 00868C movew %a1@+,%d1 */
 	{ uint32_t eaD = ctx->a[0]; ctx->a[0] += 2; int io = !plain(eaD); if (io) io_pre(ctx, 0x30C1, 0x008690); uint32_t v = (ctx->d[1] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 00868E movew %d1,%a0@+ */
 	{ uint32_t eaD = ctx->a[5]; int io = !plain(eaD); if (io) io_pre(ctx, 0x3A81, 0x008692); uint32_t v = (ctx->d[1] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 008690 movew %d1,%a5@ */
+	hle_jump(ctx, 0x008692); return;
 L_008692:
 	{ uint32_t eaS = ctx->a[1]; ctx->a[1] += 2; int io = !plain(eaS); if (io) io_pre(ctx, 0x3219, 0x008694); uint32_t v = ld16(eaS); set_w(&ctx->d[1], v); cc_logic16(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 008692 movew %a1@+,%d1 */
 	if (COND_EQ) { hle_insn(ctx, 10); goto L_00869A; } hle_insn(ctx, 8);  /* 008694 beqs 869a */
@@ -476,6 +485,7 @@ L_0FBB06:
 	{ uint32_t eaS = 0xFFFF0000u; ctx->a[0] = eaS; } hle_insn(ctx, 12);  /* 0FBB06 lea ffff0000,%a0 */
 	{ uint32_t eaS = 0xFFFF00A6u; ctx->a[1] = eaS; } hle_insn(ctx, 12);  /* 0FBB0C lea ffff00a6,%a1 */
 	{ uint32_t v = 0xA5u; set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 0FBB12 movew #165,%d7 */
+	hle_jump(ctx, 0x0FBB16); return;
 L_0FBB16:
 	{ uint32_t eaD = ctx->a[0]; ctx->a[0] += 1; int io = !plain(eaD); if (io) io_pre(ctx, 0x4218, 0x0FBB18); st8(eaD, 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0FBB16 clrb %a0@+ */
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FBB16); return; } hle_insn(ctx, 14); }  /* 0FBB18 dbf %d7,fbb16 */
@@ -483,6 +493,7 @@ L_0FBB16:
 	hle_jump(ctx, 0x0FBB1E); return;  /* 0FBB1E bsrw fc350 */
 L_0FBB22:
 	{ uint32_t v = 0x400u; set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 0FBB22 movew #1024,%d7 */
+	hle_jump(ctx, 0x0FBB26); return;
 L_0FBB26:
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FBB26); return; } hle_insn(ctx, 14); }  /* 0FBB26 dbf %d7,fbb26 */
 	hle_jump(ctx, 0x0FBB2A); return;  /* 0FBB2A bsrw fc408 */
@@ -509,6 +520,7 @@ L_0FC32E:
 	{ uint32_t eaD = 0x00A11100u; int io = !plain(eaD); if (io) io_pre(ctx, 0x33FC, 0x0FC336); uint32_t v = 0x100u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 0FC32E movew #256,a11100 */
 	{ uint32_t eaD = 0x00A11200u; int io = !plain(eaD); if (io) io_pre(ctx, 0x33FC, 0x0FC33E); uint32_t v = 0x0u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 0FC336 movew #0,a11200 */
 	{ ctx->d[0] = 0x00000009u; cc_logic32(ctx, ctx->d[0]); } hle_insn(ctx, 4);  /* 0FC33E moveq #9,%d0 */
+	hle_jump(ctx, 0x0FC340); return;
 L_0FC340:
 	hle_insn(ctx, 4);  /* 0FC340 nop */
 	{ uint16_t v = (uint16_t)ctx->d[0] - 1; set_w(&ctx->d[0], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC340); return; } hle_insn(ctx, 14); }  /* 0FC342 dbf %d0,fc340 */
@@ -520,6 +532,7 @@ L_0FC352:
 	{ uint32_t eaS = 0x00A00000u; ctx->a[0] = eaS; } hle_insn(ctx, 12);  /* 0FC352 lea a00000,%a0 */
 	{ uint32_t eaS = 0x000FC312u; ctx->a[1] = eaS; } hle_insn(ctx, 8);  /* 0FC358 lea %pc@(fc312),%a1 */
 	{ ctx->d[7] = 0x00000005u; cc_logic32(ctx, ctx->d[7]); } hle_insn(ctx, 4);  /* 0FC35C moveq #5,%d7 */
+	hle_jump(ctx, 0x0FC35E); return;
 L_0FC35E:
 	{ uint32_t eaS = ctx->a[1]; ctx->a[1] += 1; uint32_t eaD = ctx->a[0]; ctx->a[0] += 1; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x10D9, 0x0FC360); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0FC35E moveb %a1@+,%a0@+ */
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC35E); return; } hle_insn(ctx, 14); }  /* 0FC360 dbf %d7,fc35e */
@@ -528,15 +541,18 @@ L_0FC35E:
 	{ uint32_t v = shf(ctx, 'r', (ctx->d[0] & 0xFFFFu), 8, 16); set_w(&ctx->d[0], v); } hle_insn(ctx, 22);  /* 0FC36A lsrw #8,%d0 */
 	{ uint32_t eaD = ctx->a[0]; ctx->a[0] += 1; int io = !plain(eaD); if (io) io_pre(ctx, 0x10C0, 0x0FC36E); uint32_t v = (ctx->d[0] & 0xFFu); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 8); else hle_insn(ctx, 8); }  /* 0FC36C moveb %d0,%a0@+ */
 	{ ctx->d[7] = 0x00000014u; cc_logic32(ctx, ctx->d[7]); } hle_insn(ctx, 4);  /* 0FC36E moveq #20,%d7 */
+	hle_jump(ctx, 0x0FC370); return;
 L_0FC370:
 	{ uint32_t eaS = ctx->a[1]; ctx->a[1] += 1; uint32_t eaD = ctx->a[0]; ctx->a[0] += 1; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x10D9, 0x0FC372); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0FC370 moveb %a1@+,%a0@+ */
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC370); return; } hle_insn(ctx, 14); }  /* 0FC372 dbf %d7,fc370 */
 	hle_jump(ctx, 0x0FC376); return;  /* 0FC376 bsrw fc3e6 */
 L_0FC37A:
 	{ ctx->d[7] = 0x00000063u; cc_logic32(ctx, ctx->d[7]); } hle_insn(ctx, 4);  /* 0FC37A moveq #99,%d7 */
+	hle_jump(ctx, 0x0FC37C); return;
 L_0FC37C:
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC37C); return; } hle_insn(ctx, 14); }  /* 0FC37C dbf %d7,fc37c */
 	{ uint32_t eaD = 0x00A11100u; int io = !plain(eaD); if (io) io_pre(ctx, 0x33FC, 0x0FC388); uint32_t v = 0x100u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 0FC380 movew #256,a11100 */
+	hle_jump(ctx, 0x0FC388); return;
 L_0FC388:
 	{ uint32_t eaD = 0x00A11100u;  int io = !plain(eaD); if (io) io_pre(ctx, 0x0839, 0x0FC390); unsigned b = 0; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z);  if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 0FC388 btst #0,a11100 */
 	if (COND_NE) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC388); return; } hle_insn(ctx, 8);  /* 0FC390 bnes fc388 */
@@ -550,6 +566,7 @@ L_0FC3A8:
 	{ uint32_t eaS = 0x000FC5CCu; ctx->a[0] = eaS; } hle_insn(ctx, 8);  /* 0FC3A8 lea %pc@(fc5cc),%a0 */
 	{ uint32_t eaS = 0x00A00C00u; ctx->a[1] = eaS; } hle_insn(ctx, 12);  /* 0FC3AC lea a00c00,%a1 */
 	{ uint32_t v = 0x13FFu; set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 0FC3B2 movew #5119,%d7 */
+	hle_jump(ctx, 0x0FC3B6); return;
 L_0FC3B6:
 	{ uint32_t eaS = ctx->a[0]; ctx->a[0] += 1; uint32_t eaD = ctx->a[1]; ctx->a[1] += 1; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x12D8, 0x0FC3B8); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0FC3B6 moveb %a0@+,%a1@+ */
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC3B6); return; } hle_insn(ctx, 14); }  /* 0FC3B8 dbf %d7,fc3b6 */
@@ -565,6 +582,7 @@ L_0FC3E6:
 	{ uint32_t eaD = 0x00A11200u; int io = !plain(eaD); if (io) io_pre(ctx, 0x33FC, 0x0FC3EE); uint32_t v = 0x0u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 0FC3E6 movew #0,a11200 */
 	{ uint32_t eaD = 0x00A11100u; int io = !plain(eaD); if (io) io_pre(ctx, 0x33FC, 0x0FC3F6); uint32_t v = 0x0u; st16(eaD, v); cc_logic16(ctx, v); if (io) hle_post(ctx, 20); else hle_insn(ctx, 20); }  /* 0FC3EE movew #0,a11100 */
 	{ ctx->d[0] = 0x00000009u; cc_logic32(ctx, ctx->d[0]); } hle_insn(ctx, 4);  /* 0FC3F6 moveq #9,%d0 */
+	hle_jump(ctx, 0x0FC3F8); return;
 L_0FC3F8:
 	hle_insn(ctx, 4);  /* 0FC3F8 nop */
 	{ uint16_t v = (uint16_t)ctx->d[0] - 1; set_w(&ctx->d[0], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC3F8); return; } hle_insn(ctx, 14); }  /* 0FC3FA dbf %d0,fc3f8 */
@@ -576,6 +594,7 @@ L_0FC438:
 L_0FC440:
 	{ uint32_t eaS = 0x00A00400u; ctx->a[0] = eaS; } hle_insn(ctx, 12);  /* 0FC440 lea a00400,%a0 */
 	{ uint32_t v = 0x7FFu; set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 0FC446 movew #2047,%d7 */
+	hle_jump(ctx, 0x0FC44A); return;
 L_0FC44A:
 	{ uint32_t eaS = ctx->a[1]; ctx->a[1] += 1; uint32_t eaD = ctx->a[0]; ctx->a[0] += 1; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x10D9, 0x0FC44C); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0FC44A moveb %a1@+,%a0@+ */
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC44A); return; } hle_insn(ctx, 14); }  /* 0FC44C dbf %d7,fc44a */
@@ -583,6 +602,7 @@ L_0FC44A:
 	{ uint32_t eaS = ctx->a[6] + (uint32_t)(int32_t)(24); ctx->a[6] = eaS; } hle_insn(ctx, 8);  /* 0FC454 lea %fp@(24),%fp */
 	{ uint32_t eaS = 0x000F8000u; ctx->a[0] = eaS; } hle_insn(ctx, 12);  /* 0FC458 lea f8000,%a0 */
 	{ uint32_t v = 0x1Fu; set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 0FC45E movew #31,%d7 */
+	hle_jump(ctx, 0x0FC462); return;
 L_0FC462:
 	{ uint32_t eaS = ctx->a[0]; ctx->a[0] += 1; uint32_t eaD = ctx->a[6]; ctx->a[6] += 1; int io = !plain(eaS) || !plain(eaD); if (io) io_pre(ctx, 0x1CD8, 0x0FC464); uint32_t v = ld8(eaS); st8(eaD, v); cc_logic8(ctx, v); if (io) hle_post(ctx, 12); else hle_insn(ctx, 12); }  /* 0FC462 moveb %a0@+,%fp@+ */
 	{ uint16_t v = (uint16_t)ctx->d[7] - 1; set_w(&ctx->d[7], v); if (v != 0xFFFF) { hle_insn(ctx, 10); hle_jump(ctx, 0x0FC462); return; } hle_insn(ctx, 14); }  /* 0FC464 dbf %d7,fc462 */
@@ -593,13 +613,13 @@ L_0FC478:
 	hle_jump(ctx, 0x0FC478); return;  /* 0FC478 rts */
 }
 
-HLE_RANGE(0x000200, bt_Reset, 1114, 0x000238, 0x00024A, 0x000250, 0x00025C, 0x000268, 0x000272, 0x00027A, 0x00028C, 0x000300) { boot_run(ctx, 0x000200); block_end(); }
-HLE_RANGE(0x000238, bt_Boot_000238, 744, 0x000238, 0x00024A, 0x000250, 0x00025C, 0x000268, 0x000272, 0x00027A, 0x00028C) { boot_run(ctx, 0x000238); block_end(); }
-HLE_RANGE(0x00024A, bt_Boot_00024A, 618, 0x00024A, 0x000250, 0x00025C, 0x000268, 0x000272, 0x00027A, 0x00028C) { boot_run(ctx, 0x00024A); block_end(); }
-HLE_RANGE(0x000250, bt_Boot_000250, 578, 0x000250, 0x00025C, 0x000268, 0x000272, 0x00027A, 0x00028C) { boot_run(ctx, 0x000250); block_end(); }
-HLE_RANGE(0x00025C, bt_Boot_00025C, 498, 0x00025C, 0x000268, 0x000272, 0x00027A, 0x00028C) { boot_run(ctx, 0x00025C); block_end(); }
-HLE_RANGE(0x000268, bt_Boot_000268, 398, 0x000268, 0x000272, 0x00027A, 0x00028C) { boot_run(ctx, 0x000268); block_end(); }
-HLE_RANGE(0x000272, bt_Boot_000272, 324, 0x000272, 0x00027A, 0x00028C) { boot_run(ctx, 0x000272); block_end(); }
+HLE_RANGE(0x000200, bt_Reset, 430, 0x000238, 0x000300) { boot_run(ctx, 0x000200); block_end(); }
+HLE_RANGE(0x000238, bt_Boot_000238, 186, 0x000238, 0x00024A) { boot_run(ctx, 0x000238); block_end(); }
+HLE_RANGE(0x00024A, bt_Boot_00024A, 100, 0x00024A, 0x000250) { boot_run(ctx, 0x00024A); block_end(); }
+HLE_RANGE(0x000250, bt_Boot_000250, 140, 0x000250, 0x00025C) { boot_run(ctx, 0x000250); block_end(); }
+HLE_RANGE(0x00025C, bt_Boot_00025C, 160, 0x00025C, 0x000268) { boot_run(ctx, 0x00025C); block_end(); }
+HLE_RANGE(0x000268, bt_Boot_000268, 134, 0x000268, 0x000272) { boot_run(ctx, 0x000268); block_end(); }
+HLE_RANGE(0x000272, bt_Boot_000272, 108, 0x000272, 0x00027A) { boot_run(ctx, 0x000272); block_end(); }
 HLE_RANGE(0x00027A, bt_Boot_00027A, 276, 0x00027A, 0x00028C) { boot_run(ctx, 0x00027A); block_end(); }
 HLE_RANGE(0x00028C, bt_Boot_00028C, 116, 0x000300) { boot_run(ctx, 0x00028C); block_end(); }
 HLE_RANGE(0x001BE8, bt_ReadPort2Id, 564, 0x001C48) { boot_run(ctx, 0x001BE8); block_end(); }
@@ -607,38 +627,38 @@ HLE_RANGE(0x007406, bt_Boot, 102, 0x00740C) { boot_run(ctx, 0x007406); block_end
 HLE_RANGE(0x007422, bt_Boot_007422, 98, 0x007426) { boot_run(ctx, 0x007422); block_end(); }
 HLE_RANGE(0x007432, bt_Boot_007432, 108, 0x00743E) { boot_run(ctx, 0x007432); block_end(); }
 HLE_RANGE(0x007442, bt_Boot_007442, 164, 0x007454) { boot_run(ctx, 0x007442); block_end(); }
-HLE_RANGE(0x008162, bt_CramClear, 256, 0x00817A, 0x00818A) { boot_run(ctx, 0x008162); block_end(); }
+HLE_RANGE(0x008162, bt_CramClear, 150, 0x00817A) { boot_run(ctx, 0x008162); block_end(); }
 HLE_RANGE(0x00817A, bt_Boot_00817A, 166, 0x00817A, 0x00818A) { boot_run(ctx, 0x00817A); block_end(); }
-HLE_RANGE(0x00818C, bt_VsramClear, 250, 0x0081A2, 0x0081B4) { boot_run(ctx, 0x00818C); block_end(); }
+HLE_RANGE(0x00818C, bt_VsramClear, 140, 0x0081A2) { boot_run(ctx, 0x00818C); block_end(); }
 HLE_RANGE(0x0081A2, bt_Boot_0081A2, 170, 0x0081A2, 0x0081B4) { boot_run(ctx, 0x0081A2); block_end(); }
-HLE_RANGE(0x0081B6, bt_VdpSetScroll2, 230, 0x0081CA, 0x0081D8) { boot_run(ctx, 0x0081B6); block_end(); }
+HLE_RANGE(0x0081B6, bt_VdpSetScroll2, 130, 0x0081CA) { boot_run(ctx, 0x0081B6); block_end(); }
 HLE_RANGE(0x0081CA, bt_Boot_0081CA, 160, 0x0081CA, 0x0081D8) { boot_run(ctx, 0x0081CA); block_end(); }
-HLE_RANGE(0x00867A, bt_VdpSetRegs, 262, 0x008692, 0x00869A) { boot_run(ctx, 0x00867A); block_end(); }
+HLE_RANGE(0x00867A, bt_VdpSetRegs, 180, 0x008692) { boot_run(ctx, 0x00867A); block_end(); }
 HLE_RANGE(0x008692, bt_Boot_008692, 142, 0x008692, 0x00869A) { boot_run(ctx, 0x008692); block_end(); }
 HLE_RANGE(0x0086F6, bt_VramClearAlt, 192, 0x00873A) { boot_run(ctx, 0x0086F6); block_end(); }
 HLE_RANGE(0x00871A, bt_VramClear, 176, 0x00873A) { boot_run(ctx, 0x00871A); block_end(); }
 HLE_RANGE(0x00884C, bt_InitPort1, 222, 0x008874) { boot_run(ctx, 0x00884C); block_end(); }
 HLE_RANGE(0x0FBB00, bt_SndBoot, 102, HLE_EXIT_SP(0x0FBB06, -2)) { boot_run(ctx, 0x0FBB00); block_end(); }
-HLE_RANGE(0x0FBB06, bt_Boot_0FBB06, 182, 0x0FBB16, 0x0FBB1E) { boot_run(ctx, 0x0FBB06); block_end(); }
+HLE_RANGE(0x0FBB06, bt_Boot_0FBB06, 110, 0x0FBB16) { boot_run(ctx, 0x0FBB06); block_end(); }
 HLE_RANGE(0x0FBB16, bt_Boot_0FBB16, 132, 0x0FBB16, 0x0FBB1E) { boot_run(ctx, 0x0FBB16); block_end(); }
-HLE_RANGE(0x0FBB22, bt_Boot_0FBB22, 118, 0x0FBB26, 0x0FBB2A) { boot_run(ctx, 0x0FBB22); block_end(); }
+HLE_RANGE(0x0FBB22, bt_Boot_0FBB22, 74, 0x0FBB26) { boot_run(ctx, 0x0FBB22); block_end(); }
 HLE_RANGE(0x0FBB26, bt_Boot_0FBB26, 104, 0x0FBB26, 0x0FBB2A) { boot_run(ctx, 0x0FBB26); block_end(); }
 HLE_RANGE(0x0FBB2E, bt_Boot_0FBB2E, 310, 0x0FBB60) { boot_run(ctx, 0x0FBB2E); block_end(); }
 HLE_RANGE(0x0FBB68, bt_Boot_0FBB68, 82, HLE_EXIT_SP(0x0FBB6A, 2)) { boot_run(ctx, 0x0FBB68); block_end(); }
-HLE_RANGE(0x0FC32E, bt_Z80Reset, 200, 0x0FC340, 0x0FC34E) { boot_run(ctx, 0x0FC32E); block_end(); }
+HLE_RANGE(0x0FC32E, bt_Z80Reset, 122, 0x0FC340) { boot_run(ctx, 0x0FC32E); block_end(); }
 HLE_RANGE(0x0FC340, bt_Boot_0FC340, 138, 0x0FC340, 0x0FC34E) { boot_run(ctx, 0x0FC340); block_end(); }
-HLE_RANGE(0x0FC352, bt_Boot_0FC352, 282, 0x0FC35E, 0x0FC370, 0x0FC376) { boot_run(ctx, 0x0FC352); block_end(); }
-HLE_RANGE(0x0FC35E, bt_Boot_0FC35E, 240, 0x0FC35E, 0x0FC370, 0x0FC376) { boot_run(ctx, 0x0FC35E); block_end(); }
+HLE_RANGE(0x0FC352, bt_Boot_0FC352, 102, 0x0FC35E) { boot_run(ctx, 0x0FC352); block_end(); }
+HLE_RANGE(0x0FC35E, bt_Boot_0FC35E, 178, 0x0FC35E, 0x0FC370) { boot_run(ctx, 0x0FC35E); block_end(); }
 HLE_RANGE(0x0FC370, bt_Boot_0FC370, 122, 0x0FC370, 0x0FC376) { boot_run(ctx, 0x0FC370); block_end(); }
-HLE_RANGE(0x0FC37A, bt_Boot_0FC37A, 262, 0x0FC37A, 0x0FC37C, 0x0FC388, 0x0FC3A4) { boot_run(ctx, 0x0FC37A); block_end(); }
-HLE_RANGE(0x0FC37C, bt_Boot_0FC37C, 252, 0x0FC37A, 0x0FC37C, 0x0FC388, 0x0FC3A4) { boot_run(ctx, 0x0FC37C); block_end(); }
+HLE_RANGE(0x0FC37A, bt_Boot_0FC37A, 70, 0x0FC37C) { boot_run(ctx, 0x0FC37A); block_end(); }
+HLE_RANGE(0x0FC37C, bt_Boot_0FC37C, 106, 0x0FC37C, 0x0FC388) { boot_run(ctx, 0x0FC37C); block_end(); }
 HLE_RANGE(0x0FC388, bt_Boot_0FC388, 206, 0x0FC37A, 0x0FC388, 0x0FC3A4) { boot_run(ctx, 0x0FC388); block_end(); }
-HLE_RANGE(0x0FC3A8, bt_Boot_0FC3A8, 272, 0x0FC3B6, 0x0FC3DC) { boot_run(ctx, 0x0FC3A8); block_end(); }
+HLE_RANGE(0x0FC3A8, bt_Boot_0FC3A8, 106, 0x0FC3B6) { boot_run(ctx, 0x0FC3A8); block_end(); }
 HLE_RANGE(0x0FC3B6, bt_Boot_0FC3B6, 226, 0x0FC3B6, 0x0FC3DC) { boot_run(ctx, 0x0FC3B6); block_end(); }
 HLE_RANGE(0x0FC3DE, bt_Boot_0FC3DE, 108, 0x0FC3E4) { boot_run(ctx, 0x0FC3DE); block_end(); }
-HLE_RANGE(0x0FC3E6, bt_Z80Reset2, 200, 0x0FC3F8, 0x0FC406) { boot_run(ctx, 0x0FC3E6); block_end(); }
+HLE_RANGE(0x0FC3E6, bt_Z80Reset2, 122, 0x0FC3F8) { boot_run(ctx, 0x0FC3E6); block_end(); }
 HLE_RANGE(0x0FC3F8, bt_Boot_0FC3F8, 138, 0x0FC3F8, 0x0FC406) { boot_run(ctx, 0x0FC3F8); block_end(); }
 HLE_RANGE(0x0FC438, bt_SndBoot2, 98, 0x0FC43C) { boot_run(ctx, 0x0FC438); block_end(); }
-HLE_RANGE(0x0FC440, bt_Boot_0FC440, 304, 0x0FC44A, 0x0FC462, 0x0FC474) { boot_run(ctx, 0x0FC440); block_end(); }
-HLE_RANGE(0x0FC44A, bt_Boot_0FC44A, 272, 0x0FC44A, 0x0FC462, 0x0FC474) { boot_run(ctx, 0x0FC44A); block_end(); }
+HLE_RANGE(0x0FC440, bt_Boot_0FC440, 92, 0x0FC44A) { boot_run(ctx, 0x0FC440); block_end(); }
+HLE_RANGE(0x0FC44A, bt_Boot_0FC44A, 162, 0x0FC44A, 0x0FC462) { boot_run(ctx, 0x0FC44A); block_end(); }
 HLE_RANGE(0x0FC462, bt_Boot_0FC462, 170, 0x0FC462, 0x0FC474) { boot_run(ctx, 0x0FC462); block_end(); }

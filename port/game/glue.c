@@ -5,7 +5,7 @@
  * their own (t2-decomp#11, docs/native.md "Glue"): the cycles of the 68000 instruction, its effect on the stack and
  * PC, and hle_jump to the target, so a callee and the code at the return address are C blocks. Static targets are
  * HLE_RANGEs (difftest runs the original instruction up to the declared exit); computed targets (jsr (a0), jmp
- * (a0)) are functions that jump. 2598 blocks. */
+ * (a0)) are functions that jump. 2600 blocks. */
 #include "hle.h"
 
 #include <stdint.h>
@@ -5629,6 +5629,8 @@ HLE_RANGE(0x0065AC, glue_0065AC, 10, 0x005940)   /* jmp $005940(pc) */
 
 HLE_FUNC(0x0065E2, glue_0065E2, 16) { hle_insn(ctx, 16); }   /* rts */
 
+HLE_FUNC(0x0065F2, glue_0065F2, 16) { hle_insn(ctx, 16); }   /* rts */
+
 HLE_RANGE(0x00660E, glue_00660E, 10, 0x005940)   /* jmp $005940(pc) */
 {
 	hle_insn(ctx, 10);
@@ -5656,6 +5658,13 @@ HLE_RANGE(0x006734, glue_006734, 18, HLE_EXIT_SP(0x006252, -4))   /* jsr $006252
 }
 
 HLE_FUNC(0x00673C, glue_00673C, 16) { hle_insn(ctx, 16); }   /* rts */
+
+HLE_RANGE(0x00673E, glue_00673E, 18, HLE_EXIT_SP(0x00735A, -4))   /* jsr $00735A(pc) */
+{
+	hle_insn(ctx, 18);
+	push32(ctx, 0x006742);
+	hle_jump(ctx, 0x00735A);
+}
 
 HLE_FUNC(0x006754, glue_006754, 16) { hle_insn(ctx, 16); }   /* rts */
 

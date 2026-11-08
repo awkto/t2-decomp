@@ -31,7 +31,57 @@ def functions():
     return out
 
 
+def strict(d):
+    """the logs of a strict native census (T2_NATIVE=1 port/tools/ipprof.sh): where each run stopped, in markdown"""
+    ROUTES = ["coldboot_gate", "ringstate_gate", "pause_gate", "levelflow_gate", "screens_gate"]
+    runs = {}
+    for lg in sorted(glob.glob(os.path.join(d, "*.log"))):
+        name = os.path.basename(lg)[:-4]
+        txt = open(lg, errors="replace").read()
+        m = re.search(r"native: no C block at \$([0-9A-F]{6}) after (\d+) frames", txt)
+        done = re.search(r"(\d+) frames in [\d.]+ s", txt)
+        if m:
+            runs[name] = ("stop", int(m.group(1), 16), int(m.group(2)))
+        elif done:
+            runs[name] = ("done", 0, int(done.group(1)))
+        else:
+            other = [l for l in txt.splitlines() if l.startswith(("hle:", "native:")) and "active" not in l]
+            runs[name] = ("other", 0, 0, other[-1][:80] if other else "no output")
+    fn = functions()
+
+    def fname(a):
+        for e, n, rngs in fn:
+            if any(lo <= a < hi for lo, hi in rngs):
+                return n
+        return "?"
+    print("| route | frames | first stop |")
+    print("|---|---|---|")
+    for r in ROUTES:
+        v = runs.get(r)
+        if not v:
+            continue
+        print("| %s | %d | %s |" % (r, v[2], "none: ran to the end" if v[0] == "done" else ("$%06X %s" % (v[1], fname(v[1])) if v[0] == "stop" else v[3])))
+    states = {k: v for k, v in runs.items() if k not in ROUTES}
+    done = [k for k, v in states.items() if v[0] == "done"]
+    print()
+    print("States (%d runs of 3000 frames): %d ran to the end with no 68k instruction." % (len(states), len(done)))
+    by = collections.defaultdict(list)
+    for k, v in states.items():
+        if v[0] == "stop":
+            by[(v[1], fname(v[1]))].append(v[2])
+        elif v[0] == "other":
+            by[(0, v[3])].append(0)
+    print()
+    print("| first stop | runs | frames before it (min / median / max) |")
+    print("|---|---|---|")
+    for (a, nm), fr in sorted(by.items(), key=lambda kv: -len(kv[1])):
+        fr.sort()
+        print("| %s %s | %d | %d / %d / %d |" % ("$%06X" % a if a else "", nm, len(fr), fr[0], fr[len(fr) // 2], fr[-1]))
+
+
 def main():
+    if "--strict" in sys.argv:
+        return strict(sys.argv[sys.argv.index("--strict") + 1])
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     d = args[0] if args else os.path.join(ROOT, "runs/native/work")
     top = 60

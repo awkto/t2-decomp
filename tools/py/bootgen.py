@@ -13,9 +13,12 @@ Same pieces as piecegen.py (an entry, up to the next jsr/bsr/jmp/rts, which the 
   * a backward branch is an exit of the piece (hle_jump to the loop head): one pass of a loop is one block, so a
     block never spans more than a few dozen cycles and the layer can hand any single pass to the 68k when a
     frame-loop event falls in it (the 64 KiB work-RAM clear of Reset would otherwise be one call of 3.6 frames);
-  * a write to SR ends a piece (the interrupt mask may change: a pending interrupt is taken after it).
+  * a write to SR ends a piece (the interrupt mask may change: a pending interrupt is taken after it);
+  * a piece also ends in front of a loop head it falls into (difftest runs the original up to the first exit it reaches).
 
-usage: python3 -I tools/py/bootgen.py > port/game/boot.c
+usage: python3 -I tools/py/bootgen.py > port/game/boot.c                       (the fixed list SPEC: Reset, Boot, the Z80 loader, ...)
+       python3 -I tools/py/bootgen.py auto ENTRIES REGISTERED SITES > port/game/auto2.c
+                                                                               (the addresses of the native census, see auto())
 """
 import os
 import re
@@ -94,6 +97,15 @@ class HwGen(pg.Gen):
         super().__init__(spec)
         self.bound = {}
         self.barriers = set()
+        self.loop_heads = set()        # targets of backward branches: a piece ends in front of them (difftest runs the original up to its first exit)
+        for a, i in sorted(self.ins.items()):
+            try:
+                cls, tg = self.kind(i)
+            except (AssertionError, KeyError, ValueError, IndexError):
+                continue
+            for tt in tg:
+                if self.inrange(tt) and tt <= a:
+                    self.loop_heads.add(tt)
         self._cur = 0
 
     # --- control flow: back edges and SR writes end a piece
@@ -156,13 +168,14 @@ class HwGen(pg.Gen):
                     exits.add((a, d))
                     self.barriers.add(a)
                     t, mn, args = self.parsed(i)
-                    if mn in pg.CALLS:
+                    if mn in pg.CALLS and self.inrange(nxt):
                         todo.append(nxt)
                     continue
                 d2 = d + self.spdelta(i)
                 if cls == "srw":
                     exits.add((nxt, d2))
-                    todo.append(nxt)
+                    if self.inrange(nxt):
+                        todo.append(nxt)
                     continue
                 if cls == "bra":
                     nexts = [tg[0]]
@@ -171,7 +184,7 @@ class HwGen(pg.Gen):
                 else:
                     nexts = [nxt]
                 for n in nexts:
-                    if self.inrange(n) and n <= a:          # a back edge: one pass of the loop is one block
+                    if self.inrange(n) and (n <= a or n in self.loop_heads):   # a back edge (one pass of a loop is one block) or the way into a loop
                         exits.add((n, d2))
                         todo.append(n)
                     else:
@@ -180,12 +193,20 @@ class HwGen(pg.Gen):
         return entries, reached
 
     def goto(self, tgt):
-        if self.inrange(tgt) and tgt <= self._cur:
+        if self.inrange(tgt) and (tgt <= self._cur or tgt in self.loop_heads):
             return "hle_jump(ctx, 0x%06X); return;" % tgt
         return super().goto(tgt)
 
     # --- instructions
     def emit(self, i, labels):
+        out = self.emit1(i, labels)
+        nxt = i.addr + self.length(i)
+        cls = self.kind(i)[0]
+        if cls not in ("stop", "bra", "srw") and nxt in self.loop_heads and "hle_jump(ctx, 0x%06X)" % nxt not in out.split("/*")[0][-60:]:
+            out += "\n\thle_jump(ctx, 0x%06X); return;" % nxt
+        return out
+
+    def emit1(self, i, labels):
         self._cur = i.addr
         t, mn, args = self.parsed(i)
         a = i.addr
@@ -256,14 +277,15 @@ class HwGen(pg.Gen):
             n = bin(mask).count("1")
             cost = self.cost(i)
             src = parse_op(args[0])
-            assert src[0] in ("post", "ind", "disp"), t
+            assert src[0] in ("post", "ind", "disp", "abs"), t
             regs = [b for b in range(16) if mask & (1 << b)]
             ld = "(uint32_t)(int32_t)(int16_t)ld16" if sz == 2 else "ld32"
             body = "".join("%s = %s(eaS + %d); " % ("ctx->d[%d]" % r if r < 8 else "ctx->a[%d]" % (r - 8), ld, sz * k)
                            for k, r in enumerate(regs))
             post = ("ctx->a[%d] += %d; " % (src[1], sz * n)) if src[0] == "post" else ""
             end = "hle_movem_l(ctx, %d, %d);" % (cost, n) if sz == 4 else "hle_insn(ctx, %d);" % cost
-            ea = "ctx->a[%d]" % src[1] if src[0] != "disp" else "ctx->a[%d] + (uint32_t)(int32_t)(%d)" % (src[1], src[2])
+            ea = {"disp": lambda: "ctx->a[%d] + (uint32_t)(int32_t)(%d)" % (src[1], src[2]),
+                  "abs": lambda: "0x%08Xu" % (src[1] & 0xFFFFFFFF)}.get(src[0], lambda: "ctx->a[%d]" % src[1])()
             return line("{ uint32_t eaS = %s; int io = !plain(eaS); if (io) io_pre(ctx, 0x%04X, 0x%06X); %s%sif (io) hle_post(ctx, %d); else %s }" %
                         (ea, op, nxt, body, post, cost, end))
         # ---- bit operations on memory
@@ -432,8 +454,6 @@ HEADER = r"""/* The cold-boot path and the hardware helpers it needs, as C block
 #include "gx.h"
 
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #pragma GCC diagnostic ignored "-Wunused-label"
 
@@ -616,7 +636,7 @@ static inline void st16(uint32_t a, uint32_t v)
 {
 	uint32_t p = a & 0xFFFFFFu;
 	if (p >= 0xE00000u) { RAM16(p) = (uint16_t)v; return; }
-	if (is_vdp(p)) { vdp_enter(); if (getenv("T2_BTRACE")) fprintf(stderr, "st16 %%06X <- %%04X clk %%d\n", p, v & 0xFFFF, gx_m68k_cycles()); hle_vdp_timed(1); bus_w16(p, (uint16_t)v); hle_vdp_timed(0); return; }
+	if (is_vdp(p)) { vdp_enter(); hle_vdp_timed(1); bus_w16(p, (uint16_t)v); hle_vdp_timed(0); return; }
 	bus_w16(p, (uint16_t)v);
 }
 static inline void st32(uint32_t a, uint32_t v)
@@ -674,7 +694,7 @@ def functions():
 
 # functions the native census lists that this generator must not touch: the DMA routines (another task) and the spin
 # loops that wait for the VDP / an interrupt (docs/native.md "Waits")
-AUTO_SKIP = {0x00800C, 0x011FA2, 0x01DC4E}
+AUTO_SKIP = {0x00800C, 0x011FA2}
 
 
 def auto():

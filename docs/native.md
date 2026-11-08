@@ -5,8 +5,10 @@ The game logic is the C of `port/game/` (the HLE functions, ranges and glue bloc
 dispatcher, the *native runner* (`port/hle/native.c`). The rest of the machine stays GPGX's (VDP, Z80 with the
 YM2612/PSG, the pads, the interrupt lines), and work RAM is still GPGX's 64 KiB array.
 
-Status: the runner and the census exist; the C does not yet cover every 68k address the routes reach, so the
-runner stops with `no C block at $ADDR` where it runs out of C (numbers below and in docs/remaining68k.md).
+Status (wave 2, "Cold boot and the census-driven blocks" below): 50 of the 92 wide-gate states run their 3000 frames
+with no 68k instruction at all; every other run, and all five route gates, stop at the two DMA routines
+(`VramClearDma` $00800C, `DmaToVram` $011FA2), which are another task's. Everything else the 97 runs reach is C.
+Without the DMA routines the runner stops with `no C block at $ADDR`; `T2_NATIVE_FALLBACK=1` lists what is missing.
 
 ## How it runs
 
@@ -62,6 +64,7 @@ python3 -I tools/py/remaining68k.py > docs/remaining68k.md
 python3 -I tools/py/gluegen.py --add > port/game/glue.c      # add the barrier instructions the census found
 OUT=runs/native T2_NATIVE=1 port/tools/ipprof.sh      # the same routes on the native runner
 grep -h "no C block" runs/native/work/*.log | sort | uniq -c | sort -rn
+python3 -I tools/py/nativecensus.py --strict runs/native/work   # per route: frames before the first stop
 ```
 
 ## The census (docs/remaining68k.md)
@@ -78,7 +81,7 @@ bailed. `tools/py/remaining68k.py` groups the addresses by reason:
 | gap in a ported function | an instruction no piece covers |
 | wait spin: C block in the native runner only | `natwaits.c` |
 
-## Results (end of the infrastructure step)
+## Results (end of the infrastructure step, wave 1)
 
 Census over 97 runs (the 92 wide-gate states x 3000 frames and the five route gates, 423,301 frames), `--hle all`:
 
@@ -112,3 +115,92 @@ otherwise. In native mode the guards that decline a call for an interrupt (`safe
 `T2_HLE_WATCHDOG=N` (hle.c) reports the C block that is still running after N seconds.
 
 `port/hle/native_core.c` (the CPU API for a build without the 68k core, as Scooby's P3) is carried over but not built yet.
+
+## Cold boot and the census-driven blocks (wave 2)
+
+Two generators now write the C that the first wave left to the 68k. Both emit **pieces** like `piecegen.py` (an entry,
+straight code up to the next `jsr`/`bsr`/`jmp`/`rts`, which the glue blocks of `glue.c` execute) and charge every original
+instruction with its GPGX cost on the instruction timeline; `costcheck.py` checks the charges. The file
+`tools/py/bootgen.py` differs from `piecegen.py` in what a piece may touch and how it ends:
+
+* **Hardware.** An instruction whose effective address is outside work RAM and ROM goes through `hle_pre` .. `hle_post`
+  (the sound driver's model, `game/sound.c`), so the Z80 bus request, the I/O ports and the VDP see the clock the 68k core
+  would give them. The decision is made at run time from the address (`Reset` loads its port pointers from a table).
+  The first VDP access of a block opens the exact session of `game/vdpfill.c` (`hle_dma_begin`, `hle_exact_session`):
+  the raster line follows the CPU clock, data port writes are timed (FIFO stalls) and the status word has its bits 10-15
+  from the instruction prefetch. `block_end()` closes it with `hle_vdp_end()`, which, unlike `hle_dma_end()`, does **not**
+  complete a DMA that is still running: `Reset` starts a 64 KiB VRAM fill that the original lets run on into frame 1.
+* **Loops.** A backward branch is an exit of the piece: one pass of a loop is one block (a few dozen cycles). `Reset`
+  clears 64 KiB of work RAM with a `move.l d0,-(a6) / dbra` loop of 3.6 frames; as one call it could never run in the
+  emulated build (a C call must not straddle the frame end), and it would be unexact against the interrupt checks. As
+  16384 one-pass blocks the layer hands any single pass to the 68k when an event falls in it (the "frame end" declines of
+  `bt_Boot_00025C` in `T2_HLE_DECLINES=1`), and the rest runs as C.
+* **SR writes.** A write to SR ends the piece (the new mask may take a pending interrupt before the next instruction).
+* **Other.** `move usp`, `move sr`, `movem` to and from memory, `abcd`/`sbcd` (GPGX's undefined N/V included), `mulu`/`muls`/
+  `divu.w` (GPGX's data-dependent cycles), `adda`/`suba`, `eor`, `rol`/`roxl`, `(d8,pc,Xn)` operands.
+
+`port/game/boot.c` (`bootgen.py`, a fixed list) is the cold boot: `Reset` ($000200) including the Z80 handshake, the PSG
+and VDP initialisation and the work-RAM clear, `Boot` ($007406), the sound driver's Z80 boot code (`sub_0FBB00`,
+`sub_0FC32E/350/3E6/438`: reset, loader stub, 5120-byte driver upload), `InitPort1`, `ReadPort2Id`, `VdpSetRegs`,
+`CramClear`, `VsramClear`, `sub_0081B6`, `VramClear`/`VramClearAlt` (which jump into the fill loops of `vdpfill.c`).
+The pieces were validated by the lockstep gates, not by `dt`: a cold boot has no savestate to capture an entry from.
+
+`port/game/auto2.c` (`bootgen.py auto`) covers the addresses a native run reaches from a C block with no block there:
+the native runner with **`T2_NATIVE_FALLBACK=1`** (a census aid, never a gate) executes such an address on the 68k core,
+one instruction, and lists it at exit as `native-fallback: $ADDR COUNT ENTRIES` (ENTRIES: reached from a C block, i.e. an
+entry the C has to cover; `native.c`). One run of a route reports everything it needs, not only the first stop.
+`tools/py/nativecensus.py` merges the logs, groups them by function of `data/functions.txt` and writes
+`runs/native/entries.txt`; `bootgen.py auto ENTRIES REGISTERED SITES` generates one function of pieces per data/functions
+entry (every entry of it, so it also covers what the function falls into) and lists the `jsr`/`bsr`/`jmp`/`rts` it stops
+at, which go into `data/glue_sites.txt` for `gluegen.py`. Loop it until the census is empty:
+
+```
+OUT=runs/native T2_NATIVE=1 T2_NATIVE_FALLBACK=1 port/tools/ipprof.sh     # on a VM
+python3 -I tools/py/nativecensus.py runs/native/work                      # table + runs/native/entries.txt
+python3 -I tools/py/bootgen.py auto ENTRIES_ALL REGISTERED SITES > port/game/auto2.c   # see the header of bootgen.py auto()
+python3 -I tools/py/gluegen.py > port/game/glue.c
+```
+
+The `$008DFC` states (53 routes) needed no settle in the end: the `rts` there was one of 34 barrier instructions between
+C pieces without a glue block (the first wave's census predates the last `gluegen.py --add`). With the glue sites added
+(`data/glue_sites.txt` grew by the barriers of the census-listed functions and the exits of `boot.c` / `auto2.c`) every
+state starts natively; `T2_NATIVE_SETTLE` is no longer needed.
+
+### Results (wave 2)
+
+Native runner, strict (`OUT=runs/native T2_NATIVE=1 port/tools/ipprof.sh`, 97 runs, no fallback):
+
+| route | frames | first stop |
+|---|---|---|
+| coldboot_gate | 13 | $00800C VramClearDma |
+| ringstate_gate | 13 | $00800C VramClearDma |
+| pause_gate | 13 | $00800C VramClearDma |
+| levelflow_gate | 13 | $00800C VramClearDma |
+| screens_gate | 13 | $00800C VramClearDma |
+
+States (92 runs of 3000 frames): 50 ran to the end with no 68k instruction.
+
+| first stop | runs | frames before it (min / median / max) |
+|---|---|---|
+| $00800C VramClearDma | 39 | 13 / 15 / 1912 |
+| $011FA2 DmaToVram | 3 | 77 / 742 / 1400 |
+
+Census with the fallback (`T2_NATIVE_FALLBACK=1`, the same 97 runs, 423,301 frames): **64 distinct addresses** have no
+C block (was 5953 interpreted in the emulated census, 1052 reached natively before the generators), 13.6 M instructions
+run on the 68k core (2.57 G before, of which 2.50 G were the wait spins, now idle blocks): all of them in `VramClearDma`
+(17 addresses, 13.37 M instructions) and `DmaToVram` (47 addresses,
+0.21 M). Emulated census (`--hle all`, the same 97 runs): 4937 interpreted addresses (was 5953), 2,550,293,707 top-level
+instructions (was 2,573,501,147; 2.50 G of them are the wait spins); docs/remaining68k.md.
+
+Verification with `T2_NATIVE` unset (the new blocks are active in the emulated build, so the gates prove their cycles):
+`scriptgate.py` coldboot_gate 9000 (also with `T2_HASH_Z80=1`), ringstate_gate 53768, pause_gate 5738, levelflow_gate
+43913, screens_gate 34882 frames identical; `lockstep.sh --frames 3000` and `--z80` all six states identical;
+`/opt/t2/bin/wide.sh` 92/92; `mousetest.sh` (with `--hle all`) ALL PASS; `make` OK; `romscan.py --tracked` CLEAN.
+`dt` (state, registers, VDP, Z80, I/O writes) where a capture route reaches the entry: `VdpQueueVScroll` 200/200,
+`sub_0122CA` 12/12, `CramClear` 1/1, `VsramClear` 3/3, `VdpSetRegs` 3/3, `HScrollClear` 3/3, `sub_007FA4` 200/200; the cold
+boot, `InitPort1` and the Z80 loader have no capture route (no savestate exists before `Reset`): the lockstep gates are the proof.
+
+Not done / left: the two DMA routines (`VramClearDma`, `DmaToVram`: the interrupt-inside-C task); the native runner does
+not yet start a route cold past `VramClearDma` (frame 13), so "coldboot/ringstate run natively" holds up to there
+(`Reset`, `Boot`, the Z80 driver upload and the first VDP clears are C; with the fallback the whole 9000 frames run and only
+`VramClearDma` is interpreted).
