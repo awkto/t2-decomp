@@ -59,4 +59,11 @@ void gx_follow_z80(int on);              /* gx_vdp_follow_cpu_lines also runs th
 void gx_vdp_follow_cpu_lines(void);      /* like follow_cpu, also advancing the V counter */
 void gx_vdp_set_line_base(unsigned v);    /* sandbox: advance the VDP line base to the CPU time */
 
+
+/* native renderer (port/src/render, tools/patches/gpgx-render.patch) */
+void gx_set_render_hooks(void (*line)(int), void (*parse)(int), void (*remap)(int));
+uint8_t *gx_sat(void);           /* internal sprite attribute cache, 0x400 bytes, host-endian words */
+int gx_viewport_w(void);         /* active display width latched for this frame (256 / 320) */
+int gx_viewport_h(void);
+
 #endif

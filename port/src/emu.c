@@ -9,6 +9,7 @@
 #include "gx.h"
 #include "hle.h"
 #include "native.h"
+#include "render/render_emu.h"
 #include "sha1.h"
 
 #include <stdarg.h>
@@ -346,6 +347,10 @@ bool emu_init(const char *rom_path, const char *workdir, bool use_gun, char *err
 		snprintf(err, errlen, "core failed to load %s", rom_path);
 		return false;
 	}
+	if (!render_emu_configure(NULL)) {     /* T2_RENDER=gpgx|c|compare (default gpgx) */
+		snprintf(err, errlen, "T2_RENDER: unknown renderer '%s' (gpgx, c, compare)", getenv("T2_RENDER"));
+		return false;
+	}
 	/* The core reads the ROM from the file, not from our buffer: patch its copy (after the sha1 check
 	 * above; the file on disk is untouched). The core byte-swaps the ROM, hence the ^ 1. */
 	if (g_aim_fast)
@@ -441,6 +446,8 @@ void emu_run_frame(void)
 	if (g_fb && g_fb_w <= 720 && g_fb_h <= 576) {
 		for (unsigned y = 0; y < g_fb_h; y++)
 			memcpy(g_fb_copy + y * g_fb_w, (const uint8_t *)g_fb + y * g_fb_pitch, g_fb_w * 2);
+		/* the C renderer (docs/render.md): replaces or checks the picture just copied */
+		render_emu_frame_end(g_frames, g_fb_copy, g_fb_w, g_fb_h);
 	}
 }
 

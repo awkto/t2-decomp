@@ -33,6 +33,7 @@ static opt_t opts[] = {
 	OPT("volume", T_INT, "100", "0..100", 0, "audio volume in percent"),
 	OPT("rom", T_STR, "", "", 0, "path of the ROM to run (remembered automatically)"),
 	OPT("hle", T_STR, "none", "", 1, "C replacements for 68k functions: none, all, or a comma list of names (-name off, +name on); see docs/porting.md"),
+	OPT("render", T_ENUM, "gpgx", "gpgx|c|compare", 0, "renderer: gpgx = the emulator's picture, c = the C renderer (docs/render.md), compare = draw both, show gpgx's and report differences (T2_RENDER overrides)"),
 	/* keybindings: SDL key names, several separated by | */
 	OPT("key_up", T_KEYS, "Up", "", 0, "D-pad up"),
 	OPT("key_down", T_KEYS, "Down", "", 0, "D-pad down"),
