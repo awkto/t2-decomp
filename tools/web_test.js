@@ -42,7 +42,9 @@ const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSO
 
   page.on('console', m => {
     const t = m.text();
-    if (m.type() === 'error') errors.push(t);
+    // the optional bundled ROM (web/app.js) is absent on public builds: its 404 is expected
+    if (m.type() === 'error' && /baserom\.md$/.test((m.location() || {}).url || '')) logs.push('expected: ' + t);
+    else if (m.type() === 'error') errors.push(t);
     else if (m.type() === 'warning') warnings.push(t);
     else logs.push(t);
   });
