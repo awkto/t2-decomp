@@ -86,6 +86,15 @@ void hle_register_def(const hle_def *def)
 	}
 	entry *e = find_addr(def->addr);
 	if (e) {
+		/* a whole-function port that yields (HLE_F_YIELD) supersedes a piece of the same entry: the census
+		 * generators (auto1/auto2/glue) cover the addresses that were still 68k, the yielding port covers them
+		 * exactly at interrupts; two of the same kind is a mistake */
+		bool ny = (def->flags & HLE_F_YIELD) != 0, ey = (e->def.flags & HLE_F_YIELD) != 0;
+		if (ny != ey) {
+			if (ny)
+				e->def = *def;
+			return;
+		}
 		fprintf(stderr, "hle: $%06X registered twice (%s, %s)\n", def->addr, e->def.name, def->name);
 		abort();
 	}
