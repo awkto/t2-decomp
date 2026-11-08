@@ -94,7 +94,7 @@ def emit(rom, a, ins):
     tgt = ins.get("target")
     c = []
     if k == "rts":
-        c.append("HLE_FUNC(0x%06X, %s, %d) { hle_insn(ctx, %d); }   /* rts */" % (a, n, cost, cost))
+        c.append("HLE_FUNC_ATOMIC(0x%06X, %s, %d) { hle_insn(ctx, %d); }   /* rts */" % (a, n, cost, cost))
     elif k == "rte":
         c.append("HLE_FUNC(0x%06X, %s, %d)   /* rte */\n{\n\thle_insn(ctx, %d);\n\tctx->sr = pop16(ctx);\n"
                  "\thle_jump(ctx, pop32(ctx));\n}" % (a, n, cost, cost))
@@ -102,19 +102,19 @@ def emit(rom, a, ins):
         body = "\thle_insn(ctx, %d);\n" % cost
         if tgt is not None:
             body += "\tpush32(ctx, 0x%06X);\n\thle_jump(ctx, 0x%06X);\n" % (ret, tgt)
-            c.append("HLE_RANGE(0x%06X, %s, %d, HLE_EXIT_SP(0x%06X, -4))   /* %s */\n{\n%s}" %
+            c.append("HLE_RANGE_ATOMIC(0x%06X, %s, %d, HLE_EXIT_SP(0x%06X, -4))   /* %s */\n{\n%s}" %
                      (a, n, cost, tgt, ins["text"], body))
         else:
             body += "\tuint32_t t = %s;\n\tpush32(ctx, 0x%06X);\n\thle_jump(ctx, t);\n" % (ins["expr"], ret)
-            c.append("HLE_FUNC(0x%06X, %s, %d)   /* %s */\n{\n%s}" % (a, n, cost, ins["text"], body))
+            c.append("HLE_FUNC_ATOMIC(0x%06X, %s, %d)   /* %s */\n{\n%s}" % (a, n, cost, ins["text"], body))
     else:   # jmp / bra
         body = "\thle_insn(ctx, %d);\n" % cost
         if tgt is not None:
             body += "\thle_jump(ctx, 0x%06X);\n" % tgt
-            c.append("HLE_RANGE(0x%06X, %s, %d, 0x%06X)   /* %s */\n{\n%s}" % (a, n, cost, tgt, ins["text"], body))
+            c.append("HLE_RANGE_ATOMIC(0x%06X, %s, %d, 0x%06X)   /* %s */\n{\n%s}" % (a, n, cost, tgt, ins["text"], body))
         else:
             body += "\thle_jump(ctx, %s);\n" % ins["expr"]
-            c.append("HLE_FUNC(0x%06X, %s, %d)   /* %s */\n{\n%s}" % (a, n, cost, ins["text"], body))
+            c.append("HLE_FUNC_ATOMIC(0x%06X, %s, %d)   /* %s */\n{\n%s}" % (a, n, cost, ins["text"], body))
     return "\n".join(c)
 
 
@@ -169,7 +169,8 @@ def main():
  * their own (t2-decomp#11, docs/native.md "Glue"): the cycles of the 68000 instruction, its effect on the stack and
  * PC, and hle_jump to the target, so a callee and the code at the return address are C blocks. Static targets are
  * HLE_RANGEs (difftest runs the original instruction up to the declared exit); computed targets (jsr (a0), jmp
- * (a0)) are functions that jump. %d blocks. */
+ * (a0)) are functions that jump. Every block is one instruction, so it is HLE_F_ATOMIC (an interrupt cannot fall
+ * inside it: no decline); only rte, which lowers the mask, is an ordinary HLE_FUNC. %d blocks. */
 #include "hle.h"
 
 #include <stdint.h>

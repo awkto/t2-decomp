@@ -90,7 +90,8 @@ void hle_register_def(const hle_def *def)
 		/* a whole-function port that yields (HLE_F_YIELD) supersedes a piece of the same entry: the census
 		 * generators (auto1/auto2/glue) cover the addresses that were still 68k, the yielding port covers them
 		 * exactly at interrupts; two of the same kind is a mistake */
-		bool ny = (def->flags & HLE_F_YIELD) != 0, ey = (e->def.flags & HLE_F_YIELD) != 0;
+		bool ny = (def->flags & HLE_F_YIELD) && !(def->flags & HLE_F_SHORT);
+		bool ey = (e->def.flags & HLE_F_YIELD) && !(e->def.flags & HLE_F_SHORT);   /* a short block is a census piece */
 		if (ny != ey) {
 			if (ny)
 				e->def = *def;
@@ -662,6 +663,7 @@ struct rs {
 	int clock0;
 	int y_nest;
 	bool y_sess, y_timed;
+	int user;                  /* hle_cor_slot while suspended */
 	bool sr_pend;              /* the yield lowered the mask with an interrupt pending: applied at the resume hook */
 	uint16_t sr_val;
 	int sr_back;               /* mclk of the move to SR (the core takes the interrupt before it adds them) */
@@ -675,6 +677,7 @@ static rs *g_cor;              /* the coroutine whose function is running now */
 static int g_cor_block;        /* >0 inside hle_call68k / hle_run68k_until made by the function */
 static bool g_cor_on = true;   /* T2_HLE_NOCOR=1: decline / bail as before */
 unsigned long g_yields;
+int hle_cor_slot;
 
 static char g_nocor_file[1024];  /* T2_HLE_NOCOR_FILE=a.c,b.c (debugging) */
 static char g_nocor_fn[1024];  /* T2_HLE_NOCOR_FN=name,name: these decline / bail as before (debugging) */
@@ -825,7 +828,8 @@ static int run_def(const hle_def *def, entry *e)
 		g_bnd = gx_m68k_cycle_end();
 	if (top)
 		g_bail_on = false;
-	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt;
+	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt &&
+	             !(def->flags & HLE_F_ATOMIC);   /* one instruction: no interrupt can fall inside */
 	const char *fbase = strrchr(def->file ? def->file : "", '/');
 	fbase = fbase ? fbase + 1 : (def->file ? def->file : "");
 	bool cor_ok = g_cor_on && !name_listed(g_nocor_fn, def->name) && !name_listed(g_nocor_file, fbase);
@@ -876,7 +880,9 @@ static int run_def(const hle_def *def, entry *e)
 			/* the declared cycles of a generated whole-function port (piecegen: 4000) is not a bound: a loop in
 			 * it (SpawnRowB's ObjAlloc spawns) can run across the frame end. Judge by a generous span, so an
 			 * event that falls inside makes it a coroutine. */
-			if (span < YIELD_SPAN)
+			if (def->flags & HLE_F_SHORT)
+				span += 400;                /* a Z80 stall or two at the slice ends inside the block */
+			else if (span < YIELD_SPAN)
 				span = YIELD_SPAN;
 			if (lowmask) {
 				/* the function lowers the mask itself (ReadPad: $2700 ... $2000): what is pending or raised
@@ -1024,6 +1030,8 @@ static int rs_finish(rs *s)
 		 * charge, the session (if the function has one) ends and is re-opened on resume */
 		int lvl = gx_m68k_pending_irq();
 		s->y_nest = g_nest;
+		s->user = hle_cor_slot;
+		hle_cor_slot = 0;
 		s->y_sess = g_sess;
 		s->y_timed = g_sess_timed;
 		long nested = sess_end(c.tl_used);
@@ -1143,6 +1151,7 @@ static int resume_cor(void)
 			return 0;
 	}
 	g_nsusp--;
+	hle_cor_slot = s->user;
 	g_top = true;
 	g_cur_def = s->def;
 	g_bnd = gx_m68k_cycle_end();
@@ -1180,7 +1189,7 @@ static bool callc_exact(entry *e, hle_ctx *c)
 		for (const uint32_t *x = e->def.exits; *x; x++)
 			if (hle_exit_sp_delta(*x) != 0)
 				return false;
-	if (e->def.flags & HLE_F_YIELD)
+	if (e->def.flags & (HLE_F_YIELD | HLE_F_ATOMIC))   /* an atomic block is one instruction with an exact charge */
 		return true;
 	if (e->def.flags & HLE_F_PURE) {   /* exact when the dry run keeps a timeline */
 		hle_ctx d = *c;
