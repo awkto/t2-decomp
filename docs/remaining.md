@@ -96,10 +96,10 @@ TitleScreen, WaitStartWindow, CheatCodeCheck: under 0.05 Mcyc each) but is wait-
 
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
-| $00C48E | (object animation step) | 27.0 | 1.87 | 15046 | a6 = object: countdown +$1A, next frame from list at +$16; called via $00C442 and $013188 | easy: pure RAM |
-| $008C8E, $008C52 | (per-player state handler) | 11.8, 3.4 | 0.82, 0.23 | 87127 | a4 = $FF8000/$FF8050 player struct, by state word +$22: timers, sounds, ReadInput, WaitFrames | medium-hard: has blocking waits |
-| $012234 | VdpQueueTileRect | 9.0 | 0.62 | 2199 | VdpList command 6 builder (rect of tilemap words) | medium: VdpList writer |
-| $012BB0 | PickupsRun | 8.4 | 0.58 | 43549 | pool $FF9AB2 ($1A each), like MissilesRun | easy: pure |
+| $00C48E | (object animation step) | 27.0 | 1.87 | 15046 | a6 = object: countdown +$1A, next frame from list at +$16; called via $00C442 and $013188 | DONE in C (game/misc2.c; was: easy: pure RAM) |
+| $008C8E, $008C52 | (per-player state handler) | 11.8, 3.4 | 0.82, 0.23 | 87127 | a4 = $FF8000/$FF8050 player struct, by state word +$22: timers, sounds, ReadInput, WaitFrames | DONE in C (game/misc2.c), idle path only; the blocking-wait states decline to 68k (was: medium-hard: has blocking waits) |
+| $012234 | VdpQueueTileRect | 9.0 | 0.62 | 2199 | VdpList command 6 builder (rect of tilemap words) | DONE in C (game/misc2.c; was: medium: VdpList writer) |
+| $012BB0 | PickupsRun | 8.4 | 0.58 | 43549 | pool $FF9AB2 ($1A each), like MissilesRun | DONE in C (game/misc2.c; was: easy: pure) |
 | $011D38.. | VdpListNext / Reset / End / Jump | 5.9, 3.5, 2.4, 0.4 | 0.41 to 0.03 | 40k-179k | 3-instruction list helpers | easy, but per-call gain small |
 | $013376 | SpriteQueueReset | 4.2 | 0.29 | 44061 | resets sprite queue | easy |
 | $00B3AE | (object loop dispatch) | 4.2 | 0.29 | 623 | `jmp (a0)` into object handlers; structural | n/a (indirect jump; ObjRunAll owns it) |
@@ -110,6 +110,6 @@ TitleScreen, WaitStartWindow, CheatCodeCheck: under 0.05 Mcyc each) but is wait-
 1. The declines (28% of busy): cheapest big win, no new routines. Look at why VdpCmd7HScroll (99% declined) and
    VdpCmd1CopyWords (47%) run as 68k; a nested/timed session instead of a decline could move up to ~25% of busy to C.
 2. Text/HUD printing with VramWriteWord (8.8%): easy, one cluster ($007C9A..$007EB2, $0087C4).
-3. Object animation step and PickupsRun (2.5%): pure RAM.
+3. (done: ObjPathStep, PickupsRun, VdpQueueTileRect, PlayerState idle path in game/misc2.c)
 4. Sound engine as one unit (8%): hard, self-contained, one VBlank entry.
 5. VDP upload helpers (3.4%): medium; mostly load-time.
