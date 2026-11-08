@@ -1,0 +1,3 @@
+# Cold boot (power-on, no savestate, no input): logos, story, title, attract demo.
+#   python3 -I port/tools/scriptgate.py port/scripts/coldboot_gate.txt --hle all
+run 9000
