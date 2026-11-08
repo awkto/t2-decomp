@@ -659,6 +659,7 @@ struct rs {
 	entry *e;
 	const hle_def *outer_def;
 	bool top, chk, unmasked, orig, cor, done, used;
+	bool irqd_ok, y_force;     /* delayed-IRQ model enabled (hle_irqd_enable); the yield forces the interrupt check */
 	uint32_t sp0;
 	int clock0;
 	int y_nest;
@@ -777,9 +778,47 @@ void hle_irq_poll(hle_ctx *c)
 		}
 	}
 }
+/* The delayed IRQ of a VDP control port write (m68k_set_irq_delay, gpgx-irqdelay.patch): a write that enables
+ * the frame/line interrupt while one is pending makes the original core run the NEXT instruction and then take the
+ * interrupt (the nested instruction has no refresh check, its cost is added after the exception). A coroutine
+ * that opted in (hle_irqd_enable, game/vdpfill.c) models it: the hook below arms it during the write, the
+ * instruction after the write runs (without a refresh check: hle_irqd_nested), and at the next instruction
+ * boundary the function yields at once - however far the slice end is - with that instruction's charge held back
+ * (m68k_hle_irq_extra: the exception adds it after its own cycles) and the core checking the interrupt as soon as
+ * the hook returns. A natural slice end between the write and the next instruction does not yield. */
+extern int (*m68k_hle_irq_delay)(unsigned int level);
+extern int m68k_hle_irq_check, m68k_hle_irq_extra;
+static int g_irqd;        /* 0 idle, 1 the write is running, 2 the instruction after it is running */
+static int g_irqd_last;   /* master cycles of the last instruction the exact code charged (hle_irqd_note) */
+static int irqd_hook(unsigned int level)
+{
+	(void)level;
+	if (!g_cor || g_cor_block || !g_cor->irqd_ok || g_irqd || g_cor->c.dry)
+		return 0;
+	g_irqd = 1;
+	return 1;
+}
+void hle_irqd_enable(void) { if (g_cor) g_cor->irqd_ok = true; }
+void hle_irqd_note(int mclk) { g_irqd_last = mclk; }
+bool hle_irqd_nested(void) { return g_irqd == 2; }
 void hle_yield_point(void)
 {
-	if (g_cor && !g_cor_block && gx_m68k_cycles() + (int)g_cor->c.tl >= gx_m68k_cycle_end())
+	if (!g_cor || g_cor_block)
+		return;
+	if (g_irqd == 1) {                /* the boundary right after the write: the next instruction runs first */
+		g_irqd = 2;
+		return;
+	}
+	if (g_irqd == 2) {                /* ...and now the interrupt: before that instruction's charge */
+		g_irqd = 0;
+		gx_m68k_set_cycles(gx_m68k_cycles() - g_irqd_last);
+		m68k_hle_irq_extra = g_irqd_last;
+		m68k_hle_irq_check = 1;
+		g_cor->y_force = true;
+		cor_do_yield(g_cor);
+		return;
+	}
+	if (gx_m68k_cycles() + (int)g_cor->c.tl >= gx_m68k_cycle_end())
 		cor_do_yield(g_cor);
 }
 
@@ -788,6 +827,10 @@ static void cor_entry(void)
 	rs *s = g_cor;
 	s->def->fn(&s->c);
 	s->done = true;
+	if (g_irqd) {
+		fprintf(stderr, "hle: %s ended with a delayed IRQ armed (state %d)\n", s->def->name, g_irqd);
+		g_irqd = 0;
+	}
 	swapcontext(&s->uc, &s->back);
 }
 static void cor_run(rs *s, bool start)
@@ -807,6 +850,20 @@ static void cor_run(rs *s, bool start)
 }
 
 static int rs_finish(rs *s);
+
+/* the VDP session code whose waits need the frame loop (docs/native.md): vdpfill.c, vdplist.c, textprint.c */
+static bool nat_cor_file(const hle_def *def)
+{
+	const char *f = strrchr(def->file ? def->file : "", '/');
+	f = f ? f + 1 : (def->file ? def->file : "");
+	(void)f;
+	return def->addr == 0x00800C || def->addr == 0x00807C || def->addr == 0x007DEE;
+}
+
+static bool cor_ok_early(const hle_def *def)
+{
+	return g_cor_on && (def->flags & HLE_F_YIELD);
+}
 
 static int run_def(const hle_def *def, entry *e)
 {
@@ -828,13 +885,18 @@ static int run_def(const hle_def *def, entry *e)
 		g_bnd = gx_m68k_cycle_end();
 	if (top)
 		g_bail_on = false;
+	/* the native runner has no declines, but an exact-clock session function (cycles 0: VDP code, the DMA
+	 * routines that poll a busy flag the frame loop clears) still has to hand the machine to the frame loop */
+	bool nat_cor = native_active && cor_ok_early(def) && nat_cor_file(def) && top && !hle_post_access && !def_is_orig(def);
 	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt &&
 	             !(def->flags & HLE_F_ATOMIC);   /* one instruction: no interrupt can fall inside */
 	const char *fbase = strrchr(def->file ? def->file : "", '/');
 	fbase = fbase ? fbase + 1 : (def->file ? def->file : "");
 	bool cor_ok = g_cor_on && !name_listed(g_nocor_fn, def->name) && !name_listed(g_nocor_file, fbase);
 	bool yieldf = cor_ok && (def->flags & HLE_F_YIELD);
-	if (guard && yieldf && (def->cycles == 0 || (def->flags & HLE_F_BAIL))) {
+	if (nat_cor) {
+		cor = true;
+	} else if (guard && yieldf && (def->cycles == 0 || (def->flags & HLE_F_BAIL))) {
 		/* an exact-clock session function (VDP list, text printers): its own guards need the frame loop
 		 * to run in between at any line, so it is always a coroutine */
 		cor = true;
@@ -946,6 +1008,8 @@ static int run_def(const hle_def *def, entry *e)
 	s->top = top;
 	s->cor = cor;
 	s->done = false;
+	s->irqd_ok = false;
+	s->y_force = false;
 	s->clock0 = clock0;
 	s->orig = def_is_orig(def);
 	s->chk = hle_chk_on && top && !hle_post_access && !(def->flags & HLE_F_PURE) && !s->orig;
@@ -1037,7 +1101,10 @@ static int rs_finish(rs *s)
 		long nested = sess_end(c.tl_used);
 		g_nest = 0;
 		g_top = false;
-		gx_m68k_set_irq_level(lvl);
+		if (s->y_force)
+			s->y_force = false;          /* the VDP's own level (sess_end resynced it): the delayed IRQ is due now */
+		else
+			gx_m68k_set_irq_level(lvl);
 		long total = (c.cycles > 0 ? c.cycles : 0) + nested;
 		c.cycles = 0;
 		uint32_t pc_keep = c.pc;
@@ -1152,6 +1219,10 @@ static int resume_cor(void)
 	}
 	g_nsusp--;
 	hle_cor_slot = s->user;
+	if (m68k_hle_irq_extra) {            /* the delayed IRQ was masked: the held-back instruction is charged now */
+		gx_m68k_set_cycles(gx_m68k_cycles() + m68k_hle_irq_extra);
+		m68k_hle_irq_extra = 0;
+	}
 	g_top = true;
 	g_cur_def = s->def;
 	g_bnd = gx_m68k_cycle_end();
@@ -1603,6 +1674,7 @@ void hle_install(void)
 		prof_install();
 	}
 	m68k_hle_handler = dispatch;
+	m68k_hle_irq_delay = irqd_hook;
 	m68k_hle_bitmap = g_bitmap;
 	bitmap_set(STALL_PC, true);
 	bitmap_set(YIELD_PC, true);

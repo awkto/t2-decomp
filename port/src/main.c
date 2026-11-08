@@ -25,6 +25,7 @@
 #include "ipprof.h"
 #include "mouse.h"
 #include "options.h"
+#include "render/render_emu.h"
 #include "overlay.h"
 #include "romfind.h"
 #include "script.h"
@@ -64,6 +65,7 @@ static void usage(const char *argv0)
 	       "  --no-mouse              no Menacer on port 2 (keyboard/gamepad only)\n"
 	       "  --hle SPEC              run 68k functions as C: none (default), all, or a list of names\n"
 	       "                          separated by ',' or '+' (-name off, +name on); see docs/porting.md\n"
+	       "  --render MODE           gpgx (default), c (the C renderer, docs/render.md) or compare; env T2_RENDER too\n"
 	       "  --hle-list              print the active C replacements and exit\n"
 	       "Headless: SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy %s --script s.txt --screenshot out.ppm\n",
 	       argv0, argv0);
@@ -327,6 +329,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(s, "--no-throttle")) a.no_throttle = true;
 		else if (!strcmp(s, "--no-mouse")) SETOPT("mouse", "off");
 		else if (!strcmp(s, "--hle")) a.hle = NEXT();
+		else if (!strcmp(s, "--render")) SETOPT("render", NEXT());
 		else if (!strcmp(s, "--hle-list")) a.hle_list = true;
 		else if (!strcmp(s, "-h") || !strcmp(s, "--help")) { usage(argv[0]); return 0; }
 		else { fprintf(stderr, "unknown option %s\n", s); usage(argv[0]); return 2; }
@@ -390,6 +393,8 @@ int main(int argc, char **argv)
 		}
 		free(abs);
 	}
+	if (!getenv("T2_RENDER") && !render_emu_configure(options_str("render")))
+		fprintf(stderr, "render: unknown renderer, using gpgx\n");
 	keys_configure();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER) != 0) {

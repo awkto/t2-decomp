@@ -234,3 +234,17 @@ void gx_z80_catchup(int b)
 		z80_run((unsigned)b);
 }
 int gx_frame_end_clock(void) { return (int)((long)lines_per_frame * MCYCLES_PER_LINE); }
+
+/* ---- native renderer (github/t2-decomp#12, tools/patches/gpgx-render.patch) ---- */
+extern void (*t2_render_line_cb)(int line);
+extern void (*t2_parse_satb_cb)(int line);
+extern void (*t2_remap_line_cb)(int line);
+void gx_set_render_hooks(void (*line)(int), void (*parse)(int), void (*remap)(int))
+{
+	t2_render_line_cb = line;
+	t2_parse_satb_cb = parse;
+	t2_remap_line_cb = remap;
+}
+uint8_t *gx_sat(void) { return sat; }
+int gx_viewport_w(void) { return bitmap.viewport.w; }
+int gx_viewport_h(void) { return bitmap.viewport.h; }

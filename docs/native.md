@@ -5,7 +5,7 @@ The game logic is the C of `port/game/` (the HLE functions, ranges and glue bloc
 dispatcher, the *native runner* (`port/hle/native.c`). The rest of the machine stays GPGX's (VDP, Z80 with the
 YM2612/PSG, the pads, the interrupt lines), and work RAM is still GPGX's 64 KiB array.
 
-Status (wave 2, "Cold boot and the census-driven blocks" below): 50 of the 92 wide-gate states run their 3000 frames
+Status (final, "DMA routines" at the end: 92 of 92 states and all routes are native). Earlier, wave 2: 50 of the 92 wide-gate states run their 3000 frames
 with no 68k instruction at all; every other run, and all five route gates, stop at the two DMA routines
 (`VramClearDma` $00800C, `DmaToVram` $011FA2), which are another task's. Everything else the 97 runs reach is C.
 Without the DMA routines the runner stops with `no C block at $ADDR`; `T2_NATIVE_FALLBACK=1` lists what is missing.
@@ -206,3 +206,28 @@ Not done / left: the two DMA routines (`VramClearDma`, `DmaToVram`: the interrup
 not yet start a route cold past `VramClearDma` (frame 13), so "coldboot/ringstate run natively" holds up to there
 (`Reset`, `Boot`, the Z80 driver upload and the first VDP clears are C; with the fallback the whole 9000 frames run and only
 `VramClearDma` is interpreted).
+
+## DMA routines and the delayed IRQ (wave 3)
+
+`VramClearDma` $00800C and `DmaFillAt` $00807C (vdpfill.c) are compiled in and lockstep-exact; `DmaToVram` / `DmaToVramSave`
+were already. Result: **92 of 92 wide-gate states run 3000 frames with 0 68k instructions, and all five route gates run
+natively to the end** (strict census, `OUT=runs/native T2_NATIVE=1 port/tools/ipprof.sh`, `nativecensus.py --strict`):
+coldboot 9000, ringstate 53768, pause 5738, levelflow 43913, screens 34900 frames (the script's end).
+
+What was wrong with the fill (gun_0a diverged in frame 2172): `VramClearDma` writes the shadow of VDP register 1 back
+(`move.w (vdp_reg01),(4,a5)`). When that write enables the frame interrupt while a VINT is pending (the game had
+display and IE0 off), GPGX calls `m68k_set_irq_delay`: the core finishes the write, runs the **next instruction nested
+(no refresh check, its cost added after the exception)** and takes the interrupt at once, mid-slice. In a C function that
+call executed garbage on the core. `tools/patches/gpgx-irqdelay.patch` adds a hook (`m68k_hle_irq_delay`) and two
+variables; `hle.c` (`irqd_hook`, `hle_yield_point`) models it for coroutines that opt in (`hle_irqd_enable()`, vdpfill.c):
+the instruction after the write runs without a refresh check (`hle_irqd_nested`), then the function yields at once with that
+instruction's charge held back (`m68k_hle_irq_extra`, added by the exception after its latency cycles, whose phase is that of
+the held-back clock), and the core checks the interrupt as soon as the hook returns (`m68k_hle_irq_check`). A natural slice
+end between the write and the next instruction does not yield. If the interrupt is masked, `resume_cor` charges the held-back
+time.
+
+Native runner: it has no declines, but a poll on a flag that only the frame loop clears (the fill's DMA-busy bit) or a
+text print that straddles the frame end needs the frame loop in between, so `VramClearDma`, `DmaFillAt` and `PrintText`
+($007DEE) are coroutines there too (`nat_cor_file` in hle.c). Making every cycles-0 YIELD function a coroutine in the native
+runner was tried and breaks l7_chase / l8_frz / misc_p1 (a `hle_callc` to a non-C target is fatal natively), so it is limited
+to these three.
