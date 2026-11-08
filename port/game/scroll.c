@@ -104,8 +104,22 @@ static int f_lt(hle_ctx *c) { return f_n(c) != f_v(c); }
 static int f_le(hle_ctx *c) { return f_z(c) || f_lt(c); }
 
 /* ------------------------------------------------------------------ ScrollRows $004752 */
-HLE_FUNC_PURE(0x004752, ScrollRows, 8000)
+/* Early bail (docs/porting.md): the group head ($004770), the per-row loop ($004792) and the list write
+ * ($0047AE) are bail points (every register is in ctx, the next instruction sets the flags it uses) and
+ * entries again, so the C takes the rest over when the 68k reaches one after the event. Nothing charged
+ * yet = nothing changed: decline. */
+#define SR_BAIL(chunk, pc) do { if (hle_bail_due(ctx, (chunk))) { \
+	if (!ctx->tl_used) hle_decline_why(2); else hle_bail_to(ctx, (pc)); return; } } while (0)
+
+static void scrollrows_run(hle_ctx *ctx, uint32_t entry)
 {
+	if (entry == 0x004770)
+		goto L_group;
+	if (entry == 0x004792)
+		goto L_row;
+	if (entry == 0x0047AE)
+		goto L_list;
+	SR_BAIL(110, 0x004752);
 	ctx->a[0] = RAM32(SCROLL_SCRIPT);
 	ctx->a[1] = 0xFFFFAF92u;
 	ctx->a[2] = 0xFFFFAA5Cu;
@@ -113,6 +127,8 @@ HLE_FUNC_PURE(0x004752, ScrollRows, 8000)
 	ctx->a[4] = 0xFFFFB0D2u;
 	HLE_SEQ(ctx, 20, 12, 12, 12, 12);
 	for (;;) {
+	L_group:
+		SR_BAIL(160, 0x004770);
 		set_w(&ctx->d[2], bus_r16(ctx->a[0])); ctx->a[0] += 2;     /* move.w (a0)+,d2 */
 		cc_logic16(ctx, ctx->d[2]);
 		hle_insn(ctx, 8);
@@ -149,6 +165,8 @@ HLE_FUNC_PURE(0x004752, ScrollRows, 8000)
 		set_w(&ctx->d[2], alu(ctx, OP_SUB, ctx->d[2], 1, 16));              /* subq.w #1,d2 */
 		hle_insn(ctx, 4);
 		for (;;) {
+		L_row:
+			SR_BAIL(80, 0x004792);
 			uint16_t d1 = (uint16_t)ctx->d[1];
 			RAM16(ctx->a[2]) = (uint16_t)alu(ctx, OP_SUB, RAM16(ctx->a[2]), d1, 16);   /* sub.w d1,(a2) */
 			ctx->a[2] += 0x20;                                            /* lea (0x20,a2),a2 */
@@ -168,6 +186,8 @@ HLE_FUNC_PURE(0x004752, ScrollRows, 8000)
 		hle_insn(ctx, 10);                                                /* bra.w loc_004770 */
 	}
 	/* loc_0047AE */
+L_list:
+	SR_BAIL(180, 0x0047AE);
 	uint32_t a5 = RAM32(VDP_LIST_PTR);
 	RAM16(a5) = 7; a5 += 2;
 	RAM16(a5) = 0x400; a5 += 2;
@@ -178,6 +198,11 @@ HLE_FUNC_PURE(0x004752, ScrollRows, 8000)
 	HLE_SEQ(ctx, 20, 12, 12, 20, 12, 20, 16);
 	cc_logic32(ctx, a5);
 }
+
+HLE_FUNC_BAIL(0x004752, ScrollRows, 8000) { scrollrows_run(ctx, 0x004752); }
+HLE_FUNC_BAIL(0x004770, ScrollRowsGroup, 8000) { scrollrows_run(ctx, 0x004770); }
+HLE_FUNC_BAIL(0x004792, ScrollRowsRow, 8000) { scrollrows_run(ctx, 0x004792); }
+HLE_FUNC_BAIL(0x0047AE, ScrollRowsList, 8000) { scrollrows_run(ctx, 0x0047AE); }
 
 /* ------------------------------------------------------------------ BgStreamLayers $00498A */
 static void bg_call(hle_ctx *c, uint32_t addr)
