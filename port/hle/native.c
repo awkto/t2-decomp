@@ -22,6 +22,7 @@
  */
 #include "native.h"
 #include "shared.h"
+#include <stdlib.h>
 
 /* GPGX's headers remap stdio to libretro's VFS: messages go through hle.c */
 void native_fatal(const char *what, unsigned pc, unsigned sr, unsigned sp, unsigned ret);
@@ -220,6 +221,33 @@ static void no_block(unsigned pc)
 	             native_read32(m68k.dar[15] & 0xFFFFFE) & 0xFFFFFF);
 }
 
+/* T2_NATIVE_FALLBACK=1 (a census aid, docs/native.md): a PC with no C block is executed by the 68k core, one
+ * instruction, and listed at exit (address and count) instead of ending the run, so ONE run of a route reports
+ * every address it needs C for, not just the first. Never for a gate: the run is no longer "no 68k". */
+extern int m68k_step_one(void);
+void native_fallback_report(unsigned pc, unsigned long n, unsigned long entries);
+static int fb_mode = -1;
+static unsigned fb_pc[16384];
+static unsigned long fb_n[16384], fb_e[16384];
+static int fb_prev;                 /* the last block was a fallback step: not an entry */
+static void fb_exit(void)
+{
+	for (int i = 0; i < 16384; i++)
+		if (fb_n[i])
+			native_fallback_report(fb_pc[i], fb_n[i], fb_e[i]);
+}
+static void fb_note(unsigned pc)
+{
+	unsigned h = (pc >> 1) & 16383;
+	while (fb_n[h] && fb_pc[h] != pc)
+		h = (h + 1) & 16383;
+	fb_pc[h] = pc;
+	fb_n[h]++;
+	if (!fb_prev)
+		fb_e[h]++;           /* reached from a C block: an entry the C has to cover */
+	fb_prev = 1;
+}
+
 /* run the C block at PC once and charge its cycles; returns the 68k cycles charged */
 static int run_block(void)
 {
@@ -231,9 +259,23 @@ static int run_block(void)
 		cpu_hook(HOOK_M68K_E, 0, pc, 0);
 #endif
 	int c = pc < 0x400000 ? m68k_hle_handler(pc) : -1;
-	if (c < 0)
-		no_block(pc);
+	if (c < 0) {
+		if (fb_mode < 0) {
+			fb_mode = getenv("T2_NATIVE_FALLBACK") != NULL;
+			if (fb_mode)
+				atexit(fb_exit);
+		}
+		if (!fb_mode)
+			no_block(pc);
+		fb_note(pc);
+		native_active = 0;
+		m68k_step_one();
+		native_active = 1;
+		native_blocks++;
+		return 0;
+	}
 	native_blocks++;
+	fb_prev = 0;
 #ifdef M68K_OVERCLOCK_SHIFT
 	m68k.cycles += (int)(((long long)c * 7 * m68k.cycle_ratio) >> M68K_OVERCLOCK_SHIFT);
 #else
