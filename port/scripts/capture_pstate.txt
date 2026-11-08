@@ -1,0 +1,1541 @@
+# per-player state handler ($008C8E): run past the load, then poke the state word (+$22) and timer (+$20) of either player (capture-multi for game/playerstate.c)
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0000
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0078
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0079
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0032
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0033
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0020
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0030
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0010
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0002
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0001
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 017F
+run 6
+load states/gun_01.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0001
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0002
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0003
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0004
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0005
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0006
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8022 2 0007
+poke FF8020 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0001
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0002
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0003
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0004
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0005
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0006
+poke FF8070 2 0000
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0078
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0079
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0032
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0033
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0020
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0030
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0010
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0002
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0001
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 017F
+run 6
+load states/2p_gun_03.state
+run 40
+poke FF8072 2 0007
+poke FF8070 2 0000
+run 6
