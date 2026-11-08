@@ -72,7 +72,12 @@ enum { HLE_F_WAIT = 1,
        HLE_F_LOWMASK = 2,
        /* the function touches only 68k work RAM and its registers (no I/O, no nested 68k): the layer
         * may run it twice, a dry run to learn its length and then the real one */
-       HLE_F_PURE = 4 };
+       HLE_F_PURE = 4,
+       /* the function can hand the rest of its work to the original 68k at chosen instruction
+        * boundaries (hle_bail_due / hle_bail_to, docs/porting.md "Early bail"): run_def does not
+        * decline it for an interrupt or the frame end inside the call; it runs in C up to the last
+        * bail point that is certain to come before the event, and the 68k continues from there */
+       HLE_F_BAIL = 8 };
 
 /* Range exit with a declared stack delta (docs/porting.md, "Ranges that push or pop"):
  * the range leaves at ADDR with SP = entry SP + DELTA. DELTA is even, -256..+254: negative
@@ -130,6 +135,15 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
 	static const uint32_t hle_exits_##NAME[] = { __VA_ARGS__, 0 };                      \
 	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__,   \
 	                                        hle_exits_##NAME, 0, HLE_F_PURE };          \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_BAIL: an HLE_FUNC with HLE_F_BAIL (see above) */
+#define HLE_FUNC_BAIL(ADDR, NAME, CYCLES)                                               \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_BAIL };                               \
 	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
@@ -209,6 +223,15 @@ void hle_insn(hle_ctx *ctx, int n);
 void hle_insn_x(hle_ctx *ctx, int n, int extra);
 #define hle_movem_l(ctx, n, regs) hle_insn_x((ctx), (n), 8 * (regs))
 #define hle_movem_w(ctx, n, regs) hle_insn((ctx), (n))   /* .w has no SKIP_BUS_REFRESH */
+/* Early bail (HLE_F_BAIL). At an instruction boundary whose registers are all in ctx and whose next
+ * instruction sets the flags it reads, a bail-capable function asks hle_bail_due(ctx, chunk):
+ * `chunk` = an upper bound (68k cycles) of the code up to the NEXT bail point (or the end). True
+ * when the first interrupt-raising slice end or the frame end could fall inside that stretch (never
+ * in a dry run, a nested call or the sandbox). The function then mirrors its registers into ctx,
+ * calls hle_bail_to(ctx, pc) and returns: the 68k continues at `pc`, running the stretch with the
+ * event inside exactly as the original does. Before anything was changed use hle_decline(). */
+bool hle_bail_due(hle_ctx *ctx, int chunk_cycles);
+void hle_bail_to(hle_ctx *ctx, uint32_t pc);
 void hle_pre(hle_ctx *ctx);
 void hle_post(hle_ctx *ctx, int n);
 void hle_sync(hle_ctx *ctx);   /* put the pending time on the clock (before hle_call68k, after its jsr was charged) */

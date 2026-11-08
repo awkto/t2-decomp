@@ -143,9 +143,30 @@ HLE_FUNC_PURE(0x013228, ObjQueueSprite, 290)
  * tst.b Dn 4, st.b Dn 6, bset.b #n,(d16,An) 20, bclr.b #n,(d16,An) 20, clr.b (d16,An) 16,
  * clr.w (An) 12, movem.w (An)+,regs 12+4*regs, asl/asr.w #n 6+2n, Bcc.s taken 10/not 8,
  * Bcc.w taken 10/not 12, bra 10, dbra 10/expire 14, rts 16. */
-HLE_FUNC_PURE(0x013272, BuildSpriteTable, 60000)
+/* Early bail (docs/porting.md): the function runs in C up to the last bail point that is certain to be
+ * reached before the first interrupt-raising slice end or the frame end, then the original 68k
+ * continues from that instruction. The bail points are loop heads whose next instruction sets the flags
+ * it uses (the flags and X before them are dead: the final X comes from the asl.w #2,d6), with every
+ * register in ctx (the sort's d1/d2 are reloaded by its first two instructions). The chunk = the
+ * longest stretch up to the next bail point (or the rts), rounded up. The bail points are also entries
+ * (BuildSpriteTableSort ... BuildSpriteTableTail): when the 68k comes back to one after the event, the
+ * C takes the rest over again ("resume"). Nothing charged yet = nothing changed: decline instead of a bail
+ * (a bail to the very address the hook is at would loop). */
+#define BST_BAIL(chunk, pc) do { if (hle_bail_due(ctx, (chunk))) { \
+	if (!ctx->tl_used) hle_decline_why(2); else hle_bail_to(ctx, (pc)); return; } } while (0)
+
+static void bst_run(hle_ctx *ctx, uint32_t entry)
 {
 	int passes = 0;
+
+	switch (entry) {
+	case 0x013296: goto loc_013296;
+	case 0x0132C4: goto loc_0132C4;
+	case 0x0132E8: goto loc_0132E8;
+	case 0x013340: goto loc_013340;
+	default: break;
+	}
+	BST_BAIL(220, 0x013272);
 
 	ctx->a[0] = SPR_QUEUE;                        /* lea (0xffffa250).l,a0 */
 	hle_insn(ctx, 12);
@@ -185,6 +206,7 @@ loc_013290:                                       /* one bubble-sort pass */
 	set_w(&ctx->d[7], ctx->d[5] & 0xFFFF);        /* move.w d5,d7 */
 	hle_insn(ctx, 4);
 loc_013296:
+	BST_BAIL(170, 0x013296);
 	{
 		uint16_t d1 = RAM16(ctx->a[1]);           /* move.w (a1)+,d1 */
 		ctx->a[1] += 2;
@@ -234,6 +256,7 @@ loc_0132B2:
 	hle_insn(ctx, 12);
 
 loc_0132C4:                                       /* one queued sprite */
+	BST_BAIL(210, 0x0132C4);
 	ctx->d[0] = RAM8(ctx->a[0]);                  /* moveq #0,d0 / move.b (a0)+,d0 */
 	ctx->a[0] += 1;
 	HLE_SEQ(ctx, 4, 8);
@@ -267,6 +290,7 @@ loc_0132C4:                                       /* one queued sprite */
 	hle_insn(ctx, 12);
 
 loc_0132E8:                                       /* one piece */
+	BST_BAIL(350, 0x0132E8);
 	set_w(&ctx->d[0], ROM16(ctx->a[4]));          /* move.w (a4)+,d0 (size) */
 	ctx->a[4] += 2;
 	hle_insn(ctx, 8);
@@ -361,6 +385,7 @@ loc_01333C:
 	hle_insn(ctx, 14);
 
 loc_013340:                                       /* queue the SAT copy */
+	BST_BAIL(210, 0x013340);
 	if (sprite_stats_on() && (ctx->d[6] & 0xFFFF) > g_bst_max_pieces)
 		g_bst_max_pieces = ctx->d[6] & 0xFFFF;
 	if (sprite_stats_on() && passes) {
@@ -411,3 +436,9 @@ loc_013364:                                       /* empty queue: one dummy entr
 	hle_insn(ctx, 10);                                    /* bra.w loc_013340 */
 	goto loc_013340;
 }
+
+HLE_FUNC_BAIL(0x013272, BuildSpriteTable, 60000) { bst_run(ctx, 0x013272); }
+HLE_FUNC_BAIL(0x013296, BuildSpriteTableSort, 60000) { bst_run(ctx, 0x013296); }
+HLE_FUNC_BAIL(0x0132C4, BuildSpriteTableSprite, 60000) { bst_run(ctx, 0x0132C4); }
+HLE_FUNC_BAIL(0x0132E8, BuildSpriteTablePiece, 60000) { bst_run(ctx, 0x0132E8); }
+HLE_FUNC_BAIL(0x013340, BuildSpriteTableTail, 60000) { bst_run(ctx, 0x013340); }

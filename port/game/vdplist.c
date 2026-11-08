@@ -328,26 +328,11 @@ static void cmd_end(hle_ctx *ctx)
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_N);
 }
 
-/* cmd 1 ($012068): copy `count` words from src to VRAM, autoincrement 2. */
-static int cmd_copy_words(hle_ctx *ctx)
+/* the copy loop of cmd 1 (loc_0120B0: move.w (a1)+,(a5) / dbra d4), entered after the head or, `resume`,
+ * at the loop head when the 68k reaches it (VdpCmd1CopyLoop): d4 is the dbra counter. A bail before the
+ * first move of a resumed loop leaves the flags as they are. */
+static int copy_loop(hle_ctx *ctx, uint16_t d4, uint16_t count, int resume)
 {
-	count_cmd(1);
-	run_to(ctx, 0x012068, 0x012074);            /* prologue (arg reads) as 68k */
-	uint16_t count = ctx->d[4] & 0xFFFF;
-	uint16_t addr = ctx->d[2] & 0xFFFF;
-
-	poll_status(ctx, 0, 0x012074);              /* loc_012074: move.w (4,a5),d0 / btst / bne */
-	RAM8(VDP_REG01_DMA) |= 0x10;                /* bset.b #4,(vdp_reg01+1).l */
-	tick(24);
-	wr_ctrl(RAM16(VDP_REG01), 28);              /* move.w (vdp_reg01).l,(4,a5) */
-	wr_ctrl(0x8F02, 16);                        /* move.w #$8f02,(4,a5) */
-	vram_addr(ctx, addr, 1, 2);                 /* move.w d2,d1 / andi / ori / rol / andi */
-	TICKS(4, 8, 8, 10, 8);
-	wr_ctrl(ctx->d[2] & 0xFFFF, 12);            /* move.w d2,(4,a5) */
-	wr_ctrl(ctx->d[1] & 0xFFFF, 12);            /* move.w d1,(4,a5) */
-
-	uint16_t d4 = (uint16_t)(count - 1);        /* subq.w #1,d4 */
-	tick(4);
 	uint16_t last = 0;
 	int moved = 0;
 	for (;;) {                                  /* loc_0120B0: move.w (a1)+,(a5) / dbra d4 */
@@ -355,7 +340,7 @@ static int cmd_copy_words(hle_ctx *ctx)
 			set_w(&ctx->d[4], d4);
 			if (moved)
 				cc_logic16(ctx, last);
-			else
+			else if (!resume)
 				cc_subq1_w(ctx, count);
 			ctx->pc = 0x0120B0;
 			return 1;
@@ -385,6 +370,29 @@ static int cmd_copy_words(hle_ctx *ctx)
 	}
 	tick(10);                                   /* bra.w VdpListNext */
 	return 0;
+}
+
+/* cmd 1 ($012068): copy `count` words from src to VRAM, autoincrement 2. */
+static int cmd_copy_words(hle_ctx *ctx)
+{
+	count_cmd(1);
+	run_to(ctx, 0x012068, 0x012074);            /* prologue (arg reads) as 68k */
+	uint16_t count = ctx->d[4] & 0xFFFF;
+	uint16_t addr = ctx->d[2] & 0xFFFF;
+
+	poll_status(ctx, 0, 0x012074);              /* loc_012074: move.w (4,a5),d0 / btst / bne */
+	RAM8(VDP_REG01_DMA) |= 0x10;                /* bset.b #4,(vdp_reg01+1).l */
+	tick(24);
+	wr_ctrl(RAM16(VDP_REG01), 28);              /* move.w (vdp_reg01).l,(4,a5) */
+	wr_ctrl(0x8F02, 16);                        /* move.w #$8f02,(4,a5) */
+	vram_addr(ctx, addr, 1, 2);                 /* move.w d2,d1 / andi / ori / rol / andi */
+	TICKS(4, 8, 8, 10, 8);
+	wr_ctrl(ctx->d[2] & 0xFFFF, 12);            /* move.w d2,(4,a5) */
+	wr_ctrl(ctx->d[1] & 0xFFFF, 12);            /* move.w d1,(4,a5) */
+
+	uint16_t d4 = (uint16_t)(count - 1);        /* subq.w #1,d4 */
+	tick(4);
+	return copy_loop(ctx, d4, count, 0);
 }
 
 /* cmd 2 ($011D70): fill `bytes` bytes at VRAM addr with 0 (VramFillWords). */
@@ -457,34 +465,69 @@ static void cmd_fill_value(hle_ctx *ctx)
 }
 
 /* cmd 6 ($0120BA): tilemap rectangle: `cols` words per row, `rows-1` rows, rows $80 bytes
- * apart in VRAM, data from src. */
-static void cmd_tile_rect(hle_ctx *ctx)
+ * apart in VRAM, data from src. `from` 0 = the command's start; else a resume point the 68k reached after a
+ * bail or a declined head: 1 = row head $0120DA (d3 = row address, d4 = cols - 1, d6 = rows left),
+ * 2 = the row's word loop $0120F6 (d5 = words left). Bails (the next instruction at `pc`): inside the word
+ * loop before the move and before the dbf, before the row's addi/dbf, and before the closing bra.w. The flags
+ * a bail leaves are dead: the instruction at `pc` sets what the rest reads. */
+static int tr_bail(hle_ctx *ctx, uint32_t pc, uint16_t d3, uint16_t d5, uint16_t d6)
 {
-	count_cmd(6);
-	run_to(ctx, 0x0120BA, 0x0120C8);            /* prologue (arg reads) as 68k */
-	uint16_t cols = ctx->d[4] & 0xFFFF;
-	uint16_t rows1 = ctx->d[6] & 0xFFFF;
+	set_w(&ctx->d[3], d3);
+	set_w(&ctx->d[5], d5);
+	set_w(&ctx->d[6], d6);
+	ctx->pc = pc;
+	return 1;
+}
 
-	poll_status(ctx, 0, 0x0120C8);              /* loc_0120C8 */
-	wr_ctrl(0x8F02, 16);                        /* move.w #$8f02,(4,a5) */
-	uint16_t d4 = (uint16_t)(cols - 1);         /* subq.w #1,d4 */
-	set_w(&ctx->d[4], d4);
-	tick(4);
+static int cmd_tile_rect(hle_ctx *ctx, int from)
+{
+	uint16_t d3, d4, d6, d5 = 0;
+	int inner = 0;
+	if (from == 0) {
+		count_cmd(6);
+		run_to(ctx, 0x0120BA, 0x0120C8);    /* prologue (arg reads) as 68k */
+		uint16_t cols = ctx->d[4] & 0xFFFF;
+		d6 = ctx->d[6] & 0xFFFF;
 
-	uint16_t d3 = ctx->d[3] & 0xFFFF;
-	uint16_t d6 = rows1;
-	for (;;) {                                  /* loc_0120DA: one row */
-		vram_addr(ctx, d3, 1, 2);           /* move.w d3,d2 / move.w d2,d1 / andi / ori / rol / andi */
-		TICKS(4, 4, 8, 8, 10, 8);
-		wr_ctrl(ctx->d[2] & 0xFFFF, 12);
-		wr_ctrl(ctx->d[1] & 0xFFFF, 12);
-		set_w(&ctx->d[5], d4);              /* move.w d4,d5 */
+		poll_status(ctx, 0, 0x0120C8);      /* loc_0120C8 */
+		wr_ctrl(0x8F02, 16);                /* move.w #$8f02,(4,a5) */
+		d4 = (uint16_t)(cols - 1);          /* subq.w #1,d4 */
+		set_w(&ctx->d[4], d4);
 		tick(4);
-		uint16_t d5 = d4;
+		d3 = ctx->d[3] & 0xFFFF;
+	} else {
+		d3 = ctx->d[3] & 0xFFFF;
+		d4 = ctx->d[4] & 0xFFFF;
+		d6 = ctx->d[6] & 0xFFFF;
+		if (from == 2) {
+			inner = 1;
+			d5 = ctx->d[5] & 0xFFFF;
+		}
+	}
+
+	for (;;) {                                  /* loc_0120DA: one row */
+		if (!inner) {
+			if (due(130))               /* the row's head: about 100 cycles with two control writes */
+				return tr_bail(ctx, 0x0120DA, d3, ctx->d[5], d6);
+			vram_addr(ctx, d3, 1, 2);   /* move.w d3,d2 / move.w d2,d1 / andi / ori / rol / andi */
+			TICKS(4, 4, 8, 8, 10, 8);
+			wr_ctrl(ctx->d[2] & 0xFFFF, 12);
+			wr_ctrl(ctx->d[1] & 0xFFFF, 12);
+			d5 = d4;                    /* move.w d4,d5 */
+			set_w(&ctx->d[5], d5);
+			tick(4);
+		}
+		inner = 0;
 		for (;;) {                          /* loc_0120F6: cols words */
+			if (due(0))
+				return tr_bail(ctx, 0x0120F6, d3, d5, d6);
 			uint16_t w = bus_r16(ctx->a[1]);
 			ctx->a[1] += 2;
 			wr_data(w, 12);
+			if (due(0)) {
+				cc_logic16(ctx, w);
+				return tr_bail(ctx, 0x0120F8, d3, d5, d6);
+			}
 			d5 = (uint16_t)(d5 - 1);
 			if (d5 == 0xFFFF) {
 				tick(14);
@@ -492,10 +535,13 @@ static void cmd_tile_rect(hle_ctx *ctx)
 			}
 			tick(10);
 		}
-		set_w(&ctx->d[5], 0xFFFF);
+		if (due(0))
+			return tr_bail(ctx, 0x0120FC, d3, 0xFFFF, d6);
 		d3 = add_w(ctx, d3, 0x0080);        /* addi.w #$80,d3 (sets the final flags) */
 		set_w(&ctx->d[3], d3);
 		tick(8);
+		if (due(0))
+			return tr_bail(ctx, 0x012100, d3, 0xFFFF, d6);
 		d6 = (uint16_t)(d6 - 1);
 		if (d6 == 0xFFFF) {
 			tick(14);
@@ -503,8 +549,14 @@ static void cmd_tile_rect(hle_ctx *ctx)
 		}
 		tick(10);
 	}
+	set_w(&ctx->d[5], 0xFFFF);
 	set_w(&ctx->d[6], 0xFFFF);
+	if (due(0)) {
+		ctx->pc = 0x012104;
+		return 1;
+	}
 	tick(10);                                   /* bra.w VdpListNext */
+	return 0;
 }
 
 /* the VRAM address setup shared by both hscroll planes (after `move.w #$8f20`):
@@ -521,45 +573,67 @@ static void hscroll_addr(hle_ctx *ctx, uint16_t addr)
 
 /* cmd 7 ($011E48): hscroll: 28 words with source stride $20 and autoincrement $20 for plane A,
  * then the same at +2 for plane B. */
-/* bail inside cmd_hscroll's loops: mirror the state before the instruction at `pc` */
-static int hs_bail(hle_ctx *ctx, uint32_t pc, uint32_t a2, uint32_t d1, uint32_t flag_val)
+/* bail inside cmd_hscroll's loops: mirror the state before the instruction at `pc`; flag_val < 0 leaves
+ * the flags (a resumed pass that has not executed an instruction yet) */
+static int hs_bail(hle_ctx *ctx, uint32_t pc, uint32_t a2, uint32_t d1, long flag_val)
 {
 	ctx->a[2] = a2;
 	ctx->d[1] = d1;
-	cc_logic16(ctx, flag_val);
+	if (flag_val >= 0)
+		cc_logic16(ctx, (uint16_t)flag_val);
 	ctx->pc = pc;
 	return 1;
 }
 
-static int cmd_hscroll(hle_ctx *ctx)
+/* hscroll, from `from`: 0 = the command's start (VdpCmd7HScroll), else a resume point the 68k reached after
+ * a bail or a declined head: 1 = plane A loop head $011E7E, 2 = the second plane's setup $011E8A,
+ * 3 = plane B loop head $011EB4 (d1 = 27 - pass, a2 = the pass's source). */
+static int cmd_hscroll(hle_ctx *ctx, int from)
 {
-	count_cmd(7);
-	run_to(ctx, 0x011E48, 0x011E54);            /* prologue (arg reads) as 68k */
-	uint32_t src = ctx->a[1];
-	uint16_t addr = ctx->d[5] & 0xFFFF;
+	uint32_t src;
+	uint16_t addr;
+	long last = -1;                             /* flags to give a bail: the last move.w's value, -1 = as they are */
+	int plane0 = 0, i0 = 0;
+	if (from == 0) {
+		count_cmd(7);
+		run_to(ctx, 0x011E48, 0x011E54);    /* prologue (arg reads) as 68k */
+		src = ctx->a[1];
+		addr = ctx->d[5] & 0xFFFF;
 
-	pre();
-	uint16_t st = vdp_status_word(0x011E54);    /* move.w (4,a5),d0 (single read, no poll) */
-	post(12);
-	set_w(&ctx->d[0], st);
-	set_w(&ctx->d[2], addr);                    /* move.w d5,d2 (d2 is NOT modified) */
-	tick(4);
-	wr_ctrl(0x8F20, 16);                        /* move.w #$8f20,(4,a5) */
-	hscroll_addr(ctx, addr);
-	TICKS(4, 4);                                /* movea.l a1,a2 + moveq #$1b,d1 */
+		pre();
+		uint16_t st = vdp_status_word(0x011E54);    /* move.w (4,a5),d0 (single read, no poll) */
+		post(12);
+		set_w(&ctx->d[0], st);
+		set_w(&ctx->d[2], addr);            /* move.w d5,d2 (d2 is NOT modified) */
+		tick(4);
+		wr_ctrl(0x8F20, 16);                /* move.w #$8f20,(4,a5) */
+		hscroll_addr(ctx, addr);
+		TICKS(4, 4);                        /* movea.l a1,a2 + moveq #$1b,d1 */
+		last = 0x1B;                        /* flags of the moveq */
+	} else {
+		src = ctx->a[1];
+		addr = ctx->d[5] & 0xFFFF;
+		if (from == 1) {
+			i0 = 27 - (int)(ctx->d[1] & 0xFFFF);
+		} else if (from == 2) {
+			i0 = 28;                    /* no pass left in plane A */
+		} else {
+			plane0 = 1;
+			i0 = 27 - (int)(ctx->d[1] & 0xFFFF);
+		}
+	}
 
 	/* plane A, then plane B (addr + 2, source + 2): 28 words from src, stride $20:
 	 * move.w (a2),d2 / move.w d2,(a5) / lea $20(a2),a2 / dbra d1   (loc_011E7E, loc_011EB4)
 	 * State before the pass i: d1 = 27 - i, a2 = base + i*$20; flags are the moveq's on the
 	 * first pass, else the last move.w's. */
-	uint16_t last = 0;
-	for (int plane = 0; plane < 2; plane++) {
+	for (int plane = plane0; plane < 2; plane++) {
 		uint32_t base = src + (uint32_t)plane * 2;
 		uint32_t loop = plane ? 0x011EB4 : 0x011E7E;
-		for (int i = 0; i < 28; i++) {
+		for (int i = (plane == plane0 ? i0 : 0); i < 28; i++) {
 			uint32_t a2 = base + (uint32_t)i * 0x20, d1 = (uint32_t)(27 - i);
 			if (due(0))
-				return hs_bail(ctx, loop, a2, d1, i ? last : 0x1B);
+				return hs_bail(ctx, loop, a2, d1, last);
 			uint16_t v = bus_r16(a2);
 			tick(8);                        /* move.w (a2),d2 */
 			set_w(&ctx->d[2], v);
@@ -583,6 +657,7 @@ static int cmd_hscroll(hle_ctx *ctx)
 			wr_ctrl(0x8F20, 16);
 			hscroll_addr(ctx, addr2);
 			TICKS(8, 4);                    /* lea (0x2,a1),a2 + moveq #$1b,d1 */
+			last = 0x1B;
 		}
 	}
 	if (due(0))                                 /* bail before the bra.w */
@@ -590,7 +665,7 @@ static int cmd_hscroll(hle_ctx *ctx)
 	ctx->d[1] = 0x0000FFFF;                     /* moveq #$1b,d1 (clears the high word) / dbra */
 	ctx->a[2] = src + 2 + 28 * 0x20;            /* lea (a1),a2 / lea (a1+2),a2 / 28x lea $20(a2) */
 	tick(10);                                   /* bra.w VdpListNext */
-	cc_logic16(ctx, last);                      /* final flags: the last move.w d2,(a5) */
+	cc_logic16(ctx, (uint16_t)last);            /* final flags: the last move.w d2,(a5) */
 	return 0;
 }
 
@@ -660,6 +735,64 @@ HLE_RANGE(0x012068, VdpCmd1CopyWords, 0, VDP_LIST_NEXT)
 	run_bailable(ctx, cmd_copy_words, 1);
 }
 
+/* Resume points (docs/porting.md, "Resuming a bailed command"). A command whose head did not fit before
+ * an event, or that bailed at one, is finished by the 68k up to its loop head; this range then takes
+ * the loop over again in C when the 68k comes back to it (it is entered on every pass of the 68k loop
+ * until it can run: it declines when the next event is a few cycles away or a DMA is in flight). */
+static void resume_finish(hle_ctx *ctx, int bail)
+{
+	g_armed = 0;
+	sess_finish();
+	if (bail) {
+		ctx->bail = 1;
+		hle_jump(ctx, ctx->pc);
+	} else {
+		hle_jump(ctx, VDP_LIST_NEXT);
+	}
+}
+static int resume_start(int head_cycles)
+{
+	bail_init();
+	if (g_nobail || !head_ok(head_cycles)) {
+		hle_decline_why(g_nobail ? 15 : sr_why);
+		return 0;
+	}
+	sess_begin();
+	g_tog = hle_post_access ? (long)0x7FFFFFFF : (long)gx_vdp_next_toggle_clock();
+	g_armed = 1;
+	return 1;
+}
+
+static int cmd_hscroll0(hle_ctx *ctx) { return cmd_hscroll(ctx, 0); }
+
+HLE_RANGE(0x011E7E, VdpCmd7HScrollA, 0, VDP_LIST_NEXT)
+{
+	if (!resume_start(60))
+		return;
+	resume_finish(ctx, cmd_hscroll(ctx, 1));
+}
+
+HLE_RANGE(0x011E8A, VdpCmd7HScrollSetup, 0, VDP_LIST_NEXT)
+{
+	if (!resume_start(140))
+		return;
+	resume_finish(ctx, cmd_hscroll(ctx, 2));
+}
+
+HLE_RANGE(0x011EB4, VdpCmd7HScrollB, 0, VDP_LIST_NEXT)
+{
+	if (!resume_start(60))
+		return;
+	resume_finish(ctx, cmd_hscroll(ctx, 3));
+}
+
+HLE_RANGE(0x0120B0, VdpCmd1CopyLoop, 0, VDP_LIST_NEXT)
+{
+	if (!resume_start(60))
+		return;
+	resume_finish(ctx, copy_loop(ctx, ctx->d[4] & 0xFFFF, 0, 1));
+}
+
 HLE_RANGE(0x011D70, VdpCmd2FillZero, 0, VDP_LIST_NEXT)
 {
 	if (!safe_run(cmd_bound(2, ctx->a[6]))) {
@@ -708,21 +841,30 @@ HLE_RANGE(0x011D80, VdpCmd5FillValue, 0, VDP_LIST_NEXT)
 	hle_jump(ctx, VDP_LIST_NEXT);
 }
 
+static int cmd_tile_rect0(hle_ctx *ctx) { return cmd_tile_rect(ctx, 0); }
+
 HLE_RANGE(0x0120BA, VdpCmd6TileRect, 0, VDP_LIST_NEXT)
 {
-	if (!safe_run(cmd_bound(6, ctx->a[6]))) {
-		hle_decline_why(sr_why);
+	run_bailable(ctx, cmd_tile_rect0, 6);
+}
+
+HLE_RANGE(0x0120DA, VdpCmd6Row, 0, VDP_LIST_NEXT)
+{
+	if (!resume_start(150))
 		return;
-	}
-	sess_begin();
-	cmd_tile_rect(ctx);
-	sess_finish();
-	hle_jump(ctx, VDP_LIST_NEXT);
+	resume_finish(ctx, cmd_tile_rect(ctx, 1));
+}
+
+HLE_RANGE(0x0120F6, VdpCmd6Words, 0, VDP_LIST_NEXT)
+{
+	if (!resume_start(60))
+		return;
+	resume_finish(ctx, cmd_tile_rect(ctx, 2));
 }
 
 HLE_RANGE(0x011E48, VdpCmd7HScroll, 0, VDP_LIST_NEXT)
 {
-	run_bailable(ctx, cmd_hscroll, 7);
+	run_bailable(ctx, cmd_hscroll0, 7);
 }
 
 HLE_RANGE(0x011F6E, VdpCmd8VScroll, 0, VDP_LIST_NEXT)
@@ -744,7 +886,7 @@ static int cmd_ok(int cmd, uint32_t args)
 {
 	if (cmd == 0)                       /* the end command: dispatch + rewind + rts, about 120 cycles */
 		return g_nobail ? safe_run(100) : head_ok(200);
-	if ((cmd == 1 || cmd == 7) && !g_nobail)
+	if ((cmd == 1 || cmd == 6 || cmd == 7) && !g_nobail)
 		return head_ok(HEAD_CYCLES);
 	return safe_run(cmd_bound(cmd, args));
 }
@@ -789,8 +931,8 @@ HLE_FUNC(0x011D32, VdpListRun, 0)
 		case 3: cmd_write_word(ctx); break;
 		case 4: cmd_cram_line(ctx); break;
 		case 5: cmd_fill_value(ctx); break;
-		case 6: cmd_tile_rect(ctx); break;
-		case 7: bail = cmd_hscroll(ctx); break;
+		case 6: bail = cmd_tile_rect(ctx, 0); break;
+		case 7: bail = cmd_hscroll(ctx, 0); break;
 		case 8: cmd_vscroll(ctx); break;
 		default: count_cmd(-1); g_armed = 0; sess_finish(); return;
 		}

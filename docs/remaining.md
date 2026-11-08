@@ -8,18 +8,26 @@ Lockstep `--frames 1000` (six defaults) is identical with the variable set.
 
 ## Totals
 
-| | % of all frame time | % of busy |
-|---|---|---|
-| idle (waiting) | 75.9 | - |
-| C replacements (charged) | 10.6 | 44.0 |
-| original 68k | 13.5 | 56.0 |
+Measured twice on the same 16 runs: first after misc2.c, the VDP list bail, textprint.c, vdpfill.c and sound.c
+(before the early bail), then after the early bail and resume (docs/porting.md "Early bail and resume").
+The tables further down are the second measurement.
 
-- (Measured before textprint.c) The C share includes 68k that C calls itself (VramWriteWord and the text printers ran nested): 3.1% of
-  all, 12.9% of busy. Pure C is 7.5% of all, 31% of busy. So 69% of busy work is still 68k instructions.
-- Of the 56.0% real 68k, 28.3 points are routines that are already in C but were declined (an interrupt
-  falls inside the call, docs/porting.md "Interrupts inside a replaced function") and ran as the original.
-  The rest, 27.7 points (6.7% of all), is code with no replacement yet. Rows below are that part.
-- Per run, C is 25-55% of busy (title 25%, attract 43%, boot 36%, gun_05/gun_08/pad_05 about 50-55%).
+| | % of all frame time | % of busy | before the early bail: all / busy |
+|---|---|---|---|
+| idle (waiting) | 78.9 | - | 77.7 / - |
+| C replacements (charged) | 18.0 | 85.0 | 15.6 / 69.9 |
+| original 68k | 3.2 | 15.0 | 6.7 / 30.1 |
+
+- The C share includes 68k that C calls itself (VramWriteWord and the text printers run nested): 1.4% of
+  all, 6.4% of busy. Pure C is 16.6% of all, 78.6% of busy. So 21.4% of busy work is still 68k instructions
+  (real 68k plus the nested part).
+- Of the 15.0% real 68k, 9.7 points (2.1% of all) are routines that are already in C but were declined (an
+  interrupt falls inside the call, docs/porting.md "Interrupts inside a replaced function") and ran as the
+  original. The rest, 5.3 points (1.1% of all), is code with no replacement yet. Rows below are that part.
+  The "real 68k" of an HLE function is an upper bound: a C call that charges more than one stall slice is burned
+  at a trap address and the profiler books those cycles to the function (GunpowerHud and EnergyHud, 21.5 and
+  16.0 Mcyc, are their ~450-cycle C charge, not 68k work: they now decline 185 and 197 times in 41763 calls).
+- Per run, C is 66-92% of busy (boot 66%, attract 72%, title 80%, misc_t3 80%, gun_01 82%, gun_05 92%).
 - The profile is mostly in-level frames: one-shot level loading and the menus barely register (the
   attract loop is 92% idle). Their cost is blocking structure, not CPU.
 
@@ -31,30 +39,49 @@ Lockstep `--frames 1000` (six defaults) is identical with the variable set.
 | $0086E2 | WaitVBlank | 23.0 | waits for vblank_count to change (menus, fades, loads) |
 | $01DC4E | VDP wait | 1.0 | spins on `(1,a6)` bit 3 then `$C00008` HV counter == 0 |
 
-## Already in C but declined (24.3% of busy, 7.9% of all)
+## Already in C but declined (9.7% of busy, 2.1% of all; was 25.2% / 5.6%)
 
-Not remaining port work: the original runs when a VBlank/HBlank would land inside the call. The VDP list
-copy-words / hscroll loops no longer decline outright: they bail into the 68k at the next frame-loop
-event (docs/porting.md), so the 68k part is only the tail of the loop (counted as "nested 68k inside C").
-Numbers in this section are from a smaller sample than the tables above: `port/tools/declines.py` over 9
-runs of 3000 frames (the six default states, pad_05, gun_03, 2p_gun_04; 27000 frames), after the bail change.
-In that sample busy is C 52.7% / 68k 47.3% (the 16-run measurement above was 44.0% / 56.0% before it).
-Declined / calls: BuildSpriteTable 2969/25482 (70 Mcyc, 7.9% busy), VdpCmd1CopyWords 5236/18770 (63 Mcyc,
-7.2%, mostly bails), VdpCmd7HScroll 1994/2233 (17 Mcyc, 1.9%, bails), GunpowerHud 902 and EnergyHud 990
-of 25482 (13 and 10 Mcyc), BgStreamLayers 86021/95773 (9 Mcyc), PlayerShoot, PlayersButtons, MissilesRun
-and PlayerButtons (interrupt window, few Mcyc). Reasons per function: `T2_HLE_DECLINES=1`.
+Not remaining port work: the original runs when a VBlank/HBlank would land inside the call. Most of the
+declines are gone: a function now runs in C up to the last bail point before the event and the 68k runs only the
+stretch around it; the loops take over again at the next loop head (docs/porting.md "Early bail and resume").
+Same 16 runs / 57000 frames (`T2_HLE_DECLINES=1` with `T2_HLE_PROFILE=1`), declined / calls, before -> after
+(a bail is not a decline; the `bails:` lines of `T2_HLE_DECLINES` count them):
+
+| function | before | after | what |
+|---|---|---|---|
+| BuildSpriteTable | 4085/41763 | 80/38840 | bail at the sort / sprite / piece / tail heads, resume there (4031 bails); real 68k 79 Mcyc -> about 1 over all its entries |
+| GunpowerHud, EnergyHud | 1603, 1689 /41763 | 185, 197 /41763 | bail before each `jsr`; the heavy part is the C StringPrint under its own guard |
+| BgStreamLayers | 107103/121667 | 407 (266 bails) | light passes in C, a pass whose trigger fired bails when the nested VdpQueue call would not fit |
+| PlayerShoot, PlayersButtons, PlayerButtons | 27974, 21407, 11661 | 1074, 243, 1050 | bail at the `jsr`/`bsr` sites; PlayersButtons mostly bails at its first call and the callees run as their own hooks |
+| MissilesRun | 17982/43549 | 56 | bail at the slot head and before a live slot's state body, resume at the slot head |
+| ScrollRows | 1413/40461 | 28 | bail at the group / row / list heads, resume there |
+| VdpCmd1CopyWords | 8786/33018 | 8786 (head), resumed | head still declines near VBLANK-clear/wrap, but the 68k only does the head: the copy loop is taken over at $0120B0 (real 68k 81 -> 1.8 Mcyc) |
+| VdpCmd7HScroll | 3372/3921 | 3372 (head), resumed | same, resume at $011E7E / $011E8A / $011EB4 (27 -> 0.5 Mcyc) |
+| VdpCmd6TileRect | 4491/18491 | 2921 | now bails in its row / word loops and resumes at $0120DA / $0120F6 (real 68k 7.0 Mcyc -> below 0.4) |
+| VdpListRun | 4089/47748 | 4049 | the first command's head did not fit before VBLANK-clear/the wrap; unchanged |
+
+What is left is small and not worth more machinery, in order of the real 68k Mcyc in the table below:
+- GunpowerHud / EnergyHud / sub_00920C: ~0.4% declined; the rest of their "real" time is the C charge (see above).
+- VramFillWords 2827/4250 (9.0 Mcyc), VdpCmd2FillZero / VdpCmd3WriteWord / VdpCmd0End / VdpCmd4CramLine / VdpCmd8VScroll (1 to 4 thousand each) and the
+  nested VramWriteWord / DigitPrint / StringPrint (25k, 5k, 2.5k): they sit at the VBLANK-clear/wrap boundary
+  (the list starts about 10 lines before the wrap) or are guarded `hle_call68k` fills; a short command that
+  straddles the event has nothing to resume, and the fills' time is VDP FIFO time, so resuming would need the
+  VramFill loops split like the copy loop (each ~0.7% of busy at most).
+- PlayerDamage, PlayerDamageNearest, ShotHitTest, TruckMain and the other one-off interrupt-window declines (a few
+  hundred each): bounds of 10 to 24 thousand cycles for a path that is usually short; the same call-site bail would
+  apply, but each is below 0.05% of busy.
 
 ## Remaining 68k, by group
 
 Mcyc = million 68k cycles over the 57000 frames; % is of busy. Difficulty: easy = work RAM / pure;
 medium = VDP port I/O or nested calls (the vdplist.c pattern); hard = Z80 bus / blocking waits / large.
 
-### Level loading and VDP uploads (3.4% of busy)
+### Level loading and VDP uploads (1.5% of busy)
 
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
-| $00800C | VramClearDma | 15.9 | 1.10 | 24 | DMA fill of VRAM; polls DMA busy, ~660k cycles per call | left 68k: see below |
-| $011FA2 | DmaToVram | 3.3 | 0.23 | 193 | 68k to VRAM DMA | left 68k: see below |
+| $00800C | VramClearDma | 15.9 | 1.22 | 24 | DMA fill of VRAM; polls DMA busy, ~660k cycles per call | left 68k: see below |
+| $011FA2 | DmaToVram | 3.3 | 0.25 | 193 | 68k to VRAM DMA | left 68k: see below |
 
 Done (game/vdpfill.c): CramUpload $0080FE, VramFillWords $008782, the fill loops $00873A and $00874E, RamClear
 $0086C4 (the boot clear is before any gate state, checked with cold-boot frame hashes, see porting.md).
@@ -68,7 +95,7 @@ the frame loop advances the DMA, followed by a busy poll; same reason, and only 
 
 Level setup proper (LevelLoad*, script loaders) is only a few calls and does not show; levelflow.c covers it.
 
-### Sound engine ($0F8000-$0FC5CC, 8.0% of busy): now in C (game/sound.c)
+### Sound engine ($0F8000-$0FC5CC): now in C (game/sound.c)
 
 The 68k side of the driver tick ($0FBBD0 from VBlankInt, every frame, with the tick body $0FBBFE, the
 channel update / note fetch / event reader, the sfx tick, the command slots, the Z80 BUSREQ acquire /
@@ -82,7 +109,7 @@ The sequence data in the $0F8000 bank is read by the C straight from the ROM.
 
 Request side (`SndRequest` $013D04, `SndMusicRequest`, `SndSlotRequest`) is already in C.
 
-### Menus, screens and text (8.8% of busy; the printing cluster is now C)
+### Menus, screens and text (under 0.5% of busy; the printing cluster is now C)
 
 Text and HUD drawing was the cost; the menu/title/story code itself is almost free (OptionsInput, MainMenuInput,
 TitleScreen, WaitStartWindow, CheatCodeCheck: under 0.05 Mcyc each) but is wait-driven.
@@ -94,26 +121,34 @@ declines) the 68k runs them, same as VdpListRun.
 
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
-| $0042CE | StoryIntro | 0.8 | 0.06 | 3 | intro story screens: WaitVBlank, PalFade, VdpList, sound | hard: 830 bytes, blocking waits |
+| $0042CE | StoryIntro | <0.45 | <0.04 | 3 | intro story screens: WaitVBlank, PalFade, VdpList, sound | hard: 830 bytes, blocking waits |
 | $007DEE | PrintText | (player.c) | | 2240 | still nested-calls VramWriteWord through `hle_call68k` (now C); falls into $007E08 | could call the C body directly |
 
-### Other (7.4% of busy)
+### Other (2.7% of busy)
+
+The work-RAM leftovers of the earlier list (ObjPathStep $00C48E, PlayerState $008C8E/$008C52, VdpQueueTileRect
+$012234, PickupsRun $012BB0) are C now (game/misc2.c) and no longer show.
 
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
-| $00C48E | (object animation step) | 27.0 | 1.87 | 15046 | a6 = object: countdown +$1A, next frame from list at +$16; called via $00C442 and $013188 | DONE in C (game/misc2.c; was: easy: pure RAM) |
-| $008C8E, $008C52 | (per-player state handler) | 11.8, 3.4 | 0.82, 0.23 | 87127 | a4 = $FF8000/$FF8050 player struct, by state word +$22: timers, sounds, ReadInput, WaitFrames | DONE in C (game/playerstate.c): pieces between the jsr's (blocking waits, sounds, ReadInput stay the real 68k calls); the PlayerDied tail was already screens.c |
-| $012234 | VdpQueueTileRect | 9.0 | 0.62 | 2199 | VdpList command 6 builder (rect of tilemap words) | DONE in C (game/misc2.c; was: medium: VdpList writer) |
-| $012BB0 | PickupsRun | 8.4 | 0.58 | 43549 | pool $FF9AB2 ($1A each), like MissilesRun | DONE in C (game/misc2.c; was: easy: pure) |
-| $011D38.. | VdpListNext / Reset / End / Jump | 5.9, 3.5, 2.4, 0.4 | 0.41 to 0.03 | 40k-179k | 3-instruction list helpers | easy, but per-call gain small |
-| $013376 | SpriteQueueReset | 4.2 | 0.29 | 44061 | resets sprite queue | easy |
-| $00B3AE | (object loop dispatch) | 4.2 | 0.29 | 623 | `jmp (a0)` into object handlers; structural | n/a (indirect jump; ObjRunAll owns it) |
+| $00B3AE | (object loop dispatch) | 4.2 | 0.32 | 623 | `jmp (a0)` into object handlers; structural | n/a (indirect jump; ObjRunAll owns it) |
+| $013376 | SpriteQueueReset | 4.2 | 0.32 | 44061 | resets sprite queue | easy |
+| $011D38 | VdpListNext | 4.2 | 0.32 | 127128 | VdpList helper, 3 instructions | easy, but per-call gain small |
 | $013F7E | (event ring consumer) | 4.1 | 0.29 | 43549 | drains byte-pair ring at $FF80A0 (head $FF80B0, tail $FF80B2); Random, VdpQueueTileRect, QueueSprite | DONE in C (game/ringevt.c): pieces between the jsr's, with the producer $013E30 and the text rows $0141B8/$0141E6 |
+| $011D12 | VdpListReset | 3.5 | 0.27 | 47757 | VdpList helper | easy, per-call gain small |
+| $011D28 | VdpListEnd | 2.4 | 0.18 | 47757 | VdpList helper | easy, per-call gain small |
+| $004916, $0048C4, $004820, $004872 | BgStreamL1, L4, L5, L2 | 2.7, 1.8, 1.3, 0.6 | 0.21 to 0.05 | 11659, 8773, 6336, 2943 | per-layer wrappers that `bsr` into BgStreamLayers (C) | easy; the GameLoopBg* pieces cover the calls from the loop |
+| $00DB36 | (object helper) | 1.4 | 0.11 | 11003 | | easy |
+| $013188 | (sprite queue helper) | 1.2 | 0.09 | 10052 | calls the object animation step $00C48E | easy |
+| $00D238 | (truck helper) | 1.0 | 0.07 | 3714 | | easy |
+| $00920C | (HUD bar helper) | 0.9 | 0.07 | 3198 | builds the bar string, then StringPrint (C) | easy |
+| $00B3C6, $009356, $00C442 | (object loop, script tick, animation helpers) | 0.7, 0.7, 0.7 | 0.06 to 0.05 | 44059, 43562, 4347 | | easy |
+| $008C8E, $008C52 | (per-player state handler) | 11.8, 3.4 | 0.82, 0.23 | 87127 | a4 = $FF8000/$FF8050 player struct, by state word +$22: timers, sounds, ReadInput, WaitFrames | DONE in C (game/playerstate.c): pieces between the jsr's (blocking waits, sounds, ReadInput stay the real 68k calls); the PlayerDied tail was already screens.c |
 
 ## Suggested order
 
-1. (partly done) The declines: VdpCmd1CopyWords/VdpCmd7HScroll now bail into 68k at the event boundary (24.3% of busy
-   still declined, see "Already in C but declined").
+1. (mostly done) The declines: bail at the event and resume at the next loop head (25.2% of busy declined before, 9.7% now,
+   see "Already in C but declined").
 2. (done) Text/HUD printing with VramWriteWord: game/textprint.c.
 3. (done: ObjPathStep, PickupsRun, VdpQueueTileRect, PlayerState idle path in game/misc2.c)
 4. (done) Sound engine tick: game/sound.c. The boot-time Z80 loader ($0FBB00 and callees) is the only sound code left.
