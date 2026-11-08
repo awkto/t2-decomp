@@ -575,6 +575,24 @@ bool hle_pc_replaced(uint32_t pc)
 	return e && e->enabled;
 }
 
+static bool g_bail_on;     /* a top-level HLE_F_BAIL call is running */
+static int g_bail_at;      /* its first event: the first interrupt-raising slice end or the frame end (mclk) */
+bool hle_bail_due(hle_ctx *c, int chunk_cycles)
+{
+	if (!g_bail_on || c->dry || hle_post_access)
+		return false;
+	return gx_m68k_cycles() + (int)c->tl + chunk_cycles * 7 >= g_bail_at;
+}
+static void dstat(const hle_def *d, int why);
+void hle_bail_to(hle_ctx *c, uint32_t pc)
+{
+	if (g_bail_on && g_cur_def)
+		dstat(g_cur_def, 9);            /* counted as "bails:" in the T2_HLE_DECLINES table */
+	c->pc = pc;
+	c->jumped = 1;
+	c->bail = 1;
+}
+
 static int run_def(const hle_def *def, entry *e)
 {
 	hle_ctx c;
@@ -589,7 +607,27 @@ static int run_def(const hle_def *def, entry *e)
 	bool lowmask = (def->flags & HLE_F_LOWMASK) != 0;
 	if (top)
 		g_bnd = gx_m68k_cycle_end();
-	if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
+	if (top)
+		g_bail_on = false;
+	if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt && (def->flags & HLE_F_BAIL)) {
+		/* no decline: the function bails to the 68k before the first event (hle_bail_due) */
+		int at = gx_frame_end_clock();
+		if (irq_mask < 6) {
+			int c0 = clock0;
+			for (;;) {
+				int a2, lvl = gx_irq_boundary_in(c0, at, &a2);
+				if (!lvl)
+					break;
+				if (irq_mask < lvl) {
+					at = a2;
+					break;
+				}
+				c0 = a2;
+			}
+		}
+		g_bail_at = at;
+		g_bail_on = true;
+	} else if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
 		long window = -1, span = (long)def->cycles * 7;   /* span: how long the call can take */
 		if (def->flags & HLE_F_PURE) {
 			hle_ctx d;
@@ -669,6 +707,8 @@ static int run_def(const hle_def *def, entry *e)
 		if (c.tl_used)
 			c.cycles = (int)(c.tl / 7);
 	}
+	if (top)
+		g_bail_on = false;
 	g_cur_def = outer_def;
 	if (g_decline) {
 		g_decline = false;
@@ -1024,6 +1064,8 @@ static void declines_print(void)
 		unsigned long *n = g_dstat[i].n;
 		fprintf(stderr, "declines: %-20s %lu %lu %lu | %lu %lu %lu %lu %lu %lu\n", g_dstat[i].name,
 		        n[1], n[2], n[3], n[10], n[11], n[12], n[13], n[14], n[15]);
+		if (n[9])
+			fprintf(stderr, "bails: %-20s %lu\n", g_dstat[i].name, n[9]);
 	}
 }
 

@@ -1171,8 +1171,19 @@ static void (*const msl_state[8])(hle_ctx *) = {
 
 #define MSL_BOUND 39000   /* T2_HLE_BOUNDS over 92 states x 3000 frames: observed max 25883 x 1.5 */
 
-HLE_FUNC(0x0123F0, MissilesRun, MSL_BOUND)
+/* Early bail (docs/porting.md): an empty slot costs ~50 cycles, a live one runs its state body (nested 68k
+ * and spawns, up to MSL_BOUND for the whole call). The pass over the slots checks at each slot head
+ * ($012402, also an entry: the 68k reaching it after the event hands the rest back to C) and, for a live slot,
+ * before the state dispatch ($012406); the 68k continues from there, every register and flag is in ctx.
+ * Nothing charged yet = nothing changed: decline. */
+#define MSL_BAIL(chunk, pc) do { if (hle_bail_due(ctx, (chunk))) { \
+	if (!ctx->tl_used) hle_decline_why(2); else hle_bail_to(ctx, (pc)); return; } } while (0)
+
+static void missiles_run(hle_ctx *ctx, uint32_t entry)
 {
+	if (entry == 0x012402)
+		goto L_slot;
+	MSL_BAIL(120, 0x0123F0);
 	/* the table has seven entries and every writer stores 1..7; anything else would jump into the
 	 * middle of the table in the original, so leave such a frame to the real 68k */
 	for (uint32_t p = 0xFFFF80F2u, k = 0; k < 32; k++, p += 0x2A)
@@ -1186,12 +1197,15 @@ HLE_FUNC(0x0123F0, MissilesRun, MSL_BOUND)
 	if (bw(ctx, c_n(ctx))) goto L_01243A;                         /* 0123FE bmi.w sub_01243A */
 	for (;;) {
 		/* sub_012402 */
+	L_slot:
+		MSL_BAIL(120, 0x012402);
 		{ uint32_t v = ld16(ctx->a[6]); set_w(&ctx->d[0], v); cc_logic16(ctx, v); hle_insn(ctx, 8); }   /* 012402 move.w (a6),d0 */
 		if (bs(ctx, c_z(ctx))) {                                       /* 012404 beq.s loc_01242C */
 			ctx->a[6] += 0x2A; hle_insn(ctx, 8);                   /* 01242C lea.l (0x2a,a6),a6 */
 			hle_insn(ctx, 10);                                     /* 012430 bra.s sub_012402 */
 			continue;
 		}
+		MSL_BAIL(MSL_BOUND, 0x012406);
 		sh_w(ctx, 0, 'l', 2); hle_insn(ctx, 10);                       /* 012406 asl.w #2,d0 */
 		hle_insn(ctx, 14);                                             /* 012408 jmp (sub_01240C,pc,d0.w) */
 		hle_insn(ctx, 10);                                             /* bra.w <state> */
@@ -1205,3 +1219,6 @@ HLE_FUNC(0x0123F0, MissilesRun, MSL_BOUND)
 L_01243A:;
 	hle_insn(ctx, 16);                                                     /* 01243A rts */
 }
+
+HLE_FUNC_BAIL(0x0123F0, MissilesRun, MSL_BOUND) { missiles_run(ctx, 0x0123F0); }
+HLE_FUNC_BAIL(0x012402, MissilesSlot, MSL_BOUND) { missiles_run(ctx, 0x012402); }

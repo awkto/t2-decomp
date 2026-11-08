@@ -190,9 +190,22 @@ static void bg_call(hle_ctx *c, uint32_t addr)
 /* the nested VdpQueue routines and sub_013470/sub_01385A make one call last up to ~50000 cycles (level 5
  * pad_05: 49287), so the decline window must cover that, not 6000 */
 /* observed max 50967 over 38 states x 3000 frames (T2_HLE_BOUNDS, 2p_pad_05) */
-HLE_FUNC(0x00498A, BgStreamLayers, 76500)
+/* Early bail (docs/porting.md): almost every layer pass only compares the row position with the trigger
+ * (~150 cycles); the nested VdpQueue calls are the long part. So instead of declining the whole call for the
+ * worst case, the light passes run in C and a pass whose trigger fired hands over to the 68k at the
+ * instruction after the `blt` ($0049A8, all registers and flags are in ctx) when the first event could fall
+ * inside the heavy path; at the top of a pass (after the first) it hands over to the entry address, where
+ * the hook declines and the 68k runs that pass. */
+HLE_FUNC_BAIL(0x00498A, BgStreamLayers, 76500)
 {
 	for (;;) {
+		if (hle_bail_due(ctx, 260)) {
+			if (!ctx->tl_used)                                 /* nothing done yet: the 68k runs the call */
+				hle_decline_why(2);
+			else
+				hle_bail_to(ctx, 0x00498A);
+			return;
+		}
 		ctx->a[3] = bus_r32(ctx->a[2]); ctx->a[2] += 4;            /* movea.l (a2)+,a3 */
 		hle_insn(ctx, 12);
 		set_w(&ctx->d[7], bus_r16(ctx->a[0])); ctx->a[0] += 2;     /* move.w (a0)+,d7 */
@@ -219,6 +232,10 @@ HLE_FUNC(0x00498A, BgStreamLayers, 76500)
 		hle_insn(ctx, 8);
 		if (f_lt(ctx)) { hle_insn(ctx, 10); goto next; }           /* blt.w */
 		hle_insn(ctx, 12);
+		if (hle_bail_due(ctx, 76500)) {                            /* the trigger fired: the long path */
+			hle_bail_to(ctx, 0x0049A8);   /* (tl_used: the blt before it was charged) */
+			return;
+		}
 		set_w(&ctx->d[6], RAM16(ctx->a[6])); cc_logic16(ctx, ctx->d[6]);   /* move.w (a6),d6 */
 		RAM16(ctx->a[6]) = (uint16_t)alu(ctx, OP_ADD, RAM16(ctx->a[6]), ctx->d[1], 16);  /* add.w d1,(a6) */
 		RAM16(BG_SCRATCH) = (uint16_t)ctx->d[1]; cc_logic16(ctx, ctx->d[1]);             /* move.w d1,(abs).l */
