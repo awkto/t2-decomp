@@ -133,7 +133,10 @@ bool hle_is_enabled(int i) { return i >= 0 && i < g_n && g_ent[i].enabled; }
 unsigned long hle_calls(int i) { return i >= 0 && i < g_n ? g_ent[i].calls : 0; }
 unsigned long hle_calls_this_frame(void) { return g_frame_calls; }
 static long g_frames_run;      /* frames started (T2_HLE_PROFILE) */
-void hle_frame_begin(void) { g_frame_calls = 0; g_frames_run++; }
+static const hle_def *g_cur_def;   /* forward (defined below) */
+static long g_it_frame = -1;
+static void lh_frame(void);
+void hle_frame_begin(void) { g_frame_calls = 0; g_frames_run++; lh_frame(); }
 
 static entry *lookup(const char *s)
 {
@@ -322,7 +325,10 @@ static void tl_boundary(hle_ctx *c)
 		return;
 	while (g_bnd <= gx_m68k_cycles() + (int)c->tl) {
 		tl_flush(c);
+		int b0 = gx_m68k_cycles();
 		gx_z80_catchup(g_bnd);
+		if (g_it_frame == g_frames_run)
+			fprintf(stderr, "TB bnd %d at %d stall %d\n", g_bnd, b0, gx_m68k_cycles() - b0);
 		g_bnd = gx_next_slice_end(g_bnd);
 	}
 }
@@ -339,14 +345,27 @@ static void tl_refresh(hle_ctx *c)
 		c->tl += 2 * 7;
 	}
 }
+static int g_it_n;
+static void it_c(hle_ctx *c, int n);
 static void tl_start(hle_ctx *c)
 {
 	c->tl_used = 1;
 	tl_boundary(c);
+	it_c(c, g_it_n);
 	tl_refresh(c);
+}
+static int g_it_lo, g_it_hi;
+static void it_c(hle_ctx *c, int n)
+{
+	if (g_it_frame == g_frames_run && !c->dry) {
+		int t = gx_m68k_cycles() + (int)c->tl;
+		if (t >= g_it_lo && t < g_it_hi)
+			fprintf(stderr, "IT %d %d %s r=%d\n", t, n, g_cur_def ? g_cur_def->name : "?", gx_m68k_refresh_cycles());
+	}
 }
 void hle_insn(hle_ctx *c, int n)
 {
+	g_it_n = n;
 	tl_start(c);
 	c->tl += (long)n * 7;
 	c->tl_last = (long)n * 7;
@@ -356,6 +375,7 @@ void hle_insn(hle_ctx *c, int n)
 }
 void hle_insn_x(hle_ctx *c, int n, int extra)
 {
+	g_it_n = n;
 	tl_start(c);
 	if (!hle_post_access && gx_m68k_cycles() + (int)c->tl + extra * 7 >= gx_m68k_refresh_cycles())
 		gx_m68k_set_refresh_cycles(gx_m68k_refresh_cycles() + 128 * 7);   /* SKIP_BUS_REFRESH */
@@ -683,13 +703,53 @@ static rs *rs_alloc(void)
 
 bool hle_yielding(void) { return g_cor && !g_cor_block && !g_cor->c.dry; }
 
+/* T2_LINEHASH=LO-HI (work RAM offsets, hex): print "LH frame slice_end hash" at every slice end - in the C
+ * build at each yield, in the 68k-only build at the first instruction of the next slice - so the two runs can
+ * be diffed line by line to find where a region first differs (debugging aid, no effect when unset). */
+static bool g_lh_on;
+static uint32_t g_lh_lo, g_lh_hi;
+static int g_lh_end = -1;
+static const char *g_lh_who = "";
+static void lh_emit(int end)
+{
+	uint64_t h = 1469598103934665603ull;
+	for (uint32_t i = g_lh_lo; i < g_lh_hi; i++)
+		h = (h ^ work_ram[i]) * 1099511628211ull;
+	fprintf(stderr, "LH %ld %d %016llx %s\n", g_frames_run, end, (unsigned long long)h, g_lh_who);
+	if (getenv("T2_LH_DUMP") && g_frames_run == atol(getenv("T2_LH_DUMP"))) {
+		fprintf(stderr, "LD %ld %d ", g_frames_run, end);
+		for (uint32_t i = g_lh_lo; i < g_lh_hi; i++)
+			fprintf(stderr, "%02x", work_ram[i]);
+		fprintf(stderr, "\n");
+	}
+}
+static void lh_frame(void) { if (g_lh_on) lh_emit(0); }
+static bool lh_vec(uint32_t pc)
+{
+	for (int v = 0x64; v <= 0x7C; v += 4)
+		if (pc == (ROM32(v) & 0xFFFFFF))
+			return true;
+	return false;
+}
+static void lh_hook(int type, int width, unsigned addr, unsigned value)
+{
+	(void)width; (void)value;
+	if (type == 1 && g_it_frame == g_frames_run) {
+		int t = gx_m68k_cycles();
+		if (t >= g_it_lo && t < g_it_hi)
+			fprintf(stderr, "IX %d %06X r=%d\n", t, addr, gx_m68k_refresh_cycles());
+	}
+	if (type == 1 && lh_vec(addr))
+		lh_emit(gx_m68k_cycles());
+}
+
 static void cor_do_yield(rs *s)
 {
 	tl_flush(&s->c);
 	g_yields++;
 	dstat(s->def, 8);
 	if (getenv("T2_HLE_YLOG"))
-		fprintf(stderr, "yield %s clock %d end %d sp %06X\n", s->def->name, gx_m68k_cycles(), gx_m68k_cycle_end(), s->c.a[7]);
+		fprintf(stderr, "yield %s clock %d end %d sp %06X frame %ld\n", s->def->name, gx_m68k_cycles(), gx_m68k_cycle_end(), s->c.a[7], g_frames_run);
 	swapcontext(&s->uc, &s->back);
 }
 static void cor_check(hle_ctx *c)
@@ -1377,6 +1437,8 @@ static int dispatch(unsigned int pc)
 		}
 		return n;
 	}
+	if (g_lh_on && lh_vec(pc))
+		lh_emit(gx_m68k_cycles());
 	entry *e = find_addr(pc);
 	if (!e || !e->enabled)
 		return -1;
@@ -1399,7 +1461,7 @@ static int dispatch(unsigned int pc)
 	int c0 = gx_m68k_cycles();
 	uint32_t d0 = gx_m68k_dar()[0], d1 = gx_m68k_dar()[1], sp = gx_m68k_dar()[15];
 	if (g_trace > 1)
-		fprintf(stderr, "enter %s clock %d nest %d top %d bnd %d end %d cor %d\n", e->def.name, c0, g_nest, (int)g_top, g_bnd, gx_m68k_cycle_end(), g_cor != NULL);
+		fprintf(stderr, "enter %s clock %d nest %d top %d bnd %d end %d cor %d frame %ld addr %06X\n", e->def.name, c0, g_nest, (int)g_top, g_bnd, gx_m68k_cycle_end(), g_cor != NULL, g_frames_run, e->def.addr);
 	int r = run_def(&e->def, e);
 	fprintf(stderr, "hle %-18s D0=%08X D1=%08X SP=%06X -> ret %06X  mclk %d -> %d (+%d charged)\n",
 	        e->def.name, d0, d1, sp, gx_m68k_pc(), c0, gx_m68k_cycles(), r * 7);
@@ -1446,6 +1508,16 @@ void hle_install(void)
 	if (getenv("T2_HLE_WATCHDOG")) {
 		signal(SIGALRM, watchdog);
 		alarm((unsigned)atoi(getenv("T2_HLE_WATCHDOG")));
+	}
+	if (getenv("T2_ITRACE") && sscanf(getenv("T2_ITRACE"), "%ld,%d,%d", &g_it_frame, &g_it_lo, &g_it_hi) == 3) {
+		g_lh_on = true;
+		g_lh_lo = g_lh_hi = 0;
+		emu_add_hook(lh_hook);
+	}
+	if (getenv("T2_LINEHASH") && sscanf(getenv("T2_LINEHASH"), "%x-%x", &g_lh_lo, &g_lh_hi) == 2) {
+		g_lh_on = true;
+		g_lh_lo &= 0xFFFF; g_lh_hi &= 0x1FFFF;
+		emu_add_hook(lh_hook);
 	}
 	const char *o = getenv("T2_HLE_ORIG");
 	if (o)
@@ -1570,6 +1642,13 @@ static void call68k2(hle_ctx *c, uint32_t addr, bool orig, bool push, uint32_t s
 	c->pc = addr;
 	g_cor_block++;
 	nest_begin();
+	/* A function with an instruction timeline has charged its instructions so far on c->tl, not on the clock:
+	 * the nested 68k would run in the past (its bus refresh and the Z80 stalls at slice ends would fall on other
+	 * instructions than in the original). Put the time on the clock first; the session end counts it. */
+	if (g_top && g_sess && !hle_post_access && !c->dry && c->tl_used && c->tl) {
+		tl_flush(c);
+		save.tl = 0;
+	}
 	ctx_store(c);
 	if (orig)
 		m68k_hle_skip_pc = addr;

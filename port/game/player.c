@@ -554,7 +554,7 @@ L_009184:;
 }
 
 /* $009186 gunpower bars (decline bound 5500 = observed max 3635 x 1.5, T2_HLE_BOUNDS + NODECLINE over 92 states x 3000 frames) */
-HLE_FUNC_BAIL_YIELD(0x009186, GunpowerHud, 5500)
+HLE_FUNC_BAIL(0x009186, GunpowerHud, 5500)
 {
 	PL_BAIL(0x009186, 700, 0x009186);
 	{ ctx->a[4] = 0xFFFF8000u; hle_insn(ctx, 12); } /* 009186 lea 0xffff8000,%a4 */
