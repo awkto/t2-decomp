@@ -449,7 +449,7 @@ static void call68(hle_ctx *c, uint32_t addr, int cost)
 {
 	hle_insn(c, cost);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 static void bra(hle_ctx *c) { hle_insn(c, 10); }          /* bra.s / bra.w */
 
@@ -652,7 +652,7 @@ HLE_RANGE_PURE(0x00DAEE, L4BoxFlash, 500, EXIT_NEXT)
 	exit_next(ctx);
 }
 /* $00DB0C: destroyed: debris, free the slot, level script on (ScriptNext stays as it is) */
-HLE_RANGE(0x00DB0C, L4BoxKill, 1200, 0x00DB2E)   /* observed max 758 x 1.5 */
+HLE_RANGE_YIELD(0x00DB0C, L4BoxKill, 1200, 0x00DB2E)   /* observed max 758 x 1.5 */
 {
 	movem_xy(ctx);
 	movew_m_d(ctx, 2, A6 + 6);
@@ -691,7 +691,7 @@ static void lamp_dead(hle_ctx *ctx)                     /* sub_00DBE0 */
 }
 HLE_RANGE_PURE(0x00DBE0, L4LampDead, 400, EXIT_NEXT) { lamp_dead(ctx); }
 /* $00DBC4: shot: debris, then the dead lamp */
-HLE_RANGE(0x00DBC4, L4LampKill, 1900, EXIT_NEXT)   /* observed max 1238 x 1.5 */
+HLE_RANGE_YIELD(0x00DBC4, L4LampKill, 1900, EXIT_NEXT)   /* observed max 1238 x 1.5 */
 {
 	movem_xy(ctx);
 	movew_m_d(ctx, 2, A6 + 6);
@@ -1053,7 +1053,7 @@ HLE_RANGE_PURE(0x00ED2E, L4PopHit, 500, EXIT_NEXT)
 	exit_next(ctx);
 }
 /* $00ED5C: dead: free the slot, debris and sparks (all 68k) */
-HLE_RANGE(0x00ED5C, L4PopKill, 17500, EXIT_NEXT)   /* observed max 11416 x 1.5 */
+HLE_RANGE_YIELD(0x00ED5C, L4PopKill, 17500, EXIT_NEXT)   /* observed max 11416 x 1.5 */
 {
 	clr_obj_slot(ctx);
 	movem_xy(ctx);
@@ -1211,7 +1211,7 @@ HLE_RANGE_PURE(0x00F5D2, L4OrbCharge, 700, HLE_EXIT_SP(0x00F5FA, -2), EXIT_NEXT)
 	hle_jump(ctx, 0x00F5FA);                            /* bsr.w sub_009A5E, then $00DDBA */
 }
 /* $00F65A: shot: sparks, debris, free the slot (all 68k) */
-HLE_RANGE(0x00F65A, L4OrbKill, 9300, EXIT_NEXT)   /* observed max 6128 x 1.5 */
+HLE_RANGE_YIELD(0x00F65A, L4OrbKill, 9300, EXIT_NEXT)   /* observed max 6128 x 1.5 */
 {
 	moveq(ctx, 5, 3);
 	do {
@@ -1236,7 +1236,7 @@ HLE_RANGE(0x00F65A, L4OrbKill, 9300, EXIT_NEXT)   /* observed max 6128 x 1.5 */
 	exit_next(ctx);
 }
 /* $00E0A4: the same for the active orb (sparks 32 up) */
-HLE_RANGE(0x00E0A4, L4OrbKill2, 10600, EXIT_NEXT)   /* observed max 7064 x 1.5 */
+HLE_RANGE_YIELD(0x00E0A4, L4OrbKill2, 10600, EXIT_NEXT)   /* observed max 7064 x 1.5 */
 {
 	moveq(ctx, 5, 3);
 	do {
@@ -1601,7 +1601,7 @@ static void mover_debris(hle_ctx *c, uint32_t tab)
 	clr_obj_slot(c);
 }
 /* $00E174 ($24 shot, first variant): debris, then 13 rows of fill (VdpQueueFillRows) */
-HLE_RANGE(0x00E174, L4MoverKill1, 7900, EXIT_NEXT)   /* observed max 5282 x 1.5 */
+HLE_RANGE_YIELD(0x00E174, L4MoverKill1, 7900, EXIT_NEXT)   /* observed max 5282 x 1.5 */
 {
 	jsr(ctx, ObjScrollX);
 	mover_debris(ctx, 0xE1B2);
@@ -1612,7 +1612,7 @@ HLE_RANGE(0x00E174, L4MoverKill1, 7900, EXIT_NEXT)   /* observed max 5282 x 1.5 
 	exit_next(ctx);
 }
 /* $00E1CA ($24 shot, second variant): debris, then new tiles or fill, by +$2A */
-HLE_RANGE(0x00E1CA, L4MoverKill2, 14500, EXIT_NEXT)   /* observed max 9626 x 1.5 */
+HLE_RANGE_YIELD(0x00E1CA, L4MoverKill2, 14500, EXIT_NEXT)   /* observed max 9626 x 1.5 */
 {
 	jsr(ctx, ObjScrollX);
 	mover_debris(ctx, 0xE228);

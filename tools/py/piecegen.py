@@ -7,7 +7,11 @@ for the work-RAM-only instructions of some routines, as HLE_RANGE_PURE pieces: a
 leaves the routine's range) and hle_jump()s to that instruction, which the 68k executes.  The exits (with
 their stack delta) are computed by a walk over the control flow.
 
-usage: python3 -I tools/py/piecegen.py ring|player > port/game/<file>.c"""
+A spec with whole=True emits each entry as ONE function (HLE_FUNC_YIELD) instead of pieces: the jsr/bsr
+instructions are charged and made as direct C calls through hle_callc (the callee is C and can be
+interrupted too, else it runs as nested 68k), the rts returns. For code that must run with no 68k fallback.
+
+usage: python3 -I tools/py/piecegen.py ring|player|pickup > port/game/<file>.c"""
 import os
 import re
 import subprocess
@@ -35,6 +39,45 @@ SPECS = {
         title="""The per-player state handler $008C8E (PlayerState) and its caller $008C52 (PlayersState): timers,
  * the state-1/5/7 sounds and bars, the state-2 death / continue paths up to the PlayerDied label
  * ($008D68, which game/screens.c already covers).""",
+    ),
+    "pickup": dict(
+        file="pickup2.c",
+        whole=True,
+        ranges=[(0x012D00, 0x012DDC)],
+        entries={0x012D00: "PickupSpawn"},
+        prefix="Pickup",
+        title="""The pickup/missile spawn helper sub_012D00 (called by PlayerButtons and PlayerShoot): it picks the
+ * slot with MissileAlloc, fills it from the player's record and the table at $012DDC, and starts the
+ * target search.""",
+    ),
+    "bgstream": dict(
+        file="bgstream.c",
+        whole=True,
+        ranges=[(0x00498A, 0x004A64)],
+        entries={0x00498A: "BgStreamLayers"},
+        prefix="BgStream",
+        title="""BgStreamLayers $00498A: one pass per background layer record (a0 = the layer list, a1/a2/a6 the
+ * position tables, d0..d2 the plane/stride): when the scroll position crossed a block it queues the new
+ * column/row with VdpQueueTileRect (or the Mirror / FillRows variants) after saving the registers.""",
+    ),
+    "queues": dict(
+        file="queues2.c",
+        whole=True,
+        ranges=[(0x012212, 0x012234), (0x00BF46, 0x00BF60), (0x013470, 0x013480), (0x01385A, 0x01390E)],
+        entries={0x012212: "VdpQueueFillRows", 0x00BF46: "VdpQueueBand", 0x013470: "SpawnRowA", 0x01385A: "SpawnRowB"},
+        prefix="Queue",
+        title="""Small list/spawn routines that BgStreamLayers and ScrTextClear call: VdpQueueFillRows $012212 (one
+ * fill-rows command per row), the fixed list entry sub_00BF46, and the two object row spawners
+ * sub_013470 / sub_01385A (they share the tail sub_013866).""",
+    ),
+    "hudtext": dict(
+        file="hudtext2.c",
+        whole=True,
+        ranges=[(0x007BB8, 0x007BEC)],
+        entries={0x007BB8: "HudBannerText"},
+        prefix="HudText",
+        title="""The HUD banner text helper sub_007BB8 (print the two banner strings for the player in a4 through
+ * StringPrint).""",
     ),
     "helpers": dict(
         file="helpers.c",
@@ -145,6 +188,9 @@ def parse_op(s):
     m = re.fullmatch(r"%(a\d|fp|sp)@\((-?\d+),%d(\d):([wl])\)", s)
     if m:
         return ("idx", reg(m.group(1)), int(m.group(2)), int(m.group(3)), m.group(4))
+    m = re.fullmatch(r"%pc@\(([0-9a-f]+),%d(\d):([wl])\)", s)
+    if m:
+        return ("pcidx", int(m.group(1), 16), int(m.group(2)), m.group(3))
     m = re.fullmatch(r"%pc@\(([0-9a-f]+)\)", s)
     if m:
         return ("abs", int(m.group(1), 16))
@@ -170,7 +216,7 @@ def lit(v):
 
 
 def is_mem(op):
-    return op[0] in ("ind", "post", "pre", "disp", "abs", "idx")
+    return op[0] in ("ind", "post", "pre", "disp", "abs", "idx", "pcidx")
 
 
 def ea_of(op, sz, tag):
@@ -189,6 +235,9 @@ def ea_of(op, sz, tag):
     if k == "idx":
         ix = ("(uint32_t)(int32_t)(int16_t)ctx->d[%d]" if op[4] == "w" else "ctx->d[%d]") % op[3]
         return ("uint32_t %s = ctx->a[%d] + (uint32_t)(int32_t)(%d) + %s; " % (nm, op[1], op[2], ix), nm)
+    if k == "pcidx":
+        ix = ("(uint32_t)(int32_t)(int16_t)ctx->d[%d]" if op[3] == "w" else "ctx->d[%d]") % op[2]
+        return ("uint32_t %s = 0x%08Xu + %s; " % (nm, op[1] & 0xFFFFFFFF, ix), nm)
     if k == "abs":
         return ("uint32_t %s = 0x%08Xu; " % (nm, op[1] & 0xFFFFFFFF), nm)
     raise ValueError("ea " + str(op))
@@ -272,6 +321,8 @@ class Gen:
                 return -n * sz
             if args[0] == "%sp@+":
                 return n * sz
+        if "%sp@+" not in t and "%sp@-" not in t and "%sp," not in t.replace("%sp@", ""):
+            return 0                    # (sp) / d16(sp) addressing only: the stack pointer does not move
         raise AssertionError("sp use %X %s" % (i.addr, t))
 
     def walk(self):
@@ -300,8 +351,13 @@ class Gen:
                 cls, tg = self.kind(i)
                 nxt = a + self.length(i)
                 if cls == "stop":
-                    exits.add((a, d))
                     t, mn, args = self.parsed(i)
+                    if self.spec.get("whole"):
+                        assert mn in CALLS or mn in ("rts", "jmp"), "whole mode: %s at %X" % (t, a)
+                        if mn in CALLS:
+                            stack.append((nxt, d))
+                        continue
+                    exits.add((a, d))
                     if mn in CALLS:
                         todo.append(nxt)
                     continue
@@ -325,6 +381,8 @@ class Gen:
 
     def emit(self, i, labels):
         t, mn, args = self.parsed(i)
+        if re.search(r"\b(c0000[0-9a-f]|a1[0-9a-f]{4}|a0[0-9a-f]{4})\b", t):
+            raise ValueError("I/O address (VDP / Z80 / ports) in %s: hand-write it with the exact clock model" % t)
         a = i.addr
         cmt = "/* %06X %s */" % (a, t)
         lab = "L_%06X:\n" % a if a in labels else ""
@@ -340,6 +398,23 @@ class Gen:
             return lab + "\t" + s + tail + "  " + cmt
 
         cls, tg = self.kind(i)
+        if cls == "stop" and self.spec.get("whole"):
+            if mn == "rts":
+                return line("hle_insn(ctx, %d); return;" % base)
+            tgt = args[0]
+            if mn in ("jsr", "jmp") and tgt.startswith("0x"):
+                tgt = tgt[2:]
+            mi = re.fullmatch(r"%a(\d)@", tgt)
+            if mi:                       # jsr (An) / jmp (An): computed target
+                call = "hle_callc(ctx, ctx->a[%s])" % mi.group(1)
+                if mn == "jmp":
+                    return line("{ hle_insn(ctx, %d); hle_jump(ctx, ctx->a[%s]); return; }" % (base, mi.group(1)))
+                return line("{ hle_insn(ctx, %d); hle_sync(ctx); %s; }" % (base, call))
+            m2 = re.fullmatch(r"(?:%pc@\()?([0-9a-f]+)\)?", tgt)
+            assert m2, "call target " + t
+            if mn == "jmp":      # tail jump: the layer (or hle_callc) continues there; its rts returns to our caller
+                return line("{ hle_insn(ctx, %d); hle_jump(ctx, 0x%06X); return; }" % (base, int(m2.group(1), 16)))
+            return line("{ hle_insn(ctx, %d); hle_sync(ctx); hle_callc(ctx, 0x%06X); }" % (base, int(m2.group(1), 16)))
         if cls == "stop":
             return line("hle_jump(ctx, 0x%06X); return;" % a)
         m = BRANCH.fullmatch(mn)
@@ -377,6 +452,10 @@ class Gen:
                 return line("set_b(&ctx->d[%d], %s); hle_insn(ctx, %d);" % (op[1], val, base))
             pre, ea = ea_of(op, 1, "d")
             return line("{ %s st8(eaD, %s); } hle_insn(ctx, %d);" % (pre, val, base))
+        if mn == "exg":
+            r1, r2 = parse_op(args[0]), parse_op(args[1])
+            assert r1[0] == "d" and r2[0] == "d"
+            return line("{ uint32_t t_ = ctx->d[%d]; ctx->d[%d] = ctx->d[%d]; ctx->d[%d] = t_; } hle_insn(ctx, %d);" % (r1[1], r1[1], r2[1], r2[1], base))
         if mn == "lea":
             src = parse_op(args[0])
             dst = parse_op(args[1])
@@ -411,6 +490,17 @@ class Gen:
             if m.group(1) == "w":
                 return line("{ set_w(&ctx->d[%d], (uint32_t)(int32_t)(int8_t)ctx->d[%d]); cc_logic16(ctx, ctx->d[%d] & 0xFFFFu); } hle_insn(ctx, %d);" % (r, r, r, base))
             return line("{ ctx->d[%d] = (uint32_t)(int32_t)(int16_t)ctx->d[%d]; cc_logic32(ctx, ctx->d[%d]); } hle_insn(ctx, %d);" % (r, r, r, base))
+        if mn == "movemw" and args[1] == "%sp@-":
+            mask = i.words[1]
+            assert not (mask & 1), "a7 in movem"
+            regs = [15 - b for b in range(16) if mask & (1 << b)]
+            body = "".join("ctx->a[7] -= 2; st16(ctx->a[7], %s); " % ("ctx->d[%d]" % r if r < 8 else "ctx->a[%d]" % (r - 8)) for r in regs)
+            return line("{ %s} hle_movem_w(ctx, %d, %d);" % (body, self.cost(i), len(regs)))
+        if mn == "movemw" and args[0] == "%sp@+":
+            mask = i.words[1]
+            regs = [b for b in range(16) if mask & (1 << b)]
+            body = "".join("%s = (uint32_t)(int32_t)(int16_t)ld16(ctx->a[7]); ctx->a[7] += 2; " % ("ctx->d[%d]" % r if r < 8 else "ctx->a[%d]" % (r - 8)) for r in regs)
+            return line("{ %s} hle_movem_w(ctx, %d, %d);" % (body, self.cost(i), len(regs)))
         if mn == "movemw":
             mask = i.words[1]
             src = parse_op(args[0])
@@ -575,6 +665,66 @@ static inline void st32(uint32_t a, uint32_t v) { RAM32_W(a, v); }
 """
 
 
+def gen_whole(spec, e, labels):
+    g2 = Gen(dict(spec, entries={e: spec["entries"][e]}))
+    ent2, reached2 = g2.walk()
+    labels2 = set(ent2)
+    for a in reached2:
+        cls, tg = g2.kind(g2.ins[a])
+        for tt in tg:
+            if g2.inrange(tt):
+                labels2.add(tt)
+    lines = ["HLE_FUNC_YIELD(0x%06X, %s, 4000)\n{" % (e, spec["entries"][e])]
+    for a in sorted(reached2):
+        lines.append(g2.emit(g2.ins[a], labels2))
+    lines.append("}\n")
+    return "\n".join(lines), len(reached2)
+
+
+def whole_main(name):
+    if name == "autow":
+        # piecegen.py autow "TITLE" ADDR:Name[,ADDR:Name...] LO-HI[,LO-HI...]  (whole-function mode, to stdout)
+        ents = {}
+        for x in sys.argv[3].split(","):
+            ad, nm = x.split(":")
+            ents[int(ad, 16)] = nm
+        rngs = []
+        for x in sys.argv[4].split(","):
+            lo, hi = x.split("-")
+            rngs.append((int(lo, 16), int(hi, 16)))
+        spec = dict(file="auto.c", whole=True, ranges=rngs, entries=ents, prefix="Auto", title=sys.argv[2])
+    elif name == "funcs":
+        # piecegen.py funcs "TITLE" ADDR[,ADDR...]: whole-function ports of the functions at these addresses
+        # (size and name from data/functions.txt); a function the generator cannot do is skipped on stderr
+        info = {}
+        for ln in open(os.path.join(cc.ROOT, "data", "functions.txt")):
+            q = ln.split()
+            if len(q) >= 3 and not ln.startswith("#"):
+                info[int(q[0], 16)] = (int(q[1]), q[2])
+        ents, rngs = {}, []
+        for x in sys.argv[3].split(","):
+            a = int(x, 16)
+            size, nm = info[a]
+            ents[a] = ("Sub%06X" % a) if nm.startswith("sub_") else nm
+            rngs.append((a, a + size))
+        spec = dict(file="funcs.c", whole=True, ranges=rngs, entries=ents, prefix="Auto", title=sys.argv[2])
+    else:
+        spec = SPECS[name]
+    labels = None
+    out = [HEADER % dict(title=spec["title"])]
+    n = 0
+    for e in sorted(spec["entries"]):
+        try:
+            body = gen_whole(spec, e, labels)
+        except (AssertionError, ValueError) as ex:
+            sys.stderr.write("SKIP %06X %s: %s\n" % (e, spec["entries"][e], ex))
+            continue
+        out.append(body[0])
+        n += body[1]
+    print("\n".join(out))
+    sys.stderr.write("%d instructions\n" % n)
+
+
 def gen_spec(spec, runname="pc_run"):
     """-> (text of the pieces, instruction count, set of exit instruction addresses); raises on anything unsupported"""
     g = Gen(spec)
@@ -690,6 +840,9 @@ def auto(addrs, registered):
 
 
 def main():
+    if sys.argv[1] in ("autow", "funcs"):
+        whole_main(sys.argv[1])
+        return
     if sys.argv[1] == "auto":
         # piecegen.py auto UNPORTED.txt REGISTERED.txt OUTBARRIERS.txt > port/game/auto1.c
         addrs = [int(x.split()[0], 16) for x in open(sys.argv[2]) if x.strip()]

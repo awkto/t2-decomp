@@ -254,7 +254,7 @@ miss:
 }
 
 /* ---------------------------------------------------------- PickupHitBox $007086 */
-HLE_FUNC(0x007086, PickupHitBox, 6000)
+HLE_FUNC_YIELD(0x007086, PickupHitBox, 6000)
 {
 	ctx->d[0] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY);
 	ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY + 2);
@@ -299,12 +299,12 @@ HLE_FUNC(0x007086, PickupHitBox, 6000)
 	set_w(&ctx->d[3], d3);
 	hle_insn(ctx, C_JSR_AL);
 	hle_sync(ctx);
-	hle_call68k(ctx, PICKUP_EXPLODE);             /* jsr (sub_012AF4).l */
+	hle_callc(ctx, PICKUP_EXPLODE);             /* jsr (sub_012AF4).l */
 	set_w(&ctx->d[0], ctx->d[6]);                 /* move.w d6,d0 (d0's high word survives) */
 	hle_insn(ctx, C_MOVEW_DD);
 	hle_insn(ctx, C_JSR_AL);
 	hle_sync(ctx);
-	hle_call68k(ctx, PICKUP_SOUND);               /* jsr (sub_013E30).l */
+	hle_callc(ctx, PICKUP_SOUND);               /* jsr (sub_013E30).l */
 	ctx->d[6] = 0xFFFFFFFF;                       /* moveq #-1,d6 */
 	HLE_SEQ(ctx, C_MOVEQ, C_RTS);
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_N);
@@ -323,7 +323,7 @@ miss:
 }
 
 /* --------------------------------------------------------- ShotHitTest $005892 */
-HLE_FUNC(0x005892, ShotHitTest, 24000)
+HLE_FUNC_YIELD(0x005892, ShotHitTest, 24000)
 {
 	int free_slots = 0;
 
@@ -359,7 +359,7 @@ HLE_FUNC(0x005892, ShotHitTest, 24000)
 		hle_insn(ctx, C_MOVEA_D16);
 		hle_insn(ctx, C_JSR_AN);
 		hle_sync(ctx);
-		hle_call68k(ctx, ctx->a[0]);              /* jsr (a0): per-object hit test */
+		hle_callc(ctx, ctx->a[0]);              /* jsr (a0): per-object hit test */
 		ctx->a[6] += 0x2C;                        /* lea.l (0x2c,a6),a6 */
 		hle_insn(ctx, C_LEA_D16);
 		set_w(&ctx->d[7], (ctx->d[7] - 1) & 0xFFFF);   /* dbra d7 */
@@ -471,7 +471,7 @@ front:
 		hle_insn(ctx, C_BCC_S_NOT);
 		hle_insn(ctx, C_JSR_AN);
 		hle_sync(ctx);
-		hle_call68k(ctx, ctx->a[0]);              /* jsr (a0): on-hit routine */
+		hle_callc(ctx, ctx->a[0]);              /* jsr (a0): on-hit routine */
 		set_w(&ctx->d[0], RAM16(SHOT_DAMAGE));    /* move.w (shot_damage).l,d0 */
 		hle_insn(ctx, C_MOVEW_AL);
 		uint16_t hp = RAM16(ctx->a[6] + 8);
@@ -482,7 +482,7 @@ front:
 			hle_insn(ctx, C_BCC_S_NOT);
 			hle_insn(ctx, C_JSR_AN);
 			hle_sync(ctx);
-			hle_call68k(ctx, ctx->a[0]);          /* jsr (a0): kill routine */
+			hle_callc(ctx, ctx->a[0]);          /* jsr (a0): kill routine */
 			if (hittest_stats_on())
 				g_sht_kill++;
 		} else {

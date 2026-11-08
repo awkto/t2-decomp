@@ -77,7 +77,12 @@ enum { HLE_F_WAIT = 1,
         * boundaries (hle_bail_due / hle_bail_to, docs/porting.md "Early bail"): run_def does not
         * decline it for an interrupt or the frame end inside the call; it runs in C up to the last
         * bail point that is certain to come before the event, and the 68k continues from there */
-       HLE_F_BAIL = 8 };
+       HLE_F_BAIL = 8,
+       /* the function keeps an exact instruction timeline (or advances the real clock itself, as the VDP
+        * list code does) at every point where an interrupt may land: run_def runs it as a coroutine that
+        * yields to the frame loop at the CPU's slice end (docs/porting.md, "Yielding") instead of
+        * declining or bailing. HLE_F_BAIL functions do the same. */
+       HLE_F_YIELD = 16 };
 
 /* Range exit with a declared stack delta (docs/porting.md, "Ranges that push or pop"):
  * the range leaves at ADDR with SP = entry SP + DELTA. DELTA is even, -256..+254: negative
@@ -144,6 +149,33 @@ void hle_register_named(uint32_t addr, const char *name, hle_fn fn, int cycles);
 	void NAME(hle_ctx *ctx);                                                            \
 	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
 	                                        HLE_F_BAIL };                               \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_BAIL_YIELD: a bail-capable function that is also a coroutine (no 68k fallback: the bail points
+ * stay for T2_HLE_NOCOR=1 and the sandbox) */
+#define HLE_FUNC_BAIL_YIELD(ADDR, NAME, CYCLES)                                         \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_BAIL | HLE_F_YIELD };                 \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+
+/* HLE_FUNC_YIELD / HLE_RANGE_YIELD: with HLE_F_YIELD (see above) */
+#define HLE_FUNC_YIELD(ADDR, NAME, CYCLES)                                              \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__, 0, 0, \
+	                                        HLE_F_YIELD };                              \
+	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
+	{ hle_register_def(&hle_def_##NAME); }                                              \
+	void NAME(hle_ctx *ctx)
+#define HLE_RANGE_YIELD(ADDR, NAME, CYCLES, ...)                                        \
+	void NAME(hle_ctx *ctx);                                                            \
+	static const uint32_t hle_exits_##NAME[] = { __VA_ARGS__, 0 };                      \
+	static const hle_def hle_def_##NAME = { (ADDR), #NAME, NAME, (CYCLES), __FILE__,   \
+	                                        hle_exits_##NAME, 0, HLE_F_YIELD };         \
 	__attribute__((constructor)) static void hle_ctor_##NAME(void)                      \
 	{ hle_register_def(&hle_def_##NAME); }                                              \
 	void NAME(hle_ctx *ctx)
@@ -243,6 +275,12 @@ void hle_insn_x(hle_ctx *ctx, int n, int extra);
  * event inside exactly as the original does. Before anything was changed use hle_decline(). */
 bool hle_bail_due(hle_ctx *ctx, int chunk_cycles);
 void hle_bail_to(hle_ctx *ctx, uint32_t pc);
+/* Yielding (HLE_F_YIELD, HLE_F_BAIL): true while the running top-level call is a coroutine (the guards
+ * of the 68k fallback must say "go ahead"); hle_yield_point() yields to the frame loop when the CPU
+ * clock has reached the slice end (call it at the START of an instruction that advances the real clock
+ * itself; hle_insn/hle_pre/hle_post do it on their own). */
+bool hle_yielding(void);
+void hle_yield_point(void);
 void hle_pre(hle_ctx *ctx);
 void hle_post(hle_ctx *ctx, int n);
 void hle_sync(hle_ctx *ctx);   /* put the pending time on the clock (before hle_call68k, after its jsr was charged) */
@@ -271,6 +309,9 @@ void hle_vdp_timed(int on);
 /* hle_exact_session(): the C code of this session advances the real clock itself, bus refresh
  * included (as game/vdplist.c does): charge the elapsed time as is, no refresh model. */
 void hle_exact_session(void);
+/* ends an hle_dma_begin() session WITHOUT completing a DMA in flight (hle_dma_end does): for coroutines that
+ * poll the DMA-busy flag and let the frame loop advance the transfer (game/vdpfill.c) */
+void hle_exact_end(void);
 /* hle_decline(): call at the very start of a replacement (before any state change, outside a
  * session) to leave the code to the real 68k this time: the CPU executes the instruction at
  * the entry address normally. For code whose timing the frame loop must be able to
@@ -334,6 +375,10 @@ int hle_invoke(const hle_def *def);
 /* jsr to 68k code at addr with ctx's registers; returns when it rts's. Other enabled
  * HLE functions still apply inside. Use for callees that are not decompiled yet. */
 void hle_call68k(hle_ctx *ctx, uint32_t addr);
+/* like hle_call68k, but a coroutine (HLE_F_YIELD) calls an enabled exact-timeline C function at addr as a
+ * direct C call that shares ctx and can be interrupted by the frame loop (docs/porting.md, "Yielding") */
+void hle_callc(hle_ctx *ctx, uint32_t addr);
+void hle_call68k_nopush(hle_ctx *ctx, uint32_t addr, uint32_t sp_done);   /* the sentinel return address is already pushed */
 /* same, but the HLE override at addr itself is bypassed (run the original). */
 void hle_call68k_orig(hle_ctx *ctx, uint32_t addr);
 /* Run the ORIGINAL 68k code from ctx->pc (the HLE override at ctx->pc itself is bypassed,

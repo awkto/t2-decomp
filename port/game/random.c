@@ -24,27 +24,37 @@
  * low word and clears V/C; X is left by the sub.l (borrow). No caller reads d1/d2. */
 #include "hle.h"
 
+#define ld32s(a) RAM32(a)
 #define RNG_STATE 0xFFA0F0   /* data/ram.txt: rng_state, ResetCheatsRng sets it to $87654321 */
 
 HLE_FUNC_PURE(0x00881C, Random, 200)
 {
-	/* movem.l d0-d2,-(sp) 32, move.l (abs).l,d0 20, subq.l #1 8, move.w 4, subq.l #1 8, swap 4, move.w 4,
-	 * add.w 4, swap 4, move.w 4, swap 4, sub.l 8, move.l d0,(abs).l 20, movem.l (sp)+,d0-d2 36,
-	 * move.w (abs).l,d0 16, rts 16 */
-	hle_movem_l(ctx, 32, 3);
-	HLE_SEQ(ctx, 20, 8, 4, 8, 4, 4, 4, 4, 4, 4, 8, 20);
-	hle_movem_l(ctx, 36, 3);
-	HLE_SEQ(ctx, 16, 16);
-	uint32_t rng = RAM32(RNG_STATE);
-	uint32_t a = rng - 2;                       /* subq.l #2 in two steps */
+	/* Interrupt-exact (docs/porting.md, "Yielding"): the effect of an instruction first, then its charge, so
+	 * a handler that runs at an instruction boundary sees what the 68k has done by then (the saved registers
+	 * on the stack, the new rng_state after the move.l, the stack pointer). */
+	uint32_t sd0 = ctx->d[0], sd1 = ctx->d[1], sd2 = ctx->d[2];
+	ctx->a[7] -= 4; RAM32_W(ctx->a[7], sd2);
+	ctx->a[7] -= 4; RAM32_W(ctx->a[7], sd1);
+	ctx->a[7] -= 4; RAM32_W(ctx->a[7], sd0);
+	hle_movem_l(ctx, 32, 3);                    /* movem.l d0-d2,-(sp) */
+	uint32_t rng = RAM32(RNG_STATE);            /* move.l (rng_state).l,d0 */
+	hle_insn(ctx, 20);
+	uint32_t a = rng - 2;                       /* subq.l #1 / subq.l #1 */
 	uint32_t hi = (a >> 16) & 0xFFFF;           /* hi(rng_state - 2) */
 	uint32_t sum = (((rng - 1) & 0xFFFF) + hi) & 0xFFFF;  /* add.w, 16-bit */
 	uint32_t d1 = (sum << 16) | hi;             /* the value sub.l subtracts */
 	uint32_t borrow = d1 > a;                   /* sub.l sets X = C = borrow */
 	uint32_t nd = a - d1;                       /* sub.l d1,d0 */
-
-	RAM32_W(RNG_STATE, nd);
+	HLE_SEQ(ctx, 8, 4, 8, 4, 4, 4, 4, 4, 4, 8);   /* subq.l, move.w, subq.l, swap, move.w, add.w, swap, move.w, swap, sub.l */
+	RAM32_W(RNG_STATE, nd);                     /* move.l d0,(rng_state).l */
+	hle_insn(ctx, 20);
+	ctx->d[0] = ld32s(ctx->a[7]); ctx->a[7] += 4;       /* movem.l (sp)+,d0-d2 */
+	ctx->d[1] = ld32s(ctx->a[7]); ctx->a[7] += 4;
+	ctx->d[2] = ld32s(ctx->a[7]); ctx->a[7] += 4;
+	hle_movem_l(ctx, 36, 3);
 	set_w(&ctx->d[0], nd);                      /* move.w (rng_state+2).l,d0 */
 	cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C,
 	       (borrow ? CC_X : 0) | ((nd & 0x8000) ? CC_N : 0) | ((nd & 0xFFFF) ? 0 : CC_Z));
+	hle_insn(ctx, 16);
+	hle_insn(ctx, 16);                          /* rts */
 }

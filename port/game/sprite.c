@@ -83,19 +83,32 @@ static int sprite_stats_on(void)
 }
 
 /* ------------------------------------------------------------------ QueueSprite $013240 */
+/* Every instruction is charged after its effect, so a frame-loop event (the VBlank handler resets the
+ * queue) that falls between two of them sees the same state as on the 68k (the call yields there). */
 HLE_FUNC_PURE(0x013240, QueueSprite, 190)
 {
-	/* movea.l (abs).l 20 x2, move.w d,(a5)+ 8 x4, move.b (abs).l,d0 16, addq.b #1,(abs).l 20,
-	 * move.b d,(a4)+ 8 x2, move.l a,(abs).l 20 x2, rts 16 = 180 */
-	HLE_SEQ(ctx, 20, 20, 8, 8, 8, 8, 16, 20, 8, 8, 20, 20, 16);
 	uint32_t a5 = RAM32(SPR_QUEUE_DATA);          /* movea.l (spr_queue_data).l,a5 */
+	ctx->a[5] = a5;
+	hle_insn(ctx, 20);
 	uint32_t a4 = RAM32(SPR_QUEUE_PTR);           /* movea.l (spr_queue_ptr).l,a4 */
+	ctx->a[4] = a4;
+	hle_insn(ctx, 20);
 	RAM16(a5) = ctx->d[1] & 0xFFFF;               /* move.w d1,(a5)+ */
-	RAM16(a5 + 2) = ctx->d[2] & 0xFFFF;           /* move.w d2,(a5)+ */
-	RAM16(a5 + 4) = ctx->d[3] & 0xFFFF;           /* move.w d3,(a5)+ */
-	RAM16(a5 + 6) = ctx->d[5] & 0xFFFF;           /* move.w d5,(a5)+ */
+	ctx->a[5] = a5 += 2;
+	hle_insn(ctx, 8);
+	RAM16(a5) = ctx->d[2] & 0xFFFF;               /* move.w d2,(a5)+ */
+	ctx->a[5] = a5 += 2;
+	hle_insn(ctx, 8);
+	RAM16(a5) = ctx->d[3] & 0xFFFF;               /* move.w d3,(a5)+ */
+	ctx->a[5] = a5 += 2;
+	hle_insn(ctx, 8);
+	RAM16(a5) = ctx->d[5] & 0xFFFF;               /* move.w d5,(a5)+ */
+	ctx->a[5] = a5 += 2;
+	hle_insn(ctx, 8);
 	uint8_t n = RAM8(SPR_QUEUE_N);                /* move.b (spr_queue_n).l,d0 */
 	set_b(&ctx->d[0], n);
+	cc_logic8(ctx, n);
+	hle_insn(ctx, 16);
 	uint8_t nr = (uint8_t)(n + 1);                /* addq.b #1,(spr_queue_n).l */
 	RAM8(SPR_QUEUE_N) = nr;
 	unsigned carry = n == 0xFF;                   /* X=C=carry, N/Z/V from the result */
@@ -103,32 +116,43 @@ HLE_FUNC_PURE(0x013240, QueueSprite, 190)
 	cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C,
 	       (carry ? (CC_X | CC_C) : 0) | ((nr & 0x80) ? CC_N : 0) | (nr ? 0 : CC_Z) |
 	       (ov ? CC_V : 0));
+	hle_insn(ctx, 20);
 	RAM8(a4) = n;                                 /* move.b d0,(a4)+ */
-	RAM8(a4 + 1) = (uint8_t)ctx->d[5];            /* move.b d5,(a4)+ */
-	ctx->a[5] = a5 + 8;
-	ctx->a[4] = a4 + 2;
+	ctx->a[4] = a4 += 1;
+	hle_insn(ctx, 8);
+	RAM8(a4) = (uint8_t)ctx->d[5];                /* move.b d5,(a4)+ */
+	ctx->a[4] = a4 += 1;
+	hle_insn(ctx, 8);
 	RAM32_W(SPR_QUEUE_DATA, ctx->a[5]);           /* move.l a5,(spr_queue_data).l */
+	hle_insn(ctx, 20);
 	RAM32_W(SPR_QUEUE_PTR, ctx->a[4]);            /* move.l a4,(spr_queue_ptr).l */
 	/* final flags from the last move.l: N/Z from a4, V=C=0, X kept from addq.b */
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C,
 	       ((ctx->a[4] & 0x80000000u) ? CC_N : 0) | (ctx->a[4] ? 0 : CC_Z));
+	hle_insn(ctx, 20);
+	hle_insn(ctx, 16);                            /* rts */
 }
 
 /* -------------------------------------------------------------- ObjQueueSprite $013228 */
 HLE_FUNC_PURE(0x013228, ObjQueueSprite, 290)
 {
 	uint32_t a6 = ctx->a[6];
-	/* move.l d5,-(sp) 12, move.w (d16,a6),Dn 12 x2, moveq 4, move.b (d16,a6),d5 12, jsr (d16,pc) 18 */
-	HLE_SEQ(ctx, 12, 12, 12, 4, 12, 18);
 	push32(ctx, ctx->d[5]);                       /* move.l d5,-(sp) */
+	hle_insn(ctx, 12);
 	set_w(&ctx->d[2], RAM16(a6 + 2));             /* move.w (0x2,a6),d2 */
+	hle_insn(ctx, 12);
 	set_w(&ctx->d[3], RAM16(a6 + 4));             /* move.w (0x4,a6),d3 */
+	hle_insn(ctx, 12);
 	ctx->d[5] = 0;                                /* moveq #0,d5 */
+	hle_insn(ctx, 4);
 	set_b(&ctx->d[5], RAM8(a6 + 7));              /* move.b (0x7,a6),d5 */
-	QueueSprite(ctx);                             /* jsr (QueueSprite,pc) - C version */
+	hle_insn(ctx, 12);
+	hle_insn(ctx, 18);                            /* jsr (QueueSprite,pc) */
+	QueueSprite(ctx);                             /* C version, ends with its rts */
 	ctx->d[5] = pop32(ctx);                       /* move.l (sp)+,d5 */
 	cc_logic32(ctx, ctx->d[5]);                   /* N/Z from d5, V=C=0, X kept */
-	HLE_SEQ(ctx, 12, 16);                         /* move.l (sp)+,d5 / rts */
+	hle_insn(ctx, 12);
+	hle_insn(ctx, 16);                            /* rts */
 }
 
 /* -------------------------------------------------------------- BuildSpriteTable $013272 */
@@ -210,8 +234,10 @@ loc_013296:
 	{
 		uint16_t d1 = RAM16(ctx->a[1]);           /* move.w (a1)+,d1 */
 		ctx->a[1] += 2;
+		hle_insn(ctx, 8);
 		uint16_t d2 = RAM16(ctx->a[1]);           /* move.w (a1),d2 */
-		HLE_SEQ(ctx, 8, 8, 4);                         /* move, move, cmp.b d2,d1 */
+		hle_insn(ctx, 8);
+		hle_insn(ctx, 4);                              /* cmp.b d2,d1 */
 		if ((uint8_t)d1 == (uint8_t)d2) {
 			hle_insn(ctx, 10);                            /* beq.s loc_0132A8 taken */
 		} else {
@@ -257,9 +283,11 @@ loc_0132B2:
 
 loc_0132C4:                                       /* one queued sprite */
 	BST_BAIL(210, 0x0132C4);
-	ctx->d[0] = RAM8(ctx->a[0]);                  /* moveq #0,d0 / move.b (a0)+,d0 */
+	ctx->d[0] = 0;                                /* moveq #0,d0 */
+	hle_insn(ctx, 4);
+	ctx->d[0] = RAM8(ctx->a[0]);                  /* move.b (a0)+,d0 */
 	ctx->a[0] += 1;
-	HLE_SEQ(ctx, 4, 8);
+	hle_insn(ctx, 8);
 	set_b(&ctx->d[4], RAM8(ctx->a[0]));           /* move.b (a0)+,d4 */
 	ctx->a[0] += 1;
 	hle_insn(ctx, 8);
@@ -352,16 +380,18 @@ loc_0132E8:                                       /* one piece */
 				g_bst_prio_gt++;
 		}
 		if (prio <= depth) {
-			HLE_SEQ(ctx, 8, 20);                        /* bgt.s not taken + bset.b #7,(-0x4,a2) */
-			RAM8(ctx->a[2] - 4) |= 0x80;
+			hle_insn(ctx, 8);                           /* bgt.s not taken */
+			RAM8(ctx->a[2] - 4) |= 0x80;                /* bset.b #7,(-0x4,a2) */
+			hle_insn(ctx, 20);
 		} else {
 			hle_insn(ctx, 10);                            /* bgt.s loc_013322 taken */
 		}
 	}
 	hle_insn(ctx, 16);                                    /* cmpi.w #0x141,(-0x8,a2) */
 	if ((int16_t)RAM16(ctx->a[2] - 8) >= 0x141) {
-		HLE_SEQ(ctx, 8, 20);                            /* blt.s not taken + bclr.b #7,(-0x4,a2) */
-		RAM8(ctx->a[2] - 4) &= (uint8_t)~0x80;
+		hle_insn(ctx, 8);                               /* blt.s not taken */
+		RAM8(ctx->a[2] - 4) &= (uint8_t)~0x80;          /* bclr.b #7,(-0x4,a2) */
+		hle_insn(ctx, 20);
 	} else {
 		hle_insn(ctx, 10);                                /* blt.s loc_013330 taken */
 	}
@@ -437,8 +467,8 @@ loc_013364:                                       /* empty queue: one dummy entr
 	goto loc_013340;
 }
 
-HLE_FUNC_BAIL(0x013272, BuildSpriteTable, 60000) { bst_run(ctx, 0x013272); }
-HLE_FUNC_BAIL(0x013296, BuildSpriteTableSort, 60000) { bst_run(ctx, 0x013296); }
-HLE_FUNC_BAIL(0x0132C4, BuildSpriteTableSprite, 60000) { bst_run(ctx, 0x0132C4); }
-HLE_FUNC_BAIL(0x0132E8, BuildSpriteTablePiece, 60000) { bst_run(ctx, 0x0132E8); }
-HLE_FUNC_BAIL(0x013340, BuildSpriteTableTail, 60000) { bst_run(ctx, 0x013340); }
+HLE_FUNC_BAIL_YIELD(0x013272, BuildSpriteTable, 60000) { bst_run(ctx, 0x013272); }
+HLE_FUNC_BAIL_YIELD(0x013296, BuildSpriteTableSort, 60000) { bst_run(ctx, 0x013296); }
+HLE_FUNC_BAIL_YIELD(0x0132C4, BuildSpriteTableSprite, 60000) { bst_run(ctx, 0x0132C4); }
+HLE_FUNC_BAIL_YIELD(0x0132E8, BuildSpriteTablePiece, 60000) { bst_run(ctx, 0x0132E8); }
+HLE_FUNC_BAIL_YIELD(0x013340, BuildSpriteTableTail, 60000) { bst_run(ctx, 0x013340); }

@@ -153,17 +153,20 @@ static int input_stats_on(void)
 /* ------------------------------------------------------------------ QueueCrosshair $00071C */
 HLE_FUNC_PURE(0x00071C, QueueCrosshair, 320)
 {
+	/* interrupt-exact (docs/porting.md, "Yielding"): each instruction reads and writes first, then is charged */
 	uint32_t a4 = ctx->a[4];
-	HLE_SEQ(ctx, 12, 12, 12);                /* the three move.w (d16,a4),Dn */
 	uint16_t x = RAM16(a4 + 4);
 	set_w(&ctx->d[2], x);                    /* move.w (0x4,a4),d2 */
 	f_nz(ctx, x, 16);
+	hle_insn(ctx, 12);
 	uint16_t y = RAM16(a4 + 6);
 	set_w(&ctx->d[3], y);                    /* move.w (0x6,a4),d3 */
 	f_nz(ctx, y, 16);
+	hle_insn(ctx, 12);
 	uint16_t idx = RAM16(a4 + 0x24);
 	set_w(&ctx->d[1], idx);                  /* move.w (0x24,a4),d1 */
 	f_nz(ctx, idx, 16);
+	hle_insn(ctx, 12);
 	if (idx & 0x8000) {                      /* bmi.w loc_000736: not playing, no sprite */
 		if (input_stats_on())
 			g_qc_skip++;
@@ -207,12 +210,13 @@ static uint16_t pad_step(hle_ctx *ctx, uint16_t prev, uint16_t bit, uint32_t acc
 	} else {
 		hle_insn(ctx, 10);               /* bne.w taken */
 	}
-	HLE_SEQ(ctx, 16, 14);                    /* move.w d2,(abs).l / move.w (0,a3,d2.w),d3 */
 	RAM16(accel) = d2;                       /* move.w d2,(accel).l */
 	f_nz(ctx, d2, 16);
+	hle_insn(ctx, 16);
 	uint16_t d3 = ROM16(PAD_ACCEL + (int16_t)d2);   /* move.w (0,a3,d2.w),d3 */
 	set_w(&ctx->d[3], d3);
 	f_nz(ctx, d3, 16);
+	hle_insn(ctx, 14);
 	return d3;
 }
 
@@ -246,10 +250,11 @@ HLE_FUNC_PURE(0x0005FC, PadMoveCrosshair, 640)
 	uint16_t buttons = RAM16(a4);
 	set_w(&ctx->d[0], buttons);              /* move.w $0(a4),d0 */
 	f_nz(ctx, buttons, 16);
+	hle_insn(ctx, 12);
 	uint16_t prev = RAM16(a4 + 2);
 	set_w(&ctx->d[1], prev);                 /* move.w (0x2,a4),d1 */
 	f_nz(ctx, prev, 16);
-	HLE_SEQ(ctx, 12, 12, 10);                /* the two move.w (d16,a4),Dn, btst.b #0,d0 */
+	HLE_SEQ(ctx, 12, 10);                    /* btst.b #0,d0 */
 
 	bool up = buttons & 1, down = buttons & 2, left = buttons & 4, right = buttons & 8;
 	if (input_stats_on()) {

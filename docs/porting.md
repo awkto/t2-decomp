@@ -347,6 +347,78 @@ original does.
 * Gates: the difftest sandbox does not bail (it checks the full path, `dt` per entry), so the proof for the bail
   paths is the lockstep gate (`--hle all`, six states, then all 92 states, with `--z80`) and the route gates.
 
+## Yielding: coroutines instead of declines and bails (HLE_F_YIELD)
+
+A decline hands the whole call to the 68k and a bail hands it the stretch around the event; a build without a
+68k core (docs/native.md in the sibling project, GitLab github/t2-decomp#11, P5) has nothing to hand it to.
+`HLE_F_YIELD` functions (`HLE_FUNC_YIELD`, `HLE_RANGE_YIELD`, `HLE_FUNC_BAIL_YIELD`) therefore run the C
+**as a coroutine** (ucontext, a 256 KiB stack from a pool of 6, `rs` in hle.c) whenever an event may fall
+inside the call, and take the event where the 68k does:
+
+* Every instruction of such a function is charged on the clock right after its effect (`hle_insn`) or, for
+  the VDP code that advances the real clock itself (`pre()` / `post()` in vdplist.c, textprint.c, vdpfill.c),
+  with the yield point first. At every instruction boundary at or after the CPU's slice end
+  (`m68k.cycle_end`, the place where the core's `m68k_run` loop would stop) the function **yields**
+  (`cor_check` / `hle_yield_point`): the time so far is charged, the session ends (the clock and VDP line
+  base are rewound as at the end of a call), the CPU PC becomes `YIELD_PC` ($0000F8) and the hook returns.
+* The frame loop then does its line work (VDP line step, the Z80, DMA, VBLANK set / clear, the frame wrap, the
+  raised interrupts), and the next `m68k_run` takes an interrupt at that instruction boundary exactly as it
+  does for the 68k. The interrupt returns to `YIELD_PC`; its hook (`resume_cor`) re-opens the session and
+  switches back into the function. Suspended functions form a stack (a handler may itself be a coroutine).
+  No 68k code is involved, and a call with no event in it is not a coroutine at all (it runs on the normal
+  stack as before, so the cost is the swap only when an event falls inside).
+* The yield order is the contract: **the effect of an instruction first, then its `hle_insn`**; the check at
+  the end of `hle_insn(k)` is the boundary before instruction k+1. A function that charges a group of
+  instructions after the group's effects (`HLE_SEQ` after several stores) or whose callee runs nested 68k is
+  not exact at the slice end and must be rewritten (QueueSprite, ObjQueueSprite, ScrollRows and
+  BuildSpriteTable were: the sprite table and the VDP list are read by the VBlank handler).
+* When is a call a coroutine? `HLE_F_YIELD` with cycles 0 (VDP session code: always, its own guards need the
+  frame loop at any line); other YIELD functions and PURE functions with an exact timeline exactly when the
+  old logic would have declined (an interrupt-raising slice end or the frame end inside the call window).
+* `hle_callc(ctx, addr)` replaces `hle_call68k` in the game code. Called from a coroutine it calls an enabled,
+  exact C function (YIELD, or a PURE one whose dry run keeps a timeline; a range only if every exit has stack
+  delta 0) directly: a sentinel return address is pushed first (so `rts`, and a tail `hle_jump` into 68k
+  code that pops and returns, behave as on the 68k), the callee shares ctx and yields like its caller. A
+  tail jump to another C function continues there; to anything else it runs the original 68k from there
+  (`hle_call68k_nopush`). Anything not C is nested 68k as before: it is atomic, so a coroutine whose callee
+  is 68k is not exact at the slice end. `T2_HLE_DECLINES=1` prints `nested68k:` lines for those targets.
+* DMA: `VramClearDma` $00800C, `DmaFillAt` $00807C, `DmaToVram` $011FA2 and `DmaToVramSave` $011F94 are
+  coroutines (vdpfill.c): they start the transfer and poll the busy flag instruction by instruction, GPGX
+  stalls the CPU clock to the end of each chunk (`vdp_dma_update`) and the frame loop advances the transfer
+  line by line while the function is suspended, as it does for the 68k. The session ends with
+  `hle_exact_end()`, not `hle_dma_end()` (which completes a DMA at once).
+* Debugging: `T2_HLE_NOCOR=1` (decline / bail as before), `T2_HLE_NOCOR_FN=name,..` and
+  `T2_HLE_NOCOR_FILE=file.c,..` (per function / file), `T2_HLE_YLOG=1` (each yield), `T2_HLE_TRACE=2` (entries,
+  resumes and `hle_callc` calls), `T2_HLE_WATCHDOG=secs` (C backtrace of a hang; `addr2line -f -e t2port`
+  on the `+0x` offsets), `T2_HLE_DECLINES=1` (`yields:` and `nested68k:` lines next to `declines:`).
+* The generated helpers: `tools/py/piecegen.py` has a whole-function mode (`pickup`, `bgstream`, `queues`,
+  `hudtext`, `funcs ADDR,..`, `auto`) that emits one `HLE_FUNC_YIELD` per routine with the jsr/bsr as
+  `hle_callc`, a branch or jmp out of the routine as `hle_jump`; game/pickup2.c, bgstream.c, queues2.c,
+  hudtext2.c and callees2.c are its output.
+* Gates: the sandbox (difftest) does not yield, so the proof is dt per entry plus the lockstep gate and the
+  route gates.
+* Status: wide 92 of 92 identical, the five route gates (coldboot 9000, ringstate 53768, pause 5738, levelflow
+  43913, screens 34882 frames), the six lockstep states with and without `--z80`, mousetest and `make` pass.
+  What it took after the first version: (1) `Random`, `PadMoveCrosshair` and `QueueCrosshair` charged groups of
+  instructions before their effects (a handler between saw the old state): effect first, then `hle_insn`;
+  (2) a function with an instruction timeline that calls nested 68k (`hle_call68k`) now puts its pending timeline
+  on the clock first (`call68k2`), so the nested code's bus refresh and Z80 stalls fall on the instructions they do
+  in the original (before, a lump with a nested call drifted by one refresh cycle pair and the next interrupt landed
+  on another instruction); (3) the declared cycles of a generated whole-function port (4000) is not a bound
+  (SpawnRowB's ObjAlloc spawns run across the frame end), so the event window of a YIELD function is at least
+  `YIELD_SPAN` (60000 cycles); (4) a whole-function port supersedes a census piece at the same entry (registry).
+  Dropped back (not exact in reasonable effort): `GunpowerHud` is `HLE_FUNC_BAIL` again (a text-printer coroutine
+  that is resumed across the frame wrap leaves the VBlank one instruction late in 2p_gun_06), `TruckDamage`
+  ($00D322) is served by the generated pieces of auto2.c (diverged in misc_t3 as a coroutine). Not coroutines yet
+  (still declining or bailing): ReadInput / ReadInputAim / ReadPad1 / ReadPad2 / MenacerReadXY (I/O sequences
+  charged in batches), BgStreamLayers, TruckMain, BgStructFree (their callees include 68k that is not ported),
+  PalFade. VramClearDma and DmaFillAt are written but compiled out (`#if 0` in vdpfill.c): gun_0a diverges eight
+  cycles after the first call that overlaps a VBlank.
+* Finding where a coroutine goes wrong: `T2_HLE_TRACE=2 T2_HLE_YLOG=1` (entries and yields with the frame),
+  `T2_LINEHASH=LO-HI` (hash of a work-RAM range at every frame start and handler entry, in the 68k-only and the C
+  build: diff the two logs), `T2_LH_DUMP=frame` (the bytes), `T2_ITRACE=frame,lo,hi` (every instruction start in
+  a clock window: `IX` 68k, `IT` C charge), and bisect by disabling functions (`--hle all,-Name`).
+
 ## Result so far
 
 | Address | Name | File | difftest |

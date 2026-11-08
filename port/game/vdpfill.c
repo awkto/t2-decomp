@@ -41,7 +41,9 @@ static void post(int c);
  * differs for a call that spans a line. The lockstep gate is the proof for the V counter. */
 static void follow(void)
 {
-	if (hle_post_access)
+	if (hle_yielding())
+		hle_yield_point();            /* the frame loop's line work happens while we are suspended */
+	else if (hle_post_access)
 		gx_vdp_follow_cpu();
 	else
 		gx_vdp_follow_cpu_lines();
@@ -87,7 +89,7 @@ static int safe_run(int bound_cycles)
 		return 1;
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length())
 		return 0;
@@ -102,7 +104,7 @@ static int head_ok(int head_cycles)
 		return 1;
 	if (hle_chk_on)
 		hle_chk_note(head_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length())
 		return 0;
@@ -116,13 +118,15 @@ static int due(int slack)
 {
 	if (native_active)                  /* no 68k to hand the call to: the native runner takes interrupts between blocks */
 		return 0;
+	if (hle_yielding())
+		return 0;
 	if (g_armed)
 		follow();
 	return g_armed && (long)gx_m68k_cycles() + (long)slack * 7 >= g_tog;
 }
 
 /* ---------------------------------------------------------------- CramUpload $0080FE */
-HLE_FUNC(0x0080FE, CramUpload, 0)
+HLE_FUNC_YIELD(0x0080FE, CramUpload, 0)
 {
 	uint32_t a0 = ctx->a[0] & 0xFFFFFF;
 	if (a0 + 128 > 0x1000000u || (a0 >= 0x400000u && a0 < 0xE00000u) ||
@@ -270,7 +274,7 @@ static int tail_874e(hle_ctx *ctx)
 #define HEAD_874E 450
 #define LOOP_COST 110
 
-HLE_FUNC(0x00874E, VramFillTail, 0)
+HLE_FUNC_YIELD(0x00874E, VramFillTail, 0)
 {
 	if (!fill_enter(HEAD_874E, 400 + 0x700 * LOOP_COST)) {
 		hle_decline();
@@ -281,7 +285,7 @@ HLE_FUNC(0x00874E, VramFillTail, 0)
 }
 
 /* sub_00873A: d2 = 0, loop at $00873E over d1+1 words, then falls into sub_00874E */
-HLE_FUNC(0x00873A, VramFillBody, 0)
+HLE_FUNC_YIELD(0x00873A, VramFillBody, 0)
 {
 	if (ctx->a[5] != 0xC00000u ||
 	    !fill_enter(100, 400 + (int)((ctx->d[1] & 0xFFFF) + 1 + 0x700) * LOOP_COST)) {
@@ -302,7 +306,7 @@ HLE_FUNC(0x00873A, VramFillBody, 0)
 }
 
 /* ---------------------------------------------------------------- VramFillWords $008782 */
-HLE_FUNC(0x008782, VramFillWords, 0)
+HLE_FUNC_YIELD(0x008782, VramFillWords, 0)
 {
 	uint32_t words = ((ctx->d[1] & 0xFFFF) >> 1) + 1;
 	if (!fill_enter(500, 500 + (int)words * LOOP_COST)) {
@@ -371,4 +375,234 @@ HLE_FUNC_PURE(0x0086C4, RamClear, 1050000)
 	ctx->d[1] = 0;
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);                 /* cmpa.l: equal */
 	hle_insn(ctx, 16);                                            /* 0086D6 rts */
+}
+
+/* ---------------------------------------------------------------- the DMA routines
+ * VramClearDma $00800C / sub_00807C (VRAM fill by DMA) and DmaToVram $011FA2 / DmaToVramSave $011F94 (68k to
+ * VRAM DMA). They start a transfer and poll the DMA-busy flag, which lasts for lines or frames: the polls
+ * are instruction-exact like the other VDP code here and the function is a coroutine, so at every slice end
+ * it hands the machine to the frame loop, which advances the DMA line by line (GPGX stalls the CPU clock
+ * to the end of the chunk, vdp_dma_update) exactly as it does for the 68k in its poll loop. The session
+ * ends with hle_exact_end(), not hle_dma_end(): the transfer must not be completed at once. */
+static void dma_end(void) { hle_exact_end(); }
+/* movem.l: GPGX checks the bus refresh threshold again after the per-register part (n x 8 cycles) and then
+ * skips one refresh (hle_insn_x in hle.c) */
+static void movem_skip(int n)
+{
+	if (gx_m68k_cycles() + n * 8 * 7 >= gx_m68k_refresh_cycles())
+		gx_m68k_set_refresh_cycles(gx_m68k_refresh_cycles() + 128 * 7);
+}
+
+/* a RAM-only instruction: the yield point and refresh come first, then the effect, then the cost */
+#define RAMOP(cost, ...) do { pre(); __VA_ARGS__; post(cost); } while (0)
+
+/* poll the DMA-busy flag: move.w (4,a5),dN / btst.b #1,dN / bne.s */
+static void dma_poll(hle_ctx *ctx, int reg, uint32_t at, unsigned op)
+{
+	for (;;) {
+		uint16_t st = status_rd(at, op);
+		set_w(&ctx->d[reg], st);
+		cc_logic16(ctx, st);
+		tick(10);                                             /* btst.b #1,dN */
+		cc_set(ctx, CC_Z, (st & 2) ? 0 : CC_Z);
+		if (st & 2) {
+			tick(10);                                     /* bne.s taken */
+			continue;
+		}
+		tick(8);
+		break;
+	}
+}
+
+/* bset.b #4,(vdp_reg01+1) / move.w (vdp_reg01),(ctrl): DMA enable on / the shadow register written back */
+static void dma_enable(hle_ctx *ctx, int on)
+{
+	RAMOP(24, uint8_t o = RAM8(0xFFA0DD); cc_set(ctx, CC_Z, (o & 0x10) ? 0 : CC_Z); RAM8(0xFFA0DD) = on ? (o | 0x10) : (uint8_t)(o & ~0x10));
+	uint16_t v = RAM16(0xFFA0DC);
+	pre();
+	vdp_ctrl_w(v);
+	cc_logic16(ctx, v);
+	post(28);
+}
+
+#if 0   /* not lockstep-exact yet: gun_0a diverges 8 cycles after the first call that overlaps a VBlank (see docs/remaining.md) */
+HLE_FUNC_YIELD(0x00800C, VramClearDma, 0)
+{
+	sess_begin();
+	ctx->a[5] = 0xC00000u;                                        /* 00800C lea.l (0xc00000).l,a5 */
+	tick(12);
+	set_w(&ctx->d[0], status_rd(0x008012, 0x302D));               /* 008012 move.w (4,a5),d0 */
+	dma_enable(ctx, 1);                                           /* 008016 bset / 00801E move.w */
+	wr_ctrl(0x8F01, 16);                                          /* 008028 */
+	wr_ctrl(0x93F0, 16);                                          /* 00802E */
+	wr_ctrl(0x94FF, 16);                                          /* 008034 */
+	wr_ctrl(0x9780, 16);                                          /* 00803A */
+	RAMOP(28, RAM32_W(0xFFA0E8, 0x40000080u); cc_logic32(ctx, 0x40000080u));   /* 008040 move.l #$40000080,(abs).l */
+	{ uint16_t v; pre(); v = RAM16(0xFFA0E8); vdp_ctrl_w(v); cc_logic16(ctx, v); post(24); }   /* 00804A */
+	{ uint16_t v; pre(); v = RAM16(0xFFA0EA); vdp_ctrl_w(v); cc_logic16(ctx, v); post(24); }   /* 008052 */
+	wr_data(0, 12);                                               /* 00805A move.w #0,(a5): starts the fill */
+	cc_logic16(ctx, 0);
+	dma_poll(ctx, 0, 0x00805E, 0x302D);                           /* 00805E */
+	dma_enable(ctx, 0);                                           /* 008068 bclr / 008070 move.w */
+	tick(16);                                                     /* 00807A rts */
+	dma_end();
+}
+
+HLE_FUNC_YIELD(0x00807C, DmaFillAt, 0)
+{
+	sess_begin();
+	ctx->a[5] = 0xC00000u;                                        /* 00807C lea.l (0xc00000).l,a5 */
+	tick(12);
+	dma_enable(ctx, 1);                                           /* 008082 bset / 00808A move.w */
+	wr_ctrl(0x8F01, 16);                                          /* 008094 */
+	wr_ctrl(0x9300, 16);                                          /* 00809A */
+	wr_ctrl(0x9410, 16);                                          /* 0080A0 */
+	wr_ctrl(0x9780, 16);                                          /* 0080A6 */
+	uint16_t d1 = (uint16_t)ctx->d[1];
+	set_w(&ctx->d[0], d1); cc_logic16(ctx, d1); tick(4);          /* 0080AC move.w d1,d0 */
+	uint16_t d0 = d1 & 0x3FFF;
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);          /* 0080AE andi.w #$3fff,d0 */
+	d0 |= 0x4000;
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);          /* 0080B2 ori.w #$4000,d0 */
+	RAMOP(16, RAM16(0xFFA0E8) = d0; cc_logic16(ctx, d0));         /* 0080B6 move.w d0,(abs).l */
+	d1 = (uint16_t)((d1 << 2) | (d1 >> 14));
+	set_w(&ctx->d[1], d1); tick(10);                              /* 0080BC rol.w #2,d1 */
+	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, ((d1 & 0x8000) ? CC_N : 0) | (d1 ? 0 : CC_Z) | ((d1 & 1) ? CC_C : 0));
+	d1 &= 3;
+	set_w(&ctx->d[1], d1); cc_logic16(ctx, d1); tick(8);          /* 0080BE andi.w #3,d1 */
+	d1 |= 0x80;
+	set_w(&ctx->d[1], d1); cc_logic16(ctx, d1); tick(8);          /* 0080C2 ori.w #$80,d1 */
+	RAMOP(16, RAM16(0xFFA0EA) = d1; cc_logic16(ctx, d1));         /* 0080C6 move.w d1,(abs).l */
+	{ uint16_t v; pre(); v = RAM16(0xFFA0E8); vdp_ctrl_w(v); cc_logic16(ctx, v); post(24); }   /* 0080CC */
+	{ uint16_t v; pre(); v = RAM16(0xFFA0EA); vdp_ctrl_w(v); cc_logic16(ctx, v); post(24); }   /* 0080D4 */
+	wr_data(0, 12);                                               /* 0080DC move.w #0,(a5): starts the fill */
+	cc_logic16(ctx, 0);
+	dma_poll(ctx, 0, 0x0080E0, 0x302D);                           /* 0080E0 */
+	dma_enable(ctx, 0);                                           /* 0080EA bclr / 0080F2 move.w */
+	tick(16);                                                     /* 0080FC rts */
+	dma_end();
+}
+
+#endif
+
+/* DmaToVram: the 68k to VRAM transfer described by the record at $FFA0E0 (length, source, destination) */
+static void dma_to_vram(hle_ctx *ctx)
+{
+	ctx->a[5] = 0xC00000u;                                        /* 011FA2 lea.l (0xc00000).l,a5 */
+	tick(12);
+	ctx->a[0] = 0xFFFFA0E0u;                                      /* 011FA8 lea.l (0xffffa0e0).l,a0 */
+	tick(12);
+	dma_poll(ctx, 0, 0x011FAE, 0x302D);                           /* 011FAE */
+	dma_enable(ctx, 1);                                           /* 011FB8 bset / 011FC0 move.w */
+	wr_ctrl(0x8F02, 16);                                          /* 011FCA */
+	uint32_t a0 = ctx->a[0];
+	uint16_t d0 = 0x9300;                                         /* 011FD0 move.w #$9300,d0 */
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);
+	d0 = (uint16_t)((d0 & 0xFF00) | RAM8(a0 + 1));                /* 011FD4 move.b (1,a0),d0 */
+	set_w(&ctx->d[0], d0); cc_logic8(ctx, d0 & 0xFF); tick(12);
+	wr_ctrl(d0, 12);                                              /* 011FD8 */
+	d0 = 0x9400;                                                  /* 011FDC */
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);
+	d0 = (uint16_t)((d0 & 0xFF00) | RAM8(a0));                    /* 011FE0 move.b (a0),d0 */
+	set_w(&ctx->d[0], d0); cc_logic8(ctx, d0 & 0xFF); tick(8);
+	wr_ctrl(d0, 12);                                              /* 011FE2 */
+	uint32_t d1 = RAM32(a0 + 2);                                  /* 011FE6 move.l (2,a0),d1 */
+	ctx->d[1] = d1; cc_logic32(ctx, d1); tick(16);
+	d1 &= 0xFFFFFF;                                               /* 011FEA andi.l #$ffffff,d1 */
+	ctx->d[1] = d1; cc_logic32(ctx, d1); tick(16);
+	{ unsigned c = d1 & 1; d1 >>= 1; ctx->d[1] = d1;              /* 011FF0 lsr.l #1,d1 */
+	  cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C, (c ? (CC_X | CC_C) : 0) | (d1 ? 0 : CC_Z)); tick(10); }
+	d0 = 0x9500;                                                  /* 011FF2 */
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);
+	d0 = (uint16_t)(d0 | (d1 & 0xFF));                            /* 011FF6 or.b d1,d0 */
+	set_w(&ctx->d[0], d0); cc_logic8(ctx, d0 & 0xFF); tick(4);
+	wr_ctrl(d0, 12);                                              /* 011FF8 */
+	d0 = 0x9600;                                                  /* 011FFC */
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);
+	{ unsigned c = (d1 >> 7) & 1; uint16_t w = (uint16_t)(((d1 & 0xFFFF) >> 8)); set_w(&ctx->d[1], w); d1 = ctx->d[1];   /* 012000 lsr.w #8,d1 */
+	  cc_set(ctx, CC_X | CC_N | CC_Z | CC_V | CC_C, (c ? (CC_X | CC_C) : 0) | (w ? 0 : CC_Z)); tick(22); }
+	d0 = (uint16_t)(d0 | (d1 & 0xFF));                            /* 012002 or.b d1,d0 */
+	set_w(&ctx->d[0], d0); cc_logic8(ctx, d0 & 0xFF); tick(4);
+	wr_ctrl(d0, 12);                                              /* 012004 */
+	d0 = 0x9700;                                                  /* 012008 */
+	set_w(&ctx->d[0], d0); cc_logic16(ctx, d0); tick(8);
+	d1 = (d1 << 16) | (d1 >> 16); ctx->d[1] = d1; cc_logic32(ctx, d1); tick(4);   /* 01200C swap d1 */
+	d0 = (uint16_t)(d0 | (d1 & 0xFF));                            /* 01200E or.b d1,d0 */
+	set_w(&ctx->d[0], d0); cc_logic8(ctx, d0 & 0xFF); tick(4);
+	wr_ctrl(d0, 12);                                              /* 012010 */
+	uint16_t w1 = RAM16(a0 + 6);                                  /* 012014 move.w (6,a0),d1 */
+	set_w(&ctx->d[1], w1); cc_logic16(ctx, w1); tick(12);
+	uint16_t w2 = w1;                                             /* 012018 move.w d1,d2 */
+	set_w(&ctx->d[2], w2); cc_logic16(ctx, w2); tick(4);
+	w1 &= 0x3FFF; set_w(&ctx->d[1], w1); cc_logic16(ctx, w1); tick(8);       /* 01201A andi.w #$3fff,d1 */
+	w1 |= 0x4000; set_w(&ctx->d[1], w1); cc_logic16(ctx, w1); tick(8);       /* 01201E ori.w #$4000,d1 */
+	wr_ctrl(w1, 12);                                              /* 012022 */
+	w2 &= 0xC000; set_w(&ctx->d[2], w2); cc_logic16(ctx, w2); tick(8);       /* 012026 andi.w #$c000,d2 */
+	{ uint16_t r = (uint16_t)((w2 << 2) | (w2 >> 14)); w2 = r; set_w(&ctx->d[2], w2); tick(10);   /* 01202A rol.w #2,d2 */
+	  cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, ((w2 & 0x8000) ? CC_N : 0) | (w2 ? 0 : CC_Z) | ((w2 & 1) ? CC_C : 0)); }
+	w2 |= 0x80; set_w(&ctx->d[2], w2); cc_logic16(ctx, w2); tick(8);         /* 01202C ori.w #$80,d2 */
+	RAMOP(12, RAM16(a0 + 8) = w2; cc_logic16(ctx, w2));           /* 012030 move.w d2,(8,a0) */
+	{ uint16_t v; pre(); v = RAM16(a0 + 8); vdp_ctrl_w(v); cc_logic16(ctx, v); post(20); }   /* 012034: starts the DMA */
+	dma_poll(ctx, 0, 0x01203A, 0x302D);                           /* 01203A */
+	dma_enable(ctx, 0);                                           /* 012044 bclr / 01204C move.w */
+	ctx->a[1] = RAM32(a0 + 2);                                    /* 012056 movea.l (2,a0),a1 */
+	tick(16);
+	wr_ctrl(w1, 12);                                              /* 01205A move.w d1,(4,a5) */
+	{ uint16_t v; pre(); v = RAM16(a0 + 8); vdp_ctrl_w(v); cc_logic16(ctx, v); post(20); }   /* 01205E */
+	{ uint16_t v; pre(); v = bus_r16(ctx->a[1]); hle_vdp_timed(1); vdp_data_w(v); hle_vdp_timed(0); cc_logic16(ctx, v); post(12); }   /* 012064 move.w (a1),(a5) */
+	tick(16);                                                     /* 012066 rts */
+}
+
+HLE_FUNC_YIELD(0x011FA2, DmaToVram, 0)
+{
+	sess_begin();
+	dma_to_vram(ctx);
+	dma_end();
+}
+
+/* DmaToVramSave: movem.l d0-d2/a0-a5,-(sp) / jsr DmaToVram / movem.l (sp)+,... / rts */
+HLE_FUNC_YIELD(0x011F94, DmaToVramSave, 0)
+{
+	sess_begin();
+	{
+		uint32_t save[9] = { ctx->d[0], ctx->d[1], ctx->d[2], ctx->a[0], ctx->a[1], ctx->a[2], ctx->a[3], ctx->a[4], ctx->a[5] };
+		pre();
+		for (int i = 8; i >= 0; i--) {
+			ctx->a[7] -= 4;
+			bus_w32(ctx->a[7], save[i]);
+		}
+		movem_skip(9);                                        /* GPGX: the refresh check inside movem */
+		post(80);                                             /* 011F94 movem.l d0-d2/a0-a5,-(sp): 8 + 8*9 */
+		tick(18);                                             /* 011F98 jsr (DmaToVram,pc) */
+		dma_to_vram(ctx);
+		pre();
+		for (int i = 0; i < 9; i++) {
+			uint32_t v = bus_r32(ctx->a[7]);
+			ctx->a[7] += 4;
+			if (i < 3) ctx->d[i] = v; else ctx->a[i - 3] = v;
+		}
+		movem_skip(9);
+		post(84);                                             /* 011F9C movem.l (sp)+,d0-d2/a0-a5 */
+		tick(16);                                             /* 011FA0 rts */
+	}
+	dma_end();
+}
+
+/* sub_0081B6: VSRAM address 0, then two words d0, d1 (the vertical scroll pair) once the FIFO has room */
+HLE_FUNC_YIELD(0x0081B6, VdpVScrollWrite, 0)
+{
+	sess_begin();
+	ctx->a[5] = 0xC00000u;                                        /* 0081B6 lea.l (0xc00000).l,a5 */
+	tick(12);
+	wr_ctrl(0x8F02, 16);                                          /* 0081BC */
+	pre();                                                        /* 0081C2 move.l #$40000010,(4,a5) */
+	vdp_ctrl_w32(0x40000010u);
+	cc_logic32(ctx, 0x40000010u);
+	post(24);
+	dma_poll(ctx, 2, 0x0081CA, 0x342D);                           /* 0081CA move.w (4,a5),d2 / btst / bne */
+	wr_data((uint16_t)ctx->d[0], 8);                              /* 0081D4 move.w d0,(a5) */
+	wr_data((uint16_t)ctx->d[1], 8);                              /* 0081D6 move.w d1,(a5) */
+	cc_logic16(ctx, (uint16_t)ctx->d[1]);
+	tick(16);                                                     /* 0081D8 rts */
+	dma_end();
 }
