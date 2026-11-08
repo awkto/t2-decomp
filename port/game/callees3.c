@@ -192,6 +192,75 @@ L_00902E:
 	hle_insn(ctx, 16); return;  /* 009052 rts */
 }
 
+HLE_FUNC_YIELD(0x00D322, TruckDamage, 4000)
+{
+L_00D322:
+	{ uint32_t eaS = 0xFFFFAE84u; ctx->a[1] = eaS; } hle_insn(ctx, 12);  /* 00D322 lea ffffae84,%a1 */
+	{ ctx->d[2] = 0x0000000Fu; cc_logic32(ctx, ctx->d[2]); } hle_insn(ctx, 4);  /* 00D328 moveq #15,%d2 */
+L_00D32A:
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00881C); }  /* 00D32A jsr %pc@(881c) */
+	{ uint32_t v = ((ctx->d[0] & 0xFFFFu) & 0xFu) & 0xFFFFu; set_w(&ctx->d[0], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 00D32E andiw #15,%d0 */
+	{ uint32_t eaD = ctx->a[1] + (uint32_t)(int32_t)(0) + (uint32_t)(int32_t)(int16_t)ctx->d[0]; cc_logic8(ctx, ld8(eaD)); } hle_insn(ctx, 14);  /* 00D332 tstb %a1@(0,%d0:w) */
+	if (COND_NE) { hle_insn(ctx, 10); goto L_00D358; } hle_insn(ctx, 8);  /* 00D336 bnes d358 */
+	{ uint16_t v = (uint16_t)ctx->d[2] - 1; set_w(&ctx->d[2], v); if (v != 0xFFFF) { hle_insn(ctx, 10); goto L_00D32A; } hle_insn(ctx, 14); }  /* 00D338 dbf %d2,d32a */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00D46E); }  /* 00D33C jsr %pc@(d46e) */
+	{ ctx->a[0] = 0x1F7DAu; } hle_insn(ctx, 12);  /* 00D340 moveal #128986,%a0 */
+	{ uint32_t eaD = 0xFFFF80D2u; st16(eaD, 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); } hle_insn(ctx, 20);  /* 00D346 clrw ffff80d2 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00933E); }  /* 00D34C jsr %pc@(933e) */
+	{ uint32_t eaD = ctx->a[6];  unsigned b = 4; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z); st8(eaD, v | m); } hle_insn(ctx, 16);  /* 00D350 bset #4,%fp@ */
+	hle_insn(ctx, 10); goto L_00D3E2;  /* 00D354 braw d3e2 */
+L_00D358:
+	{ uint32_t eaD = ctx->a[1] + (uint32_t)(int32_t)(0) + (uint32_t)(int32_t)(int16_t)ctx->d[0]; uint32_t v = alu(ctx, OP_SUB, ld8(eaD), 0x1u, 8, 1); st8(eaD, v); } hle_insn(ctx, 18);  /* 00D358 subqb #1,%a1@(0,%d0:w) */
+	if (COND_NE) { hle_insn(ctx, 10); goto L_00D3E0; } hle_insn(ctx, 12);  /* 00D35C bnew d3e0 */
+	{ uint32_t eaD = 0xFFFF9F68u; uint32_t v = alu(ctx, OP_ADD, ld16(eaD), 0x1u, 16, 1); st16(eaD, v); } hle_insn(ctx, 20);  /* 00D360 addqw #1,ffff9f68 */
+	{ uint32_t v = shf(ctx, 'L', (ctx->d[0] & 0xFFFFu), 2, 16); set_w(&ctx->d[0], v); } hle_insn(ctx, 10);  /* 00D366 aslw #2,%d0 */
+	{ ctx->d[2] = 0x00000000u; cc_logic32(ctx, ctx->d[2]); } hle_insn(ctx, 4);  /* 00D368 moveq #0,%d2 */
+	{ ctx->d[1] = 0x00000000u; cc_logic32(ctx, ctx->d[1]); } hle_insn(ctx, 4);  /* 00D36A moveq #0,%d1 */
+	{ uint32_t eaS = 0x0000D3E5u + (uint32_t)(int32_t)(int16_t)ctx->d[0]; uint32_t v = ld8(eaS); set_b(&ctx->d[2], v); cc_logic8(ctx, v); } hle_insn(ctx, 14);  /* 00D36C moveb %pc@(d3e5,%d0:w),%d2 */
+	{ uint32_t eaS = 0x0000D3E4u + (uint32_t)(int32_t)(int16_t)ctx->d[0]; uint32_t v = ld8(eaS); set_b(&ctx->d[1], v); cc_logic8(ctx, v); } hle_insn(ctx, 14);  /* 00D370 moveb %pc@(d3e4,%d0:w),%d1 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00D444); }  /* 00D374 jsr %pc@(d444) */
+	{ uint32_t v = shf(ctx, 'L', (ctx->d[1] & 0xFFFFu), 4, 16); set_w(&ctx->d[1], v); } hle_insn(ctx, 14);  /* 00D378 aslw #4,%d1 */
+	{ uint32_t v = (ctx->d[1] & 0xFFFFu); set_w(&ctx->d[3], v); cc_logic16(ctx, v); } hle_insn(ctx, 4);  /* 00D37A movew %d1,%d3 */
+	{ uint32_t v = shf(ctx, 'L', (ctx->d[1] & 0xFFFFu), 2, 16); set_w(&ctx->d[1], v); } hle_insn(ctx, 10);  /* 00D37C aslw #2,%d1 */
+	{ uint32_t v = alu(ctx, OP_ADD, (ctx->d[3] & 0xFFFFu), (ctx->d[1] & 0xFFFFu), 16, 1); set_w(&ctx->d[3], v); } hle_insn(ctx, 4);  /* 00D37E addw %d1,%d3 */
+	{ uint32_t v = alu(ctx, OP_ADD, (ctx->d[1] & 0xFFFFu), (ctx->d[1] & 0xFFFFu), 16, 1); set_w(&ctx->d[1], v); } hle_insn(ctx, 4);  /* 00D380 addw %d1,%d1 */
+	{ uint32_t v = alu(ctx, OP_ADD, (ctx->d[2] & 0xFFFFu), (ctx->d[2] & 0xFFFFu), 16, 1); set_w(&ctx->d[2], v); } hle_insn(ctx, 4);  /* 00D382 addw %d2,%d2 */
+	{ uint32_t v = alu(ctx, OP_ADD, (ctx->d[1] & 0xFFFFu), (ctx->d[2] & 0xFFFFu), 16, 1); set_w(&ctx->d[1], v); } hle_insn(ctx, 4);  /* 00D384 addw %d2,%d1 */
+	{ uint32_t v = alu(ctx, OP_ADD, (ctx->d[3] & 0xFFFFu), (ctx->d[2] & 0xFFFFu), 16, 1); set_w(&ctx->d[3], v); } hle_insn(ctx, 4);  /* 00D386 addw %d2,%d3 */
+	{ uint32_t v = alu(ctx, OP_ADD, (ctx->d[1] & 0xFFFFu), 0xE500u, 16, 1); set_w(&ctx->d[1], v); } hle_insn(ctx, 8);  /* 00D388 addiw #-6912,%d1 */
+	{ uint32_t eaS = 0x00053D40u; ctx->a[0] = eaS; } hle_insn(ctx, 12);  /* 00D38C lea 53d40,%a0 */
+	{ uint32_t eaS = ctx->a[0] + (uint32_t)(int32_t)(0) + (uint32_t)(int32_t)(int16_t)ctx->d[3]; ctx->a[0] = eaS; } hle_insn(ctx, 12);  /* 00D392 lea %a0@(0,%d3:w),%a0 */
+	{ ctx->d[2] = 0x00000000u; cc_logic32(ctx, ctx->d[2]); } hle_insn(ctx, 4);  /* 00D396 moveq #0,%d2 */
+	{ ctx->d[3] = 0x00000000u; cc_logic32(ctx, ctx->d[3]); } hle_insn(ctx, 4);  /* 00D398 moveq #0,%d3 */
+	{ uint32_t eaS = 0x0000D3E6u + (uint32_t)(int32_t)(int16_t)ctx->d[0]; uint32_t v = ld8(eaS); set_b(&ctx->d[2], v); cc_logic8(ctx, v); } hle_insn(ctx, 14);  /* 00D39A moveb %pc@(d3e6,%d0:w),%d2 */
+	{ uint32_t eaS = 0x0000D3E7u + (uint32_t)(int32_t)(int16_t)ctx->d[0]; uint32_t v = ld8(eaS); set_b(&ctx->d[3], v); cc_logic8(ctx, v); } hle_insn(ctx, 14);  /* 00D39E moveb %pc@(d3e7,%d0:w),%d3 */
+	{ uint32_t v = 0xE000u; set_w(&ctx->d[6], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 00D3A2 movew #-8192,%d6 */
+	{ ctx->a[7] -= 2; uint32_t eaD = ctx->a[7]; uint32_t v = (ctx->d[7] & 0xFFFFu); st16(eaD, v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 00D3A6 movew %d7,%sp@- */
+	{ uint32_t eaS = 0xFFFF9E4Au; uint32_t v = ld16(eaS); set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 16);  /* 00D3A8 movew ffff9e4a,%d7 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012234); }  /* 00D3AE jsr %pc@(12234) */
+	{ uint32_t eaS = ctx->a[7]; ctx->a[7] += 2; uint32_t v = ld16(eaS); set_w(&ctx->d[7], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 00D3B2 movew %sp@+,%d7 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00881C); }  /* 00D3B4 jsr %pc@(881c) */
+	{ uint32_t v = ((ctx->d[0] & 0xFFFFu) & 0x7u) & 0xFFFFu; set_w(&ctx->d[0], v); cc_logic16(ctx, v); } hle_insn(ctx, 8);  /* 00D3B8 andiw #7,%d0 */
+	if (COND_NE) { hle_insn(ctx, 10); goto L_00D3C2; } hle_insn(ctx, 8);  /* 00D3BC bnes d3c2 */
+	{ uint32_t eaD = ctx->a[6];  unsigned b = 3; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z); st8(eaD, v | m); } hle_insn(ctx, 16);  /* 00D3BE bset #3,%fp@ */
+L_00D3C2:
+	{ alu(ctx, OP_SUB, (ctx->d[0] & 0xFFFFu), 0x2u, 16, 0); } hle_insn(ctx, 8);  /* 00D3C2 cmpiw #2,%d0 */
+	if (COND_NE) { hle_insn(ctx, 10); goto L_00D3CC; } hle_insn(ctx, 8);  /* 00D3C6 bnes d3cc */
+	{ uint32_t eaD = ctx->a[6];  unsigned b = 6; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z); st8(eaD, v | m); } hle_insn(ctx, 16);  /* 00D3C8 bset #6,%fp@ */
+L_00D3CC:
+	{ alu(ctx, OP_SUB, (ctx->d[0] & 0xFFFFu), 0x4u, 16, 0); } hle_insn(ctx, 8);  /* 00D3CC cmpiw #4,%d0 */
+	if (COND_NE) { hle_insn(ctx, 10); goto L_00D3E0; } hle_insn(ctx, 8);  /* 00D3D0 bnes d3e0 */
+	{ uint32_t eaD = ctx->a[6];  unsigned b = 4; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z); st8(eaD, v | m); } hle_insn(ctx, 16);  /* 00D3D2 bset #4,%fp@ */
+	if (COND_NE) { hle_insn(ctx, 10); goto L_00D3E0; } hle_insn(ctx, 8);  /* 00D3D6 bnes d3e0 */
+	{ ctx->d[2] = 0x00000005u; cc_logic32(ctx, ctx->d[2]); } hle_insn(ctx, 4);  /* 00D3D8 moveq #5,%d2 */
+	{ ctx->d[1] = 0x00000001u; cc_logic32(ctx, ctx->d[1]); } hle_insn(ctx, 4);  /* 00D3DA moveq #1,%d1 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00D444); }  /* 00D3DC jsr %pc@(d444) */
+L_00D3E0:
+	hle_insn(ctx, 16); return;  /* 00D3E0 rts */
+L_00D3E2:
+	hle_insn(ctx, 16); return;  /* 00D3E2 rts */
+}
+
 HLE_FUNC_YIELD(0x010666, Sub010666, 4000)
 {
 L_010666:

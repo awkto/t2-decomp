@@ -178,6 +178,9 @@ def parse_op(s):
     m = re.fullmatch(r"%(a\d|fp|sp)@\((-?\d+),%d(\d):([wl])\)", s)
     if m:
         return ("idx", reg(m.group(1)), int(m.group(2)), int(m.group(3)), m.group(4))
+    m = re.fullmatch(r"%pc@\(([0-9a-f]+),%d(\d):([wl])\)", s)
+    if m:
+        return ("pcidx", int(m.group(1), 16), int(m.group(2)), m.group(3))
     m = re.fullmatch(r"%pc@\(([0-9a-f]+)\)", s)
     if m:
         return ("abs", int(m.group(1), 16))
@@ -203,7 +206,7 @@ def lit(v):
 
 
 def is_mem(op):
-    return op[0] in ("ind", "post", "pre", "disp", "abs", "idx")
+    return op[0] in ("ind", "post", "pre", "disp", "abs", "idx", "pcidx")
 
 
 def ea_of(op, sz, tag):
@@ -222,6 +225,9 @@ def ea_of(op, sz, tag):
     if k == "idx":
         ix = ("(uint32_t)(int32_t)(int16_t)ctx->d[%d]" if op[4] == "w" else "ctx->d[%d]") % op[3]
         return ("uint32_t %s = ctx->a[%d] + (uint32_t)(int32_t)(%d) + %s; " % (nm, op[1], op[2], ix), nm)
+    if k == "pcidx":
+        ix = ("(uint32_t)(int32_t)(int16_t)ctx->d[%d]" if op[3] == "w" else "ctx->d[%d]") % op[2]
+        return ("uint32_t %s = 0x%08Xu + %s; " % (nm, op[1] & 0xFFFFFFFF, ix), nm)
     if k == "abs":
         return ("uint32_t %s = 0x%08Xu; " % (nm, op[1] & 0xFFFFFFFF), nm)
     raise ValueError("ea " + str(op))

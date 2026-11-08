@@ -23,30 +23,37 @@
 /* $011D12: vdp_list_ptr = vdp_list, vdp_list_data = $FFB452 */
 HLE_FUNC_PURE(0x011D12, VdpListReset, 72)
 {
-	HLE_SEQ(ctx, 28, 28, 16);                    /* move.l #i,(abs).l x2, rts */
-	RAM32_W(VDP_LIST_PTR, 0xFFFFB252u);
+	RAM32_W(VDP_LIST_PTR, 0xFFFFB252u);          /* move.l #i,(abs).l: each charged right after its effect */
+	hle_insn(ctx, 28);
 	RAM32_W(VDP_LIST_DATA, 0xFFFFB452u);
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_N);    /* flags of the last move.l: #$FFFFB452 */
+	hle_insn(ctx, 28);
+	hle_insn(ctx, 16);                           /* rts */
 }
 
 /* $011D28: write command 0 at the list pointer; a5 = the pointer */
 HLE_FUNC_PURE(0x011D28, VdpListEnd, 48)
 {
-	HLE_SEQ(ctx, 20, 12, 16);                    /* movea.l (abs).l,a5 ; clr.w (a5) ; rts */
-	uint32_t a5 = RAM32(VDP_LIST_PTR);
+	uint32_t a5 = RAM32(VDP_LIST_PTR);           /* movea.l (abs).l,a5 */
 	ctx->a[5] = a5;
-	RAM16(a5) = 0;
+	hle_insn(ctx, 20);
+	RAM16(a5) = 0;                               /* clr.w (a5) */
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);    /* clr: N=0 Z=1 V=0 C=0, X kept */
+	hle_insn(ctx, 12);
+	hle_insn(ctx, 16);                           /* rts */
 }
 
 /* $013376: sprite queue empty */
 HLE_FUNC_PURE(0x013376, SpriteQueueReset, 92)
 {
-	HLE_SEQ(ctx, 28, 28, 20, 16);                /* move.l #i,(abs).l x2 ; move.b #0,(abs).l ; rts */
-	RAM32_W(SPR_QUEUE_PTR, 0xFFFFA250u);
+	RAM32_W(SPR_QUEUE_PTR, 0xFFFFA250u);         /* move.l #i,(abs).l x2 ; move.b #0,(abs).l ; rts, each */
+	hle_insn(ctx, 28);                           /* charged right after its effect */
 	RAM32_W(SPR_QUEUE_DATA, 0xFFFFA318u);
+	hle_insn(ctx, 28);
 	RAM8(SPR_QUEUE_N) = 0;
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
+	hle_insn(ctx, 20);
+	hle_insn(ctx, 16);
 }
 
 /* $011D38: fetch the command word and jump through the bra table */
