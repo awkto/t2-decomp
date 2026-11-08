@@ -23,8 +23,8 @@ the browser build has no blocking loop.
 
 ## C replacements (HLE)
 
-The page runs the same HLE layer as the desktop (docs/porting.md; `port/hle`, `port/game/*.c`, 1090
-replacements at the time of writing, all in the `t2_web` target, which globs `port/game/*.c`). Default `none`: the original 68k code
+The page runs the same HLE layer as the desktop (docs/porting.md; `port/hle`, `port/game/*.c`, 1128
+replacements at the time of writing (counted as the `($ADDR)` entries of `t2port --hle all --hle-list`; the page test further below was run at 1090), all in the `t2_web` target, which globs `port/game/*.c`). Default `none`: the original 68k code
 runs, as on the desktop. Choose the set with the `hle` option (ini line `hle = all` or
 `hle = Random+MenacerReadXY`; `+` separates names; the ini is `/t2/t2.ini` in IndexedDB, read at start)
 or, for one visit, the URL parameter, which wins over the ini:
