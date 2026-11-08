@@ -2,7 +2,7 @@
  * object path stepper $00C48E (registered at its own address so the 68k callers get C too; the AI files
  * inline their own copy), the pickup pool runner PickupsRun $012BB0 and the VDP list builders
  * VdpQueueTileRect $012234 / VdpQueueTileRectMirror $01227A (command 6: a rect of tilemap words), and the
- * per-player state handler $008C8E / $008C52 (its idle path only).
+ * per-player state handler (now game/playerstate.c).
  *
  * The generated bodies were produced instruction by instruction from the disassembly (a comment on every
  * line names the 68k instruction and its address) with the GPGX cost of each opcode word on the
@@ -343,76 +343,4 @@ L_012CE2:;
 HLE_FUNC_PURE(0x00C48E, ObjPathStep, 600)
 {
 	sub_00C48E(ctx);
-}
-
-/* ------------------------------------------------------------------ per-player state handler $008C8E / $008C52 */
-/* $008C8E is the per-frame state machine of one player (a4 = $FF8000 / $FF8050; state word +$22, timer +$20).
- * Most frames nothing happens: the timer is 0 or counts down to a value other than 0. Only that idle path is C;
- * a frame where the handler would do anything else (state 7, the state 1 timer at 120 or 50, the state 5 sound
- * beats every 16 frames, the timer reaching 0: sounds, ReadInput, WaitFrames, text, state changes) is left to the
- * real 68k (hle_decline before any change; the code at the entry runs, including its blocking calls). */
-static int pl_idle(uint32_t a4)
-{
-	uint32_t st = ld16(a4 + 34), t = ld16(a4 + 32);
-	if (st == 7)
-		return 0;
-	if (st == 1 && (t == 120 || t == 50))
-		return 0;
-	if (st == 5 && (t & 15) == 0)
-		return 0;
-	return t != 1;
-}
-
-/* $008C8E after its bsr was charged; the rts is charged here */
-static void sub_008C8E(hle_ctx *ctx)
-{
-	uint32_t a4 = ctx->a[4];
-	{ uint32_t r = alu(ctx, OP_SUB, ld16(a4 + 34), 1, 16, 0); (void)r; hle_insn(ctx, 16); }   /* 008C8E cmpi.w #1,34(a4) */
-	if (bs(ctx, !c_z(ctx))) goto L_008CB2;                                  /* 008C94 bne.s */
-	{ alu(ctx, OP_SUB, ld16(a4 + 32), 120, 16, 0); hle_insn(ctx, 16); }     /* 008C96 cmpi.w #120,32(a4) */
-	(void)bs(ctx, !c_z(ctx));                                               /* 008C9C bne.s 008CA4 (taken) */
-	{ alu(ctx, OP_SUB, ld16(a4 + 32), 50, 16, 0); hle_insn(ctx, 16); }      /* 008CA4 cmpi.w #50,32(a4) */
-	(void)bs(ctx, !c_z(ctx));                                               /* 008CAA bne.s 008CB2 (taken) */
-L_008CB2:;
-	{ alu(ctx, OP_SUB, ld16(a4 + 34), 5, 16, 0); hle_insn(ctx, 16); }       /* 008CB2 cmpi.w #5,34(a4) */
-	if (bs(ctx, !c_z(ctx))) goto L_008CD6;                                  /* 008CB8 bne.s */
-	{ uint32_t v = ld16(a4 + 32); set_w(&ctx->d[0], v); cc_logic16(ctx, v); hle_insn(ctx, 12); }   /* 008CBA move.w 32(a4),d0 */
-	{ uint32_t v = ctx->d[0] & 0xFFFF; set_w(&ctx->d[1], v); cc_logic16(ctx, v); hle_insn(ctx, 4); }   /* 008CBE move.w d0,d1 */
-	{ uint32_t v = ctx->d[0] & 15; set_w(&ctx->d[0], v); cc_logic16(ctx, v); hle_insn(ctx, 8); }      /* 008CC0 andi.w #15,d0 */
-	(void)bs(ctx, !c_z(ctx));                                               /* 008CC4 bne.s 008CD6 (taken) */
-L_008CD6:;
-	{ alu(ctx, OP_SUB, ld16(a4 + 34), 7, 16, 0); hle_insn(ctx, 16); }       /* 008CD6 cmpi.w #7,34(a4) */
-	(void)bs(ctx, !c_z(ctx));                                               /* 008CDC bne.s 008D22 (taken) */
-	{ uint32_t v = ld16(a4 + 32); set_w(&ctx->d[0], v); cc_logic16(ctx, v); hle_insn(ctx, 12); }   /* 008D22 move.w 32(a4),d0 */
-	if (bw(ctx, c_z(ctx))) goto L_008DFC;                                   /* 008D26 beq.w 008DFC */
-	{ uint32_t r = alu(ctx, OP_SUB, ctx->d[0], 1, 16, 1); set_w(&ctx->d[0], r); hle_insn(ctx, 4); }   /* 008D2A subq.w #1,d0 */
-	{ uint32_t v = ctx->d[0] & 0xFFFF; st16(a4 + 32, v); cc_logic16(ctx, v); hle_insn(ctx, 12); }    /* 008D2C move.w d0,32(a4) */
-	(void)bw(ctx, !c_z(ctx));                                               /* 008D30 bne.w 008DFC (taken) */
-L_008DFC:;
-	hle_insn(ctx, 16);                                                      /* 008DFC rts */
-}
-
-HLE_FUNC_PURE(0x008C8E, PlayerState, 200)
-{
-	if (!pl_idle(ctx->a[4])) {
-		if (!ctx->dry)
-			hle_decline();
-		return;
-	}
-	sub_008C8E(ctx);
-}
-
-/* $008C52: both players */
-HLE_FUNC_PURE(0x008C52, PlayersState, 400)
-{
-	if (!pl_idle(0xFFFF8000u) || !pl_idle(0xFFFF8050u)) {
-		if (!ctx->dry)
-			hle_decline();
-		return;
-	}
-	ctx->a[4] = 0xFFFF8000u; hle_insn(ctx, 12);                             /* 008C52 lea $FF8000,a4 */
-	hle_insn(ctx, 18); sub_008C8E(ctx);                                     /* 008C58 bsr.w 008C8E */
-	ctx->a[4] = 0xFFFF8050u; hle_insn(ctx, 12);                             /* 008C5C lea $FF8050,a4 */
-	hle_insn(ctx, 18); sub_008C8E(ctx);                                     /* 008C62 bsr.w 008C8E */
-	hle_insn(ctx, 16);                                                      /* 008C66 rts */
 }
