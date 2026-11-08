@@ -50,6 +50,26 @@ SPECS = {
  * slot with MissileAlloc, fills it from the player's record and the table at $012DDC, and starts the
  * target search.""",
     ),
+    "bgstream": dict(
+        file="bgstream.c",
+        whole=True,
+        ranges=[(0x00498A, 0x004A64)],
+        entries={0x00498A: "BgStreamLayers"},
+        prefix="BgStream",
+        title="""BgStreamLayers $00498A: one pass per background layer record (a0 = the layer list, a1/a2/a6 the
+ * position tables, d0..d2 the plane/stride): when the scroll position crossed a block it queues the new
+ * column/row with VdpQueueTileRect (or the Mirror / FillRows variants) after saving the registers.""",
+    ),
+    "queues": dict(
+        file="queues2.c",
+        whole=True,
+        ranges=[(0x012212, 0x012234), (0x00BF46, 0x00BF60), (0x013470, 0x013480), (0x01385A, 0x01390E)],
+        entries={0x012212: "VdpQueueFillRows", 0x00BF46: "VdpQueueBand", 0x013470: "SpawnRowA", 0x01385A: "SpawnRowB"},
+        prefix="Queue",
+        title="""Small list/spawn routines that BgStreamLayers and ScrTextClear call: VdpQueueFillRows $012212 (one
+ * fill-rows command per row), the fixed list entry sub_00BF46, and the two object row spawners
+ * sub_013470 / sub_01385A (they share the tail sub_013866).""",
+    ),
     "helpers": dict(
         file="helpers.c",
         ranges=[(0x004820, 0x00498A), (0x00920C, 0x009242), (0x00C442, 0x00C48E), (0x00D238, 0x00D27A),
@@ -605,13 +625,24 @@ def main():
             del entries[e]
     out = [HEADER % dict(title=spec["title"])]
     if spec.get("whole"):
-        (e,) = sorted(entries)
-        out.append("HLE_FUNC_YIELD(0x%06X, %s, 4000)\n{" % (e, spec["entries"][e]))
-        for a in sorted(reached):
-            out.append(g.emit(g.ins[a], labels))
-        out.append("}")
+        n = 0
+        for e in sorted(spec["entries"]):
+            g2 = Gen(dict(spec, entries={e: spec["entries"][e]}))
+            ent2, reached2 = g2.walk()
+            labels2 = set(ent2)
+            for a in reached2:
+                cls, tg = g2.kind(g2.ins[a])
+                for tt in tg:
+                    if g2.inrange(tt):
+                        labels2.add(tt)
+            labels2.discard(e) if len(spec["entries"]) > 1 else None
+            out.append("HLE_FUNC_YIELD(0x%06X, %s, 4000)\n{" % (e, spec["entries"][e]))
+            for a in sorted(reached2):
+                out.append(g2.emit(g2.ins[a], labels2 | ({e} if e in labels else set())))
+            out.append("}\n")
+            n += len(reached2)
         print("\n".join(out))
-        sys.stderr.write("%d instructions\n" % len(reached))
+        sys.stderr.write("%d instructions\n" % n)
         return
     out.append("static void pc_run(hle_ctx *ctx, uint32_t pc)\n{\n\tswitch (pc) {")
     for e in sorted(entries):
