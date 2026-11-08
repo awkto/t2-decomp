@@ -31,6 +31,7 @@ extern int m68k_step_one(void);
 
 #define MAX_DEFS 8192   /* glue.c and auto1.c (t2-decomp#11) brought the registry past 4096 */
 #define SENTINEL_RET 0x0000F0u   /* return address used for hle_call68k (never executed) */
+#define YIELD_SPAN   (60000L * 7)   /* minimum window (mclk) in which an event makes a YIELD function a coroutine */
 #define YIELD_PC     0x0000F8u   /* a function yielded to the frame loop here (cor_run, resume_cor) */
 #define STALL_PC     0x0000F4u   /* "burn the rest of a long C function's cost" trap (#31) */
 #define STALL_SLICE  256       /* 68k cycles burnt per STALL_PC visit. Must stay below a scanline (~488 68k cycles): a
@@ -856,6 +857,11 @@ static int run_def(const hle_def *def, entry *e)
 				window = d.tl - d.tl_last + margin;
 		} else if (yieldf) {
 			exact = true;               /* exact timeline: a coroutine instead of a decline (below) */
+			/* the declared cycles of a generated whole-function port (piecegen: 4000) is not a bound: a loop in
+			 * it (SpawnRowB's ObjAlloc spawns) can run across the frame end. Judge by a generous span, so an
+			 * event that falls inside makes it a coroutine. */
+			if (span < YIELD_SPAN)
+				span = YIELD_SPAN;
 			if (irq_mask < 6)
 				window = span;
 		} else if (irq_mask < 6 || lowmask) {
