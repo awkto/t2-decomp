@@ -397,15 +397,27 @@ inside the call, and take the event where the 68k does:
   hudtext2.c and callees2.c are its output.
 * Gates: the sandbox (difftest) does not yield, so the proof is dt per entry plus the lockstep gate and the
   route gates.
-* Status (branch worktree-agent-a168b5dbd34c7954d): wide 87 of 92 identical (not identical: 2p_gun_02,
-  2p_gun_05, 2p_gun_06, l4_orb_c, l4_orb_c_p, each a few cycles or a list byte after a yield in a nested
-  chain of coroutines, not yet root-caused), coldboot / ringstate / pause / screens route gates identical,
-  levelflow_gate diverges at frame 17869, six states with --z80 and mousetest pass. Not coroutines yet (still
-  declining or bailing): ReadInput / ReadInputAim / ReadPad1 / ReadPad2 / MenacerReadXY (I/O sequences charged in
-  batches), BgStreamLayers (the generated whole-function version diverged in pad_05 / 2p_gun_06; the bail
-  version is back), MissilesRun / MissilesSlot, TruckMain, BgStructFree (their callees include 68k that is not
-  ported: $00BE42 diverged when ported, $00D444), PalFade. VramClearDma and DmaFillAt are written but
-  compiled out (`#if 0` in vdpfill.c): gun_0a diverges eight cycles after the first call that overlaps a VBlank.
+* Status: wide 92 of 92 identical, the five route gates (coldboot 9000, ringstate 53768, pause 5738, levelflow
+  43913, screens 34882 frames), the six lockstep states with and without `--z80`, mousetest and `make` pass.
+  What it took after the first version: (1) `Random`, `PadMoveCrosshair` and `QueueCrosshair` charged groups of
+  instructions before their effects (a handler between saw the old state): effect first, then `hle_insn`;
+  (2) a function with an instruction timeline that calls nested 68k (`hle_call68k`) now puts its pending timeline
+  on the clock first (`call68k2`), so the nested code's bus refresh and Z80 stalls fall on the instructions they do
+  in the original (before, a lump with a nested call drifted by one refresh cycle pair and the next interrupt landed
+  on another instruction); (3) the declared cycles of a generated whole-function port (4000) is not a bound
+  (SpawnRowB's ObjAlloc spawns run across the frame end), so the event window of a YIELD function is at least
+  `YIELD_SPAN` (60000 cycles); (4) a whole-function port supersedes a census piece at the same entry (registry).
+  Dropped back (not exact in reasonable effort): `GunpowerHud` is `HLE_FUNC_BAIL` again (a text-printer coroutine
+  that is resumed across the frame wrap leaves the VBlank one instruction late in 2p_gun_06), `TruckDamage`
+  ($00D322) is served by the generated pieces of auto2.c (diverged in misc_t3 as a coroutine). Not coroutines yet
+  (still declining or bailing): ReadInput / ReadInputAim / ReadPad1 / ReadPad2 / MenacerReadXY (I/O sequences
+  charged in batches), BgStreamLayers, TruckMain, BgStructFree (their callees include 68k that is not ported),
+  PalFade. VramClearDma and DmaFillAt are written but compiled out (`#if 0` in vdpfill.c): gun_0a diverges eight
+  cycles after the first call that overlaps a VBlank.
+* Finding where a coroutine goes wrong: `T2_HLE_TRACE=2 T2_HLE_YLOG=1` (entries and yields with the frame),
+  `T2_LINEHASH=LO-HI` (hash of a work-RAM range at every frame start and handler entry, in the 68k-only and the C
+  build: diff the two logs), `T2_LH_DUMP=frame` (the bytes), `T2_ITRACE=frame,lo,hi` (every instruction start in
+  a clock window: `IX` 68k, `IT` C charge), and bisect by disabling functions (`--hle all,-Name`).
 
 ## Result so far
 

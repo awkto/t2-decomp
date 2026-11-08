@@ -185,6 +185,8 @@ States (92 runs of 3000 frames): 50 ran to the end with no 68k instruction.
 | $00800C VramClearDma | 39 | 13 / 15 / 1912 |
 | $011FA2 DmaToVram | 3 | 77 / 742 / 1400 |
 
+After merging the yielding coroutines (docs/porting.md, "Yielding"): the same strict run (`OUT=runs/native T2_NATIVE=1 port/tools/ipprof.sh`) has 51 of 92 states running to the end with no 68k instruction (DmaToVram is C now); the other 41 stop at `VramClearDma` $00800C (written in vdpfill.c, still compiled out). The native runner takes no interrupt inside a function, so `hle_yielding()` is false there and the `due()`/`safe_run()` guards return early as before.
+
 Census with the fallback (`T2_NATIVE_FALLBACK=1`, the same 97 runs, 423,301 frames): **64 distinct addresses** have no
 C block (was 5953 interpreted in the emulated census, 1052 reached natively before the generators), 13.6 M instructions
 run on the 68k core (2.57 G before, of which 2.50 G were the wait spins, now idle blocks): all of them in `VramClearDma`

@@ -57,7 +57,9 @@ queues2.c, pickup2.c, hudtext2.c, bcdhelp.c): DONE. VramClearDma $00800C, DmaFil
 $011FA2, DmaToVramSave $011F94 and VdpVScrollWrite $0081B6 are C coroutines too (vdpfill.c): DONE.
 Still declining / bailing: ReadPad1/2, ReadInput, ReadInputAim, MenacerReadXY (I/O sequences that charge in
 batches or are LOWMASK), BgStreamLayers (bails to the 68k around its heavy path), PalFade (nested
-CramUpload), and the rest listed by `T2_HLE_DECLINES` in the final report.
+CramUpload), GunpowerHud (bail again: exactness across the frame wrap), TruckDamage (generated pieces), and the
+rest listed by `T2_HLE_DECLINES` in the final report. Merged with the P5/P5b native runner: wide 92/92, route gates
+identical, `T2_NATIVE=1` 51 of 92 states fully native (the others stop at VramClearDma).
 
 ## Already in C but declined (10.3% of busy, 2.3% of all; was 9.7% / 2.1% at the previous measurement)
 
