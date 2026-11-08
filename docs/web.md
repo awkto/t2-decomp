@@ -159,3 +159,11 @@ errors, 59.6 emulated frames/s, game running about 2.4 s after navigation; the c
 commanded pixel in the screenshots (40,60; 280,180; 80,160; 240,60; touch 120,90), shots fired.
 `t2.wasm` 3.29 MB (685 kB gzipped), `t2.js` 155 kB (40 kB gzipped); romscan of `build/web` with the ROM:
 CLEAN. Not covered headless: sound output itself, gamepads, real fullscreen.
+
+## Private deployment with the ROM bundled
+
+`app.js` looks for the ROM in this order: the copy kept in IndexedDB, then `baserom.md` served next to
+`index.html` (kept in MEMFS only, not stored), then the picker. The public build (Pages/CI) has no
+`baserom.md`, so the fetch gets a 404 and the page asks as before. A private copy (for example on a
+LAN-only host) is the CI or `tools/web_build.sh` output plus `rom/baserom.md` copied in as `baserom.md`.
+Never put that copy on a public host.

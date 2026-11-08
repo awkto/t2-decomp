@@ -82,11 +82,11 @@ function romOk(path) {
 // start the game without one, so the page waits for "Click to play" first: SDL creates its
 // AudioContext inside callMain, so creating it in the click handler means it starts 'running'
 // instead of silently 'suspended'. A ROM the player has just chosen or dropped starts at once.
-function clickToPlay(path) {
+function clickToPlay(path, source = 'cached') {
   $('rom-panel').hidden = true;
   $('play-panel').hidden = false;
   setStatus('ready');
-  const go = () => { $('play-panel').hidden = true; startNow(path, 'cached'); resumeAudio(); };
+  const go = () => { $('play-panel').hidden = true; startNow(path, source); resumeAudio(); };
   $('btn-play').addEventListener('click', go, { once: true });
 }
 
@@ -113,7 +113,18 @@ async function findRom() {
     if (romOk(ROM_CACHED)) return clickToPlay(ROM_CACHED);
     FS.unlink(ROM_CACHED);
   }
-  // 2. ask
+  // 2. a ROM served next to the page (private deployments only; the public build has none)
+  try {
+    const r = await fetch('baserom.md', { cache: 'no-cache' });
+    if (r.ok) {
+      const buf = new Uint8Array(await r.arrayBuffer());
+      const tmp = '/tmp/bundled.md';          // MEMFS, not kept in IndexedDB
+      FS.writeFile(tmp, buf);
+      if (romOk(tmp)) return clickToPlay(tmp, 'bundled');
+      FS.unlink(tmp);
+    }
+  } catch (e) { /* no bundled ROM */ }
+  // 3. ask
   window.t2State = 'need-rom';
   setStatus('waiting for the ROM');
   $('rom-panel').hidden = false;
