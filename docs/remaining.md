@@ -14,7 +14,7 @@ Lockstep `--frames 1000` (six defaults) is identical with the variable set.
 | C replacements (charged) | 10.6 | 44.0 |
 | original 68k | 13.5 | 56.0 |
 
-- The C share includes 68k that C calls itself (VramWriteWord and the text printers run nested): 3.1% of
+- (Measured before textprint.c) The C share includes 68k that C calls itself (VramWriteWord and the text printers ran nested): 3.1% of
   all, 12.9% of busy. Pure C is 7.5% of all, 31% of busy. So 69% of busy work is still 68k instructions.
 - Of the 56.0% real 68k, 28.3 points are routines that are already in C but were declined (an interrupt
   falls inside the call, docs/porting.md "Interrupts inside a replaced function") and ran as the original.
@@ -78,19 +78,20 @@ except the BUSREQ spin.
 
 Request side (`SndRequest` $013D04, `SndMusicRequest`, `SndSlotRequest`) is already in C.
 
-### Menus, screens and text (8.8% of busy)
+### Menus, screens and text (8.8% of busy; the printing cluster is now C)
 
-Text and HUD drawing is the cost; the menu/title/story code itself is almost free (OptionsInput, MainMenuInput,
+Text and HUD drawing was the cost; the menu/title/story code itself is almost free (OptionsInput, MainMenuInput,
 TitleScreen, WaitStartWindow, CheatCodeCheck: under 0.05 Mcyc each) but is wait-driven.
+
+Done in `game/textprint.c` (exact VDP timing like vdplist.c; docs/porting.md): $0087C4 VramWriteWord, $007D0E digit
+printer, $007C9A/$007CD8 HUD score/lives printers, $007EB2 string printer, $007E08 text printer. They run as C
+whenever no line-start event (VBlank, frame wrap, H-Int, gun, DMA) can fall inside the call; otherwise (`safe_run`
+declines) the 68k runs them, same as VdpListRun.
 
 | addr | name | Mcyc | % | calls | what | difficulty |
 |---|---|---|---|---|---|---|
-| $0087C4 | VramWriteWord | 55.3 (+59.7 nested) | 3.83 | 549426 | VRAM[d2] = d0.w, leaf | easy: VDP port write; best done with its callers |
-| $007D0E | (digit string printer) | 47.0 | 3.26 | 75505 | BCD digits of (a0) as tiles at d3, leading-zero blanking | easy-medium: RAM + VramWriteWord |
-| $007E08 | (text printer) | 9.0 | 0.62 | 2314 | text with newline/colour codes, tile base `$FF9E2C` | medium |
-| $007C9A, $007CD8 | (HUD score printers) | 5.0, 4.9 | 0.35, 0.34 | 43564 | P1/P2 score and lives via $007D0E | easy |
-| $007EB2 | (string printer) | 3.1 (+47.6 nested) | 0.21 | 4133 | bytes to tiles until 0 | easy |
 | $0042CE | StoryIntro | 0.8 | 0.06 | 3 | intro story screens: WaitVBlank, PalFade, VdpList, sound | hard: 830 bytes, blocking waits |
+| $007DEE | PrintText | (player.c) | | 2240 | still nested-calls VramWriteWord through `hle_call68k` (now C); falls into $007E08 | could call the C body directly |
 
 ### Other (7.4% of busy)
 
@@ -109,7 +110,7 @@ TitleScreen, WaitStartWindow, CheatCodeCheck: under 0.05 Mcyc each) but is wait-
 
 1. The declines (28% of busy): cheapest big win, no new routines. Look at why VdpCmd7HScroll (99% declined) and
    VdpCmd1CopyWords (47%) run as 68k; a nested/timed session instead of a decline could move up to ~25% of busy to C.
-2. Text/HUD printing with VramWriteWord (8.8%): easy, one cluster ($007C9A..$007EB2, $0087C4).
+2. (done) Text/HUD printing with VramWriteWord: game/textprint.c.
 3. Object animation step and PickupsRun (2.5%): pure RAM.
 4. Sound engine as one unit (8%): hard, self-contained, one VBlank entry.
 5. VDP upload helpers (3.4%): medium; mostly load-time.
