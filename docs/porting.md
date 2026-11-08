@@ -397,6 +397,15 @@ inside the call, and take the event where the 68k does:
   hudtext2.c and callees2.c are its output.
 * Gates: the sandbox (difftest) does not yield, so the proof is dt per entry plus the lockstep gate and the
   route gates.
+* Status (branch worktree-agent-a168b5dbd34c7954d): wide 87 of 92 identical (not identical: 2p_gun_02,
+  2p_gun_05, 2p_gun_06, l4_orb_c, l4_orb_c_p, each a few cycles or a list byte after a yield in a nested
+  chain of coroutines, not yet root-caused), coldboot / ringstate / pause / screens route gates identical,
+  levelflow_gate diverges at frame 17869, six states with --z80 and mousetest pass. Not coroutines yet (still
+  declining or bailing): ReadInput / ReadInputAim / ReadPad1 / ReadPad2 / MenacerReadXY (I/O sequences charged in
+  batches), BgStreamLayers (the generated whole-function version diverged in pad_05 / 2p_gun_06; the bail
+  version is back), MissilesRun / MissilesSlot, TruckMain, BgStructFree (their callees include 68k that is not
+  ported: $00BE42 diverged when ported, $00D444), PalFade. VramClearDma and DmaFillAt are written but
+  compiled out (`#if 0` in vdpfill.c): gun_0a diverges eight cycles after the first call that overlaps a VBlank.
 
 ## Result so far
 
