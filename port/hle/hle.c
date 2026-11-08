@@ -6,7 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/fiber.h>   /* the browser build: Asyncify fibers instead of ucontext (docs/web.md) */
+#define COR_ASYNC_STACK (96 * 1024)
+#else
 #include <ucontext.h>
+#endif
 #include <signal.h>
 #include <unistd.h>
 
@@ -667,7 +672,12 @@ struct rs {
 	bool sr_pend;              /* the yield lowered the mask with an interrupt pending: applied at the resume hook */
 	uint16_t sr_val;
 	int sr_back;               /* mclk of the move to SR (the core takes the interrupt before it adds them) */
+#ifdef __EMSCRIPTEN__
+	emscripten_fiber_t uc, back;
+	char *astack_uc, *astack_back;
+#else
 	ucontext_t uc, back;
+#endif
 	char *stack;
 };
 static rs g_pool[COR_MAX];
@@ -750,6 +760,11 @@ static void lh_hook(int type, int width, unsigned addr, unsigned value)
 		lh_emit(gx_m68k_cycles());
 }
 
+#ifdef __EMSCRIPTEN__
+#define COR_SWAP(from, to) emscripten_fiber_swap((from), (to))
+#else
+#define COR_SWAP(from, to) swapcontext((from), (to))
+#endif
 static void cor_do_yield(rs *s)
 {
 	tl_flush(&s->c);
@@ -757,7 +772,7 @@ static void cor_do_yield(rs *s)
 	dstat(s->def, 8);
 	if (getenv("T2_HLE_YLOG"))
 		fprintf(stderr, "yield %s clock %d end %d sp %06X frame %ld\n", s->def->name, gx_m68k_cycles(), gx_m68k_cycle_end(), s->c.a[7], g_frames_run);
-	swapcontext(&s->uc, &s->back);
+	COR_SWAP(&s->uc, &s->back);
 }
 static void cor_check(hle_ctx *c)
 {
@@ -821,7 +836,7 @@ void hle_yield_point(void)
 		cor_do_yield(g_cor);
 }
 
-static void cor_entry(void)
+static void cor_entry(void *arg_unused)
 {
 	rs *s = g_cor;
 	s->def->fn(&s->c);
@@ -830,21 +845,30 @@ static void cor_entry(void)
 		fprintf(stderr, "hle: %s ended with a delayed IRQ armed (state %d)\n", s->def->name, g_irqd);
 		g_irqd = 0;
 	}
-	swapcontext(&s->uc, &s->back);
+	COR_SWAP(&s->uc, &s->back);
 }
 static void cor_run(rs *s, bool start)
 {
 	if (start) {
 		if (!s->stack)
 			s->stack = malloc(COR_STACK);
+#ifdef __EMSCRIPTEN__
+		if (!s->astack_uc) {
+			s->astack_uc = malloc(COR_ASYNC_STACK);
+			s->astack_back = malloc(COR_ASYNC_STACK);
+			emscripten_fiber_init_from_current_context(&s->back, s->astack_back, COR_ASYNC_STACK);
+		}
+		emscripten_fiber_init(&s->uc, cor_entry, NULL, s->stack, COR_STACK, s->astack_uc, COR_ASYNC_STACK);
+#else
 		getcontext(&s->uc);
 		s->uc.uc_stack.ss_sp = s->stack;
 		s->uc.uc_stack.ss_size = COR_STACK;
 		s->uc.uc_link = NULL;
-		makecontext(&s->uc, cor_entry, 0);
+		makecontext(&s->uc, (void (*)(void))cor_entry, 0);
+#endif
 	}
 	g_cor = s;
-	swapcontext(&s->back, &s->uc);
+	COR_SWAP(&s->back, &s->uc);
 	g_cor = NULL;
 }
 
