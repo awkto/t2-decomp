@@ -433,8 +433,8 @@ inside the call, and take the event where the 68k does:
   span (`HLE_F_SHORT`: no 60000-cycle window, they run millions of times). Their "this block opened the VDP session"
   flag is `hle_cor_slot`, saved and restored by the yield. A whole-function port still supersedes a census piece
   (the registry ranks YIELD without SHORT above the rest).
-  Not coroutines (see docs/remaining.md): VramClearDma and DmaFillAt stay `#if 0` (the other agent's), PalFade (the
-  nested CramUpload is a coroutine, PalFade itself is not).
+  Left (see docs/remaining.md): VramClearDma and DmaFillAt stay `#if 0` in vdpfill.c (the other agent's task); PalFade,
+  CramUpload, sub_010666 and a few helpers are still run as nested 68k by C that is not a coroutine.
 * Finding where a coroutine goes wrong: `T2_HLE_TRACE=2 T2_HLE_YLOG=1` (entries and yields with the frame),
   `T2_LINEHASH=LO-HI` (hash of a work-RAM range at every frame start and handler entry, in the 68k-only and the C
   build: diff the two logs), `T2_LH_DUMP=frame` (the bytes), `T2_ITRACE=frame,lo,hi` (every instruction start in
