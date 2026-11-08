@@ -36,6 +36,17 @@ SPECS = {
  * the state-1/5/7 sounds and bars, the state-2 death / continue paths up to the PlayerDied label
  * ($008D68, which game/screens.c already covers).""",
     ),
+    "helpers": dict(
+        file="helpers.c",
+        ranges=[(0x004820, 0x00498A), (0x00920C, 0x009242), (0x00C442, 0x00C48E), (0x00D238, 0x00D27A),
+                (0x00DB36, 0x00DB5A)],
+        entries={0x004820: "BgStreamL5", 0x004872: "BgStreamL2", 0x0048C4: "BgStreamL4", 0x004916: "BgStreamL1",
+                 0x00920C: "HudBarHelper", 0x00C442: "AnimHelper", 0x00D238: "TruckHelper", 0x00DB36: "ObjHelper"},
+        prefix="Helper",
+        title="""Small helpers that were still 68k (docs/remaining.md): the per-layer background stream wrappers
+ * BgStreamL5/L2/L4/L1 ($004820..$00498A, they set the layer tables and `bsr` into BgStreamLayers), the HUD bar
+ * helper $00920C, the animation helper $00C442, the truck helper $00D238 and the object helper $00DB36.""",
+    ),
 }
 
 
@@ -374,14 +385,28 @@ class Gen:
             bitexpr = ("%d" % (s[1] & 7)) if s[0] == "i" else "(ctx->d[%d] & 7)" % s[1]
             act = {"btst": "", "bset": "st8(eaD, v | m);", "bclr": "st8(eaD, v & ~m);", "bchg": "st8(eaD, v ^ m);"}[mn]
             return line("{ %s unsigned b = %s; uint32_t m = 1u << b; uint8_t v = ld8(eaD); cc_set(ctx, CC_Z, (v & m) ? 0 : CC_Z); %s } hle_insn(ctx, %d);" % (pre, bitexpr, act, base))
-        m = re.fullmatch(r"(move|movea|clr|tst|cmpi|cmpa|cmp|addq|subq|addi|subi|add|sub|ori|andi|eori|or|and|not|asl|asr|lsl|lsr)([bwl])", mn)
+        m = re.fullmatch(r"ext([wl])", mn)
+        if m:
+            r = parse_op(args[0])[1]
+            if m.group(1) == "w":
+                return line("{ set_w(&ctx->d[%d], (uint32_t)(int32_t)(int8_t)ctx->d[%d]); cc_logic16(ctx, ctx->d[%d] & 0xFFFFu); } hle_insn(ctx, %d);" % (r, r, r, base))
+            return line("{ ctx->d[%d] = (uint32_t)(int32_t)(int16_t)ctx->d[%d]; cc_logic32(ctx, ctx->d[%d]); } hle_insn(ctx, %d);" % (r, r, r, base))
+        if mn == "movemw":
+            mask = i.words[1]
+            src = parse_op(args[0])
+            assert src[0] in ("disp", "ind"), t
+            pre, ea = ea_of(src, 2, "s")
+            regs = [b for b in range(16) if mask & (1 << b)]
+            body = "".join("%s = (uint32_t)(int32_t)(int16_t)ld16(eaS + %d); " % ("ctx->d[%d]" % r if r < 8 else "ctx->a[%d]" % (r - 8), 2 * k) for k, r in enumerate(regs))
+            return line("{ %s%s} hle_insn(ctx, %d);" % (pre, body, self.cost(i)))
+        m = re.fullmatch(r"(move|movea|clr|neg|tst|cmpi|cmpa|cmp|addq|subq|addi|subi|add|sub|ori|andi|eori|or|and|not|asl|asr|lsl|lsr)([bwl])", mn)
         assert m, "unhandled %s at %X" % (t, a)
         return line(self.gen_sized(i, m.group(1), SZ[m.group(2)], args, base))
 
     def gen_sized(self, i, kind, sz, args, base):
         ops = [parse_op(x) for x in args]
         pre = ""
-        if kind in ("clr", "tst", "not"):
+        if kind in ("clr", "tst", "not", "neg"):
             src, dst = None, ops[0]
         else:
             src, dst = ops[0], ops[1]
@@ -403,6 +428,8 @@ class Gen:
             body = "ctx->a[%d] = %s;" % (dst[1], v)
         elif kind == "clr":
             body = "%s cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);" % wr_stmt(dst, sz, "0", "d")
+        elif kind == "neg":
+            body = "uint32_t v = alu(ctx, OP_SUB, 0, %s, %d, 1); %s" % (rd_expr(dst, sz, "d"), BITS[sz], wr_stmt(dst, sz, "v", "d"))
         elif kind == "tst":
             body = lg(sz, rd_expr(dst, sz, "d"))
         elif kind == "not":
@@ -415,7 +442,11 @@ class Gen:
                 s = "(uint32_t)(int32_t)(int16_t)%s" % s
             body = "alu(ctx, OP_SUB, ctx->a[%d], %s, 32, 0);" % (dst[1], s)
         elif kind in ("add", "addi", "addq", "sub", "subi", "subq"):
-            assert dst[0] != "a"
+            if dst[0] == "a":
+                # addq/subq to An: whole register, sign-extended source, no flags
+                assert kind in ("addq", "subq") and src[0] == "i"
+                body = "ctx->a[%d] %s= %d;" % (dst[1], "+" if kind == "addq" else "-", src[1])
+                return "{ %s } %s" % (body, end)
             op = "OP_ADD" if kind.startswith("add") else "OP_SUB"
             body = "uint32_t v = alu(ctx, %s, %s, %s, %d, 1); %s" % (op, rd_expr(dst, sz, "d"), rd_expr(src, sz, "s"), BITS[sz], wr_stmt(dst, sz, "v", "d"))
         elif kind in ("or", "ori", "and", "andi", "eori"):
