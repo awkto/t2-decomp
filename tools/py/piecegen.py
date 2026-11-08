@@ -70,6 +70,15 @@ SPECS = {
  * fill-rows command per row), the fixed list entry sub_00BF46, and the two object row spawners
  * sub_013470 / sub_01385A (they share the tail sub_013866).""",
     ),
+    "hudtext": dict(
+        file="hudtext2.c",
+        whole=True,
+        ranges=[(0x007BB8, 0x007BEC)],
+        entries={0x007BB8: "HudBannerText"},
+        prefix="HudText",
+        title="""The HUD banner text helper sub_007BB8 (print the two banner strings for the player in a4 through
+ * StringPrint).""",
+    ),
     "helpers": dict(
         file="helpers.c",
         ranges=[(0x004820, 0x00498A), (0x00920C, 0x009242), (0x00C442, 0x00C48E), (0x00D238, 0x00D27A),
@@ -296,6 +305,8 @@ class Gen:
                 return -n * sz
             if args[0] == "%sp@+":
                 return n * sz
+        if "%sp@+" not in t and "%sp@-" not in t and "%sp," not in t.replace("%sp@", ""):
+            return 0                    # (sp) / d16(sp) addressing only: the stack pointer does not move
         raise AssertionError("sp use %X %s" % (i.addr, t))
 
     def walk(self):
@@ -326,7 +337,7 @@ class Gen:
                 if cls == "stop":
                     t, mn, args = self.parsed(i)
                     if self.spec.get("whole"):
-                        assert mn in CALLS or mn == "rts", "whole mode: %s at %X" % (t, a)
+                        assert mn in CALLS or mn in ("rts", "jmp"), "whole mode: %s at %X" % (t, a)
                         if mn in CALLS:
                             stack.append((nxt, d))
                         continue
@@ -354,6 +365,8 @@ class Gen:
 
     def emit(self, i, labels):
         t, mn, args = self.parsed(i)
+        if re.search(r"\b(c0000[0-9a-f]|a1[0-9a-f]{4}|a0[0-9a-f]{4})\b", t):
+            raise ValueError("I/O address (VDP / Z80 / ports) in %s: hand-write it with the exact clock model" % t)
         a = i.addr
         cmt = "/* %06X %s */" % (a, t)
         lab = "L_%06X:\n" % a if a in labels else ""
@@ -373,10 +386,18 @@ class Gen:
             if mn == "rts":
                 return line("hle_insn(ctx, %d); return;" % base)
             tgt = args[0]
-            if mn == "jsr" and tgt.startswith("0x"):
+            if mn in ("jsr", "jmp") and tgt.startswith("0x"):
                 tgt = tgt[2:]
+            mi = re.fullmatch(r"%a(\d)@", tgt)
+            if mi:                       # jsr (An) / jmp (An): computed target
+                call = "hle_callc(ctx, ctx->a[%s])" % mi.group(1)
+                if mn == "jmp":
+                    return line("{ hle_insn(ctx, %d); hle_jump(ctx, ctx->a[%s]); return; }" % (base, mi.group(1)))
+                return line("{ hle_insn(ctx, %d); hle_sync(ctx); %s; }" % (base, call))
             m2 = re.fullmatch(r"(?:%pc@\()?([0-9a-f]+)\)?", tgt)
             assert m2, "call target " + t
+            if mn == "jmp":      # tail jump: the layer (or hle_callc) continues there; its rts returns to our caller
+                return line("{ hle_insn(ctx, %d); hle_jump(ctx, 0x%06X); return; }" % (base, int(m2.group(1), 16)))
             return line("{ hle_insn(ctx, %d); hle_sync(ctx); hle_callc(ctx, 0x%06X); }" % (base, int(m2.group(1), 16)))
         if cls == "stop":
             return line("hle_jump(ctx, 0x%06X); return;" % a)
@@ -443,6 +464,17 @@ class Gen:
             if m.group(1) == "w":
                 return line("{ set_w(&ctx->d[%d], (uint32_t)(int32_t)(int8_t)ctx->d[%d]); cc_logic16(ctx, ctx->d[%d] & 0xFFFFu); } hle_insn(ctx, %d);" % (r, r, r, base))
             return line("{ ctx->d[%d] = (uint32_t)(int32_t)(int16_t)ctx->d[%d]; cc_logic32(ctx, ctx->d[%d]); } hle_insn(ctx, %d);" % (r, r, r, base))
+        if mn == "movemw" and args[1] == "%sp@-":
+            mask = i.words[1]
+            assert not (mask & 1), "a7 in movem"
+            regs = [15 - b for b in range(16) if mask & (1 << b)]
+            body = "".join("ctx->a[7] -= 2; st16(ctx->a[7], %s); " % ("ctx->d[%d]" % r if r < 8 else "ctx->a[%d]" % (r - 8)) for r in regs)
+            return line("{ %s} hle_movem_w(ctx, %d, %d);" % (body, self.cost(i), len(regs)))
+        if mn == "movemw" and args[0] == "%sp@+":
+            mask = i.words[1]
+            regs = [b for b in range(16) if mask & (1 << b)]
+            body = "".join("%s = (uint32_t)(int32_t)(int16_t)ld16(ctx->a[7]); ctx->a[7] += 2; " % ("ctx->d[%d]" % r if r < 8 else "ctx->a[%d]" % (r - 8)) for r in regs)
+            return line("{ %s} hle_movem_w(ctx, %d, %d);" % (body, self.cost(i), len(regs)))
         if mn == "movemw":
             mask = i.words[1]
             src = parse_op(args[0])
@@ -607,9 +639,52 @@ static inline void st32(uint32_t a, uint32_t v) { RAM32_W(a, v); }
 """
 
 
+def gen_whole(spec, e, labels):
+    g2 = Gen(dict(spec, entries={e: spec["entries"][e]}))
+    ent2, reached2 = g2.walk()
+    labels2 = set(ent2)
+    for a in reached2:
+        cls, tg = g2.kind(g2.ins[a])
+        for tt in tg:
+            if g2.inrange(tt):
+                labels2.add(tt)
+    lines = ["HLE_FUNC_YIELD(0x%06X, %s, 4000)\n{" % (e, spec["entries"][e])]
+    for a in sorted(reached2):
+        lines.append(g2.emit(g2.ins[a], labels2))
+    lines.append("}\n")
+    return "\n".join(lines), len(reached2)
+
+
 def main():
     name = sys.argv[1]
-    spec = SPECS[name]
+    if name == "auto":
+        # piecegen.py auto "TITLE" ADDR:Name[,ADDR:Name...] LO-HI[,LO-HI...]  (whole-function mode, to stdout)
+        ents = {}
+        for x in sys.argv[3].split(","):
+            ad, nm = x.split(":")
+            ents[int(ad, 16)] = nm
+        rngs = []
+        for x in sys.argv[4].split(","):
+            lo, hi = x.split("-")
+            rngs.append((int(lo, 16), int(hi, 16)))
+        spec = dict(file="auto.c", whole=True, ranges=rngs, entries=ents, prefix="Auto", title=sys.argv[2])
+    elif name == "funcs":
+        # piecegen.py funcs "TITLE" ADDR[,ADDR...]: whole-function ports of the functions at these addresses
+        # (size and name from data/functions.txt); a function the generator cannot do is skipped on stderr
+        info = {}
+        for ln in open(os.path.join(cc.ROOT, "data", "functions.txt")):
+            q = ln.split()
+            if len(q) >= 3 and not ln.startswith("#"):
+                info[int(q[0], 16)] = (int(q[1]), q[2])
+        ents, rngs = {}, []
+        for x in sys.argv[3].split(","):
+            a = int(x, 16)
+            size, nm = info[a]
+            ents[a] = ("Sub%06X" % a) if nm.startswith("sub_") else nm
+            rngs.append((a, a + size))
+        spec = dict(file="funcs.c", whole=True, ranges=rngs, entries=ents, prefix="Auto", title=sys.argv[2])
+    else:
+        spec = SPECS[name]
     g = Gen(spec)
     entries, reached = g.walk()
     labels = set(entries)
@@ -627,6 +702,14 @@ def main():
     if spec.get("whole"):
         n = 0
         for e in sorted(spec["entries"]):
+            try:
+                body = gen_whole(spec, e, labels)
+            except (AssertionError, ValueError) as ex:
+                sys.stderr.write("SKIP %06X %s: %s\n" % (e, spec["entries"][e], ex))
+                continue
+            out.append(body[0])
+            n += body[1]
+            continue
             g2 = Gen(dict(spec, entries={e: spec["entries"][e]}))
             ent2, reached2 = g2.walk()
             labels2 = set(ent2)

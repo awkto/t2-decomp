@@ -254,7 +254,7 @@ miss:
 }
 
 /* ---------------------------------------------------------- PickupHitBox $007086 */
-HLE_FUNC(0x007086, PickupHitBox, 6000)
+HLE_FUNC_YIELD(0x007086, PickupHitBox, 6000)
 {
 	ctx->d[0] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY);
 	ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(SHOT_XY + 2);
@@ -323,7 +323,7 @@ miss:
 }
 
 /* --------------------------------------------------------- ShotHitTest $005892 */
-HLE_FUNC(0x005892, ShotHitTest, 24000)
+HLE_FUNC_YIELD(0x005892, ShotHitTest, 24000)
 {
 	int free_slots = 0;
 

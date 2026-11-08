@@ -126,7 +126,7 @@ static void mul_w(hle_ctx *c, int r, uint16_t src, int sign)
 
 
 /* $00E2E6 wall gun before the boss: countdown, fires through sub_009A02 */
-HLE_RANGE(0x00E2E6, SkyGun, 2600, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E2E6, SkyGun, 2600, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00E2E6 subqw #1,%fp@(36) */
 	if (bs(ctx, !c_z(ctx))) goto L_00E310; /* 00E2EA bnes 0xe310 */
@@ -145,7 +145,7 @@ L_00E310:;
 }
 
 /* $00E314 wall gun killed: tile pop; the last one starts the boss intro */
-HLE_RANGE(0x00E314, SkyGunDie, 14916, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E314, SkyGunDie, 14916, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)2)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E314 movew %fp@(2),%d0 */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)4)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E318 movew %fp@(4),%d1 */
@@ -202,7 +202,7 @@ L_00E366:;
 }
 
 /* $00E3E2 boss intro: tile frames by countdown, then palette and the sprite sweep */
-HLE_RANGE(0x00E3E2, SkyIntroTiles, 30703, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E3E2, SkyIntroTiles, 30703, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E3E2 movew %fp@(36),%d0 */
 	{ uint32_t _s = 0x1u; uint32_t _d = (ctx->d[0] & 0xFFFFu); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); set_w(&ctx->d[0], _r); hle_insn(ctx, 4); } /* 00E3E6 subqw #1,%d0 */
@@ -323,7 +323,7 @@ L_00E5A2:;
 }
 
 /* $00E546 boss intro: two sprites slide in, then the spawner */
-HLE_RANGE(0x00E546, SkyIntroSweep, 762, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E546, SkyIntroSweep, 762, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00E546 subqw #1,%fp@(36) */
 	if (bs(ctx, !c_z(ctx))) goto L_00E578; /* 00E54A bnes 0xe578 */
@@ -390,7 +390,7 @@ L_00E60E:;
 }
 
 /* $00E72E boss controller: periodic sound */
-HLE_RANGE(0x00E72E, SkyCtl, 132, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E72E, SkyCtl, 132, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E72E movew %fp@(36),%d0 */
 	{ uint32_t _s = 0x1u; uint32_t _d = (ctx->d[0] & 0xFFFFu); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); set_w(&ctx->d[0], _r); hle_insn(ctx, 4); } /* 00E732 subqw #1,%d0 */
@@ -409,7 +409,7 @@ HLE_RANGE_PURE(0x00E746, SkyPartIdle, 1000, EXIT_NEXT)
 }
 
 /* $00E74A CPU part: firing, countdown with a random reload */
-HLE_RANGE(0x00E74A, SkyPartFire, 3053, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E74A, SkyPartFire, 3053, EXIT_NEXT)
 {
 	{ cc_logic16(ctx, ld16((ctx->a[6] + (uint32_t)(int32_t)40))); hle_insn(ctx, 12); } /* 00E74A tstw %fp@(40) */
 	if (bs(ctx, !c_n(ctx))) goto L_00E758; /* 00E74E bpls 0xe758 */
@@ -440,7 +440,7 @@ L_00E79A:;
 }
 
 /* $00E7C0 CPU part destroyed: tiles, counters, the last one starts the finish */
-HLE_RANGE(0x00E7C0, SkyPartDie, 3612, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E7C0, SkyPartDie, 3612, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)2)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E7C0 movew %fp@(2),%d0 */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)4)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E7C4 movew %fp@(4),%d1 */
@@ -488,7 +488,7 @@ L_00E858:;
 }
 
 /* $00E864 boss finish: countdown, explosion sprites */
-HLE_RANGE(0x00E864, SkyFinish1, 29097, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E864, SkyFinish1, 29097, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00E864 subqw #1,%fp@(36) */
 	if (bs(ctx, !c_z(ctx))) goto L_00E890; /* 00E868 bnes 0xe890 */
@@ -523,7 +523,7 @@ L_00E8C4:;
 }
 
 /* $00E8C8 boss finish: tiles */
-HLE_RANGE(0x00E8C8, SkyFinish2, 23315, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E8C8, SkyFinish2, 23315, EXIT_NEXT)
 {
 	{ uint32_t _v = (ctx->d[7] & 0xFFFFu); push16(ctx, _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00E8C8 movew %d7,%sp@- */
 	{ ctx->a[0] = 0x0006D93Eu; hle_insn(ctx, 12); } /* 00E8CA lea 0x6d93e,%a0 */
@@ -547,7 +547,7 @@ HLE_RANGE(0x00E8C8, SkyFinish2, 23315, EXIT_NEXT)
 }
 
 /* $00E91E boss finish: countdown, explosions, palette */
-HLE_RANGE(0x00E91E, SkyFinish3, 2532, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E91E, SkyFinish3, 2532, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00E91E movew %fp@(36),%d0 */
 	{ uint32_t _s = 0x1u; uint32_t _d = (ctx->d[0] & 0xFFFFu); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); set_w(&ctx->d[0], _r); hle_insn(ctx, 4); } /* 00E922 subqw #1,%d0 */
@@ -598,7 +598,7 @@ L_00E9C0:;
 }
 
 /* $00E9C4 boss finish: palette fade out */
-HLE_RANGE(0x00E9C4, SkyFadeEnd, 27192, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00E9C4, SkyFadeEnd, 27192, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16(0xFFFFA0EEu); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 00E9C4 movew 0xffffa0ee,%d0 */
 	{ uint32_t _s = 0x7u; uint32_t _d = (ctx->d[0] & 0xFFFFu); uint32_t _r = (_d & _s) & 0xFFFFu; cc_logic16(ctx, _r); set_w(&ctx->d[0], _r); hle_insn(ctx, 8); } /* 00E9CA andiw #7,%d0 */

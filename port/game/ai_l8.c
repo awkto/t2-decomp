@@ -635,7 +635,7 @@ static void sub_0112DE(hle_ctx *ctx)
 }
 
 /* $01116A $27 liquid-nitrogen tanker: periodic leak, spawn a spray piece */
-HLE_RANGE(0x01116A, L8Leak, 1500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x01116A, L8Leak, 1500, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 01116A subqw #1,%fp@(36) */
 	if (bs(ctx, !c_z(ctx))) goto L_0111C6; /* 01116E bnes 0x111c6 */
@@ -672,7 +672,7 @@ L_0111C6:;
 }
 
 /* $0111CA $27 tanker/background scroller: queue the tile blocks at fixed X */
-HLE_RANGE(0x0111CA, L8TankerScroll, 24000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x0111CA, L8TankerScroll, 24000, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); ObjScrollX(ctx); } /* 0111CA jsr %pc@(0x12316) */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)2)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 0111CE movew %fp@(2),%d0 */
@@ -807,7 +807,7 @@ L_011B4A:;
 }
 
 /* $011394 $27 T-1000: attack animation with sound $61 and sub_009066 */
-HLE_RANGE(0x011394, L8T1000Act1, 15500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x011394, L8T1000Act1, 15500, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 011394 movew %fp@(36),%d1 */
 	{ uint32_t _s = 0x38u; uint32_t _d = (ctx->d[1] & 0xFFFFu); uint32_t _r = (_d & _s) & 0xFFFFu; cc_logic16(ctx, _r); set_w(&ctx->d[1], _r); hle_insn(ctx, 8); } /* 011398 andiw #56,%d1 */
@@ -841,7 +841,7 @@ L_011B4A:;
 }
 
 /* $0113D8 $27 T-1000: attack animation, sprays debris at timer $10 */
-HLE_RANGE(0x0113D8, L8T1000Act2, 28500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x0113D8, L8T1000Act2, 28500, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 0113D8 movew %fp@(36),%d1 */
 	{ uint32_t _s = 0x3Cu; uint32_t _d = (ctx->d[1] & 0xFFFFu); uint32_t _r = (_d & _s) & 0xFFFFu; cc_logic16(ctx, _r); set_w(&ctx->d[1], _r); hle_insn(ctx, 8); } /* 0113DC andiw #60,%d1 */
@@ -1019,7 +1019,7 @@ L_011B4A:;
 }
 
 /* $011580 $27 T-1000 shattered: init, falls into the fall state */
-HLE_RANGE(0x011580, L8T1000Shatter, 2500, EXIT_NEXT, 0x0112FE, 0x011360, 0x011394, 0x0113D8)
+HLE_RANGE_YIELD(0x011580, L8T1000Shatter, 2500, EXIT_NEXT, 0x0112FE, 0x011360, 0x011394, 0x0113D8)
 {
 	goto L_011580;
 L_011448:;
@@ -1267,7 +1267,7 @@ L_011B4A:;
 }
 
 /* $011A90 $27 T-1000 frozen: countdown, then the shatter spray */
-HLE_RANGE(0x011A90, L8T1000Frozen, 49500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x011A90, L8T1000Frozen, 49500, EXIT_NEXT)
 {
 	{ uint32_t _v = 0xC4u; st16((ctx->a[6] + (uint32_t)(int32_t)4), _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 011A90 movew #196,%fp@(4) */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 011A96 movew %fp@(36),%d1 */
@@ -1295,7 +1295,7 @@ L_011AEC:;
 }
 
 /* $011AF8 $27 T-1000 gone: free the slot */
-HLE_RANGE(0x011AF8, L8T1000Gone, 160, EXIT_NEXT)
+HLE_RANGE_YIELD(0x011AF8, L8T1000Gone, 160, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 011AF8 subqw #1,%fp@(36) */
 	if (bs(ctx, !c_z(ctx))) goto L_011B0C; /* 011AFC bnes 0x11b0c */
@@ -1307,7 +1307,7 @@ L_011B0C:;
 }
 
 /* $011BF4 $27 tanker: nitrogen meter, upload the gauge */
-HLE_RANGE(0x011BF4, L8TankerMeter, 3700, EXIT_NEXT)
+HLE_RANGE_YIELD(0x011BF4, L8TankerMeter, 3700, EXIT_NEXT)
 {
 	{ ctx->a[0] = 0x000085FAu; hle_insn(ctx, 12); } /* 011BF4 lea 0x85fa,%a0 */
 	{ cc_logic8(ctx, ld8(0xFFFF9EC3u)); hle_insn(ctx, 16); } /* 011BFA tstb 0xffff9ec3 */
@@ -1325,7 +1325,7 @@ L_011C08:;
 }
 
 /* $011C2C $27 tanker meter off: clear the gauge row and free */
-HLE_RANGE(0x011C2C, L8MeterOff, 300, EXIT_NEXT)
+HLE_RANGE_YIELD(0x011C2C, L8MeterOff, 300, EXIT_NEXT)
 {
 	{ uint32_t _v = 0xE310u; set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 011C2C movew #-7408,%d1 */
 	{ ctx->d[2] = 0x18u; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 011C30 moveq #24,%d2 */

@@ -404,7 +404,7 @@ L_0109A4:;
 }
 
 /* $0109C8 $27 explosion/debris: spawn a flying piece, fall into the countdown */
-HLE_RANGE(0x0109C8, L7ExplodeInit, 30000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x0109C8, L7ExplodeInit, 30000, EXIT_NEXT)
 {
 	goto L_0109C8;
 L_010908:;
@@ -650,7 +650,7 @@ L_010AF4:;
 }
 
 /* $010AF8 $27 T-1000 on the police vehicle: pick the approach side */
-HLE_RANGE(0x010AF8, L7HeliStart, 9300, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010AF8, L7HeliStart, 9300, EXIT_NEXT)
 {
 	{ cc_logic16(ctx, ld16((ctx->a[6] + (uint32_t)(int32_t)36))); hle_insn(ctx, 12); } /* 010AF8 tstw %fp@(36) */
 	if (bw(ctx, !c_z(ctx))) goto L_010B80; /* 010AFC bnew 0x10b80 */
@@ -734,7 +734,7 @@ L_010D2C:;
 }
 
 /* $010B84 $27 T-1000 on the police vehicle: approach */
-HLE_RANGE(0x010B84, L7HeliApproach, 10700, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010B84, L7HeliApproach, 10700, EXIT_NEXT)
 {
 	{ uint32_t _v = 0x73u; st16(0xFFFF9EA4u, _v); cc_logic16(ctx, _v); hle_insn(ctx, 20); } /* 010B84 movew #115,0xffff9ea4 */
 	{ hle_insn(ctx, 18); sub_00E10C(ctx); } /* 010B8C jsr %pc@(0xe10c) */
@@ -808,7 +808,7 @@ L_010D2C:;
 }
 
 /* $010BE4 $27 T-1000 on the police vehicle shot: fly off */
-HLE_RANGE(0x010BE4, L7HeliHit, 12000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010BE4, L7HeliHit, 12000, EXIT_NEXT)
 {
 	{ uint32_t _v = 0x0u; st8((ctx->a[6] + (uint32_t)(int32_t)10), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 010BE4 moveb #0,%fp@(10) */
 	{ uint32_t _v = 0xFDu; st8((ctx->a[6] + (uint32_t)(int32_t)16), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 010BEA moveb #-3,%fp@(16) */
@@ -912,7 +912,7 @@ L_010E18:;
 }
 
 /* $010C1C $27 T-1000 on the police vehicle: fly away */
-HLE_RANGE(0x010C1C, L7HeliFlyOff, 27100, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010C1C, L7HeliFlyOff, 27100, EXIT_NEXT)
 {
 	{ uint32_t _v = 0x73u; st16(0xFFFF9EA4u, _v); cc_logic16(ctx, _v); hle_insn(ctx, 20); } /* 010C1C movew #115,0xffff9ea4 */
 	{ hle_insn(ctx, 18); sub_00E10C(ctx); } /* 010C24 jsr %pc@(0xe10c) */
@@ -1006,7 +1006,7 @@ L_010E18:;
 }
 
 /* $010D46 $27 T-1000 on the police vehicle: crash (sparks, tile rect) */
-HLE_RANGE(0x010D46, L7HeliCrash, 14800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010D46, L7HeliCrash, 14800, EXIT_NEXT)
 {
 	goto L_010D46;
 L_010D20:;
@@ -1068,7 +1068,7 @@ L_010DEA:;
 }
 
 /* $010DD6 $27 T-1000 on the police vehicle: crash descent */
-HLE_RANGE(0x010DD6, L7HeliCrash2, 2100, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010DD6, L7HeliCrash2, 2100, EXIT_NEXT)
 {
 	goto L_010DD6;
 L_010D20:;
@@ -1094,7 +1094,7 @@ L_010DEA:;
 }
 
 /* $010DEE $27 T-1000 on the police vehicle: scroll off, next script */
-HLE_RANGE(0x010DEE, L7HeliCrash3, 2100, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010DEE, L7HeliCrash3, 2100, EXIT_NEXT)
 {
 	goto L_010DEE;
 L_010D20:;
@@ -1125,7 +1125,7 @@ L_010E14:;
 }
 
 /* $010E4A $27 helicopter chase pass: init */
-HLE_RANGE(0x010E4A, L7PassInit, 6500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010E4A, L7PassInit, 6500, EXIT_NEXT)
 {
 	goto L_010E4A;
 L_010D20:;
@@ -1210,7 +1210,7 @@ L_011142:;
 }
 
 /* $010E82 $27 helicopter chase pass: check X >= $88 (HeliPassCheck) */
-HLE_RANGE(0x010E82, L7PassCheck, 3200, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010E82, L7PassCheck, 3200, EXIT_NEXT)
 {
 	goto L_010E82;
 L_010D20:;
@@ -1305,7 +1305,7 @@ L_011142:;
 }
 
 /* $010EF6 $27 helicopter chase pass: wrap up */
-HLE_RANGE(0x010EF6, L7PassEnd, 7200, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010EF6, L7PassEnd, 7200, EXIT_NEXT)
 {
 	goto L_010EF6;
 L_010D20:;
@@ -1425,7 +1425,7 @@ L_010FAC:;
 }
 
 /* $010FB0 $27 freeway scroller finale */
-HLE_RANGE(0x010FB0, L7Finale, 10000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010FB0, L7Finale, 10000, EXIT_NEXT)
 {
 	goto L_010FB0;
 L_010D20:;

@@ -248,7 +248,7 @@ static void van_62e2(hle_ctx *ctx)
 	van_62fa(ctx);
 }
 
-HLE_FUNC(0x0062D4, Onhit5678_Van3, 4000)
+HLE_FUNC_YIELD(0x0062D4, Onhit5678_Van3, 4000)
 {
 	bit_m(ctx, 's', A6, 1, 16);                         /* 0062D4 bset.b #9,(a6) */
 	if (bs(ctx, !c_z(ctx))) {                           /* 0062D8 bne.s sub_006304 */
@@ -260,7 +260,7 @@ HLE_FUNC(0x0062D4, Onhit5678_Van3, 4000)
 	van_6304(ctx);
 }
 
-HLE_FUNC(0x0062DC, Onhit5678_Van2, 4000)
+HLE_FUNC_YIELD(0x0062DC, Onhit5678_Van2, 4000)
 {
 	bit_m(ctx, 's', A6, 0, 16);                         /* 0062DC bset.b #8,(a6) */
 	if (bs(ctx, !c_z(ctx))) {                           /* 0062E0 bne.s sub_006304 */
@@ -273,7 +273,7 @@ HLE_FUNC(0x0062DC, Onhit5678_Van2, 4000)
 
 #endif /* ONHIT5678_UNPROVEN */
 
-HLE_FUNC(0x0062FA, Onhit5678_Van1, 3000)
+HLE_FUNC_YIELD(0x0062FA, Onhit5678_Van1, 3000)
 {
 	van_62fa(ctx);
 	van_6304(ctx);
@@ -294,7 +294,7 @@ HLE_FUNC_PURE(0x0063CC, Onhit5678_Lamp, 40)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x0063D2, Onhit5678_LampKill, 2500)
+HLE_FUNC_YIELD(0x0063D2, Onhit5678_LampKill, 2500)
 {
 	jsr68(ctx, 0x0072CE, 18);                           /* 0063D2 jsr sub_0072CE */
 	bclr_d(ctx, 5, 15);                                 /* 0063D6 bclr #15,d5 */
@@ -311,7 +311,7 @@ HLE_FUNC_PURE(0x006A00, Onhit5678_Equip, 40)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006A06, Onhit5678_EquipKill, 2500)
+HLE_FUNC_YIELD(0x006A06, Onhit5678_EquipKill, 2500)
 {
 	jsr68(ctx, 0x0072CE, 18);                           /* 006A06 jsr sub_0072CE */
 	mvli_a6(ctx, 0x20, 0xF8EA);                         /* 006A0A move.l #$F8EA,(32,a6) */
@@ -380,7 +380,7 @@ HLE_FUNC_PURE(0x006B74, Onhit5678_Endo3, 40)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006B7A, Onhit5678_Endo3Kill, 2500)
+HLE_FUNC_YIELD(0x006B7A, Onhit5678_Endo3Kill, 2500)
 {
 	jsr_c(ctx, AddScore750);                            /* 006B7A jsr AddScore750 */
 	cc_logic32(ctx, RAM32(0xFF9EDA));
@@ -408,8 +408,8 @@ static void model_hit(hle_ctx *ctx, uint32_t ai1, uint32_t ai2, uint32_t kill)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006BA2, Onhit5678_Model, 3000) { model_hit(ctx, 0x103A4, 0x103C6, 0x006BD8); }
-HLE_FUNC(0x006BEE, Onhit5678_Model2, 3000) { model_hit(ctx, 0x105D4, 0x105F6, 0x006C24); }
+HLE_FUNC_YIELD(0x006BA2, Onhit5678_Model, 3000) { model_hit(ctx, 0x103A4, 0x103C6, 0x006BD8); }
+HLE_FUNC_YIELD(0x006BEE, Onhit5678_Model2, 3000) { model_hit(ctx, 0x105D4, 0x105F6, 0x006C24); }
 
 #ifdef ONHIT5678_UNPROVEN   /* no state in /opt/t2/vstates reaches it (0 calls in 92 states x 3000 frames) */
 HLE_FUNC_PURE(0x006BD8, Onhit5678_ModelKill, 30) { rts_(ctx); }
@@ -418,7 +418,7 @@ HLE_FUNC_PURE(0x006C24, Onhit5678_Model2Kill, 30) { rts_(ctx); }
 #endif /* ONHIT5678_UNPROVEN */
 
 /* ---------------------------------------------------------------- T-1000 in the steel mill (HitT1000Mill) */
-HLE_FUNC(0x006C42, Onhit5678_Mill, 4000)
+HLE_FUNC_YIELD(0x006C42, Onhit5678_Mill, 4000)
 {
 	bit_m(ctx, 'c', A6, 7, 16);                         /* 006C42 bclr.b #15,(a6) */
 	mvli_a6(ctx, 0x20, 0x11514);                        /* 006C46 move.l #$11514,(32,a6) */
@@ -464,7 +464,7 @@ HLE_FUNC_PURE(0x006E7E, Onhit5678_HeliKill, 30) { rts_(ctx); }
 #endif /* ONHIT5678_UNPROVEN */
 
 /* ---------------------------------------------------------------- tanker panel (HitL8Panel) */
-HLE_FUNC(0x006F04, Onhit5678_Panel, 4000)
+HLE_FUNC_YIELD(0x006F04, Onhit5678_Panel, 4000)
 {
 	uint32_t ea;
 	movem_shot(ctx);                                    /* 006F04 movem.w (abs).l,d0-d1 */

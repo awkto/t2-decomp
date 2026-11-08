@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ucontext.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "gx.h"
 
@@ -632,6 +635,7 @@ static int g_cor_block;        /* >0 inside hle_call68k / hle_run68k_until made 
 static bool g_cor_on = true;   /* T2_HLE_NOCOR=1: decline / bail as before */
 unsigned long g_yields;
 
+static char g_nocor_file[1024];  /* T2_HLE_NOCOR_FILE=a.c,b.c (debugging) */
 static char g_nocor_fn[1024];  /* T2_HLE_NOCOR_FN=name,name: these decline / bail as before (debugging) */
 static bool name_listed(const char *list, const char *name)
 {
@@ -727,10 +731,15 @@ static int run_def(const hle_def *def, entry *e)
 	if (top)
 		g_bail_on = false;
 	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt;
-	bool cor_ok = g_cor_on && !name_listed(g_nocor_fn, def->name);
-	if (guard && cor_ok && (def->flags & HLE_F_YIELD)) {
+	const char *fbase = strrchr(def->file ? def->file : "", '/');
+	fbase = fbase ? fbase + 1 : (def->file ? def->file : "");
+	bool cor_ok = g_cor_on && !name_listed(g_nocor_fn, def->name) && !name_listed(g_nocor_file, fbase);
+	bool yieldf = cor_ok && (def->flags & HLE_F_YIELD);
+	if (guard && yieldf && (def->cycles == 0 || (def->flags & HLE_F_BAIL))) {
+		/* an exact-clock session function (VDP list, text printers): its own guards need the frame loop
+		 * to run in between at any line, so it is always a coroutine */
 		cor = true;
-	} else if (guard && (def->flags & HLE_F_BAIL)) {
+	} else if (guard && !yieldf && (def->flags & HLE_F_BAIL)) {
 		/* no decline: the function bails to the 68k before the first event (hle_bail_due) */
 		int at = gx_frame_end_clock();
 		if (irq_mask < 6) {
@@ -761,12 +770,16 @@ static int run_def(const hle_def *def, entry *e)
 			def->fn(&d);
 			memcpy(work_ram, g_snap, sizeof g_snap);
 			gx_m68k_set_refresh_cycles(refresh0);
-			exact = cor_ok && d.tl_used;
+			exact = cor_ok && d.tl_used && !getenv("T2_HLE_NOPUREEXACT");
 			/* the dry run has no Z80 stall at slice ends (up to ~80 mcycles each): margin */
 			long margin = 300 + (d.tl / 3420 + 1) * 100;   /* one Z80 stall per slice end crossed */
 			span = d.tl + margin;
 			if (irq_mask < 6)
 				window = d.tl - d.tl_last + margin;
+		} else if (yieldf) {
+			exact = true;               /* exact timeline: a coroutine instead of a decline (below) */
+			if (irq_mask < 6)
+				window = span;
 		} else if (irq_mask < 6 || lowmask) {
 			window = span;
 			if (lowmask) {
@@ -1021,30 +1034,67 @@ static int resume_cor(void)
 /* hle_callc: a `jsr` made by a coroutine to a function that is C (and keeps an exact timeline) runs as a
  * direct C call that shares ctx, so the frame loop can interrupt the callee too; anything else (not C,
  * disabled, a range, a lump-charged function, or the caller is not a coroutine) is hle_call68k. */
+static int g_trace = -1;   /* T2_HLE_TRACE=1: log every dispatched call, 2: also hle_callc */
 static unsigned long g_callc_fb[64][2];
 static int g_callc_nfb;
+/* can the registered function at e be called directly (it keeps an exact timeline and leaves the stack as a
+ * plain function does)? */
+static bool callc_exact(entry *e, hle_ctx *c)
+{
+	if (!e || !e->enabled || (e->def.flags & (HLE_F_WAIT | HLE_F_LOWMASK)))
+		return false;
+	if (e->def.exits)                  /* a range: only if every exit leaves with the stack as it was */
+		for (const uint32_t *x = e->def.exits; *x; x++)
+			if (hle_exit_sp_delta(*x) != 0)
+				return false;
+	if (e->def.flags & HLE_F_YIELD)
+		return true;
+	if (e->def.flags & HLE_F_PURE) {   /* exact when the dry run keeps a timeline */
+		hle_ctx d = *c;
+		int refresh0 = gx_m68k_refresh_cycles();
+		d.dry = 1;
+		d.tl = 0;
+		d.tl_used = 0;
+		d.jumped = 0;
+		memcpy(g_snap, work_ram, sizeof g_snap);
+		e->def.fn(&d);
+		memcpy(work_ram, g_snap, sizeof g_snap);
+		gx_m68k_set_refresh_cycles(refresh0);
+		return d.tl_used != 0;
+	}
+	return false;
+}
+
 void hle_callc(hle_ctx *c, uint32_t addr)
 {
+	if (g_trace > 1)
+		fprintf(stderr, "callc $%06X (cor %d)\n", addr, g_cor != NULL);
 	if (g_cor && !g_cor_block && c == &g_cor->c && !hle_post_access && !c->dry && !getenv("T2_HLE_NOCALLC")) {
 		entry *e = find_addr(addr);
-		if (e && e->enabled && !e->def.exits && !(e->def.flags & (HLE_F_WAIT | HLE_F_LOWMASK))) {
-			bool exact = (e->def.flags & HLE_F_YIELD) != 0;
-			if (!exact && (e->def.flags & HLE_F_PURE)) {
-				hle_ctx d = *c;
-				int refresh0 = gx_m68k_refresh_cycles();
-				d.dry = 1;
-				d.tl = 0;
-				d.tl_used = 0;
-				memcpy(g_snap, work_ram, sizeof g_snap);
-				e->def.fn(&d);
-				memcpy(work_ram, g_snap, sizeof g_snap);
-				gx_m68k_set_refresh_cycles(refresh0);
-				exact = d.tl_used != 0;
-			}
-			if (exact) {
-				e->calls++;
-				g_frame_calls++;
-				e->def.fn(c);
+		if (callc_exact(e, c)) {
+			/* a real jsr: the return address (a sentinel) is on the stack below whatever the callee pushes, so
+			 * its rts, and a tail jump into 68k code that pops and returns, work as on the 68k */
+			e->calls++;
+			g_frame_calls++;
+			c->a[7] -= 4;
+			bus_w32(c->a[7], SENTINEL_RET);
+			uint32_t sp_ret = c->a[7];
+			hle_fn fn = e->def.fn;
+			for (;;) {
+				fn(c);
+				if (!c->jumped) {              /* the rts */
+					c->a[7] += 4;
+					return;
+				}
+				uint32_t t = c->pc;            /* a tail jump */
+				c->jumped = 0;
+				entry *e2 = find_addr(t);
+				if (callc_exact(e2, c)) {
+					e2->calls++;
+					fn = e2->def.fn;
+					continue;
+				}
+				hle_call68k_nopush(c, t, sp_ret + 4);   /* the original continues at t and returns to the sentinel */
 				return;
 			}
 		}
@@ -1288,11 +1338,12 @@ static void prof_install(void)
 }
 
 static bool g_prof;        /* T2_HLE_PROFILE */
-static int g_trace = -1;   /* T2_HLE_TRACE=1: log every dispatched call to stderr */
 
 static int dispatch(unsigned int pc)
 {
 	if (pc == YIELD_PC) {
+		if (g_trace > 1)
+			fprintf(stderr, "resume clock %d\n", gx_m68k_cycles());
 		int r = resume_cor();
 		if (g_prof) {
 			g_p_c += (long long)r * 7;
@@ -1329,6 +1380,8 @@ static int dispatch(unsigned int pc)
 		return run_def(&e->def, e);
 	int c0 = gx_m68k_cycles();
 	uint32_t d0 = gx_m68k_dar()[0], d1 = gx_m68k_dar()[1], sp = gx_m68k_dar()[15];
+	if (g_trace > 1)
+		fprintf(stderr, "enter %s clock %d nest %d top %d bnd %d end %d cor %d\n", e->def.name, c0, g_nest, (int)g_top, g_bnd, gx_m68k_cycle_end(), g_cor != NULL);
 	int r = run_def(&e->def, e);
 	fprintf(stderr, "hle %-18s D0=%08X D1=%08X SP=%06X -> ret %06X  mclk %d -> %d (+%d charged)\n",
 	        e->def.name, d0, d1, sp, gx_m68k_pc(), c0, gx_m68k_cycles(), r * 7);
@@ -1359,8 +1412,22 @@ static void declines_print(void)
 	}
 }
 
+/* T2_HLE_WATCHDOG=secs: after that many seconds print the C backtrace (addr2line -f -e t2port) and abort */
+static void watchdog_fire(int sig)
+{
+	void *bt[40];
+	(void)sig;
+	int n = backtrace(bt, 40);
+	backtrace_symbols_fd(bt, n, 2);
+	_exit(99);
+}
+
 void hle_install(void)
 {
+	if (getenv("T2_HLE_WATCHDOG")) {
+		signal(SIGALRM, watchdog_fire);
+		alarm((unsigned)atoi(getenv("T2_HLE_WATCHDOG")));
+	}
 	const char *o = getenv("T2_HLE_ORIG");
 	if (o)
 		snprintf(g_orig, sizeof g_orig, "%s", o);
@@ -1382,6 +1449,8 @@ void hle_install(void)
 	bitmap_set(STALL_PC, true);
 	bitmap_set(YIELD_PC, true);
 	g_cor_on = getenv("T2_HLE_NOCOR") == NULL;
+	if (getenv("T2_HLE_NOCOR_FILE"))
+		snprintf(g_nocor_file, sizeof g_nocor_file, "%s", getenv("T2_HLE_NOCOR_FILE"));
 	if (getenv("T2_HLE_NOCOR_FN"))
 		snprintf(g_nocor_fn, sizeof g_nocor_fn, "%s", getenv("T2_HLE_NOCOR_FN"));
 	g_installed = true;
@@ -1457,13 +1526,15 @@ static void nest_end(void)
 		sess_end(false);
 }
 
-static void call68k(hle_ctx *c, uint32_t addr, bool orig)
+static void call68k2(hle_ctx *c, uint32_t addr, bool orig, bool push, uint32_t sp_done_in)
 {
-	/* push the sentinel return address, run until it is popped */
+	/* push the sentinel return address (unless hle_callc already did), run until it is popped */
 	hle_ctx save = *c;
-	c->a[7] -= 4;
-	bus_w32(c->a[7], SENTINEL_RET);
-	uint32_t sp_done = c->a[7] + 4;
+	if (push) {
+		c->a[7] -= 4;
+		bus_w32(c->a[7], SENTINEL_RET);
+	}
+	uint32_t sp_done = push ? c->a[7] + 4 : sp_done_in;
 	c->pc = addr;
 	g_cor_block++;
 	nest_begin();
@@ -1500,7 +1571,11 @@ static void call68k(hle_ctx *c, uint32_t addr, bool orig)
 	c->tl_flushed = save.tl_flushed;
 }
 
+static void call68k(hle_ctx *c, uint32_t addr, bool orig) { call68k2(c, addr, orig, true, 0); }
 void hle_call68k(hle_ctx *c, uint32_t addr) { call68k(c, addr, false); }
+/* the 68k continues at addr; the sentinel return address is already on the stack, and the call is done when
+ * it is popped (SP = sp_done), whatever has been pushed above it meanwhile (hle_callc) */
+void hle_call68k_nopush(hle_ctx *c, uint32_t addr, uint32_t sp_done) { call68k2(c, addr, false, false, sp_done); }
 
 /* VDP DMA started by C: behave like a nested 68k instruction (see hle.h) */
 void hle_dma_begin(void) { nest_begin(); }
@@ -1580,6 +1655,7 @@ void hle_vdp_timed(int on)
 	if (on && g_sess)
 		g_sess_timed = true;
 }
+void hle_exact_end(void) { nest_end(); }
 void hle_exact_session(void)
 {
 	if (g_sess) {

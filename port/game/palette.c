@@ -292,7 +292,7 @@ static void pal_run_to(hle_ctx *ctx, uint32_t start, uint32_t stop)
  * hle_run68k_until), then lea.l (abs).l,a0 (12), jsr (CramUpload).l (20, its own time added
  * by the layer), tst.b (abs).l (16) and the bne.s (10 back to $008A4C / 8 not taken, falling
  * to the rts at $008A7A): 58 or 56 non-nested cycles. */
-HLE_RANGE(0x008A5E, PalFade, 14000, 0x008A4C, 0x008A7A)
+HLE_RANGE_YIELD(0x008A5E, PalFade, 14000, 0x008A4C, 0x008A7A)
 {
 	pal_run_to(ctx, 0x008A5E, 0x008A66); /* moveq #$64,d0 + the nop/dbra delay, as 68k */
 	hle_exact_session();                 /* the session's time (refresh, VDP FIFO stalls) is real: keep it as is */

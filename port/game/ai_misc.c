@@ -291,7 +291,7 @@ static void sub_0098FC(hle_ctx *ctx)
 
 /* $00D112 John Connor truck (level 3): damage check, tail/front sprites, bounce, then the shared sprite part */
 /* bound 30200 = 1.5 x the T2_HLE_BOUNDS max observed 20088 (the destroy path with TruckDamage; dt max 17136) */
-HLE_RANGE(0x00D112, TruckMain, 30200, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D112, TruckMain, 30200, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16(0xFFFF9E92u); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 00D112 movew 0xffff9e92,%d0 */
 	{ uint32_t _s = ld16(0xFFFF9F6Au); uint32_t _d = (ctx->d[0] & 0xFFFFu); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 16); } /* 00D118 cmpw 0xffff9f6a,%d0 */
@@ -380,7 +380,7 @@ L_00D306:;
 }
 
 /* $00D27A truck: settle (no bounce) then the shared sprite part */
-HLE_RANGE(0x00D27A, TruckSettle, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D27A, TruckSettle, 4000, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00D27A subqw #1,%fp@(36) */
 	{ uint32_t _s = 0xB0u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)4); uint32_t _d = ld16(_da); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 16); } /* 00D27E cmpiw #176,%fp@(4) */
@@ -463,7 +463,7 @@ L_00D306:;
 
 /* $00D56E truck: damage-cell panel (tile rect of the damaged body) */
 /* bound 6500 = 1.5 x observed max 4273 */
-HLE_RANGE(0x00D56E, TruckPanel, 6500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D56E, TruckPanel, 6500, EXIT_NEXT)
 {
 	{ uint32_t _v = (ctx->d[7] & 0xFFFFu); push16(ctx, _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00D56E movew %d7,%sp@- */
 	{ uint32_t _v = ld32(0xFFFF9ECAu); ctx->a[5] = _v; hle_insn(ctx, 20); } /* 00D570 moveal 0xffff9eca,%a5 */
@@ -537,7 +537,7 @@ L_00D636:;
 }
 
 /* $00D4E6 truck: flying debris tile that falls apart */
-HLE_RANGE(0x00D4E6, TruckDebris, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D4E6, TruckDebris, 4000, EXIT_NEXT)
 {
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00D4E6 subqw #1,%fp@(36) */
 	if (bw(ctx, c_z(ctx))) goto L_00D564; /* 00D4EA beqw 0xd564 */
@@ -588,7 +588,7 @@ L_00D564:;
 
 /* $00D0D4 truck: destroyed, explosion list entry */
 /* bound 15500 = 1.5 x observed max 10258 (sub_00902E) */
-HLE_RANGE(0x00D0D4, TruckDie, 15500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D0D4, TruckDie, 15500, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); sub_00D0F8(ctx); } /* 00D0D4 jsr %pc@(0xd0f8) */
 	{ uint32_t _s = 0x2Bu; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 16); } /* 00D0D8 cmpiw #43,%fp@(36) */
@@ -659,7 +659,7 @@ L_00D9AE:;
 }
 
 /* $00D9B2 ground trooper: shooting/animation */
-HLE_RANGE(0x00D9B2, TrooperD9B2, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D9B2, TrooperD9B2, 4000, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); ObjScrollX(ctx); } /* 00D9B2 jsr %pc@(0x12316) */
 	{ ctx->d[0] = 0xFFFFFFD8u; cc_logic32(ctx, ctx->d[0]); hle_insn(ctx, 4); } /* 00D9B6 moveq #-40,%d0 */
@@ -713,7 +713,7 @@ L_00DA44:;
 
 /* $00B69A endoskeleton death variant: debris and kill */
 /* bound 9400 = 1.5 x observed max 6204 */
-HLE_RANGE(0x00B69A, EndoDieDebris, 9400, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B69A, EndoDieDebris, 9400, EXIT_NEXT)
 {
 	{ ctx->d[5] = 0x3u; cc_logic32(ctx, ctx->d[5]); hle_insn(ctx, 4); } /* 00B69A moveq #3,%d5 */
 L_00B69C:;
@@ -763,7 +763,7 @@ L_00B7E0:;
 }
 
 /* $00B7E4 endoskeleton shoot variant */
-HLE_RANGE(0x00B7E4, EndoShoot3, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B7E4, EndoShoot3, 4000, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); ObjScrollX(ctx); } /* 00B7E4 jsr %pc@(0x12316) */
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00B7E8 subqw #1,%fp@(36) */
@@ -882,7 +882,7 @@ L_00C7FA:;
 }
 
 /* $00B86A type $0D: first frame tile rect */
-HLE_RANGE(0x00B86A, Type0DInit, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B86A, Type0DInit, 4000, EXIT_NEXT)
 {
 	{ uint32_t _v = (ctx->d[7] & 0xFFFFu); push16(ctx, _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00B86A movew %d7,%sp@- */
 	{ uint32_t _v = 0xC550u; set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00B86C movew #-15024,%d1 */
@@ -898,7 +898,7 @@ HLE_RANGE(0x00B86A, Type0DInit, 4000, EXIT_NEXT)
 }
 
 /* $00B896 type $0D: two sprites then the walk */
-HLE_RANGE(0x00B896, Type0DSprites, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B896, Type0DSprites, 4000, EXIT_NEXT)
 {
 	{ ctx->d[1] = 0x0u; cc_logic32(ctx, ctx->d[1]); hle_insn(ctx, 4); } /* 00B896 moveq #0,%d1 */
 	{ hle_insn(ctx, 18); sub_00BABC(ctx); } /* 00B898 jsr %pc@(0xbabc) */
@@ -944,7 +944,7 @@ L_00B91C:;
 }
 
 /* $00B8C2 type $0D: walk across */
-HLE_RANGE(0x00B8C2, Type0DWalk, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B8C2, Type0DWalk, 4000, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x009078); } /* 00B8C2 bsrw 0x9078 */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)36)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00B8C6 movew %fp@(36),%d0 */
@@ -979,7 +979,7 @@ L_00B91C:;
 
 /* $00B92E type $0D killed: debris then the cleanup */
 /* bound 15500 = 1.5 x observed max 10194 */
-HLE_RANGE(0x00B92E, Type0DDieDebris, 15500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B92E, Type0DDieDebris, 15500, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00BCC6); } /* 00B92E bsrw 0xbcc6 */
 	{ st16(ctx->a[6], 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); hle_insn(ctx, 12); } /* 00B932 clrw %fp@ */
@@ -998,7 +998,7 @@ HLE_RANGE(0x00B92E, Type0DDieDebris, 15500, EXIT_NEXT)
 }
 
 /* $00B932 type $0D: cleanup */
-HLE_RANGE(0x00B932, Type0DGone, 4000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00B932, Type0DGone, 4000, EXIT_NEXT)
 {
 	{ st16(ctx->a[6], 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); hle_insn(ctx, 12); } /* 00B932 clrw %fp@ */
 	{ hle_insn(ctx, 18); sub_0098FC(ctx); } /* 00B934 jsr %pc@(0x98fc) */

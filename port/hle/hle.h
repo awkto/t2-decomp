@@ -297,6 +297,9 @@ void hle_vdp_timed(int on);
 /* hle_exact_session(): the C code of this session advances the real clock itself, bus refresh
  * included (as game/vdplist.c does): charge the elapsed time as is, no refresh model. */
 void hle_exact_session(void);
+/* ends an hle_dma_begin() session WITHOUT completing a DMA in flight (hle_dma_end does): for coroutines that
+ * poll the DMA-busy flag and let the frame loop advance the transfer (game/vdpfill.c) */
+void hle_exact_end(void);
 /* hle_decline(): call at the very start of a replacement (before any state change, outside a
  * session) to leave the code to the real 68k this time: the CPU executes the instruction at
  * the entry address normally. For code whose timing the frame loop must be able to
@@ -360,6 +363,7 @@ void hle_call68k(hle_ctx *ctx, uint32_t addr);
 /* like hle_call68k, but a coroutine (HLE_F_YIELD) calls an enabled exact-timeline C function at addr as a
  * direct C call that shares ctx and can be interrupted by the frame loop (docs/porting.md, "Yielding") */
 void hle_callc(hle_ctx *ctx, uint32_t addr);
+void hle_call68k_nopush(hle_ctx *ctx, uint32_t addr, uint32_t sp_done);   /* the sentinel return address is already pushed */
 /* same, but the HLE override at addr itself is bypassed (run the original). */
 void hle_call68k_orig(hle_ctx *ctx, uint32_t addr);
 /* Run the ORIGINAL 68k code from ctx->pc (the HLE override at ctx->pc itself is bypassed,

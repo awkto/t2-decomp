@@ -317,7 +317,7 @@ L_00F8DE:;
 }
 
 /* $00F8EA $0F equipment destroyed: tile rect, debris/sparks */
-HLE_RANGE(0x00F8EA, L56EquipKill, 36600, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00F8EA, L56EquipKill, 36600, EXIT_NEXT)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)26)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00F8EA movew %fp@(26),%d0 */
 	{ uint32_t _s = 0x17u; uint32_t _d = (ctx->d[0] & 0xFFFFu); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 8); } /* 00F8EE cmpiw #23,%d0 */
@@ -609,7 +609,7 @@ L_00FC74:;
 }
 
 /* $00FC78 $27 endoskeleton standing, firing */
-HLE_RANGE(0x00FC78, L56EndoFire, 1800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00FC78, L56EndoFire, 1800, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); ObjScrollX(ctx); } /* 00FC78 jsr %pc@(0x12316) */
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00FC7C subqw #1,%fp@(36) */
@@ -635,7 +635,7 @@ L_00FCB6:;
 }
 
 /* $00FCC2 $27 endoskeleton standing, firing (variant) */
-HLE_RANGE(0x00FCC2, L56EndoFire2, 1800, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00FCC2, L56EndoFire2, 1800, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); ObjScrollX(ctx); } /* 00FCC2 jsr %pc@(0x12316) */
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00FCC6 subqw #1,%fp@(36) */
@@ -905,7 +905,7 @@ L_00FF68:;
 }
 
 /* $00FF6C $27 endoskeleton stand (level 6) */
-HLE_RANGE(0x00FF6C, L56Endo2Stand, 3500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00FF6C, L56Endo2Stand, 3500, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); ObjScrollX(ctx); } /* 00FF6C jsr %pc@(0x12316) */
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00FF70 subqw #1,%fp@(36) */
@@ -1187,7 +1187,7 @@ L_010302:;
 }
 
 /* $01031E $28 equipment machine state */
-HLE_RANGE(0x01031E, L56ModelB, 1500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x01031E, L56ModelB, 1500, EXIT_NEXT)
 {
 	goto L_01031E;
 L_010302:;
@@ -1310,7 +1310,7 @@ L_0104EA:;
 }
 
 /* $010532 $28 equipment machine (level 6) */
-HLE_RANGE(0x010532, L56Model2B, 1700, EXIT_NEXT)
+HLE_RANGE_YIELD(0x010532, L56Model2B, 1700, EXIT_NEXT)
 {
 	goto L_010532;
 L_010518:;
@@ -1423,7 +1423,7 @@ L_01063E:;
 }
 
 /* $00C348 $0A fixture blink */
-HLE_RANGE(0x00C348, L56Fixture, 16300, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C348, L56Fixture, 16300, EXIT_NEXT)
 {
 	{ hle_insn(ctx, 18); sub_00D236(ctx); } /* 00C348 jsr %pc@(0xd236) */
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 00C34C subqw #1,%fp@(36) */

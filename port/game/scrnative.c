@@ -217,7 +217,7 @@ static void u_008A7C(hle_ctx *ctx)
 	hle_insn(ctx, 16); return; /* 008A8C rts */
 }
 /* sub_009290 */
-HLE_FUNC(0x009290, Nat009290, 12000)
+HLE_FUNC_YIELD(0x009290, Nat009290, 12000)
 {
 	{ { uint32_t v = ctx->a[0]; ctx->a[7] -= 4; uint32_t da = ctx->a[7]; st32(da, v); cc_logic32(ctx, v); } } hle_insn(ctx, 12); /* 009290 move.l a0,-(sp) */
 	{ ctx->a[0] = 0x000031B5u; } hle_insn(ctx, 12); /* 009292 lea.l (dat_0031B5).l,a0 */
@@ -327,7 +327,7 @@ L_00A270:
 	hle_insn(ctx, 10); goto L_009EBE; /* 00A27C bra.w sub_009EBE */
 }
 /* ScrLoadPalette */
-HLE_FUNC(0x00A2A8, ScrLoadPalette, 5400)
+HLE_FUNC_YIELD(0x00A2A8, ScrLoadPalette, 5400)
 {
 	{ { uint32_t v = ctx->a[0]; ctx->a[7] -= 4; uint32_t da = ctx->a[7]; st32(da, v); cc_logic32(ctx, v); } } hle_insn(ctx, 12); /* 00A2A8 move.l a0,-(sp) */
 	{ { uint32_t sa = ctx->a[0]; ctx->a[0] += 2; uint32_t v = ld16(sa); set_w(&ctx->d[0], v); cc_logic16(ctx, v); } } hle_insn(ctx, 8); /* 00A2AA move.w (a0)+,d0 */
@@ -448,7 +448,7 @@ HLE_FUNC_PURE(0x00A46E, Nat00A46E, 4000)
 	hle_insn(ctx, 16); return; /* 00A4B0 rts */
 }
 /* sub_00A4B2 */
-HLE_FUNC(0x00A4B2, Nat00A4B2, 1750)
+HLE_FUNC_YIELD(0x00A4B2, Nat00A4B2, 1750)
 {
 	{ ctx->d[0] = 0x0u; cc_logic32(ctx, 0x0u); } hle_insn(ctx, 4); /* 00A4B2 moveq #0x0,d0 */
 	{ ctx->d[1] = 0x0u; cc_logic32(ctx, 0x0u); } hle_insn(ctx, 4); /* 00A4B4 moveq #0x0,d1 */

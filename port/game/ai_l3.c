@@ -344,7 +344,7 @@ static void plain_sprite(hle_ctx *ctx, uint16_t frame)
 HLE_RANGE_PURE(0x00C332, FlyHkPlain, 400, EXIT_NEXT) { plain_sprite(ctx, 0x18F); }
 
 /* $00C0AA: flies in, the counter picks the frame; at 0 -> $00C0E8 with bit 7 set */
-HLE_RANGE(0x00C0AA, FlyHkIn, 1200, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C0AA, FlyHkIn, 1200, EXIT_NEXT)
 {
 	jsr68(ctx, 0x009078);                                               /* bsr.w sub_009078 */
 	subq1w_m(ctx, A6 + 0x24, 16);
@@ -365,7 +365,7 @@ HLE_RANGE(0x00C0AA, FlyHkIn, 1200, EXIT_NEXT)
 }
 
 /* $00C0E8: the winged HK proper: frame from the counter, art as two tile rects (plain and mirrored) */
-HLE_RANGE(0x00C0E8, FlyHk, 10500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C0E8, FlyHk, 10500, EXIT_NEXT)
 {
 	jsr68(ctx, 0x009078);                                               /* bsr.w sub_009078 */
 	subq1w_m(ctx, A6 + 0x24, 16);
@@ -432,7 +432,7 @@ static void sub_c1e6(hle_ctx *ctx)
 }
 
 /* $00C242: free the slot, clear the art */
-HLE_RANGE(0x00C242, FlyHkFree, 8500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C242, FlyHkFree, 8500, EXIT_NEXT)
 {
 	RAM16(A6) = 0;
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);
@@ -468,7 +468,7 @@ static void fly_sparks(hle_ctx *ctx)
 
 
 /* $00C252: dying counter; at 0 free the slot */
-HLE_RANGE(0x00C252, FlyHkDie, 2100, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C252, FlyHkDie, 2100, EXIT_NEXT)
 {
 	mvw_m(ctx, 0, A6 + 0x24);
 	subq1w(ctx, 0);
@@ -480,7 +480,7 @@ HLE_RANGE(0x00C252, FlyHkDie, 2100, EXIT_NEXT)
 }
 
 /* $00C264: same, but the last frame also clears the art */
-HLE_RANGE(0x00C264, FlyHkDie2, 8600, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C264, FlyHkDie2, 8600, EXIT_NEXT)
 {
 	mvw_m(ctx, 0, A6 + 0x24);
 	subq1w(ctx, 0);
@@ -547,14 +547,14 @@ static void bomb_tail(hle_ctx *ctx)
 	exit_next(ctx);                                                     /* loc_00C546 */
 }
 
-HLE_RANGE(0x00C4E4, BombFixed, 2200, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C4E4, BombFixed, 2200, EXIT_NEXT)
 {
 	mvw_i(ctx, 1, 0x15E);
 	hle_insn(ctx, 10);                                                  /* bra.s sub_00C4F4 */
 	bomb_tail(ctx);
 }
 
-HLE_RANGE(0x00C4EA, BombAnim, 2100, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C4EA, BombAnim, 2100, EXIT_NEXT)
 {
 	mvw_m(ctx, 1, A6 + 0x14);
 	shiftw(ctx, 1, 'a', 4);
@@ -563,7 +563,7 @@ HLE_RANGE(0x00C4EA, BombAnim, 2100, EXIT_NEXT)
 }
 
 /* $00C54A: the puff after a hit (type $09 hit state): one spark at (x, y-16), free the slot */
-HLE_RANGE(0x00C54A, BombPuff, 1500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00C54A, BombPuff, 1500, EXIT_NEXT)
 {
 	ctx->d[0] = (uint32_t)(int32_t)(int16_t)RAM16(A6 + 2);              /* movem.w (0x2,a6),d0-d1 */
 	ctx->d[1] = (uint32_t)(int32_t)(int16_t)RAM16(A6 + 4);
@@ -610,7 +610,7 @@ static void endo_head(hle_ctx *ctx)
 }
 
 /* $00D674: walks (two sprites: body d5+6, legs d5+$64), timer 0 -> shot sound, state $D6CA */
-HLE_RANGE(0x00D674, Endo1dWalk, 2500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D674, Endo1dWalk, 2500, EXIT_NEXT)
 {
 	endo_head(ctx);
 	mvw_m(ctx, 5, A6 + 0x24);
@@ -635,7 +635,7 @@ HLE_RANGE(0x00D674, Endo1dWalk, 2500, EXIT_NEXT)
 }
 
 /* $00D6CA: fires (sub_009054 hurts the player), timer 0 -> back to $D674 */
-HLE_RANGE(0x00D6CA, Endo1dFire, 15300, EXIT_NEXT)   /* T2_HLE_BOUNDS max 10143 (misc_t5) x 1.5 */
+HLE_RANGE_YIELD(0x00D6CA, Endo1dFire, 15300, EXIT_NEXT)   /* T2_HLE_BOUNDS max 10143 (misc_t5) x 1.5 */
 {
 	endo_head(ctx);
 	mvw_m(ctx, 1, A6 + 0x24);
@@ -659,7 +659,7 @@ HLE_RANGE(0x00D6CA, Endo1dFire, 15300, EXIT_NEXT)   /* T2_HLE_BOUNDS max 10143 (
 static void draw_010666(hle_ctx *ctx) { jsr68(ctx, 0x010666); }
 
 /* $00D712: waits, then -> $D746 */
-HLE_RANGE(0x00D712, Edge1eWait, 1000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D712, Edge1eWait, 1000, EXIT_NEXT)
 {
 	subq1w_m(ctx, A6 + 0x24, 16);
 	if (!bs(ctx, !c_z(ctx))) {
@@ -687,7 +687,7 @@ static void strip(hle_ctx *ctx, uint32_t data)
 }
 
 /* $00D746: the timer steps through four strips (at $5F, $4B, $37, $23), then -> $D800 */
-HLE_RANGE(0x00D746, Edge1eStrips, 46000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D746, Edge1eStrips, 46000, EXIT_NEXT)
 {
 	static const struct { uint16_t v; uint32_t a0; } t[3] = {
 		{ 0x5F, 0x002FFC }, { 0x4B, 0x003014 }, { 0x37, 0x003045 } };
@@ -738,7 +738,7 @@ HLE_RANGE(0x00D746, Edge1eStrips, 46000, EXIT_NEXT)
 }
 
 /* $00D800: clears tile rows, flashes strips + sound, -> $D89E (or $107AC on level 5) */
-HLE_RANGE(0x00D800, Edge1eFlash, 14600, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D800, Edge1eFlash, 14600, EXIT_NEXT)
 {
 	subq1w_m(ctx, A6 + 0x24, 16);
 	if (!bs(ctx, !c_z(ctx))) {
@@ -787,7 +787,7 @@ HLE_RANGE(0x00D800, Edge1eFlash, 14600, EXIT_NEXT)
 }
 
 /* $00D89E: counter down, 0 -> sound, state $D8DC; frame from the counter's bits 3..1 */
-HLE_RANGE(0x00D89E, Edge1eBlink, 1000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D89E, Edge1eBlink, 1000, EXIT_NEXT)
 {
 	subq1w_m(ctx, A6 + 0x24, 16);
 	if (!bs(ctx, !c_z(ctx))) {
@@ -824,7 +824,7 @@ HLE_RANGE_PURE(0x00D8DC, Edge1eGone, 800, EXIT_NEXT)
 }
 
 /* $00D90E: second $1E variant: frame $18A/$18B, counter 0 -> sound, $D93E */
-HLE_RANGE(0x00D90E, Edge1eB, 600, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00D90E, Edge1eB, 600, EXIT_NEXT)
 {
 	mvw_i(ctx, 1, 0x18A);
 	cmpiw_m(ctx, A6 + 0x24, 0x20, 16);
@@ -885,7 +885,7 @@ static void bg_rects(hle_ctx *ctx)
 }
 
 /* $00BD54: the tile art cycles by the timer (three data blocks) */
-HLE_RANGE(0x00BD54, BgStruct, 3100, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00BD54, BgStruct, 3100, EXIT_NEXT)
 {
 	addq1w_abs(ctx, 0xFF9E92);
 	mvw_m(ctx, 0, A6 + 0x24);
@@ -898,7 +898,7 @@ HLE_RANGE(0x00BD54, BgStruct, 3100, EXIT_NEXT)
 }
 
 /* $00BD22 (after the hit): two sprites via sub_00BABC + QueueSprite, then the tail of $BD54 */
-HLE_RANGE(0x00BD22, BgStructHit, 4500, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00BD22, BgStructHit, 4500, EXIT_NEXT)
 {
 	moveq(ctx, 1, 0);
 	jsr68(ctx, 0x00BABC);
@@ -919,7 +919,7 @@ HLE_RANGE(0x00BD22, BgStructHit, 4500, EXIT_NEXT)
 }
 
 /* $00BE2E: free the slot and clean up (68k helpers) */
-HLE_RANGE(0x00BE2E, BgStructFree, 40000, EXIT_NEXT)
+HLE_RANGE_YIELD(0x00BE2E, BgStructFree, 40000, EXIT_NEXT)
 {
 	RAM16(A6) = 0;
 	cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z);

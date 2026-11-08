@@ -386,7 +386,7 @@ L_0008FE:;
 }
 
 /* $00700C pickups pool shot test through PickupHitTable (decline bound 3300 = observed max 2176 x 1.5, T2_HLE_BOUNDS + NODECLINE over 92 states x 3000 frames) */
-HLE_FUNC(0x00700C, PickupShotTest, 3300)
+HLE_FUNC_YIELD(0x00700C, PickupShotTest, 3300)
 {
 	{ ctx->a[6] = 0xFFFF9AB2u; hle_insn(ctx, 12); } /* 00700C lea 0xffff9ab2,%fp */
 	{ uint32_t _v = ld16(0xFFFF80E0u); set_w(&ctx->d[7], _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 007012 movew 0xffff80e0,%d7 */
@@ -416,7 +416,7 @@ L_007080:;
 }
 
 /* $008FA8 a4 = player, d0 = state (decline bound 10200 = observed max 6784 x 1.5, T2_HLE_BOUNDS + NODECLINE over 92 states x 3000 frames) */
-HLE_FUNC(0x008FA8, SetPlayerState, 10200)
+HLE_FUNC_YIELD(0x008FA8, SetPlayerState, 10200)
 {
 	{ uint32_t _v = ld16((ctx->a[4] + (uint32_t)(int32_t)34)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 008FA8 movew %a4@(34),%d1 */
 	{ uint32_t _s = 0x2u; uint32_t _d = (ctx->d[1] & 0xFFFFu); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 8); } /* 008FAC cmpiw #2,%d1 */
@@ -462,7 +462,7 @@ L_00902C:;
 }
 
 /* $00909C d2 = energy loss for the player on the object side (decline bound 14800 = observed max 9828 x 1.5, T2_HLE_BOUNDS + NODECLINE over 92 states x 3000 frames) */
-HLE_FUNC(0x00909C, PlayerDamageNearest, 14800)
+HLE_FUNC_YIELD(0x00909C, PlayerDamageNearest, 14800)
 {
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)2)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00909C movew %fp@(2),%d0 */
 	{ ctx->a[4] = 0xFFFF8000u; hle_insn(ctx, 12); } /* 0090A0 lea 0xffff8000,%a4 */
@@ -473,7 +473,7 @@ HLE_FUNC(0x00909C, PlayerDamageNearest, 14800)
 }
 
 /* $0090B2 a4 = player, d2 = energy loss (decline bound 14700 = observed max 9780 x 1.5, T2_HLE_BOUNDS + NODECLINE over 92 states x 3000 frames) */
-HLE_FUNC(0x0090B2, PlayerDamage, 14700)
+HLE_FUNC_YIELD(0x0090B2, PlayerDamage, 14700)
 {
 	{ cc_logic16(ctx, ld16((ctx->a[4] + (uint32_t)(int32_t)46))); hle_insn(ctx, 12); } /* 0090B2 tstw %a4@(46) */
 	if (bs(ctx, c_n(ctx))) goto L_009102; /* 0090B6 bmis 0x9102 */

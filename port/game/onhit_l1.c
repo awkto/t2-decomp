@@ -268,7 +268,7 @@ HLE_FUNC_PURE(0x005A5A, Onhit1_EndoKill, 200)
 }
 
 /* ---------------------------------------------------------------- endoskeleton 3 (hit_endoskeleton3 pair) */
-HLE_FUNC(0x005B10, Onhit1_Endo3A, 2000)
+HLE_FUNC_YIELD(0x005B10, Onhit1_Endo3A, 2000)
 {
 	jsr68(ctx, 0x0072C0, 18);                           /* jsr sub_0072C0 */
 	bset_d(ctx, 5, 12);
@@ -279,7 +279,7 @@ HLE_FUNC(0x005B10, Onhit1_Endo3A, 2000)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x005B2E, Onhit1_Endo3B, 3000)
+HLE_FUNC_YIELD(0x005B2E, Onhit1_Endo3B, 3000)
 {
 	bset_d(ctx, 5, 12);
 	mvw_d5_a6(ctx);
@@ -343,7 +343,7 @@ HLE_FUNC_PURE(0x005E28, Onhit1_Type0D, 80)
 }
 
 /* ---------------------------------------------------------------- resistance human (type $13) */
-HLE_FUNC(0x005F1A, Onhit1_Human, 2500)
+HLE_FUNC_YIELD(0x005F1A, Onhit1_Human, 2500)
 {
 	jsr68(ctx, 0x013DA8, 20);                           /* jsr (sub_013DA8).l */
 	mvli_a6(ctx, 0x20, 0xC968);
@@ -352,7 +352,7 @@ HLE_FUNC(0x005F1A, Onhit1_Human, 2500)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x005F34, Onhit1_HumanKill, 2500)
+HLE_FUNC_YIELD(0x005F34, Onhit1_HumanKill, 2500)
 {
 	bclr_d(ctx, 5, 15);
 	mvw_d5_a6(ctx);
@@ -392,7 +392,7 @@ HLE_FUNC_PURE(0x006022, Onhit1_HkWeak, 40)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006028, Onhit1_HkWeakKill, 2500)
+HLE_FUNC_YIELD(0x006028, Onhit1_HkWeakKill, 2500)
 {
 	jsr68(ctx, 0x0072CE, 18);                           /* jsr sub_0072CE */
 	bclr_d(ctx, 5, 15);
@@ -413,9 +413,9 @@ static void hk_part_hit(hle_ctx *ctx, uint32_t kill)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006146, Onhit1_HkBody, 4000) { hk_part_hit(ctx, 0x006154); }
-HLE_FUNC(0x006194, Onhit1_HkHull, 4000) { hk_part_hit(ctx, 0x0061A2); }
-HLE_FUNC(0x0061D6, Onhit1_HkTurret, 4000) { hk_part_hit(ctx, 0x0061E4); }
+HLE_FUNC_YIELD(0x006146, Onhit1_HkBody, 4000) { hk_part_hit(ctx, 0x006154); }
+HLE_FUNC_YIELD(0x006194, Onhit1_HkHull, 4000) { hk_part_hit(ctx, 0x0061A2); }
+HLE_FUNC_YIELD(0x0061D6, Onhit1_HkTurret, 4000) { hk_part_hit(ctx, 0x0061E4); }
 
 HLE_FUNC_PURE(0x006154, Onhit1_HkBodyKill, 300)
 {
@@ -448,7 +448,7 @@ HLE_FUNC_PURE(0x0061E4, Onhit1_HkTurretKill, 300)
 	rts_(ctx);
 }
 
-HLE_FUNC(0x006214, Onhit1_HkArm, 3000)
+HLE_FUNC_YIELD(0x006214, Onhit1_HkArm, 3000)
 {
 	hle_insn(ctx, 18);                                  /* jsr sub_006252 */
 	sub_6252(ctx);
@@ -473,7 +473,7 @@ HLE_FUNC_PURE(0x00621E, Onhit1_HkArmKill, 300)
 }
 
 /* ---------------------------------------------------------------- John Connor's truck */
-HLE_FUNC(0x00628E, Onhit1_Truck, 2500)
+HLE_FUNC_YIELD(0x00628E, Onhit1_Truck, 2500)
 {
 	set_w(&ctx->d[0], 0x72);
 	cc_logic16(ctx, 0x72);
