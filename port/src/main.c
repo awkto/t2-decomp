@@ -22,6 +22,7 @@
 #include "emu.h"
 #include "gun.h"
 #include "hle.h"
+#include "ipprof.h"
 #include "mouse.h"
 #include "options.h"
 #include "overlay.h"
@@ -353,6 +354,7 @@ int main(int argc, char **argv)
 		hle_list_active(stdout);
 		return 0;
 	}
+	ipprof_init(hle_spec);   /* T2_IPPROF=file: interpreted-instruction profile (src/ipprof.c) */
 	fprintf(stderr, "hle: %d active: ", hle_count_active());
 	hle_list_active(stderr);
 

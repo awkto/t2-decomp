@@ -8,6 +8,7 @@
 #include "emu.h"
 #include "gx.h"
 #include "hle.h"
+#include "native.h"
 #include "sha1.h"
 
 #include <stdarg.h>
@@ -353,6 +354,7 @@ bool emu_init(const char *rom_path, const char *workdir, bool use_gun, char *err
 	retro_set_controller_port_device(1, use_gun ? RETRO_DEVICE_MENACER : RETRO_DEVICE_NONE);
 	retro_get_system_av_info(&g_av);
 	hle_install();          /* hook the CPU (docs/porting.md); no function is enabled by default */
+	native_init();          /* T2_NATIVE=1: no 68k instruction is executed (docs/native.md) */
 	g_boot = malloc(emu_state_size());
 	if (!emu_state_save(g_boot, emu_state_size())) {
 		free(g_boot);
@@ -604,3 +606,25 @@ bool emu_write_memdump(const char *path)
 uint8_t emu_ram8(uint32_t a) { return work_ram[(a & 0xFFFF) ^ 1]; }
 uint16_t emu_ram16(uint32_t a) { return *(uint16_t *)(work_ram + (a & 0xFFFE)); }
 uint32_t emu_ram32(uint32_t a) { return ((uint32_t)emu_ram16(a) << 16) | emu_ram16(a + 2); }
+
+/* ------------------------------------------------------------------ native runner (t2-decomp#11) */
+static void native_report(void)
+{
+	if (native_active)
+		fprintf(stderr, "native: %lu C blocks run, %lu instructions executed by a 68k core\n",
+		        native_blocks, gx_m68k_insn_count());
+}
+
+void native_init(void)
+{
+	const char *e = getenv("T2_NATIVE");
+	native_active = e && *e && strcmp(e, "0");
+	static bool reg;
+	if (native_active && !reg) {
+		atexit(native_report);
+		reg = true;
+		hle_native_mode();
+	}
+}
+
+bool emu_native(void) { return native_active; }

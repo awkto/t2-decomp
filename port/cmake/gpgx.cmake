@@ -13,7 +13,7 @@ option(GPGX_CLONE "Clone Genesis-Plus-GX into GPGX_DIR if it does not exist (net
 
 # applied in this order: cpuhook (HOOK_CPU: the bus/exec hooks the HLE sandbox and the
 # entry-state capture need), then gpgx-hle.patch (m68k_hle_*: the C function override hook)
-set(GPGX_PATCHES gpgx-cpuhook.patch gpgx-hle.patch)
+set(GPGX_PATCHES gpgx-cpuhook.patch gpgx-hle.patch gpgx-native.patch)
 
 set(GPGX_SRC "${CMAKE_BINARY_DIR}/gpgx-src")
 

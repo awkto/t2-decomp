@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "gx.h"
+#include "native.h"
 
 /* from gpgx-hle.patch */
 extern unsigned char *m68k_hle_bitmap;
@@ -575,6 +576,9 @@ bool hle_pc_replaced(uint32_t pc)
 	return e && e->enabled;
 }
 
+unsigned long hle_declined_total(void) { return g_declined; }
+static unsigned long g_bailed;
+unsigned long hle_bailed_total(void) { return g_bailed; }
 static bool g_bail_on;     /* a top-level HLE_F_BAIL call is running */
 static int g_bail_at;      /* its first event: the first interrupt-raising slice end or the frame end (mclk) */
 bool hle_bail_due(hle_ctx *c, int chunk_cycles)
@@ -587,7 +591,8 @@ static void dstat(const hle_def *d, int why);
 void hle_bail_to(hle_ctx *c, uint32_t pc)
 {
 	if (g_bail_on && g_cur_def)
-		dstat(g_cur_def, 9);            /* counted as "bails:" in the T2_HLE_DECLINES table */
+		dstat(g_cur_def, 9);
+	g_bailed++;            /* counted as "bails:" in the T2_HLE_DECLINES table */
 	c->pc = pc;
 	c->jumped = 1;
 	c->bail = 1;
@@ -1163,8 +1168,20 @@ static void nest_end(void)
 		sess_end(false);
 }
 
+static void no_original(const char *what, uint32_t addr)
+{
+	fprintf(stderr, "native: %s($%06X): the original 68k code cannot run in the native runner "
+	        "(a path no route reaches; docs/native.md)\n", what, addr);
+	abort();
+}
+
+/* the native runner never declines: nothing is left to hand to a 68k (called by native_init) */
+void hle_native_mode(void) { g_decline_on = false; hle_set_group("native", true); }
+
 static void call68k(hle_ctx *c, uint32_t addr, bool orig)
 {
+	if (orig && native_active)
+		no_original("hle_call68k_orig", addr);
 	/* push the sentinel return address, run until it is popped */
 	hle_ctx save = *c;
 	c->a[7] -= 4;
@@ -1226,12 +1243,14 @@ void hle_idle(hle_ctx *c)
 		        c->def ? c->def->name : "?", c->def ? c->def->addr : 0);
 		abort();
 	}
-	int left = gx_m68k_slice_left();
+	int left = native_active ? native_slice_left() : gx_m68k_slice_left();
 	c->cycles = left > 4 ? left : 4;
 }
 
 void hle_run68k_until(hle_ctx *c, const uint32_t *exits)
 {
+	if (native_active)
+		no_original("hle_run68k_until", c->pc);
 	hle_ctx save = *c;
 	uint32_t sp = c->a[7], start = c->pc;
 	nest_begin();
@@ -1331,4 +1350,15 @@ void bus_w32(uint32_t a, uint32_t v)
 		gx_vdp_untimed_end();
 	if (hle_post_access)
 		hle_post_access();
+}
+
+long emu_frame_count(void);
+/* fatal errors of the native runner (native.c cannot use stdio: GPGX's headers remap it) */
+void native_fatal(const char *what, unsigned pc, unsigned sr, unsigned sp, unsigned ret)
+{
+	fprintf(stderr, "native: %s at $%06X after %ld frames (SR $%04X, SP $%06X, long at SP $%06X).\n"
+	        "        Every 68k address the game reaches must be a registered C block (HLE function or\n"
+	        "        range); nothing is interpreted in the native runner (docs/native.md).\n",
+	        what, pc & 0xFFFFFF, emu_frame_count(), sr, sp, ret);
+	abort();
 }
