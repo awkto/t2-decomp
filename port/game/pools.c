@@ -444,7 +444,7 @@ L_013052:;
 L_013068:;
 	{ uint32_t _v = ld32((ctx->a[6] + (uint32_t)(int32_t)2)); st32(0xFFFF9E94u, _v); cc_logic32(ctx, _v); hle_insn(ctx, 32); } /* 013068 movel %fp@(2),0xffff9e94 */
 	{ uint32_t _v = 0x29u; st16(0xFFFFA0CAu, _v); cc_logic16(ctx, _v); hle_insn(ctx, 20); } /* 013070 movew #41,0xffffa0ca */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x005892); } /* 013078 jsr 0x5892 */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x005892); } /* 013078 jsr 0x5892 */
 	{ uint32_t _v = pop32(ctx); ctx->a[6] = _v; hle_insn(ctx, 12); } /* 01307E moveal %sp@+,%fp */
 	{ uint32_t _v = pop16(ctx); set_w(&ctx->d[7], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 013080 movew %sp@+,%d7 */
 	{ uint32_t _s = 0x2u; uint32_t _da = 0xFFFF80CCu; uint32_t _d = ld16(_da); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 20); } /* 013082 cmpiw #2,0xffff80cc */
@@ -489,7 +489,7 @@ L_013152:;
 	{ uint32_t _v = 0x8u; st16(0xFFFFA0CAu, _v); cc_logic16(ctx, _v); hle_insn(ctx, 20); } /* 01315C movew #8,0xffffa0ca */
 	{ uint32_t _v = ctx->a[6]; push32(ctx, _v); cc_logic32(ctx, _v); hle_insn(ctx, 12); } /* 013164 movel %fp,%sp@- */
 	{ uint32_t _v = (ctx->d[7] & 0xFFFFu); push16(ctx, _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 013166 movew %d7,%sp@- */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x005892); } /* 013168 jsr 0x5892 */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x005892); } /* 013168 jsr 0x5892 */
 	{ uint32_t _v = pop16(ctx); set_w(&ctx->d[7], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 01316E movew %sp@+,%d7 */
 	{ uint32_t _v = pop32(ctx); ctx->a[6] = _v; hle_insn(ctx, 12); } /* 013170 moveal %sp@+,%fp */
 L_013172:;
@@ -541,7 +541,7 @@ L_0130E2:;
 	{ uint32_t _s = ld16((ctx->a[6] + (uint32_t)(int32_t)4)); uint32_t _d = (ctx->d[0] & 0xFFFFu); uint32_t _r = alu(ctx, OP_ADD, _d, _s, 16, 1); set_w(&ctx->d[0], _r); hle_insn(ctx, 12); } /* 0130E2 addw %fp@(4),%d0 */
 	{ uint32_t _v = (ctx->d[0] & 0xFFFFu); st16(0xFFFF9E96u, _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 0130E6 movew %d0,0xffff9e96 */
 	{ uint32_t _v = 0x3u; st16(0xFFFFA0CAu, _v); cc_logic16(ctx, _v); hle_insn(ctx, 20); } /* 0130EC movew #3,0xffffa0ca */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x005892); } /* 0130F4 jsr 0x5892 */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x005892); } /* 0130F4 jsr 0x5892 */
 	{ uint32_t _v = pop32(ctx); ctx->a[6] = _v; hle_insn(ctx, 12); } /* 0130FA moveal %sp@+,%fp */
 	{ uint32_t _v = pop16(ctx); set_w(&ctx->d[7], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 0130FC movew %sp@+,%d7 */
 	{ uint32_t _s = 0x1u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)20); uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 16); } /* 0130FE subqw #1,%fp@(20) */
@@ -1241,5 +1241,5 @@ L_01243A:;
 	hle_insn(ctx, 16);                                                     /* 01243A rts */
 }
 
-HLE_FUNC_BAIL(0x0123F0, MissilesRun, MSL_BOUND) { missiles_run(ctx, 0x0123F0); }
-HLE_FUNC_BAIL(0x012402, MissilesSlot, MSL_BOUND) { missiles_run(ctx, 0x012402); }
+HLE_FUNC_BAIL_YIELD(0x0123F0, MissilesRun, MSL_BOUND) { missiles_run(ctx, 0x0123F0); }
+HLE_FUNC_BAIL_YIELD(0x012402, MissilesSlot, MSL_BOUND) { missiles_run(ctx, 0x012402); }

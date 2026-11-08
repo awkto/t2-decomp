@@ -257,7 +257,7 @@ static void jsr68(hle_ctx *c, uint32_t addr)
 {
 	hle_insn(c, 18);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* clr.w (a6) ; subq.w #1,(obj_count).l : free the slot */
@@ -288,7 +288,7 @@ static void jsr68_abs(hle_ctx *c, uint32_t addr)                /* jsr (abs).l t
 {
 	hle_insn(c, 20);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 static void addw_ea(hle_ctx *c, int r, uint16_t v, int cost)    /* add.w <ea>,Dn */
 {
@@ -795,7 +795,7 @@ HLE_RANGE(0x00D89E, Edge1eBlink, 1000, EXIT_NEXT)
 		mvw_im(ctx, A6 + 0x24, 0x80, 16);
 		hle_insn(ctx, 18);                                          /* jsr (sub_013DD6,pc) */
 		hle_sync(ctx);
-		hle_call68k(ctx, 0x013DD6);
+		hle_callc(ctx, 0x013DD6);
 	}
 	mvw_m(ctx, 0, A6 + 0x24);                                           /* loc_00D8B6 */
 	shiftw(ctx, 0, 'a', 3);

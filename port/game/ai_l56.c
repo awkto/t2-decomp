@@ -347,7 +347,7 @@ L_00F908:;
 L_00F948:;
 	{ ctx->a[0] = (ctx->a[0] + (uint32_t)(int32_t)-560); hle_insn(ctx, 8); } /* 00F948 lea %a0@(-560),%a0 */
 L_00F94C:;
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012234); } /* 00F94C jsr %pc@(0x12234) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012234); } /* 00F94C jsr %pc@(0x12234) */
 	{ uint32_t _v = pop16(ctx); set_w(&ctx->d[7], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00F950 movew %sp@+,%d7 */
 L_00F952:;
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)38)); set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00F952 movew %fp@(38),%d0 */
@@ -367,7 +367,7 @@ L_00F970:;
 	{ ctx->d[2] = 0xBu; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 00F97C moveq #11,%d2 */
 	{ uint32_t _v = ctx->a[6]; push32(ctx, _v); cc_logic32(ctx, _v); hle_insn(ctx, 12); } /* 00F97E movel %fp,%sp@- */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)6)); set_w(&ctx->d[3], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00F980 movew %fp@(6),%d3 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A46); } /* 00F984 jsr %pc@(0x12a46) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A46); } /* 00F984 jsr %pc@(0x12a46) */
 	{ uint32_t _v = 0x5u; st8((ctx->a[6] + (uint32_t)(int32_t)18), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00F988 moveb #5,%fp@(18) */
 	{ uint32_t _v = 0x78u; st8((ctx->a[6] + (uint32_t)(int32_t)12), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00F98E moveb #120,%fp@(12) */
 	{ uint32_t _v = 0xFFu; st8((ctx->a[6] + (uint32_t)(int32_t)15), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00F994 moveb #-1,%fp@(15) */
@@ -387,7 +387,7 @@ L_00F9AA:;
 	{ ctx->d[2] = 0x7u; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 00F9C4 moveq #7,%d2 */
 	{ uint32_t _v = ctx->a[6]; push32(ctx, _v); cc_logic32(ctx, _v); hle_insn(ctx, 12); } /* 00F9C6 movel %fp,%sp@- */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)6)); set_w(&ctx->d[3], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00F9C8 movew %fp@(6),%d3 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A46); } /* 00F9CC jsr %pc@(0x12a46) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A46); } /* 00F9CC jsr %pc@(0x12a46) */
 	{ uint32_t _v = 0x4u; st8((ctx->a[6] + (uint32_t)(int32_t)18), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00F9D0 moveb #4,%fp@(18) */
 	{ uint32_t _v = 0xB4u; st8((ctx->a[6] + (uint32_t)(int32_t)12), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00F9D6 moveb #-76,%fp@(12) */
 	{ uint32_t _v = 0xFFu; st8((ctx->a[6] + (uint32_t)(int32_t)15), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00F9DC moveb #-1,%fp@(15) */
@@ -404,7 +404,7 @@ L_00F9F2:;
 	{ ctx->d[2] = 0xAu; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 00FA06 moveq #10,%d2 */
 	{ uint32_t _v = ctx->a[6]; push32(ctx, _v); cc_logic32(ctx, _v); hle_insn(ctx, 12); } /* 00FA08 movel %fp,%sp@- */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)6)); set_w(&ctx->d[3], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00FA0A movew %fp@(6),%d3 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A46); } /* 00FA0E jsr %pc@(0x12a46) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A46); } /* 00FA0E jsr %pc@(0x12a46) */
 	{ uint32_t _v = 0x5u; st8((ctx->a[6] + (uint32_t)(int32_t)18), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00FA12 moveb #5,%fp@(18) */
 	{ uint32_t _v = 0x78u; st8((ctx->a[6] + (uint32_t)(int32_t)12), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00FA18 moveb #120,%fp@(12) */
 	{ uint32_t _v = 0xFFu; st8((ctx->a[6] + (uint32_t)(int32_t)15), _v); cc_logic8(ctx, _v); hle_insn(ctx, 16); } /* 00FA1E moveb #-1,%fp@(15) */
@@ -421,7 +421,7 @@ L_00FA32:;
 	{ ctx->d[2] = 0xBu; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 00FA46 moveq #11,%d2 */
 	{ uint32_t _v = ctx->a[6]; push32(ctx, _v); cc_logic32(ctx, _v); hle_insn(ctx, 12); } /* 00FA48 movel %fp,%sp@- */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)6)); set_w(&ctx->d[3], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00FA4A movew %fp@(6),%d3 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A46); } /* 00FA4E jsr %pc@(0x12a46) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A46); } /* 00FA4E jsr %pc@(0x12a46) */
 	{ uint32_t _v = pop32(ctx); ctx->a[6] = _v; hle_insn(ctx, 12); } /* 00FA52 moveal %sp@+,%fp */
 	hle_insn(ctx, 10); goto L_00FA86; /* 00FA54 bras 0xfa86 */
 L_00FA56:;
@@ -438,7 +438,7 @@ L_00FA62:;
 	{ ctx->d[2] = 0xCu; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 00FA78 moveq #12,%d2 */
 	{ uint32_t _v = ctx->a[6]; push32(ctx, _v); cc_logic32(ctx, _v); hle_insn(ctx, 12); } /* 00FA7A movel %fp,%sp@- */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)6)); set_w(&ctx->d[3], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00FA7C movew %fp@(6),%d3 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A46); } /* 00FA80 jsr %pc@(0x12a46) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A46); } /* 00FA80 jsr %pc@(0x12a46) */
 	{ uint32_t _v = pop32(ctx); ctx->a[6] = _v; hle_insn(ctx, 12); } /* 00FA84 moveal %sp@+,%fp */
 L_00FA86:;
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)40)); set_w(&ctx->d[5], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00FA86 movew %fp@(40),%d5 */
@@ -448,7 +448,7 @@ L_00FA86:;
 	if (bs(ctx, !c_n(ctx))) goto L_00FA9E; /* 00FA96 bpls 0xfa9e */
 	{ st16(0xFFFFA0A8u, 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); hle_insn(ctx, 20); } /* 00FA98 clrw 0xffffa0a8 */
 L_00FA9E:;
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x0092A8); } /* 00FA9E jsr %pc@(0x92a8) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x0092A8); } /* 00FA9E jsr %pc@(0x92a8) */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)40)); set_w(&ctx->d[5], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00FAA2 movew %fp@(40),%d5 */
 L_00FAA6:;
 	{ cc_set(ctx, CC_Z, ((ctx->d[5] >> 1) & 1) ? 0 : CC_Z); hle_insn(ctx, 10); } /* 00FAA6 btst #1,%d5 */
@@ -457,7 +457,7 @@ L_00FAA6:;
 L_00FAB0:;
 	{ uint32_t _a = 0xFFFF9E94u; ctx->d[0] = (uint32_t)(int32_t)(int16_t)ld16(_a + 0); ctx->d[1] = (uint32_t)(int32_t)(int16_t)ld16(_a + 2); hle_insn(ctx, 28); } /* 00FAB0 movemw 0xffff9e94,%d0-%d1 */
 	{ ctx->a[2] = 0x012866u; hle_insn(ctx, 8); } /* 00FAB8 lea %pc@(0x12866),%a2 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x01277C); } /* 00FABC bsrw 0x1277c */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x01277C); } /* 00FABC bsrw 0x1277c */
 	{ uint16_t _c = (uint16_t)ctx->d[4] - 1; set_w(&ctx->d[4], _c); if (_c != 0xFFFF) { hle_insn(ctx, 10); goto L_00FAB0; } hle_insn(ctx, 14); } /* 00FAC0 dbf %d4,0xfab0 */
 	hle_insn(ctx, 10); goto L_00FAE6; /* 00FAC4 bras 0xfae6 */
 L_00FAC6:;
@@ -467,7 +467,7 @@ L_00FAC6:;
 L_00FAD0:;
 	{ uint32_t _a = 0xFFFF9E94u; ctx->d[0] = (uint32_t)(int32_t)(int16_t)ld16(_a + 0); ctx->d[1] = (uint32_t)(int32_t)(int16_t)ld16(_a + 2); hle_insn(ctx, 28); } /* 00FAD0 movemw 0xffff9e94,%d0-%d1 */
 	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)6)); set_w(&ctx->d[2], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 00FAD8 movew %fp@(6),%d2 */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x0124EC); } /* 00FADC jsr 0x124ec */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x0124EC); } /* 00FADC jsr 0x124ec */
 	{ uint16_t _c = (uint16_t)ctx->d[4] - 1; set_w(&ctx->d[4], _c); if (_c != 0xFFFF) { hle_insn(ctx, 10); goto L_00FAD0; } hle_insn(ctx, 14); } /* 00FAE2 dbf %d4,0xfad0 */
 L_00FAE6:;
 	{ st16((ctx->a[6] + (uint32_t)(int32_t)40), 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); hle_insn(ctx, 16); } /* 00FAE6 clrw %fp@(40) */
@@ -624,8 +624,8 @@ L_00FC8A:;
 	{ cc_set(ctx, CC_Z, ((ctx->d[0] >> 2) & 1) ? 0 : CC_Z); hle_insn(ctx, 10); } /* 00FC9A btst #2,%d0 */
 	if (bs(ctx, c_z(ctx))) goto L_00FCB6; /* 00FC9E beqs 0xfcb6 */
 	{ uint32_t _v = 0x60u; set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00FCA0 movew #96,%d0 */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x013D04); } /* 00FCA4 jsr 0x13d04 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x009054); } /* 00FCAA bsrw 0x9054 */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x013D04); } /* 00FCA4 jsr 0x13d04 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x009054); } /* 00FCAA bsrw 0x9054 */
 	{ uint32_t _v = 0x34Bu; set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00FCAE movew #843,%d1 */
 	{ hle_insn(ctx, 18); ObjQueueSprite(ctx); } /* 00FCB2 jsr %pc@(0x13228) */
 L_00FCB6:;
@@ -650,8 +650,8 @@ L_00FCD4:;
 	{ cc_set(ctx, CC_Z, ((ctx->d[0] >> 2) & 1) ? 0 : CC_Z); hle_insn(ctx, 10); } /* 00FCE4 btst #2,%d0 */
 	if (bs(ctx, c_z(ctx))) goto L_00FD00; /* 00FCE8 beqs 0xfd00 */
 	{ uint32_t _v = 0x60u; set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00FCEA movew #96,%d0 */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x013D04); } /* 00FCEE jsr 0x13d04 */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x009054); } /* 00FCF4 bsrw 0x9054 */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x013D04); } /* 00FCEE jsr 0x13d04 */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x009054); } /* 00FCF4 bsrw 0x9054 */
 	{ uint32_t _v = 0x34Cu; set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00FCF8 movew #844,%d1 */
 	{ hle_insn(ctx, 18); ObjQueueSprite(ctx); } /* 00FCFC jsr %pc@(0x13228) */
 L_00FD00:;
@@ -920,7 +920,7 @@ L_00FF7A:;
 	{ hle_insn(ctx, 18); ObjQueueSprite(ctx); } /* 00FF8C jsr %pc@(0x13228) */
 	{ uint32_t _s = 0x14u; uint32_t _da = (ctx->a[6] + (uint32_t)(int32_t)36); uint32_t _d = ld16(_da); alu(ctx, OP_SUB, _d, _s, 16, 0); hle_insn(ctx, 16); } /* 00FF90 cmpiw #20,%fp@(36) */
 	if (bs(ctx, !c_z(ctx))) goto L_00FF9C; /* 00FF96 bnes 0xff9c */
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012352); } /* 00FF98 jsr %pc@(0x12352) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012352); } /* 00FF98 jsr %pc@(0x12352) */
 L_00FF9C:;
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00B3BE); return; /* 00FF9C braw 0xb3be */
 }
@@ -1221,7 +1221,7 @@ L_01035C:;
 	if (bs(ctx, !c_z(ctx))) goto L_010366; /* 010362 bnes 0x10366 */
 	{ ctx->d[2] = 0xBu; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 010364 moveq #11,%d2 */
 L_010366:;
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A16); } /* 010366 jsr %pc@(0x12a16) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A16); } /* 010366 jsr %pc@(0x12a16) */
 L_01036A:;
 	hle_insn(ctx, 10); goto L_010302; /* 01036A braw 0x10302 */
 }
@@ -1344,7 +1344,7 @@ L_010570:;
 	if (bs(ctx, !c_z(ctx))) goto L_01057A; /* 010576 bnes 0x1057a */
 	{ ctx->d[2] = 0xBu; cc_logic32(ctx, ctx->d[2]); hle_insn(ctx, 4); } /* 010578 moveq #11,%d2 */
 L_01057A:;
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x012A16); } /* 01057A jsr %pc@(0x12a16) */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x012A16); } /* 01057A jsr %pc@(0x12a16) */
 L_01057E:;
 	hle_insn(ctx, 10); goto L_010518; /* 01057E braw 0x10518 */
 }
@@ -1441,9 +1441,9 @@ HLE_RANGE(0x00C348, L56Fixture, 16300, EXIT_NEXT)
 	{ hle_insn(ctx, 18); ObjQueueSprite(ctx); } /* 00C376 jsr %pc@(0x13228) */
 	hle_insn(ctx, 10); hle_jump(ctx, 0x00B3BE); return; /* 00C37A braw 0xb3be */
 L_00C37E:;
-	{ hle_insn(ctx, 18); hle_sync(ctx); hle_call68k(ctx, 0x00908A); } /* 00C37E bsrw 0x908a */
+	{ hle_insn(ctx, 18); hle_sync(ctx); hle_callc(ctx, 0x00908A); } /* 00C37E bsrw 0x908a */
 	{ uint32_t _v = 0x7Eu; set_w(&ctx->d[0], _v); cc_logic16(ctx, _v); hle_insn(ctx, 8); } /* 00C382 movew #126,%d0 */
-	{ hle_insn(ctx, 20); hle_sync(ctx); hle_call68k(ctx, 0x013D04); } /* 00C386 jsr 0x13d04 */
+	{ hle_insn(ctx, 20); hle_sync(ctx); hle_callc(ctx, 0x013D04); } /* 00C386 jsr 0x13d04 */
 	{ uint32_t _v = 0x14u; st16((ctx->a[6] + (uint32_t)(int32_t)36), _v); cc_logic16(ctx, _v); hle_insn(ctx, 16); } /* 00C38C movew #20,%fp@(36) */
 	{ uint32_t _v = 0xC3ACu; st32((ctx->a[6] + (uint32_t)(int32_t)32), _v); cc_logic32(ctx, _v); hle_insn(ctx, 24); } /* 00C392 movel #50092,%fp@(32) */
 	hle_insn(ctx, 10); goto L_00C3AC; /* 00C39A bras 0xc3ac */

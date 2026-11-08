@@ -274,7 +274,7 @@ static void jsr68(hle_ctx *c, uint32_t addr)
 {
 	hle_insn(c, 18);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* clr.w (a6) ; subq.w #1,(obj_count).l : free the slot */

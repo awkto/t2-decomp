@@ -111,6 +111,8 @@ static int f_le(hle_ctx *c) { return f_z(c) || f_lt(c); }
 #define SR_BAIL(chunk, pc) do { if (hle_bail_due(ctx, (chunk))) { \
 	if (!ctx->tl_used) hle_decline_why(2); else hle_bail_to(ctx, (pc)); return; } } while (0)
 
+/* Every instruction is charged right after its effect (the call yields to the frame loop at the slice end,
+ * so an interrupt sees the state of the instruction boundary it lands on). */
 static void scrollrows_run(hle_ctx *ctx, uint32_t entry)
 {
 	if (entry == 0x004770)
@@ -121,11 +123,15 @@ static void scrollrows_run(hle_ctx *ctx, uint32_t entry)
 		goto L_list;
 	SR_BAIL(110, 0x004752);
 	ctx->a[0] = RAM32(SCROLL_SCRIPT);
+	hle_insn(ctx, 20);
 	ctx->a[1] = 0xFFFFAF92u;
+	hle_insn(ctx, 12);
 	ctx->a[2] = 0xFFFFAA5Cu;
+	hle_insn(ctx, 12);
 	ctx->a[3] = 0xFFFFAFD2u;
+	hle_insn(ctx, 12);
 	ctx->a[4] = 0xFFFFB0D2u;
-	HLE_SEQ(ctx, 20, 12, 12, 12, 12);
+	hle_insn(ctx, 12);
 	for (;;) {
 	L_group:
 		SR_BAIL(160, 0x004770);
@@ -140,25 +146,30 @@ static void scrollrows_run(hle_ctx *ctx, uint32_t entry)
 		if (f_z(ctx)) {                                           /* beq.w loc_0047A4 */
 			hle_insn(ctx, 10);
 			ctx->a[2] = 0xFFFFAA5Eu;                          /* lea.l (hscroll_ram+2),a2 */
-			HLE_SEQ(ctx, 12, 10);                             /* lea / bra.w */
+			hle_insn(ctx, 12);
+			hle_insn(ctx, 10);                                /* bra.w */
 			continue;
 		}
 		hle_insn(ctx, 12);
 		set_w(&ctx->d[0], bus_r16(ctx->a[0])); ctx->a[0] += 2;     /* move.w (a0)+,d0 */
 		cc_logic16(ctx, ctx->d[0]);
+		hle_insn(ctx, 8);
 		set_w(&ctx->d[3], RAM16(ctx->a[1]));                       /* move.w (a1),d3 */
 		cc_logic16(ctx, ctx->d[3]);
-		HLE_SEQ(ctx, 8, 8);
+		hle_insn(ctx, 8);
 		set_w(&ctx->d[0], alu(ctx, OP_ADD, ctx->d[0], ctx->d[3], 16));   /* add.w d3,d0 */
+		hle_insn(ctx, 4);
 		set_w(&ctx->d[1], ctx->d[0]);                              /* move.w d0,d1 */
 		cc_logic16(ctx, ctx->d[1]);
-		HLE_SEQ(ctx, 4, 4);
+		hle_insn(ctx, 4);
 		set_w(&ctx->d[3], ctx->d[3] & 0xFF00); cc_logic16(ctx, ctx->d[3]);   /* andi.w #$ff00,d3 */
+		hle_insn(ctx, 8);
 		set_w(&ctx->d[1], ctx->d[1] & 0xFF00); cc_logic16(ctx, ctx->d[1]);   /* andi.w #$ff00,d1 */
-		HLE_SEQ(ctx, 8, 8);
+		hle_insn(ctx, 8);
 		set_w(&ctx->d[1], alu(ctx, OP_SUB, ctx->d[1], ctx->d[3], 16));       /* sub.w d3,d1 */
+		hle_insn(ctx, 4);
 		set_w(&ctx->d[1], asr16(ctx, ctx->d[1], 8));                         /* asr.w #8,d1 */
-		HLE_SEQ(ctx, 4, 22);
+		hle_insn(ctx, 22);
 		RAM16(ctx->a[1]) = (uint16_t)ctx->d[0]; ctx->a[1] += 2;             /* move.w d0,(a1)+ */
 		cc_logic16(ctx, ctx->d[0]);
 		hle_insn(ctx, 8);
@@ -169,12 +180,15 @@ static void scrollrows_run(hle_ctx *ctx, uint32_t entry)
 			SR_BAIL(80, 0x004792);
 			uint16_t d1 = (uint16_t)ctx->d[1];
 			RAM16(ctx->a[2]) = (uint16_t)alu(ctx, OP_SUB, RAM16(ctx->a[2]), d1, 16);   /* sub.w d1,(a2) */
+			hle_insn(ctx, 12);
 			ctx->a[2] += 0x20;                                            /* lea (0x20,a2),a2 */
+			hle_insn(ctx, 8);
 			RAM16(ctx->a[3]) = (uint16_t)alu(ctx, OP_ADD, RAM16(ctx->a[3]), d1, 16);   /* add.w d1,(a3)+ */
 			ctx->a[3] += 2;
+			hle_insn(ctx, 12);
 			RAM16(ctx->a[4]) = d1; ctx->a[4] += 2;                        /* move.w d1,(a4)+ */
 			cc_logic16(ctx, d1);
-			HLE_SEQ(ctx, 12, 8, 12, 8);
+			hle_insn(ctx, 8);
 			uint16_t d2 = (uint16_t)ctx->d[2] - 1;                        /* dbra d2 */
 			set_w(&ctx->d[2], d2);
 			if (d2 == 0xFFFF) {
@@ -189,27 +203,34 @@ static void scrollrows_run(hle_ctx *ctx, uint32_t entry)
 L_list:
 	SR_BAIL(180, 0x0047AE);
 	uint32_t a5 = RAM32(VDP_LIST_PTR);
+	ctx->a[5] = a5;
+	hle_insn(ctx, 20);
 	RAM16(a5) = 7; a5 += 2;
+	hle_insn(ctx, 12);
 	RAM16(a5) = 0x400; a5 += 2;
+	hle_insn(ctx, 12);
 	RAM32_W(a5, 0xFFFFAA5Cu); a5 += 4;
+	hle_insn(ctx, 20);
 	RAM16(a5) = 0xF000; a5 += 2;
+	hle_insn(ctx, 12);
 	RAM32_W(VDP_LIST_PTR, a5);
 	ctx->a[5] = a5;
-	HLE_SEQ(ctx, 20, 12, 12, 20, 12, 20, 16);
 	cc_logic32(ctx, a5);
+	hle_insn(ctx, 20);
+	hle_insn(ctx, 16);                                                        /* rts */
 }
 
-HLE_FUNC_BAIL(0x004752, ScrollRows, 8000) { scrollrows_run(ctx, 0x004752); }
-HLE_FUNC_BAIL(0x004770, ScrollRowsGroup, 8000) { scrollrows_run(ctx, 0x004770); }
-HLE_FUNC_BAIL(0x004792, ScrollRowsRow, 8000) { scrollrows_run(ctx, 0x004792); }
-HLE_FUNC_BAIL(0x0047AE, ScrollRowsList, 8000) { scrollrows_run(ctx, 0x0047AE); }
+HLE_FUNC_BAIL_YIELD(0x004752, ScrollRows, 8000) { scrollrows_run(ctx, 0x004752); }
+HLE_FUNC_BAIL_YIELD(0x004770, ScrollRowsGroup, 8000) { scrollrows_run(ctx, 0x004770); }
+HLE_FUNC_BAIL_YIELD(0x004792, ScrollRowsRow, 8000) { scrollrows_run(ctx, 0x004792); }
+HLE_FUNC_BAIL_YIELD(0x0047AE, ScrollRowsList, 8000) { scrollrows_run(ctx, 0x0047AE); }
 
 /* ------------------------------------------------------------------ BgStreamLayers $00498A */
 static void bg_call(hle_ctx *c, uint32_t addr)
 {
 	hle_insn(c, 20);                    /* jsr (abs).l */
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* the nested VdpQueue routines and sub_013470/sub_01385A make one call last up to ~50000 cycles (level 5

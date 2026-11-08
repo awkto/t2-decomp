@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ucontext.h>
 
 #include "gx.h"
 
@@ -26,6 +27,7 @@ extern int m68k_step_one(void);
 
 #define MAX_DEFS 4096
 #define SENTINEL_RET 0x0000F0u   /* return address used for hle_call68k (never executed) */
+#define YIELD_PC     0x0000F8u   /* a function yielded to the frame loop here (cor_run, resume_cor) */
 #define STALL_PC     0x0000F4u   /* "burn the rest of a long C function's cost" trap (#31) */
 #define STALL_SLICE  256       /* 68k cycles burnt per STALL_PC visit. Must stay below a scanline (~488 68k cycles): a
                                  * slice that overshoots the line boundary makes the next m68k_run() skip its
@@ -270,6 +272,7 @@ static void ctx_load(hle_ctx *c)
 /* ---- instruction timeline (hle.h) */
 static int g_nest;             /* (defined below) depth of nested 68k execution */
 static bool g_top;             /* (defined below) a top-level C function is running */
+static void cor_check(hle_ctx *c);
 static int g_bnd;              /* the next slice end the frame loop would have processed (tl_boundary) */
 /* T2_HLE_SEQ=1: log, per top-level call, the list of instruction costs (the C side: what was
  * passed to hle_insn/hle_post; the T2_HLE_ORIG side: what each original instruction cost, without
@@ -334,6 +337,7 @@ void hle_insn(hle_ctx *c, int n)
 	c->tl_last = (long)n * 7;
 	if (!c->dry)
 		seq_add(n);
+	cor_check(c);
 }
 void hle_insn_x(hle_ctx *c, int n, int extra)
 {
@@ -344,11 +348,13 @@ void hle_insn_x(hle_ctx *c, int n, int extra)
 	c->tl_last = (long)n * 7;
 	if (!c->dry)
 		seq_add(n);
+	cor_check(c);
 }
 static int g_pre_clock;
 void hle_sync(hle_ctx *c)
 {
 	c->tl_used = 1;
+	cor_check(c);
 	tl_boundary(c);
 	tl_flush(c);
 	g_pre_clock = gx_m68k_cycles();
@@ -356,6 +362,7 @@ void hle_sync(hle_ctx *c)
 void hle_pre(hle_ctx *c)
 {
 	c->tl_used = 1;
+	cor_check(c);
 	tl_boundary(c);
 	tl_refresh(c);
 	tl_flush(c);
@@ -368,6 +375,7 @@ void hle_post(hle_ctx *c, int n)
 	c->tl += (long)n * 7;
 	c->tl_last = (long)n * 7;
 	seq_add(n + (hle_post_access ? 0 : (gx_m68k_cycles() - g_pre_clock) / 7));
+	cor_check(c);
 }
 void hle_seq(hle_ctx *c, const int *costs, int n)
 {
@@ -567,7 +575,7 @@ const hle_def *hle_current_def(void) { return g_cur_def; }
 /* would the CPU hand this pc to a C function instead of executing the instruction? (profilers) */
 bool hle_pc_replaced(uint32_t pc)
 {
-	if (pc == STALL_PC)
+	if (pc == STALL_PC || pc == YIELD_PC)
 		return true;
 	if (pc >= 0x400000 || !(g_bitmap[pc >> 4] & (1u << ((pc >> 1) & 7))) || pc == m68k_hle_skip_pc)
 		return false;
@@ -593,15 +601,124 @@ void hle_bail_to(hle_ctx *c, uint32_t pc)
 	c->bail = 1;
 }
 
+/* ---- coroutines: a C function that is interrupted by the frame loop (docs/porting.md, "Yielding").
+ * A top-level call of a yield-capable function (HLE_F_YIELD / HLE_F_BAIL, or a PURE function with an
+ * exact timeline whose window holds an event) runs on its own stack. At every instruction boundary at
+ * or after the CPU's slice end (m68k.cycle_end: where the core's loop would stop) the function
+ * yields: the time so far is charged, the CPU PC becomes YIELD_PC and the hook returns, so the
+ * frame loop does its line work and the core takes an interrupt exactly where the original does. The
+ * interrupt returns to YIELD_PC, whose hook switches back into the function. No 68k code is needed. */
+#define COR_STACK (256 * 1024)
+#define COR_MAX 6
+typedef struct rs rs;
+struct rs {
+	hle_ctx c;
+	const hle_def *def;
+	entry *e;
+	const hle_def *outer_def;
+	bool top, chk, unmasked, orig, cor, done, used;
+	uint32_t sp0;
+	int clock0;
+	int y_nest;
+	bool y_sess, y_timed;
+	ucontext_t uc, back;
+	char *stack;
+};
+static rs g_pool[COR_MAX];
+static rs *g_susp[COR_MAX];
+static int g_nsusp;
+static rs *g_cor;              /* the coroutine whose function is running now */
+static int g_cor_block;        /* >0 inside hle_call68k / hle_run68k_until made by the function */
+static bool g_cor_on = true;   /* T2_HLE_NOCOR=1: decline / bail as before */
+unsigned long g_yields;
+
+static char g_nocor_fn[1024];  /* T2_HLE_NOCOR_FN=name,name: these decline / bail as before (debugging) */
+static bool name_listed(const char *list, const char *name)
+{
+	if (!list[0] || !name)
+		return false;
+	size_t l = strlen(name);
+	for (const char *p = list; *p;) {
+		const char *e = strchr(p, ',');
+		size_t n = e ? (size_t)(e - p) : strlen(p);
+		if (n == l && !strncmp(p, name, l))
+			return true;
+		if (!e)
+			break;
+		p = e + 1;
+	}
+	return false;
+}
+
+static rs *rs_alloc(void)
+{
+	for (int i = 0; i < COR_MAX; i++)
+		if (!g_pool[i].used) {
+			g_pool[i].used = true;
+			return &g_pool[i];
+		}
+	return NULL;
+}
+
+bool hle_yielding(void) { return g_cor && !g_cor_block && !g_cor->c.dry; }
+
+static void cor_do_yield(rs *s)
+{
+	tl_flush(&s->c);
+	g_yields++;
+	dstat(s->def, 8);
+	if (getenv("T2_HLE_YLOG"))
+		fprintf(stderr, "yield %s clock %d end %d sp %06X\n", s->def->name, gx_m68k_cycles(), gx_m68k_cycle_end(), s->c.a[7]);
+	swapcontext(&s->uc, &s->back);
+}
+static void cor_check(hle_ctx *c)
+{
+	if (g_cor && c == &g_cor->c && !g_cor_block && gx_m68k_cycles() + (int)c->tl >= gx_m68k_cycle_end())
+		cor_do_yield(g_cor);
+}
+void hle_yield_point(void)
+{
+	if (g_cor && !g_cor_block && gx_m68k_cycles() + (int)g_cor->c.tl >= gx_m68k_cycle_end())
+		cor_do_yield(g_cor);
+}
+
+static void cor_entry(void)
+{
+	rs *s = g_cor;
+	s->def->fn(&s->c);
+	s->done = true;
+	swapcontext(&s->uc, &s->back);
+}
+static void cor_run(rs *s, bool start)
+{
+	if (start) {
+		if (!s->stack)
+			s->stack = malloc(COR_STACK);
+		getcontext(&s->uc);
+		s->uc.uc_stack.ss_sp = s->stack;
+		s->uc.uc_stack.ss_size = COR_STACK;
+		s->uc.uc_link = NULL;
+		makecontext(&s->uc, cor_entry, 0);
+	}
+	g_cor = s;
+	swapcontext(&s->back, &s->uc);
+	g_cor = NULL;
+}
+
+static int rs_finish(rs *s);
+
 static int run_def(const hle_def *def, entry *e)
 {
-	hle_ctx c;
+	rs local;
+	rs *s = &local;
 	const hle_def *outer_def = g_cur_def;
 	bool top = g_nest == 0 && !g_top;
+	bool cor = false;
 	/* Interrupt atomicity (docs/porting.md, "Interrupts inside a replaced function"): when the
 	 * original would have been interrupted INSIDE this call, it must run as 68k. A pure function
 	 * (HLE_F_PURE: work RAM only) is run once dry to learn its real length; the others are judged
-	 * by def->cycles, the longest window they take. */
+	 * by def->cycles, the longest window they take. A function with an exact instruction timeline
+	 * does not decline: it runs as a coroutine and yields to the frame loop at the event. */
 	int irq_mask = (m68k_hle_get_sr() >> 8) & 7;
 	int clock0 = gx_m68k_cycles();
 	bool lowmask = (def->flags & HLE_F_LOWMASK) != 0;
@@ -609,7 +726,11 @@ static int run_def(const hle_def *def, entry *e)
 		g_bnd = gx_m68k_cycle_end();
 	if (top)
 		g_bail_on = false;
-	if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt && (def->flags & HLE_F_BAIL)) {
+	bool guard = g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt;
+	bool cor_ok = g_cor_on && !name_listed(g_nocor_fn, def->name);
+	if (guard && cor_ok && (def->flags & HLE_F_YIELD)) {
+		cor = true;
+	} else if (guard && (def->flags & HLE_F_BAIL)) {
 		/* no decline: the function bails to the 68k before the first event (hle_bail_due) */
 		int at = gx_frame_end_clock();
 		if (irq_mask < 6) {
@@ -627,8 +748,9 @@ static int run_def(const hle_def *def, entry *e)
 		}
 		g_bail_at = at;
 		g_bail_on = true;
-	} else if (g_decline_on && top && !hle_post_access && !def_is_orig(def) && !g_stall_debt) {
+	} else if (guard) {
 		long window = -1, span = (long)def->cycles * 7;   /* span: how long the call can take */
+		bool exact = false;
 		if (def->flags & HLE_F_PURE) {
 			hle_ctx d;
 			int refresh0 = gx_m68k_refresh_cycles();
@@ -639,6 +761,7 @@ static int run_def(const hle_def *def, entry *e)
 			def->fn(&d);
 			memcpy(work_ram, g_snap, sizeof g_snap);
 			gx_m68k_set_refresh_cycles(refresh0);
+			exact = cor_ok && d.tl_used;
 			/* the dry run has no Z80 stall at slice ends (up to ~80 mcycles each): margin */
 			long margin = 300 + (d.tl / 3420 + 1) * 100;   /* one Z80 stall per slice end crossed */
 			span = d.tl + margin;
@@ -658,60 +781,108 @@ static int run_def(const hle_def *def, entry *e)
 		/* The frame loop rebases the clocks at the end of the frame and starts the next one
 		 * (VDP frame work, the VINT slice...): a call that straddles it cannot be a C lump. */
 		if (clock0 + span > gx_frame_end_clock()) {
-			dstat(def, 1);
-			g_declined++;
-			return -1;
-		}
-		if (window >= 0) {
-			int at, lvl = gx_irq_boundary_in(clock0, clock0 + (int)window, &at);
-			if (lvl && irq_mask < lvl) {
-				if (getenv("T2_HLE_DECLINES"))
-					fprintf(stderr, "decline %s: clock %d window %ld lvl %d at %d mask %d\n", def->name, clock0, window, lvl, at, irq_mask);
-				dstat(def, 2);
+			if (exact) {
+				cor = true;
+			} else {
+				dstat(def, 1);
 				g_declined++;
 				return -1;
 			}
 		}
+		if (!cor && window >= 0) {
+			int at, lvl = gx_irq_boundary_in(clock0, clock0 + (int)window, &at);
+			if (lvl && irq_mask < lvl) {
+				if (exact) {
+					cor = true;
+				} else {
+					if (getenv("T2_HLE_DECLINES"))
+						fprintf(stderr, "decline %s: clock %d window %ld lvl %d at %d mask %d\n", def->name, clock0, window, lvl, at, irq_mask);
+					dstat(def, 2);
+					g_declined++;
+					return -1;
+				}
+			}
+		}
 	}
-	bool chk = hle_chk_on && top && !hle_post_access && !(def->flags & HLE_F_PURE) && !def_is_orig(def);
+	if (cor) {
+		s = rs_alloc();
+		if (!s) {
+			fprintf(stderr, "hle: out of coroutine slots (%s)\n", def->name);
+			abort();
+		}
+	} else {
+		s->stack = NULL;
+	}
+	s->def = def;
+	s->e = e;
+	s->outer_def = outer_def;
+	s->top = top;
+	s->cor = cor;
+	s->done = false;
+	s->clock0 = clock0;
+	s->orig = def_is_orig(def);
+	s->chk = hle_chk_on && top && !hle_post_access && !(def->flags & HLE_F_PURE) && !s->orig;
 	if (top)
 		g_top = true;
-	ctx_load(&c);
-	if (chk) {
+	hle_ctx *cp = &s->c;
+	ctx_load(cp);
+	if (s->chk) {
 		g_chk_clock0 = clock0;
 		g_chk_def = def;
-		g_chk_ctx = &c;
+		g_chk_ctx = cp;
 		g_chk_seg = false;
 	}
-	uint32_t sp0 = c.a[7];
-	bool unmasked = ((c.sr >> 8) & 7) < 6;
-	c.def = def;
-	c.cycles = def->cycles;
+	s->sp0 = cp->a[7];
+	s->unmasked = ((cp->sr >> 8) & 7) < 6;
+	cp->def = def;
+	cp->cycles = def->cycles;
 	if (e)
 		e->calls++;
 	g_frame_calls++;
 	g_cur_def = def;
-	if (def_is_orig(def)) {
+	if (s->orig) {
 		/* passthrough: run the original 68k and log its real cost vs the C charge */
 		long c0 = gx_m68k_cycles();
 		if (def->exits)
-			hle_run68k_until(&c, def->exits);
+			hle_run68k_until(cp, def->exits);
 		else
-			hle_call68k_orig(&c, c.pc);
+			hle_call68k_orig(cp, cp->pc);
 		long d = (gx_m68k_cycles() - c0) / 7;
 		fprintf(stderr, "orig %-18s real %ld cyc  (C charge %d, delta %ld)\n",
 		        def->name, d, def->cycles, d - def->cycles);
-		c.cycles = (int)(d > 0 ? d : 0);
+		cp->cycles = (int)(d > 0 ? d : 0);
+	} else if (cor) {
+		cor_run(s, true);
 	} else {
-		def->fn(&c);
+		def->fn(cp);
+	}
+	return rs_finish(s);
+}
+
+/* what is left of a call once its function has returned or yielded */
+static int rs_finish(rs *s)
+{
+	hle_ctx *cp = &s->c;
+#define c (*cp)
+	const hle_def *def = s->def;
+	entry *e = s->e;
+	bool top = s->top;
+	bool yielded = s->cor && !s->done;
+	if (!s->orig) {
 		if (c.tl_used)
 			c.cycles = (int)(c.tl / 7);
+		else if (yielded)
+			c.cycles = 0;
 	}
 	if (top)
 		g_bail_on = false;
-	g_cur_def = outer_def;
+	g_cur_def = s->outer_def;
 	if (g_decline) {
 		g_decline = false;
+		if (yielded) {
+			fprintf(stderr, "hle: %s declined after a yield\n", def->name);
+			abort();
+		}
 		if (top) {
 			dstat(def, g_why);
 			g_declined++;
@@ -723,7 +894,29 @@ static int run_def(const hle_def *def, entry *e)
 			e->calls--;
 		g_frame_calls--;
 		g_seq_n = 0;
+		if (s->cor)
+			s->used = false;
 		return -1;
+	}
+	if (yielded) {
+		/* hand the machine to the frame loop at this instruction boundary: the time so far is the
+		 * charge, the session (if the function has one) ends and is re-opened on resume */
+		int lvl = gx_m68k_pending_irq();
+		s->y_nest = g_nest;
+		s->y_sess = g_sess;
+		s->y_timed = g_sess_timed;
+		long nested = sess_end(c.tl_used);
+		g_nest = 0;
+		g_top = false;
+		gx_m68k_set_irq_level(lvl);
+		long total = (c.cycles > 0 ? c.cycles : 0) + nested;
+		c.cycles = 0;
+		uint32_t pc_keep = c.pc;
+		c.pc = YIELD_PC;
+		ctx_store(cp);
+		c.pc = pc_keep;
+		g_susp[g_nsusp++] = s;
+		return (int)total;
 	}
 	if (g_seq_on > 0 && top) {
 		fprintf(stderr, "seq %s:", def->name);
@@ -734,9 +927,9 @@ static int run_def(const hle_def *def, entry *e)
 	}
 	if (def->exits) {
 		/* HLE_RANGE: must leave through a declared exit */
-		if (!c.jumped || !(hle_exit_match(def->exits, c.pc, c.a[7], sp0) || (c.bail && c.a[7] == sp0))) {
+		if (!c.jumped || !(hle_exit_match(def->exits, c.pc, c.a[7], s->sp0) || (c.bail && c.a[7] == s->sp0))) {
 			fprintf(stderr, "hle: range %s ($%06X) left via $%06X with SP %+d%s, not a declared exit\n",
-			        def->name, def->addr, c.pc, (int)(c.a[7] - sp0), c.jumped ? "" : " (no hle_jump)");
+			        def->name, def->addr, c.pc, (int)(c.a[7] - s->sp0), c.jumped ? "" : " (no hle_jump)");
 			abort();
 		}
 	} else if (!c.jumped) {
@@ -756,7 +949,7 @@ static int run_def(const hle_def *def, entry *e)
 	 * would have accrued (the gap after each refresh is 896-14 = 882 mcycles) and advance
 	 * refresh_cycles so the next real instruction keeps the right phase. Nested 68k ran for
 	 * real, so its refresh is already inside `nested`. */
-	if (!def_is_orig(def) && total > 0 && !hle_post_access && !c.tl_used && !(top && g_exact)) {
+	if (!s->orig && total > 0 && !hle_post_access && !c.tl_used && !(top && g_exact)) {
 		int delta = (int)(total * 7);
 		int R = gx_m68k_refresh_cycles(), C = gx_m68k_cycles();
 		int gap = R - C;
@@ -766,7 +959,7 @@ static int run_def(const hle_def *def, entry *e)
 			gx_m68k_set_refresh_cycles(R + 896 * n);
 		}
 	}
-	if (chk) {
+	if (s->chk) {
 		g_chk_ctx = NULL;
 		g_chk_def = NULL;
 		if (g_chk_seg)
@@ -779,7 +972,7 @@ static int run_def(const hle_def *def, entry *e)
 	/* A bail (game/vdplist.c) ends at the very instruction boundary where the original's slice ends and
 	 * the frame loop raises the interrupt: the lump must not be cut in slices (an interrupt would be
 	 * taken before its last few cycles, which belong in front of it). */
-	if (unmasked && total > STALL_SLICE && !c.bail && !hle_post_access && g_nest == 0 && !g_stall_debt) {
+	if (s->unmasked && total > STALL_SLICE && !c.bail && !s->cor && !hle_post_access && g_nest == 0 && !g_stall_debt) {
 		/* Long function entered with VBlank unmasked: the original would have been
 		 * interrupted along the way. Spend the cost in slices at STALL_PC, a trap that
 		 * "returns" to the real continuation (pushed like a jsr, so a savestate taken
@@ -791,10 +984,93 @@ static int run_def(const hle_def *def, entry *e)
 		total = STALL_SLICE;
 	}
 	ctx_store(&c);
+	if (s->cor)
+		s->used = false;
 	return (int)total;
+#undef c
 }
 
-void hle_state_reset(void) { g_cur_def = NULL; g_stall_debt = 0; g_sess = false; g_sess_timed = false; g_vdp_timed = false; gx_follow_z80(0); g_top = false; g_nest = 0; }
+/* YIELD_PC: an interrupt (or nothing) brought the CPU back to where a function yielded: continue it */
+static int resume_cor(void)
+{
+	if (!g_nsusp) {
+		fprintf(stderr, "hle: YIELD_PC reached with no suspended function\n");
+		abort();
+	}
+	rs *s = g_susp[--g_nsusp];
+	g_top = true;
+	g_cur_def = s->def;
+	g_bnd = gx_m68k_cycle_end();
+	g_bail_on = false;
+	g_nest = s->y_nest;
+	if (s->y_sess) {
+		g_sess = true;
+		g_sess_c0 = gx_m68k_cycles();
+		g_sess_r0 = gx_m68k_refresh_cycles();
+		g_sess_line_base = gx_vdp_line_base();
+		g_sess_vc = gx_vdp_vcounter();
+		if (s->y_timed) {
+			g_sess_timed = true;
+			gx_follow_z80(1);
+		}
+	}
+	cor_run(s, false);
+	return rs_finish(s);
+}
+
+/* hle_callc: a `jsr` made by a coroutine to a function that is C (and keeps an exact timeline) runs as a
+ * direct C call that shares ctx, so the frame loop can interrupt the callee too; anything else (not C,
+ * disabled, a range, a lump-charged function, or the caller is not a coroutine) is hle_call68k. */
+static unsigned long g_callc_fb[64][2];
+static int g_callc_nfb;
+void hle_callc(hle_ctx *c, uint32_t addr)
+{
+	if (g_cor && !g_cor_block && c == &g_cor->c && !hle_post_access && !c->dry && !getenv("T2_HLE_NOCALLC")) {
+		entry *e = find_addr(addr);
+		if (e && e->enabled && !e->def.exits && !(e->def.flags & (HLE_F_WAIT | HLE_F_LOWMASK))) {
+			bool exact = (e->def.flags & HLE_F_YIELD) != 0;
+			if (!exact && (e->def.flags & HLE_F_PURE)) {
+				hle_ctx d = *c;
+				int refresh0 = gx_m68k_refresh_cycles();
+				d.dry = 1;
+				d.tl = 0;
+				d.tl_used = 0;
+				memcpy(g_snap, work_ram, sizeof g_snap);
+				e->def.fn(&d);
+				memcpy(work_ram, g_snap, sizeof g_snap);
+				gx_m68k_set_refresh_cycles(refresh0);
+				exact = d.tl_used != 0;
+			}
+			if (exact) {
+				e->calls++;
+				g_frame_calls++;
+				e->def.fn(c);
+				return;
+			}
+		}
+		/* statistics: what a coroutine still runs as nested 68k */
+		int i;
+		for (i = 0; i < g_callc_nfb; i++)
+			if (g_callc_fb[i][0] == addr)
+				break;
+		if (i == g_callc_nfb && g_callc_nfb < 64) {
+			g_callc_fb[g_callc_nfb][0] = addr;
+			g_callc_fb[g_callc_nfb++][1] = 0;
+		}
+		if (i < g_callc_nfb)
+			g_callc_fb[i][1]++;
+	}
+	hle_call68k(c, addr);
+}
+
+void hle_state_reset(void)
+{
+	g_cur_def = NULL; g_stall_debt = 0; g_sess = false; g_sess_timed = false; g_vdp_timed = false;
+	gx_follow_z80(0); g_top = false; g_nest = 0;
+	g_nsusp = 0; g_cor = NULL; g_cor_block = 0;
+	for (int i = 0; i < COR_MAX; i++)
+		g_pool[i].used = false;
+}
 
 /* STALL_PC: burn the next slice of g_stall_debt; then rts to the continuation */
 static int stall(void)
@@ -1016,6 +1292,14 @@ static int g_trace = -1;   /* T2_HLE_TRACE=1: log every dispatched call to stder
 
 static int dispatch(unsigned int pc)
 {
+	if (pc == YIELD_PC) {
+		int r = resume_cor();
+		if (g_prof) {
+			g_p_c += (long long)r * 7;
+			g_p_last_pc = -1;
+		}
+		return r;
+	}
 	if (pc == STALL_PC) {
 		int n = stall();
 		if (g_prof) {
@@ -1066,6 +1350,12 @@ static void declines_print(void)
 		        n[1], n[2], n[3], n[10], n[11], n[12], n[13], n[14], n[15]);
 		if (n[9])
 			fprintf(stderr, "bails: %-20s %lu\n", g_dstat[i].name, n[9]);
+		if (n[8])
+			fprintf(stderr, "yields: %-20s %lu\n", g_dstat[i].name, n[8]);
+	}
+	for (int i = 0; i < g_callc_nfb; i++) {
+		entry *e = find_addr((uint32_t)g_callc_fb[i][0]);
+		fprintf(stderr, "nested68k: $%06X %-20s %lu\n", (unsigned)g_callc_fb[i][0], e ? e->def.name : "(68k)", g_callc_fb[i][1]);
 	}
 }
 
@@ -1090,6 +1380,10 @@ void hle_install(void)
 	m68k_hle_handler = dispatch;
 	m68k_hle_bitmap = g_bitmap;
 	bitmap_set(STALL_PC, true);
+	bitmap_set(YIELD_PC, true);
+	g_cor_on = getenv("T2_HLE_NOCOR") == NULL;
+	if (getenv("T2_HLE_NOCOR_FN"))
+		snprintf(g_nocor_fn, sizeof g_nocor_fn, "%s", getenv("T2_HLE_NOCOR_FN"));
 	g_installed = true;
 }
 
@@ -1171,6 +1465,7 @@ static void call68k(hle_ctx *c, uint32_t addr, bool orig)
 	bus_w32(c->a[7], SENTINEL_RET);
 	uint32_t sp_done = c->a[7] + 4;
 	c->pc = addr;
+	g_cor_block++;
 	nest_begin();
 	ctx_store(c);
 	if (orig)
@@ -1194,6 +1489,7 @@ static void call68k(hle_ctx *c, uint32_t addr, bool orig)
 	}
 	m68k_hle_skip_pc = 0xFFFFFFFF;
 	nest_end();
+	g_cor_block--;
 	ctx_load(c);
 	c->def = save.def;
 	c->pc = save.pc;
@@ -1234,6 +1530,7 @@ void hle_run68k_until(hle_ctx *c, const uint32_t *exits)
 {
 	hle_ctx save = *c;
 	uint32_t sp = c->a[7], start = c->pc;
+	g_cor_block++;
 	nest_begin();
 	ctx_store(c);
 	m68k_hle_skip_pc = start;
@@ -1257,6 +1554,7 @@ void hle_run68k_until(hle_ctx *c, const uint32_t *exits)
 	}
 	m68k_hle_skip_pc = 0xFFFFFFFF;
 	nest_end();
+	g_cor_block--;
 	ctx_load(c);
 	c->def = save.def;
 	c->cycles = save.cycles;

@@ -449,7 +449,7 @@ static void call68(hle_ctx *c, uint32_t addr, int cost)
 {
 	hle_insn(c, cost);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 static void bra(hle_ctx *c) { hle_insn(c, 10); }          /* bra.s / bra.w */
 

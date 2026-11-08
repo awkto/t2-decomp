@@ -7,7 +7,11 @@ for the work-RAM-only instructions of some routines, as HLE_RANGE_PURE pieces: a
 leaves the routine's range) and hle_jump()s to that instruction, which the 68k executes.  The exits (with
 their stack delta) are computed by a walk over the control flow.
 
-usage: python3 -I tools/py/piecegen.py ring|player > port/game/<file>.c"""
+A spec with whole=True emits each entry as ONE function (HLE_FUNC_YIELD) instead of pieces: the jsr/bsr
+instructions are charged and made as direct C calls through hle_callc (the callee is C and can be
+interrupted too, else it runs as nested 68k), the rts returns. For code that must run with no 68k fallback.
+
+usage: python3 -I tools/py/piecegen.py ring|player|pickup > port/game/<file>.c"""
 import os
 import re
 import subprocess
@@ -35,6 +39,16 @@ SPECS = {
         title="""The per-player state handler $008C8E (PlayerState) and its caller $008C52 (PlayersState): timers,
  * the state-1/5/7 sounds and bars, the state-2 death / continue paths up to the PlayerDied label
  * ($008D68, which game/screens.c already covers).""",
+    ),
+    "pickup": dict(
+        file="pickup2.c",
+        whole=True,
+        ranges=[(0x012D00, 0x012DDC)],
+        entries={0x012D00: "PickupSpawn"},
+        prefix="Pickup",
+        title="""The pickup/missile spawn helper sub_012D00 (called by PlayerButtons and PlayerShoot): it picks the
+ * slot with MissileAlloc, fills it from the player's record and the table at $012DDC, and starts the
+ * target search.""",
     ),
     "helpers": dict(
         file="helpers.c",
@@ -290,8 +304,13 @@ class Gen:
                 cls, tg = self.kind(i)
                 nxt = a + self.length(i)
                 if cls == "stop":
-                    exits.add((a, d))
                     t, mn, args = self.parsed(i)
+                    if self.spec.get("whole"):
+                        assert mn in CALLS or mn == "rts", "whole mode: %s at %X" % (t, a)
+                        if mn in CALLS:
+                            stack.append((nxt, d))
+                        continue
+                    exits.add((a, d))
                     if mn in CALLS:
                         todo.append(nxt)
                     continue
@@ -330,6 +349,15 @@ class Gen:
             return lab + "\t" + s + tail + "  " + cmt
 
         cls, tg = self.kind(i)
+        if cls == "stop" and self.spec.get("whole"):
+            if mn == "rts":
+                return line("hle_insn(ctx, %d); return;" % base)
+            tgt = args[0]
+            if mn == "jsr" and tgt.startswith("0x"):
+                tgt = tgt[2:]
+            m2 = re.fullmatch(r"(?:%pc@\()?([0-9a-f]+)\)?", tgt)
+            assert m2, "call target " + t
+            return line("{ hle_insn(ctx, %d); hle_sync(ctx); hle_callc(ctx, 0x%06X); }" % (base, int(m2.group(1), 16)))
         if cls == "stop":
             return line("hle_jump(ctx, 0x%06X); return;" % a)
         m = BRANCH.fullmatch(mn)
@@ -367,6 +395,10 @@ class Gen:
                 return line("set_b(&ctx->d[%d], %s); hle_insn(ctx, %d);" % (op[1], val, base))
             pre, ea = ea_of(op, 1, "d")
             return line("{ %s st8(eaD, %s); } hle_insn(ctx, %d);" % (pre, val, base))
+        if mn == "exg":
+            r1, r2 = parse_op(args[0]), parse_op(args[1])
+            assert r1[0] == "d" and r2[0] == "d"
+            return line("{ uint32_t t_ = ctx->d[%d]; ctx->d[%d] = ctx->d[%d]; ctx->d[%d] = t_; } hle_insn(ctx, %d);" % (r1[1], r1[1], r2[1], r2[1], base))
         if mn == "lea":
             src = parse_op(args[0])
             dst = parse_op(args[1])
@@ -572,6 +604,15 @@ def main():
         if g.kind(g.ins[e])[0] == "stop":
             del entries[e]
     out = [HEADER % dict(title=spec["title"])]
+    if spec.get("whole"):
+        (e,) = sorted(entries)
+        out.append("HLE_FUNC_YIELD(0x%06X, %s, 4000)\n{" % (e, spec["entries"][e]))
+        for a in sorted(reached):
+            out.append(g.emit(g.ins[a], labels))
+        out.append("}")
+        print("\n".join(out))
+        sys.stderr.write("%d instructions\n" % len(reached))
+        return
     out.append("static void pc_run(hle_ctx *ctx, uint32_t pc)\n{\n\tswitch (pc) {")
     for e in sorted(entries):
         out.append("\tcase 0x%06X: goto L_%06X;" % (e, e))

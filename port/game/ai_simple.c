@@ -217,7 +217,7 @@ HLE_RANGE(0x00C8BA, crate_open1, 6000, EXIT_NEXT)
 		hle_insn(ctx, 12);                      /* move.w (0x2a,a6),d2 */
 		hle_insn(ctx, 18);                      /* jsr (sub_012A16,pc) */
 		hle_sync(ctx);
-		hle_call68k(ctx, 0x012A16);
+		hle_callc(ctx, 0x012A16);
 		a6 = ctx->a[6];
 		RAM32_W(a6 + 0x20, 0xC8F0);
 		cc_logic32(ctx, 0xC8F0);
@@ -318,7 +318,7 @@ static void human_tiles(hle_ctx *c)
 	hle_insn(c, 16);                                /* move.w (abs).l,d7 */
 	hle_insn(c, 18);                                /* jsr (VdpQueueTileRect,pc) */
 	hle_sync(c);
-	hle_call68k(c, TILE_RECT);
+	hle_callc(c, TILE_RECT);
 	set_w(&c->d[7], pop16(c));
 	cc_logic16(c, c->d[7]);
 	hle_insn(c, 8);                                 /* move.w (sp)+,d7 */
@@ -463,7 +463,7 @@ static void wall_call(hle_ctx *c, uint32_t addr)
 {
 	hle_insn(c, 18);                                /* jsr (sub_xxxxxx,pc) */
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* dbra d5 at the loop end; returns 1 when it loops */

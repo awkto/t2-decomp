@@ -100,7 +100,7 @@ HLE_FUNC_PURE(0x00B2F2, ScrReturn, 36)
 
 /* $009C18: movea.l (a0)+,a1 ; move.l a0,-(sp) ; movea.l a1,a0 ; move.w #$c000,d6 ;
  *          jsr (PrintText,pc) ; movea.l (sp)+,a0 ; rts.   PrintText runs as 68k. */
-HLE_FUNC(0x009C18, ScrText, 60000)
+HLE_FUNC_YIELD(0x009C18, ScrText, 60000)
 {
 	HLE_SEQ(ctx, 12, 12, 4, 8, 18);
 	ctx->a[1] = rd32(ctx->a[0]);
@@ -110,17 +110,17 @@ HLE_FUNC(0x009C18, ScrText, 60000)
 	set_w(&ctx->d[6], 0xC000);
 	cc_logic16(ctx, 0xC000);
 	hle_sync(ctx);
-	hle_call68k(ctx, 0x007DEE);
+	hle_callc(ctx, 0x007DEE);
 	hle_insn(ctx, 12);
 	ctx->a[0] = pop32(ctx);
 	hle_insn(ctx, 16);
 }
 
 /* $009C30: jsr (callee,pc) ; rts */
-HLE_FUNC(0x009C30, ScrTextClear, 60000)
+HLE_FUNC_YIELD(0x009C30, ScrTextClear, 60000)
 {
 	hle_insn(ctx, 18);
 	hle_sync(ctx);
-	hle_call68k(ctx, 0x00BF46);
+	hle_callc(ctx, 0x00BF46);
 	hle_insn(ctx, 16);
 }

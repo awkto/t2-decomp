@@ -40,7 +40,9 @@ static void post(int c);
  * differs for a call that spans a line. The lockstep gate is the proof for the V counter. */
 static void follow(void)
 {
-	if (hle_post_access)
+	if (hle_yielding())
+		hle_yield_point();            /* the frame loop's line work happens while we are suspended */
+	else if (hle_post_access)
 		gx_vdp_follow_cpu();
 	else
 		gx_vdp_follow_cpu_lines();
@@ -84,7 +86,7 @@ static int safe_run(int bound_cycles)
 {
 	if (hle_chk_on)
 		hle_chk_note(bound_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length())
 		return 0;
@@ -97,7 +99,7 @@ static int head_ok(int head_cycles)
 {
 	if (hle_chk_on)
 		hle_chk_note(head_cycles);
-	if (hle_post_access)
+	if (hle_post_access || hle_yielding())
 		return 1;
 	if (gx_dma_length())
 		return 0;
@@ -109,13 +111,15 @@ static int g_armed;
 static long g_tog;
 static int due(int slack)
 {
+	if (hle_yielding())
+		return 0;
 	if (g_armed)
 		follow();
 	return g_armed && (long)gx_m68k_cycles() + (long)slack * 7 >= g_tog;
 }
 
 /* ---------------------------------------------------------------- CramUpload $0080FE */
-HLE_FUNC(0x0080FE, CramUpload, 0)
+HLE_FUNC_YIELD(0x0080FE, CramUpload, 0)
 {
 	uint32_t a0 = ctx->a[0] & 0xFFFFFF;
 	if (a0 + 128 > 0x1000000u || (a0 >= 0x400000u && a0 < 0xE00000u) ||
@@ -263,7 +267,7 @@ static int tail_874e(hle_ctx *ctx)
 #define HEAD_874E 450
 #define LOOP_COST 110
 
-HLE_FUNC(0x00874E, VramFillTail, 0)
+HLE_FUNC_YIELD(0x00874E, VramFillTail, 0)
 {
 	if (!fill_enter(HEAD_874E, 400 + 0x700 * LOOP_COST)) {
 		hle_decline();
@@ -274,7 +278,7 @@ HLE_FUNC(0x00874E, VramFillTail, 0)
 }
 
 /* sub_00873A: d2 = 0, loop at $00873E over d1+1 words, then falls into sub_00874E */
-HLE_FUNC(0x00873A, VramFillBody, 0)
+HLE_FUNC_YIELD(0x00873A, VramFillBody, 0)
 {
 	if (ctx->a[5] != 0xC00000u ||
 	    !fill_enter(100, 400 + (int)((ctx->d[1] & 0xFFFF) + 1 + 0x700) * LOOP_COST)) {
@@ -295,7 +299,7 @@ HLE_FUNC(0x00873A, VramFillBody, 0)
 }
 
 /* ---------------------------------------------------------------- VramFillWords $008782 */
-HLE_FUNC(0x008782, VramFillWords, 0)
+HLE_FUNC_YIELD(0x008782, VramFillWords, 0)
 {
 	uint32_t words = ((ctx->d[1] & 0xFFFF) >> 1) + 1;
 	if (!fill_enter(500, 500 + (int)words * LOOP_COST)) {

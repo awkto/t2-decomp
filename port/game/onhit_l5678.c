@@ -87,7 +87,7 @@ static void jsr68(hle_ctx *c, uint32_t addr, int cost)
 {
 	hle_insn(c, cost);
 	hle_sync(c);
-	hle_call68k(c, addr);
+	hle_callc(c, addr);
 }
 
 /* bclr #n,Dn (Z = the bit before) */

@@ -29,6 +29,7 @@ void gx_m68k_set_ir(unsigned op);
 void gx_vdp_fifo_clamp(void);    /* FIFO read-out stamps <= CPU clock (after a rewind) */
 void gx_m68k_set_cycles(int c);  /* rewind the CPU clock (hle.c, after nested calls) */
 void gx_m68k_clear_irq(void);
+void gx_m68k_set_irq_level(int l);   /* restore a level read by gx_m68k_pending_irq() */
 int gx_irq_boundary_in(int c0, int c1, int *at);   /* first IRQ-raising slice boundary in (c0,c1], mcycles; returns its level or 0 */
 int gx_m68k_pending_irq(void);   /* interrupt level the CPU has asserted (0 = none) */
 int gx_m68k_cycle_end(void);

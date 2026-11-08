@@ -299,7 +299,7 @@ HLE_RANGE(0x008A5E, PalFade, 14000, 0x008A4C, 0x008A7A)
 	ctx->a[0] = PAL_CUR;                 /* lea.l (pal_cur).l,a0 */
 	HLE_SEQ(ctx, 12, 20);                /* lea.l (abs).l,a0 / jsr (CramUpload).l: before the call, so it starts on time */
 	hle_sync(ctx);
-	hle_call68k(ctx, CRAM_UPLOAD);       /* jsr (CramUpload).l */
+	hle_callc(ctx, CRAM_UPLOAD);       /* jsr (CramUpload).l */
 	uint8_t f = RAM8(PAL_FADING);
 	hle_insn(ctx, 16);                   /* tst.b (abs).l */
 	/* tst.b pal_fading: N/Z from the byte, V=C=0, X unchanged */
