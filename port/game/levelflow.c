@@ -20,6 +20,9 @@
  * one function, lf_run(), entered through a switch on the entry address; branches inside the routines
  * are gotos. */
 #include "hle.h"
+void VdpListReset(hle_ctx *ctx);
+void VdpListEnd(hle_ctx *ctx);
+void SpriteQueueReset(hle_ctx *ctx);
 
 #include <stdint.h>
 
@@ -438,7 +441,7 @@ L_001EB6:
 	{ uint32_t v = (ctx->d[1] & 0xFFFF); RAM16(0xFFFF9E3A) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 001EC0 move.w d1,0xffff9e3a */
 	hle_jump(ctx, 0x001EC6); return;  /* 001EC6 jsr 0x1320a */
-	hle_jump(ctx, 0x001ECC); return;  /* 001ECC jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x001ED2); VdpListReset(ctx); ctx->a[7] += 4;  /* 001ECC jsr 0x11d12 (C) */
 L_001ED2:
 	ctx->a[1] = 0x0001346D;
 	hle_insn(ctx, 12); /* 001ED2 lea 0x1346d,a1 */
@@ -473,9 +476,9 @@ L_001F02:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 001F16 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x001F1C); return;  /* 001F1C jsr 0x12234 */
-	hle_jump(ctx, 0x001F22); return;  /* 001F22 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x001F28); VdpListEnd(ctx); ctx->a[7] += 4;  /* 001F22 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x001F28); return;  /* 001F28 jsr 0x11d32 */
-	hle_jump(ctx, 0x001F2E); return;  /* 001F2E jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x001F34); VdpListReset(ctx); ctx->a[7] += 4;  /* 001F2E jsr 0x11d12 (C) */
 L_001F34:
 	{ uint32_t v = 0xEBC0; set_w(&ctx->d[1], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 8); /* 001F34 move.w #-5184,d1 */
@@ -504,7 +507,7 @@ L_001F54:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 001F68 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x001F6E); return;  /* 001F6E jsr 0x12234 */
-	hle_jump(ctx, 0x001F74); return;  /* 001F74 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x001F7A); VdpListEnd(ctx); ctx->a[7] += 4;  /* 001F74 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x001F7A); return;  /* 001F7A jsr 0x11d32 */
 L_001F80:
 	ctx->a[0] = 0x0000861A;
@@ -584,7 +587,7 @@ L_00203A:
 	{ uint32_t v = (ctx->d[1] & 0xFFFF); RAM16(0xFFFF9E3A) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 002044 move.w d1,0xffff9e3a */
 	hle_jump(ctx, 0x00204A); return;  /* 00204A jsr 0x1320a */
-	hle_jump(ctx, 0x002050); return;  /* 002050 jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x002056); VdpListReset(ctx); ctx->a[7] += 4;  /* 002050 jsr 0x11d12 (C) */
 L_002056:
 	{ uint32_t v = 0xC140; set_w(&ctx->d[1], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 8); /* 002056 move.w #-16064,d1 */
@@ -669,7 +672,7 @@ L_0020F6:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 00210A move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x002110); return;  /* 002110 jsr 0x12234 */
-	hle_jump(ctx, 0x002116); return;  /* 002116 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x00211C); VdpListEnd(ctx); ctx->a[7] += 4;  /* 002116 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x00211C); return;  /* 00211C jsr 0x11d32 */
 L_002122:
 	ctx->a[0] = 0x000085BA;
@@ -748,7 +751,7 @@ L_0021DA:
 	hle_insn(ctx, 20); /* 0021EA move.w #1260,0xffff9e6c */
 	{ uint32_t v = 0x4C2; RAM16(0xFFFF9E3E) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 20); /* 0021F2 move.w #1218,0xffff9e3e */
-	hle_jump(ctx, 0x0021FA); return;  /* 0021FA jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x002200); VdpListReset(ctx); ctx->a[7] += 4;  /* 0021FA jsr 0x11d12 (C) */
 L_002200:
 	ctx->a[1] = 0x0001345F;
 	hle_insn(ctx, 12); /* 002200 lea 0x1345f,a1 */
@@ -789,7 +792,7 @@ L_002240:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 002254 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x00225A); return;  /* 00225A jsr 0x12234 */
-	hle_jump(ctx, 0x002260); return;  /* 002260 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x002266); VdpListEnd(ctx); ctx->a[7] += 4;  /* 002260 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x002266); return;  /* 002266 jsr 0x11d32 */
 L_00226C:
 	ctx->a[0] = 0x0000859A;
@@ -880,7 +883,7 @@ L_002342:
 	hle_insn(ctx, 20); /* 00235A move.w #1227,0xffff9e3e */
 	{ uint32_t v = 0x4F5; RAM16(0xFFFF9E58) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 20); /* 002362 move.w #1269,0xffff9e58 */
-	hle_jump(ctx, 0x00236A); return;  /* 00236A jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x002370); VdpListReset(ctx); ctx->a[7] += 4;  /* 00236A jsr 0x11d12 (C) */
 L_002370:
 	ctx->a[1] = 0x0001345F;
 	hle_insn(ctx, 12); /* 002370 lea 0x1345f,a1 */
@@ -921,7 +924,7 @@ L_0023B0:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 0023C4 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x0023CA); return;  /* 0023CA jsr 0x12234 */
-	hle_jump(ctx, 0x0023D0); return;  /* 0023D0 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x0023D6); VdpListEnd(ctx); ctx->a[7] += 4;  /* 0023D0 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x0023D6); return;  /* 0023D6 jsr 0x11d32 */
 L_0023DC:
 	ctx->a[0] = 0x0000857A;
@@ -1006,7 +1009,7 @@ L_00246C:
 	hle_insn(ctx, 20); /* 0024DC move.w #1058,0xffff9e56 */
 	{ uint32_t v = 0x372; RAM16(0xFFFF9E1C) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 20); /* 0024E4 move.w #882,0xffff9e1c */
-	hle_jump(ctx, 0x0024EC); return;  /* 0024EC jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x0024F2); VdpListReset(ctx); ctx->a[7] += 4;  /* 0024EC jsr 0x11d12 (C) */
 L_0024F2:
 	ctx->a[1] = 0x00013454;
 	hle_insn(ctx, 12); /* 0024F2 lea 0x13454,a1 */
@@ -1055,9 +1058,9 @@ L_002542:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 002556 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x00255C); return;  /* 00255C jsr 0x12234 */
-	hle_jump(ctx, 0x002562); return;  /* 002562 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x002568); VdpListEnd(ctx); ctx->a[7] += 4;  /* 002562 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x002568); return;  /* 002568 jsr 0x11d32 */
-	hle_jump(ctx, 0x00256E); return;  /* 00256E jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x002574); VdpListReset(ctx); ctx->a[7] += 4;  /* 00256E jsr 0x11d12 (C) */
 L_002574:
 	{ uint32_t v = 0xE100; set_w(&ctx->d[1], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 8); /* 002574 move.w #-7936,d1 */
@@ -1114,7 +1117,7 @@ L_0025D4:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 0025E8 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x0025EE); return;  /* 0025EE jsr 0x12234 */
-	hle_jump(ctx, 0x0025F4); return;  /* 0025F4 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x0025FA); VdpListEnd(ctx); ctx->a[7] += 4;  /* 0025F4 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x0025FA); return;  /* 0025FA jsr 0x11d32 */
 L_002600:
 	ctx->a[0] = 0x0000851A;
@@ -1241,7 +1244,7 @@ L_0026C2:
 	hle_insn(ctx, 20); /* 00277A move.w #1098,0xffff9e68 */
 	{ uint32_t v = 0x3D6; RAM16(0xFFFF9E6C) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 20); /* 002782 move.w #982,0xffff9e6c */
-	hle_jump(ctx, 0x00278A); return;  /* 00278A jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x002790); VdpListReset(ctx); ctx->a[7] += 4;  /* 00278A jsr 0x11d12 (C) */
 L_002790:
 	ctx->a[1] = 0x0001345A;
 	hle_insn(ctx, 12); /* 002790 lea 0x1345a,a1 */
@@ -1276,7 +1279,7 @@ L_0027C0:
 	{ uint32_t v = RAM16(0xFFFF9E38); set_w(&ctx->d[7], v); cc_logic16(ctx, v); }
 	hle_insn(ctx, 16); /* 0027D4 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x0027DA); return;  /* 0027DA jsr 0x12234 */
-	hle_jump(ctx, 0x0027E0); return;  /* 0027E0 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x0027E6); VdpListEnd(ctx); ctx->a[7] += 4;  /* 0027E0 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x0027E6); return;  /* 0027E6 jsr 0x11d32 */
 L_0027EC:
 	ctx->a[0] = 0x000084BA;
@@ -1367,7 +1370,7 @@ L_0028A6:
 	hle_insn(ctx, 20); /* 0028D6 move.w #655,0xffff9e44 */
 	{ uint32_t v = 0x357; RAM16(0xFFFF9E3C) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 20); /* 0028DE move.w #855,0xffff9e3c */
-	hle_jump(ctx, 0x0028E6); return;  /* 0028E6 jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x0028EC); VdpListReset(ctx); ctx->a[7] += 4;  /* 0028E6 jsr 0x11d12 (C) */
 L_0028EC:
 	ctx->a[1] = 0x00013469;
 	hle_insn(ctx, 12); /* 0028EC lea 0x13469,a1 */
@@ -1403,7 +1406,7 @@ L_00291C:
 	hle_insn(ctx, 16); /* 002930 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x002936); return;  /* 002936 jsr 0x12234 */
 	hle_jump(ctx, 0x00293C); return;  /* 00293C jsr 0xbe42 */
-	hle_jump(ctx, 0x002942); return;  /* 002942 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x002948); VdpListEnd(ctx); ctx->a[7] += 4;  /* 002942 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x002948); return;  /* 002948 jsr 0x11d32 */
 L_00294E:
 	ctx->a[0] = 0x000084BA;
@@ -1486,7 +1489,7 @@ L_0029B6:
 	hle_insn(ctx, 20); /* 002A3E move.w #387,0xffff9e44 */
 	{ uint32_t v = 0x183; RAM16(0xFFFF9E48) = v; cc_logic16(ctx, v); }
 	hle_insn(ctx, 20); /* 002A46 move.w #387,0xffff9e48 */
-	hle_jump(ctx, 0x002A4E); return;  /* 002A4E jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x002A54); VdpListReset(ctx); ctx->a[7] += 4;  /* 002A4E jsr 0x11d12 (C) */
 L_002A54:
 	ctx->a[1] = 0x00013448;
 	hle_insn(ctx, 12); /* 002A54 lea 0x13448,a1 */
@@ -1534,7 +1537,7 @@ L_002AA4:
 	hle_insn(ctx, 16); /* 002AB8 move.w 0xffff9e38,d7 */
 	hle_jump(ctx, 0x002ABE); return;  /* 002ABE jsr 0x12234 */
 	hle_jump(ctx, 0x002AC4); return;  /* 002AC4 jsr 0xbe42 */
-	hle_jump(ctx, 0x002ACA); return;  /* 002ACA jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x002AD0); VdpListEnd(ctx); ctx->a[7] += 4;  /* 002ACA jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x002AD0); return;  /* 002AD0 jsr 0x11d32 */
 L_002AD6:
 	ctx->a[0] = 0x000084BA;
@@ -1667,12 +1670,12 @@ L_0075C2:
 	hle_jump(ctx, 0x0075E8); return;  /* 0075E8 jsr pc@(0x8c52) */
 	hle_jump(ctx, 0x0075EC); return;  /* 0075EC jsr pc@(0x9186) */
 	hle_jump(ctx, 0x0075F0); return;  /* 0075F0 jsr pc@(0x9104) */
-	hle_jump(ctx, 0x0075F4); return;  /* 0075F4 jsr 0x11d12 */
+	hle_insn(ctx, 20); push32(ctx, 0x0075FA); VdpListReset(ctx); ctx->a[7] += 4;  /* 0075F4 jsr 0x11d12 (C) */
 	hle_jump(ctx, 0x0075FA); return;  /* 0075FA jsr pc@(0x9326) */
-	hle_jump(ctx, 0x0075FE); return;  /* 0075FE jsr 0x13376 */
+	hle_insn(ctx, 20); push32(ctx, 0x007604); SpriteQueueReset(ctx); ctx->a[7] += 4;  /* 0075FE jsr 0x13376 (C) */
 	hle_jump(ctx, 0x007604); return;  /* 007604 jsr pc@(0xb398) */
 	hle_jump(ctx, 0x007608); return;  /* 007608 jsr 0x13272 */
-	hle_jump(ctx, 0x00760E); return;  /* 00760E jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x007614); VdpListEnd(ctx); ctx->a[7] += 4;  /* 00760E jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x007614); return;  /* 007614 jsr 0x11d32 */
 L_00761A:
 	RAM8(0xFFFFA246) = 0xFF;
@@ -1715,10 +1718,10 @@ L_0078D0:
 	if (COND_NE) { hle_insn(ctx, 10); goto L_007924; }  /* 0078F4 bne.s 0x7924 */
 	hle_insn(ctx, 8);
 L_0078F6:
-	hle_jump(ctx, 0x0078F6); return;  /* 0078F6 jsr 0x11d12 */
-	hle_jump(ctx, 0x0078FC); return;  /* 0078FC jsr 0x13376 */
+	hle_insn(ctx, 20); push32(ctx, 0x0078FC); VdpListReset(ctx); ctx->a[7] += 4;  /* 0078F6 jsr 0x11d12 (C) */
+	hle_insn(ctx, 20); push32(ctx, 0x007902); SpriteQueueReset(ctx); ctx->a[7] += 4;  /* 0078FC jsr 0x13376 (C) */
 	hle_jump(ctx, 0x007902); return;  /* 007902 jsr 0x13272 */
-	hle_jump(ctx, 0x007908); return;  /* 007908 jsr 0x11d28 */
+	hle_insn(ctx, 20); push32(ctx, 0x00790E); VdpListEnd(ctx); ctx->a[7] += 4;  /* 007908 jsr 0x11d28 (C) */
 	hle_jump(ctx, 0x00790E); return;  /* 00790E jsr pc@(0x86e2) */
 	hle_jump(ctx, 0x007912); return;  /* 007912 jsr 0x11d32 */
 L_007918:

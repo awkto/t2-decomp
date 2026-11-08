@@ -376,6 +376,27 @@ L_0131A8:;
 	hle_insn(ctx, 10); goto L_013192; /* 0131B0 bras 0x13192 */
 }
 
+/* $013188: the shared tail of the missile states 1..3 (a5 = the frame table): one step of the movement
+ * script (C), the slot is freed when it ended, the frame is queued and the loop goes on at sub_012432.
+ * The 68k reaches it by `bra.s` from the three state stubs when MissilesRun bailed or declined. */
+HLE_RANGE_PURE(0x013188, MissileTail, 1000, 0x012432)
+{
+	{ hle_insn(ctx, 18); sub_00C48E(ctx); } /* 013188 jsr %pc@(0xc48e) */
+	{ cc_logic16(ctx, (ctx->d[4] & 0xFFFFu)); hle_insn(ctx, 4); } /* 01318C tstw %d4 */
+	if (bw(ctx, c_z(ctx))) goto L_0131A8; /* 01318E beqw 0x131a8 */
+L_013192:;
+	{ uint32_t _v = ld16((ctx->a[6] + (uint32_t)(int32_t)20)); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 12); } /* 013192 movew %fp@(20),%d1 */
+	{ sh_w(ctx, 1, 'r', 4); hle_insn(ctx, 14); } /* 013196 lsrw #4,%d1 */
+	{ uint32_t _s = 0xEu; uint32_t _d = (ctx->d[1] & 0xFFFFu); uint32_t _r = (_d & _s) & 0xFFFFu; cc_logic16(ctx, _r); set_w(&ctx->d[1], _r); hle_insn(ctx, 8); } /* 013198 andiw #14,%d1 */
+	{ uint32_t _v = ld16((ctx->a[5] + (uint32_t)(int32_t)0 + (uint32_t)((int32_t)(int16_t)ctx->d[1]))); set_w(&ctx->d[1], _v); cc_logic16(ctx, _v); hle_insn(ctx, 14); } /* 01319C movew %a5@(0,%d1:w),%d1 */
+	{ hle_insn(ctx, 18); ObjQueueSprite(ctx); } /* 0131A0 jsr %pc@(0x13228) */
+	hle_insn(ctx, 10); hle_jump(ctx, 0x012432); return; /* 0131A4 braw 0x12432 */
+L_0131A8:;
+	{ st16(ctx->a[6], 0); cc_set(ctx, CC_N | CC_Z | CC_V | CC_C, CC_Z); hle_insn(ctx, 12); } /* 0131A8 clrw %fp@ */
+	{ uint32_t _s = 0x1u; uint32_t _da = 0xFFFF80D6u; uint32_t _d = ld16(_da); uint32_t _r = alu(ctx, OP_SUB, _d, _s, 16, 1); st16(_da, _r); hle_insn(ctx, 20); } /* 0131AA subqw #1,0xffff80d6 */
+	hle_insn(ctx, 10); goto L_013192; /* 0131B0 bras 0x13192 */
+}
+
 /* sub_012FC2 (called after its jsr/bsr was charged; the rts is charged here) */
 static void sub_012FC2(hle_ctx *ctx)
 {
