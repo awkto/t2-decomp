@@ -1,0 +1,53 @@
+--- a/core/m68k/m68kcpu.c
++++ b/core/m68k/m68kcpu.c
+@@ -41,6 +41,14 @@
+ int (*m68k_hle_handler)(unsigned int pc) = NULL;
+ unsigned int m68k_hle_skip_pc = 0xFFFFFFFF;
+ static int m68k_hle_try(void);
++/* t2-decomp (gpgx-irqdelay.patch): the delayed IRQ of a VDP control port write (m68k_set_irq_delay) made from a
++ * C function. The hook, when it returns 1, took the event over: the C function lets the instruction after the write
++ * run, then yields (its charge for that instruction not yet applied: m68k_hle_irq_extra mclk) and the core checks the
++ * interrupt right after the hook returns; the exception then adds the extra, as the original adds the cost of the
++ * nested instruction after the exception. */
++int (*m68k_hle_irq_delay)(unsigned int level) = NULL;
++int m68k_hle_irq_check = 0;
++int m68k_hle_irq_extra = 0;
+ /* t2-decomp #11 (gpgx-native.patch): the native runner (port/hle/native.c). While
+  * native_active is set, this core never executes an instruction: m68k_run, m68k_step_one,
+  * the delayed IRQ and the HLE SR access go to the runner, which only runs C blocks.
+@@ -247,6 +255,7 @@
+ {
+ #ifdef HOOK_HLE
+   if (native_active) { native_set_irq_delay(int_level); return; }
++  if (m68k_hle_irq_delay && m68k_hle_irq_delay(int_level)) return;
+ #endif
+   /* Prevent reentrance */
+   if (!irq_latency)
+@@ -473,6 +482,11 @@
+ #else
+       m68ki_cpu.cycles += c * MUL;
+ #endif
++      if (m68k_hle_irq_check)
++      {
++        m68k_hle_irq_check = 0;
++        m68ki_check_interrupts();
++      }
+       return 1;
+     }
+   }
+--- a/core/m68k/m68kcpu.h
++++ b/core/m68k/m68kcpu.h
+@@ -1429,6 +1429,13 @@
+ 
+   /* Update cycle count now */
+   USE_CYCLES(m68ki_cycle_interrupts[(m68ki_cpu.cycles / MUL) % 10]);
++#ifdef HOOK_HLE
++  {
++    extern int m68k_hle_irq_extra;
++    m68ki_cpu.cycles += m68k_hle_irq_extra;
++    m68k_hle_irq_extra = 0;
++  }
++#endif
+ }
+ 
+ /* ASG: Check for interrupts */

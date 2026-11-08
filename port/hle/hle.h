@@ -281,6 +281,12 @@ void hle_bail_to(hle_ctx *ctx, uint32_t pc);
  * itself; hle_insn/hle_pre/hle_post do it on their own). */
 bool hle_yielding(void);
 void hle_yield_point(void);
+/* delayed IRQ of a VDP control port write (docs/porting.md, "Yielding"): hle_irqd_enable() opts the running
+ * coroutine in, hle_irqd_note(mclk) tells it what the last instruction cost, hle_irqd_nested() is true while
+ * the instruction after the write runs (the original does no refresh check for it) */
+void hle_irqd_enable(void);
+void hle_irqd_note(int mclk);
+bool hle_irqd_nested(void);
 void hle_pre(hle_ctx *ctx);
 void hle_post(hle_ctx *ctx, int n);
 void hle_sync(hle_ctx *ctx);   /* put the pending time on the clock (before hle_call68k, after its jsr was charged) */

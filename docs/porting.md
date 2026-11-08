@@ -412,8 +412,8 @@ inside the call, and take the event where the 68k does:
   ($00D322) is served by the generated pieces of auto2.c (diverged in misc_t3 as a coroutine). Not coroutines yet
   (still declining or bailing): ReadInput / ReadInputAim / ReadPad1 / ReadPad2 / MenacerReadXY (I/O sequences
   charged in batches), BgStreamLayers, TruckMain, BgStructFree (their callees include 68k that is not ported),
-  PalFade. VramClearDma and DmaFillAt are written but compiled out (`#if 0` in vdpfill.c): gun_0a diverges eight
-  cycles after the first call that overlaps a VBlank.
+  PalFade. VramClearDma and DmaFillAt are enabled: the delayed IRQ of a VDP register 1 write is modelled (docs/native.md,
+  "DMA routines and the delayed IRQ").
 * Finding where a coroutine goes wrong: `T2_HLE_TRACE=2 T2_HLE_YLOG=1` (entries and yields with the frame),
   `T2_LINEHASH=LO-HI` (hash of a work-RAM range at every frame start and handler entry, in the 68k-only and the C
   build: diff the two logs), `T2_LH_DUMP=frame` (the bytes), `T2_ITRACE=frame,lo,hi` (every instruction start in
