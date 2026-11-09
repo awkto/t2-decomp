@@ -18,4 +18,9 @@ for q in "" "?hle=all" "?hle=all&fps=on"; do
   WEB_QUERY=$q tools/web_test.sh || rc=1
   grep -E '"(hle|hle_active|logic_fps|failed)"' runs/web/test.json
 done
+for m in all native; do                 # the play panel's Mode menu
+  echo "== Mode menu '${m}'"
+  WEB_MODE=$m tools/web_test.sh || rc=1
+  grep -E '"(mode|hle|hle_active|logic_fps|failed)"' runs/web/test.json
+done
 exit $rc

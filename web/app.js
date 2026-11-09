@@ -82,7 +82,8 @@ function romOk(path) {
 // Browsers only let a page make sound after a user gesture. A ROM kept from an earlier visit would
 // start the game without one, so the page waits for "Click to play" first: SDL creates its
 // AudioContext inside callMain, so creating it in the click handler means it starts 'running'
-// instead of silently 'suspended'. A ROM the player has just chosen or dropped starts at once.
+// instead of silently 'suspended'. A ROM the player has just chosen or dropped also goes through it, so
+// the Mode menu on the panel can be set first.
 function clickToPlay(path, source = 'cached') {
   $('rom-panel').hidden = true;
   $('play-panel').hidden = false;
@@ -101,7 +102,11 @@ function startNow(path, source) {
     // ?hle=all|none|NAME+NAME overrides the ini's hle option for this visit (docs/web.md)
     // ?fps=off|on|120 overrides the ini's fps option (interpolated high frame rate, docs/hifps.md)
     const q = new URLSearchParams(location.search);
-    const hle = q.get("hle"), fps = q.get("fps");
+    // the play panel's Mode menu: '' = the ini's hle option (default none, the emulated 68k), all, native
+    const mode = $('sel-mode').value;
+    if (mode === 'native') Module.ccall('web_set_native', 'number', ['number'], [1]);
+    const hle = q.get("hle") || (mode ? 'all' : null), fps = q.get("fps");
+    console.log('t2: mode ' + (mode || 'emulated') + (q.get("hle") ? ' (hle from the URL: ' + q.get("hle") + ')' : ''));
     Module.callMain(fps ? [path, hle || "", fps] : hle ? [path, hle] : [path]);
   } catch (e) {
     if (e !== 'unwind' && !(e && e.name === 'ExitStatus')) throw e;
@@ -155,8 +160,7 @@ async function takeRomFile(file) {
   }
   FS.rename(tmp, ROM_CACHED);
   syncNow();
-  startNow(ROM_CACHED, 'cached');
-  resumeAudio();
+  clickToPlay(ROM_CACHED);
 }
 
 $('rom-file').addEventListener('change', e => takeRomFile(e.target.files[0]));
@@ -233,6 +237,11 @@ selFps.addEventListener('change', () => {
   $('canvas').focus();
 });
 let pendingFps = null;
+
+// Mode menu on the play panel: remembered in this browser only
+const selMode = $('sel-mode');
+try { const m = localStorage.getItem('t2-mode'); if (m !== null && [...selMode.options].some(o => o.value === m)) selMode.value = m; } catch (e) { /* no storage */ }
+selMode.addEventListener('change', () => { try { localStorage.setItem('t2-mode', selMode.value); } catch (e) { /* no storage */ } });
 function loadRightSetting() {
   try {
     const ini = Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' });

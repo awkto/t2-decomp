@@ -84,6 +84,9 @@ EMSCRIPTEN_KEEPALIVE int web_gun_state(int which)
 /* the screen the mouse logic sees (SCR_* of mouse.h): 0 game, 1 logo, 2 title, 3 menu, 4 options, 5 continue, 6 story intro */
 EMSCRIPTEN_KEEPALIVE int web_screen(void) { return mouse_screen(); }
 
+/* the page's "Mode" menu picks the native runner (docs/native.md) before main runs: same as T2_NATIVE=1 */
+EMSCRIPTEN_KEEPALIVE int web_set_native(int on) { return setenv("T2_NATIVE", on ? "1" : "0", 1); }
+
 /* how many C replacements (HLE, docs/porting.md) are active */
 EMSCRIPTEN_KEEPALIVE int web_hle_count(void) { return hle_count_active(); }
 

@@ -21,6 +21,20 @@ Link settings (`port/CMakeLists.txt`): `-O3`, `-sUSE_SDL=2`, `-sINVOKE_RUN=0` (t
 once it has the ROM), `-sEXIT_RUNTIME=0`, memory growth from 64 MB, a 1 MB stack, IDBFS. No ASYNCIFY:
 the browser build has no blocking loop.
 
+## Mode menu
+
+The play panel ("Click to play") has a **Mode** menu, remembered per browser (localStorage `t2-mode`):
+
+| Mode | What runs | Same as |
+|---|---|---|
+| Emulated 68k (original code), the default | the ini's `hle` option, default `none` | `?hle=none` |
+| C replacements | `hle all`: the C code for every replaced routine, the 68k core for the rest | `?hle=all` |
+| Native C | `hle all` plus the native runner: no 68k instruction runs (docs/native.md); a gap is fatal and shows the error panel | `T2_NATIVE=1` on the desktop |
+
+`?hle=` in the URL wins over the menu's HLE set. A ROM chosen with the picker now also stops at the play panel, so the
+mode can be picked before the first start. `tools/vm/webtest.sh` runs the page test for the menu's `all` and `native` too
+(`WEB_MODE=all|native tools/web_test.sh`).
+
 ## C replacements (HLE)
 
 The page runs the same HLE layer as the desktop (docs/porting.md; `port/hle`, `port/game/*.c`, 1128
