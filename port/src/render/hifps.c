@@ -113,6 +113,16 @@ enum { HR_FIRST, HR_CHECK, HR_LAYOUT, HR_OWNERS, HR_CUT, HR_NOSNAP, HR_MID, HR_N
 static const char *held_name[HR_N] = { "no previous frame", "frame mode differs", "layout changed",
                                        "owners unknown", "scene cut", "no snapshot", "changed during the display" };
 
+static bool dbg_on(void)
+{
+	static int on = -1;
+	if (on < 0) {
+		const char *d = getenv("T2_HIFPS_DEBUG");
+		on = d && *d && *d != '0';
+	}
+	return on;
+}
+
 static double now_ns(void)
 {
 	struct timespec ts;
@@ -312,13 +322,13 @@ void hifps_line(const render_vdp *v, int line)
 		static const int regs[] = { 0, 1, 2, 3, 4, 5, 7, 11, 12, 13, 16, 17, 18 };
 		if (!r->vs_changed && memcmp(v->vsram, r->vsram, sizeof r->vsram)) {
 			r->vs_changed = true;
-			if (getenv("T2_HIFPS_DEBUG"))
+			if (dbg_on())
 				fprintf(stderr, "hifps: frame %ld: vsram changed at line %d\n", emu_frame_count(), line);
 		}
 		for (unsigned i = 0; i < sizeof regs / sizeof regs[0]; i++)
 			if (!r->reg_changed && ((v->reg[regs[i]] ^ r->reg[regs[i]]) & regmask(regs[i]))) {
 				r->reg_changed = true;
-				if (getenv("T2_HIFPS_DEBUG"))
+				if (dbg_on())
 					fprintf(stderr, "hifps: frame %ld: reg %d changed at line %d (%02X -> %02X)\n", emu_frame_count(), regs[i], line,
 					        r->reg[regs[i]], v->reg[regs[i]]);
 			}
@@ -335,7 +345,7 @@ void hifps_parse(const render_vdp *v, int line)
 	if (memcmp(v->vram + sb, r->vram + sb, 80 * 8) || memcmp(v->sat, r->sat, 80 * 8))
 	{
 		r->sat_line = line + 1;
-		if (getenv("T2_HIFPS_DEBUG"))
+		if (dbg_on())
 			fprintf(stderr, "hifps: frame %ld: sprite table changed at line %d (vram %d cache %d)\n", emu_frame_count(), line + 1,
 			        memcmp(v->vram + sb, r->vram + sb, 80 * 8) != 0, memcmp(v->sat, r->sat, 80 * 8) != 0);
 	}
@@ -365,19 +375,16 @@ void hifps_lastline(void)
 			H.adopted++;
 		}
 	}
-	if (getenv("T2_HIFPS_DEBUG") && H.R[H.inext].snap) {
+	if (dbg_on() && H.R[H.inext].snap) {
 		const uint16_t *lv = (const uint16_t *)gx_vram();
 		const rec *r = &H.R[H.inext];
-		int n = 0, first = -1, last = -1;
+		int n = 0;
 		char buf[600];
 		buf[0] = 0;
 		int prevblk = -1;
 		for (int i = 0; i < 32768; i++)
 			if (lv[i] != r->vram[i]) {
 				n++;
-				if (first < 0)
-					first = i;
-				last = i;
 				if (i / 64 != prevblk && strlen(buf) < 500) {
 					prevblk = i / 64;
 					sprintf(buf + strlen(buf), " %04X", i * 2);
@@ -724,7 +731,7 @@ void hifps_frame_end(const uint16_t *px, unsigned w, unsigned h, bool complete)
 			}
 		if (!r->owners) {
 			H.owners_unknown++;
-			if (getenv("T2_HIFPS_DEBUG"))
+			if (dbg_on())
 				fprintf(stderr, "hifps: frame %ld: owners unknown (queues: %d %d %d %d)\n", emu_frame_count(),
 				        H.c[0].read ? H.c[0].n : -1, H.c[1].read ? H.c[1].n : -1, H.c[2].read ? H.c[2].n : -1, H.c[3].read ? H.c[3].n : -1);
 		}
@@ -741,7 +748,7 @@ void hifps_frame_end(const uint16_t *px, unsigned w, unsigned h, bool complete)
 			r->nbad++;
 		}
 	r->ok = r->nbad <= MAX_BAD_LINES;
-	if (getenv("T2_HIFPS_DEBUG") && r->nbad) {
+	if (dbg_on() && r->nbad) {
 		fprintf(stderr, "hifps: frame %ld: %d lines differ:", emu_frame_count(), r->nbad);
 		int shown = 0;
 		for (unsigned y = 0; y < h && shown < 40; y++)

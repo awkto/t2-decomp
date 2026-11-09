@@ -144,4 +144,43 @@ identical, and prints how many frames were interpolated.
 
 ## Results
 
-RESULTS
+`port/tools/hifpstest.sh` (all 92 states, 1500 frames of the lockstep input each, `--hle all`, 120 Hz, in-betweens
+drawn eagerly):
+
+```
+hifpstest: 92 states, machine state identical to 60 Hz in 92
+hifpstest: 138000 frames: 100164 interpolated, 36820 still, 1016 held; sprite entries matched 957404 of 978268; owners unknown on 3671 frames
+hifpstest: PASS
+```
+
+- Machine state (work RAM, VRAM, CRAM, VSRAM, VDP registers, per frame) identical to the 60 Hz run in every state: it
+  is presentation only. With the feature off (the default) every existing gate is identical: lockstep six default
+  states plain and `--z80` (3000 frames each), the five route gates (5738 / 43913 / 34882 / 9000 / 53768 frames),
+  the wide gate (92 of 92, `--hle all` 3000 frames), `rendergate` (92/92 states, 5/5 routes pixel-identical), the
+  mouse tests (ALL PASS), `make` (build/t2.md: OK) and `romscan` (CLEAN).
+- 72.6 % of the frames are interpolated, 26.7 % are still (nothing moved: menus, a standing player), 0.7 % held. The
+  heavy scenes (level 4 and 8 states, whose frames overrun) are 98-99.9 % interpolated thanks to the end-of-display
+  state; 97.9 % of the sprite entries find their object in the frame before; 2.7 % of the frames have owners that no queue
+  explains (held only when the sprite table also changed).
+- Cost of a picture drawn in frame mode: 0.5-0.8 ms on the VM (p99 about 1 ms, 3 ms worst; 320x224, the cost is
+  the C renderer's, `render_frame`).
+
+Real-time presentation (t2-vm2, level 4 route, 1500 frames, `--realtime-script --mute --no-vsync --hle all`,
+SDL dummy video driver with its software renderer, no audio, no vsync; `--scale 1` so that the software flip
+is cheap, as a GPU's is). Whole frames every 16.69 ms (T). Spacing of consecutive presents against T/n:
+
+| rate | n | pictures a second | within 1 ms | sd | cpu (one core) |
+|---|---|---|---|---|---|
+| 60 (off) | 1 | 59.9 | | | 13 % |
+| 120 | 2 | 119.8 | 99.7 % | 0.14 ms | 40 % |
+| 240 | 4 | 239.6 | 77.5 % | 0.86 ms | 52 % |
+
+At `--scale 3` (960x672 in software) one flip costs 2 ms on this VM, and 120 Hz is 119.8 pictures a second, 95.6 %
+within 1 ms, 63 % of a core (60 Hz: 24 %); 144 Hz is also n = 2 (119.8 a second, 96.4 % within 1 ms); 240 Hz needs the CPU that is not there (237 a second, 96 % of a core): the
+flip, not the interpolation, is the cost there (0.8 ms to prepare a picture, 2.0 ms to flip). The logic frame
+(3 ms on this VM in the heavy level) runs between the last picture of a step and the first of the next, so on a
+slow machine and at n = 4 the first in-between is late (never dropped). The interpolation's own cost is the
+0.5-0.8 ms picture, once per extra picture: at 120 Hz about 5 % of a core.
+
+Browser (`tools/vm/webtest.sh`, headless Chrome, `?hle=all&fps=on`): PASS, 59.9 logic frames a second, 0 failed, same
+as without `fps`.

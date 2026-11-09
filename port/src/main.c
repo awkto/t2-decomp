@@ -749,7 +749,7 @@ int main(int argc, char **argv)
 		 * shows n pictures: in-betweens at j/n of the way from the last frame to this one, the whole
 		 * frame last (docs/hifps.md); the host waits for each picture's time, then flips. */
 		bool hf_run = ran && hifps_enabled() && !fast && v.ren && hifps_ready();
-		if (ran && hifps_enabled() && fast)
+		if (ran && hifps_enabled() && fast && !ff)
 			hifps_eager();                /* batch: draw (and count) the in-betweens, present nothing */
 		int npics = 1;
 		if (hf_run) {
