@@ -14,9 +14,13 @@
 #include <SDL.h>
 
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <time.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 
 #include "emu.h"
@@ -25,6 +29,7 @@
 #include "ipprof.h"
 #include "mouse.h"
 #include "options.h"
+#include "render/hifps.h"
 #include "render/render_emu.h"
 #include "overlay.h"
 #include "romfind.h"
@@ -66,6 +71,9 @@ static void usage(const char *argv0)
 	       "  --hle SPEC              run 68k functions as C: none (default), all, or a list of names\n"
 	       "                          separated by ',' or '+' (-name off, +name on); see docs/porting.md\n"
 	       "  --render MODE           gpgx (default), c (the C renderer, docs/render.md) or compare; env T2_RENDER too\n"
+	       "  --fps RATE              high frame rate (docs/hifps.md): off, auto (the display's refresh rate)\n"
+	       "                          or Hz (120, 144, 240): the game stays at 60 Hz, in-between pictures are\n"
+	       "                          interpolated; F4 toggles; scripted runs stay at 60 Hz unless given\n"
 	       "  --hle-list              print the active C replacements and exit\n"
 	       "Headless: SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy %s --script s.txt --screenshot out.ppm\n",
 	       argv0, argv0);
@@ -235,6 +243,35 @@ static bool game_frame(video_t *v, int *w, int *h)
 	return true;
 }
 
+/* a picture (RGB565, as emu_video gives it) -> v->buf */
+static bool picture_to_buf(video_t *v, const uint16_t *px, unsigned gw, unsigned gh)
+{
+	if (!px || gw * gh > sizeof v->buf / sizeof v->buf[0])
+		return false;
+	for (unsigned i = 0; i < gw * gh; i++)
+		v->buf[i] = rgba_from_565(px[i]);
+	return true;
+}
+
+static double now_s(void)
+{
+	return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
+}
+
+/* sleep until t (seconds on now_s()'s clock): nanosleep up to 0.4 ms before, the rest spinning */
+static void wait_until(double t)
+{
+	for (;;) {
+		double left = t - now_s();
+		if (left <= 0)
+			return;
+		if (left > 0.0006) {
+			struct timespec ts = { 0, (long)((left - 0.0004) * 1e9) };
+			nanosleep(&ts, NULL);
+		}
+	}
+}
+
 static bool window_shot(video_t *v, const char *path)
 {
 	int w, h;
@@ -276,6 +313,45 @@ static void mouse_from_window(video_t *v, int x, int y)
 		mouse_move(gx, gy);
 		SDL_ShowCursor(gun_enabled() ? SDL_DISABLE : SDL_ENABLE);
 	}
+}
+
+/* high frame rate (docs/hifps.md): the rate for the option value off / auto / Hz, 0 = off; capped to
+ * the display's refresh when vsync is on (every flip waits for a refresh) */
+static int display_hz(void)
+{
+	SDL_DisplayMode m;
+	return SDL_GetCurrentDisplayMode(0, &m) == 0 ? m.refresh_rate : 0;
+}
+
+static int fps_rate(const char *val, bool vsync)
+{
+	int hz = 0, disp = display_hz();
+	if (!strcasecmp(val, "off") || !strcmp(val, "0"))
+		return 0;
+	if (!strcasecmp(val, "auto"))
+		hz = disp > 60 ? disp : 0;
+	else
+		hz = atoi(val);
+	if (hz < 61 || hz > 1000) {
+		if (strcasecmp(val, "auto"))
+			fprintf(stderr, "fps: '%s' is not off, auto or a rate in 61..1000 Hz; high frame rate off\n", val);
+		return 0;
+	}
+	if (vsync && disp > 0 && hz > disp)
+		hz = disp;
+	return hz;
+}
+
+/* the pointer now, in game pixels, for the crosshair of every picture */
+static void hf_pointer(video_t *v)
+{
+	if (!gun_enabled() || !v->win)
+		return;
+	SDL_PumpEvents();
+	int mx, my, gx = 0, gy = 0;
+	SDL_GetMouseState(&mx, &my);
+	bool in = (SDL_GetWindowFlags(v->win) & SDL_WINDOW_MOUSE_FOCUS) && window_to_game(v, mx, my, &gx, &gy) > 0;
+	hifps_mouse_now(gx, gy, !in);
 }
 
 int main(int argc, char **argv)
@@ -330,6 +406,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(s, "--no-mouse")) SETOPT("mouse", "off");
 		else if (!strcmp(s, "--hle")) a.hle = NEXT();
 		else if (!strcmp(s, "--render")) SETOPT("render", NEXT());
+		else if (!strcmp(s, "--fps")) SETOPT("fps", NEXT());
 		else if (!strcmp(s, "--hle-list")) a.hle_list = true;
 		else if (!strcmp(s, "-h") || !strcmp(s, "--help")) { usage(argv[0]); return 0; }
 		else { fprintf(stderr, "unknown option %s\n", s); usage(argv[0]); return 2; }
@@ -405,6 +482,21 @@ int main(int argc, char **argv)
 	if (!video_init(&v, scale, fullscreen, vsync))
 		fprintf(stderr, "video unavailable (%s), running without a window\n", SDL_GetError());
 
+	/* high frame rate: scripted / batch runs stay at 60 Hz unless the rate is given explicitly */
+	int hf_opt_hz = 0, hf_toggle_hz = 0;
+	{
+		bool explicit_rate = options_source("fps") == OPT_CLI;
+		if (!batch || explicit_rate)
+			hf_opt_hz = fps_rate(options_str("fps"), vsync && v.ren);
+		hf_toggle_hz = hf_opt_hz ? hf_opt_hz : (display_hz() > 60 ? display_hz() : 120);
+		if (hf_opt_hz) {
+			if (render_emu_mode() == RENDER_GPGX)
+				render_emu_configure("c");        /* the in-betweens come from the C renderer's scene */
+			if (hifps_configure(hf_opt_hz))
+				fprintf(stderr, "hifps: %d Hz, %d pictures a frame\n", hf_opt_hz, hifps_per_frame());
+		}
+	}
+
 	SDL_AudioDeviceID adev = 0;
 	int rate = (int)(emu_sample_rate() + 0.5);
 	if (!mute) {
@@ -449,6 +541,14 @@ int main(int argc, char **argv)
 	const double frame_dt = 1.0 / emu_fps();
 	static char ovl_text[256];
 	bool drew_once = false;
+	const double T = 1.0 / emu_fps();
+	double hf_t0 = 0;                    /* when R(k-1) was (to be) presented */
+	bool hf_clock = false;
+	long hf_pics = 0, hf_logic = 0, hf_sp_n = 0, hf_sp_ok = 0;
+	double hf_last = 0, hf_sp_sum = 0, hf_sp_sq = 0, hf_prep = 0, hf_flip = 0;
+	struct rusage ru0;
+	getrusage(RUSAGE_SELF, &ru0);
+	double wall0 = now_s();
 
 	while (!quit) {
 		SDL_Event e;
@@ -490,6 +590,19 @@ int main(int argc, char **argv)
 						printf("%s %s%s\n", k == SDLK_F5 ? "save" : "load", p, ok ? "" : " FAILED");
 						if (adev && k == SDLK_F9)
 							SDL_ClearQueuedAudio(adev);
+					} else if (k == SDLK_F4) {
+						if (hifps_enabled()) {
+							hifps_configure(0);
+							snprintf(msg, sizeof msg, "60 HZ");
+						} else {
+							int hz = hf_toggle_hz;
+							if (render_emu_mode() == RENDER_GPGX)
+								render_emu_configure("c");
+							hifps_configure(hz);
+							snprintf(msg, sizeof msg, "%d HZ", hz);
+						}
+						hf_clock = false;
+						msg_timer = 90;
 					} else if (k == SDLK_F6 || k == SDLK_F7) {
 						slot = (slot + (k == SDLK_F7 ? 1 : 9)) % 10;
 						snprintf(msg, sizeof msg, "SLOT %d", slot);
@@ -596,6 +709,13 @@ int main(int argc, char **argv)
 		}
 		if (scripted || !paused || step) {
 			emu_set_pad(0, emu_get_pad(0) | mouse_frame());
+			if (hifps_enabled() && gun_enabled()) {
+				int gx, gy;
+				bool off;
+				unsigned gb;
+				gun_state(&gx, &gy, &off, &gb);
+				hifps_note_mouse(gx, gy, off);
+			}
 			emu_run_frame();
 			ran = true;
 			step = false;
@@ -625,17 +745,45 @@ int main(int argc, char **argv)
 			SDL_ClearQueuedAudio(adev);
 		}
 
-		/* video (skip most frames when running unthrottled) */
-		int w, h;
+		/* video (skip most frames when running unthrottled). With a high frame rate each logic frame
+		 * shows n pictures: in-betweens at j/n of the way from the last frame to this one, the whole
+		 * frame last (docs/hifps.md); the host waits for each picture's time, then flips. */
+		bool hf_run = ran && hifps_enabled() && !fast && v.ren && hifps_ready();
+		if (ran && hifps_enabled() && fast && !ff)
+			hifps_eager();                /* batch: draw (and count) the in-betweens, present nothing */
+		int npics = 1;
+		if (hf_run) {
+			npics = hifps_per_frame();
+			double t = now_s();
+			if (!hf_clock || t - hf_t0 > 4 * T) {
+				hf_t0 = t;
+				hf_clock = true;
+			}
+		}
 		bool show = !fast || (total % 30) == 0 || paused || !drew_once;
-		if (v.ren && show && game_frame(&v, &w, &h)) {
+		for (int j = 1; j <= npics; j++) {
+			int w = 0, h = 0;
+			bool got;
+			double t_prep = hf_run ? now_s() : 0;
+			if (hf_run) {
+				hf_pointer(&v);
+				unsigned pw = 0, ph = 0;
+				int kind;
+				got = picture_to_buf(&v, hifps_picture((double)j / npics, &pw, &ph, &kind), pw, ph);
+				w = (int)pw;
+				h = (int)ph;
+			} else {
+				got = v.ren && show && game_frame(&v, &w, &h);
+			}
+			if (!got)
+				continue;
 			if (overlay) {
 				int gx, gy;
 				bool off;
 				unsigned gb;
 				gun_state(&gx, &gy, &off, &gb);
-				snprintf(ovl_text, sizeof ovl_text, "F %ld  %.1f FPS%s%s\nGUN %d,%d%s %c%c%c%c\nPAD %02X  AQ %u MS",
-				         emu_frame_count(), fps_show, paused ? "  PAUSED" : "", ff ? "  FF" : "",
+				snprintf(ovl_text, sizeof ovl_text, "F %ld  %.1f FPS%s%s%s\nGUN %d,%d%s %c%c%c%c\nPAD %02X  AQ %u MS",
+				         emu_frame_count(), fps_show, hifps_enabled() ? " HI" : "", paused ? "  PAUSED" : "", ff ? "  FF" : "",
 				         gx, gy, off ? " OFF" : "", gb & GUN_A ? 'A' : '-', gb & GUN_B ? 'B' : '-',
 				         gb & GUN_C ? 'C' : '-', gb & GUN_START ? 'S' : '-', emu_get_pad(0),
 				         adev ? (unsigned)(SDL_GetQueuedAudioSize(adev) * 1000 / (rate * 4)) : 0);
@@ -643,16 +791,50 @@ int main(int argc, char **argv)
 			}
 			if (msg_timer > 0) {
 				overlay_text_rgba(v.buf, w, h, 2, h - 8, 0xFFFFFFFFu, msg);
-				msg_timer--;
+				if (j == npics)
+					msg_timer--;
 			}
 			if (video_prepare(&v, w, h)) {
+				if (hf_run) {
+					hf_prep += now_s() - t_prep;
+					wait_until(hf_t0 + j * T / npics);
+					hf_pics++;
+				}
+				double t_flip = hf_run ? now_s() : 0;
 				SDL_RenderPresent(v.ren);
+				if (hf_run)
+					hf_flip += now_s() - t_flip;
 				drew_once = true;
+				if (hf_run) {       /* the spacing of consecutive presents against T / n */
+					double t = now_s();
+					if (hf_last > 0 && t - hf_last < 2 * T) {
+						double dev = (t - hf_last) - T / npics;
+						hf_sp_n++;
+						hf_sp_ok += dev > -0.001 && dev < 0.001;
+						hf_sp_sum += dev;
+						hf_sp_sq += dev * dev;
+					}
+					hf_last = t;
+				}
+			}
+		}
+		if (hf_run) {
+			hf_t0 += T;
+			hf_logic++;
+			/* audio: keep its queue near the target by nudging the clock a 32nd of a frame */
+			if (adev) {
+				Uint32 q = SDL_GetQueuedAudioSize(adev), fb = (Uint32)(rate * 4 * T);
+				if (q > q_target + fb)
+					hf_t0 += T / 32;
+				else if (q + fb < q_target)
+					hf_t0 -= T / 32;
 			}
 		}
 
 		/* throttle */
-		if (!fast) {
+		if (hf_run) {
+			next_tick = SDL_GetPerformanceCounter();      /* the picture clock above paces */
+		} else if (!fast) {
 			if (adev) {
 				while (SDL_GetQueuedAudioSize(adev) > q_target)
 					SDL_Delay(1);
@@ -708,6 +890,22 @@ int main(int argc, char **argv)
 		rc = 1;
 	}
 	printf("%ld frames in %.2f s (%.1f fps)\n", total, secs, total / (secs > 0 ? secs : 1));
+	if (hf_pics) {
+		struct rusage ru1;
+		getrusage(RUSAGE_SELF, &ru1);
+		double cpu = (ru1.ru_utime.tv_sec - ru0.ru_utime.tv_sec) + (ru1.ru_utime.tv_usec - ru0.ru_utime.tv_usec) / 1e6 +
+		             (ru1.ru_stime.tv_sec - ru0.ru_stime.tv_sec) + (ru1.ru_stime.tv_usec - ru0.ru_stime.tv_usec) / 1e6;
+		double wall = now_s() - wall0;
+		printf("hifps: %ld pictures presented in %.2f s (%.1f a second) for %ld paced logic frames (%.1f a second); cpu %.2f s = %.1f%% of one core\n",
+		       hf_pics, wall, hf_pics / wall, hf_logic, hf_logic / wall, cpu, 100.0 * cpu / wall);
+		printf("hifps: per picture: %.3f ms to prepare (draw, convert, overlay, upload, scale into the back buffer), %.3f ms in the flip\n",
+		       hf_prep / hf_pics * 1000, hf_flip / hf_pics * 1000);
+		if (hf_sp_n > 1) {
+			double mean = hf_sp_sum / hf_sp_n, sd = sqrt(hf_sp_sq / hf_sp_n - mean * mean);
+			printf("hifps: spacing of consecutive presents against T/n: %.1f%% within 1 ms, mean %+.3f ms, sd %.3f ms (%ld presents)\n",
+			       100.0 * hf_sp_ok / hf_sp_n, mean * 1000, sd * 1000, hf_sp_n);
+		}
+	}
 	if (adev)
 		SDL_CloseAudioDevice(adev);
 	SDL_Quit();
