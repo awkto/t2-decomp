@@ -15,7 +15,7 @@
 #include "emu.h"
 #include "gx.h"
 
-#define W_MAX RENDER_MAX_W
+#define W_MAX RENDER_W43           /* the in-betweens are 320 wide (not combined with widescreen) */
 #define H_MAX RENDER_MAX_H
 #define LOGIC_HZ 59.92
 
@@ -430,7 +430,7 @@ static void render_work(const rec *r, uint16_t *out)
 {
 	render_ctx rc;
 	render_ctx_reset(&rc);
-	render_scene s;
+	render_scene s = { 0 };
 	s.vdp.vram = w_vram;
 	s.vdp.cram = r->cram;
 	s.vdp.vsram = w_vsram;

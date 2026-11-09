@@ -11,6 +11,7 @@
 #include "native.h"
 #include "render/hifps.h"
 #include "render/render_emu.h"
+#include "render/render_wide.h"
 #include "sha1.h"
 
 #include <stdarg.h>
@@ -66,6 +67,8 @@ static const uint16_t *g_fb;
 static unsigned g_fb_w, g_fb_h;
 static size_t g_fb_pitch;
 static uint16_t g_fb_copy[720 * 576];      /* frame kept across state loads */
+static uint16_t g_wide_copy[RENDER_MAX_W * 240];   /* the widescreen frame (render_wide.c), kept the same way */
+static unsigned g_wide_w, g_wide_h;
 static unsigned g_pad[2];
 static int g_gun_x, g_gun_y;
 static bool g_gun_off = true;
@@ -449,6 +452,8 @@ void emu_run_frame(void)
 			memcpy(g_fb_copy + y * g_fb_w, (const uint8_t *)g_fb + y * g_fb_pitch, g_fb_w * 2);
 		/* the C renderer (docs/render.md): replaces or checks the picture just copied */
 		render_emu_frame_end(g_frames, g_fb_copy, g_fb_w, g_fb_h);
+		if (render_wide_enabled())
+			render_wide_frame565(g_wide_copy, &g_wide_w, &g_wide_h) ;
 	}
 }
 
@@ -469,6 +474,12 @@ void emu_reset(void)
 
 const uint16_t *emu_video(unsigned *w, unsigned *h, size_t *pitch)
 {
+	if (g_wide_w && render_wide_enabled()) {     /* widescreen (#13): the wide frame; clicks map through gun_map_window + the margin */
+		*w = g_wide_w;
+		*h = g_wide_h;
+		*pitch = g_wide_w * 2;
+		return g_wide_copy;
+	}
 	*w = g_fb_w;
 	*h = g_fb_h;
 	*pitch = g_fb_w * 2;

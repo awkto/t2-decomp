@@ -31,6 +31,7 @@
 #include "options.h"
 #include "render/hifps.h"
 #include "render/render_emu.h"
+#include "render/render_wide.h"
 #include "overlay.h"
 #include "romfind.h"
 #include "script.h"
@@ -71,6 +72,7 @@ static void usage(const char *argv0)
 	       "  --hle SPEC              run 68k functions as C: none (default), all, or a list of names\n"
 	       "                          separated by ',' or '+' (-name off, +name on); see docs/porting.md\n"
 	       "  --render MODE           gpgx (default), c (the C renderer, docs/render.md) or compare; env T2_RENDER too\n"
+	       "  --widescreen SPEC       wider view of the scrolling levels: off (default), 16:9, 21:9, W:H or a width (docs/widescreen.md)\n"
 	       "  --fps RATE              high frame rate (docs/hifps.md): off, auto (the display's refresh rate)\n"
 	       "                          or Hz (120, 144, 240): the game stays at 60 Hz, in-between pictures are\n"
 	       "                          interpolated; F4 toggles; scripted runs stay at 60 Hz unless given\n"
@@ -170,7 +172,7 @@ typedef struct {
 static bool video_init(video_t *v, int scale, bool fullscreen, bool vsync)
 {
 	v->win = SDL_CreateWindow("T2: The Arcade Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-	                          320 * scale, 224 * scale,
+	                          (render_wide_enabled() ? render_wide_width() : 320) * scale, 224 * scale,
 	                          SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
 	if (!v->win)
 		return false;
@@ -310,7 +312,8 @@ static void mouse_from_window(video_t *v, int x, int y)
 		mouse_leave();
 		SDL_ShowCursor(SDL_ENABLE);       /* outside the image: the OS cursor is useful again */
 	} else if (on > 0) {
-		mouse_move(gx, gy);
+		/* widescreen: the frame is wider than the game's 320 pixels (docs/widescreen.md) */
+		mouse_move_frame(gx, gy, render_wide_enabled() && v->tw > 320 ? (v->tw - 320) / 2 : 0);
 		SDL_ShowCursor(gun_enabled() ? SDL_DISABLE : SDL_ENABLE);
 	}
 }
@@ -406,6 +409,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(s, "--no-mouse")) SETOPT("mouse", "off");
 		else if (!strcmp(s, "--hle")) a.hle = NEXT();
 		else if (!strcmp(s, "--render")) SETOPT("render", NEXT());
+		else if (!strcmp(s, "--widescreen")) SETOPT("widescreen", NEXT());
 		else if (!strcmp(s, "--fps")) SETOPT("fps", NEXT());
 		else if (!strcmp(s, "--hle-list")) a.hle_list = true;
 		else if (!strcmp(s, "-h") || !strcmp(s, "--help")) { usage(argv[0]); return 0; }
@@ -422,6 +426,11 @@ int main(int argc, char **argv)
 	gun_set_right(options_str("mouse_right")[0]);
 	mouse_set_aim_correct(options_bool("aim_correct"));
 	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));
+	if (!render_wide_configure(getenv("T2_WIDE") ? NULL : options_str("widescreen"))) {
+		fprintf(stderr, "widescreen: bad value '%s' (off, 16:9, 21:9, W:H or a width 320..%d)\n",
+		        getenv("T2_WIDE") ? getenv("T2_WIDE") : options_str("widescreen"), RENDER_MAX_W);
+		return 2;
+	}
 
 	/* C replacements for 68k functions: --hle overrides the hle option (default none). Every
 	 * replacement starts disabled, so plain t2port and --hle none run the original 68k code. */
@@ -489,6 +498,11 @@ int main(int argc, char **argv)
 		if (!batch || explicit_rate)
 			hf_opt_hz = fps_rate(options_str("fps"), vsync && v.ren);
 		hf_toggle_hz = hf_opt_hz ? hf_opt_hz : (display_hz() > 60 ? display_hz() : 120);
+		if (render_wide_enabled()) {      /* exclusive with widescreen: the in-betweens are drawn 320 wide (docs/widescreen.md) */
+			if (hf_opt_hz)
+				fprintf(stderr, "fps: not combined with widescreen, high frame rate off\n");
+			hf_opt_hz = 0;
+		}
 		if (hf_opt_hz) {
 			if (render_emu_mode() == RENDER_GPGX)
 				render_emu_configure("c");        /* the in-betweens come from the C renderer's scene */
@@ -590,6 +604,9 @@ int main(int argc, char **argv)
 						printf("%s %s%s\n", k == SDLK_F5 ? "save" : "load", p, ok ? "" : " FAILED");
 						if (adev && k == SDLK_F9)
 							SDL_ClearQueuedAudio(adev);
+					} else if (k == SDLK_F4 && render_wide_enabled()) {
+						snprintf(msg, sizeof msg, "NOT WITH WIDESCREEN");
+						msg_timer = 90;
 					} else if (k == SDLK_F4) {
 						if (hifps_enabled()) {
 							hifps_configure(0);

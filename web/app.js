@@ -59,13 +59,14 @@ var Module = window.Module = {
       Module.removeRunDependency('idbfs');
     });
   }],
-  onRuntimeInitialized: () => { loadRightSetting(); findRom(); },
+  onRuntimeInitialized: () => { loadRightSetting(); loadWideSetting(); findRom(); },
   // called from C
   t2Sync: () => { clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 300); },
   t2Status: t => setStatus(t),
   t2Started: () => {
     window.t2State = 'running';
     if (pendingRight) Module.ccall('web_set_option', 'number', ['string', 'string'], ['mouse_right', pendingRight]);
+    if (pendingWide) Module.ccall('web_set_option', 'number', ['string', 'string'], ['widescreen', pendingWide]);
     if (pendingFps) Module.ccall('web_set_option', 'number', ['string', 'string'], ['fps', pendingFps]);
   },
   t2Fatal: t => showFatal('Cannot start the game', t),
@@ -100,14 +101,19 @@ function startNow(path, source) {
   $('canvas').focus();
   try {
     // ?hle=all|none|NAME+NAME overrides the ini's hle option for this visit (docs/web.md)
-    // ?fps=off|on|120 overrides the ini's fps option (interpolated high frame rate, docs/hifps.md)
+    // ?fps=off|on|120 (docs/hifps.md) and ?wide=off|16:9|21:9|W:H|WIDTH (docs/widescreen.md) override the ini's options for
+    // this visit; they go to main as key=value arguments after the ROM path
     const q = new URLSearchParams(location.search);
     // the play panel's Mode menu: '' = the ini's hle option (default none, the emulated 68k), all, native
     const mode = $('sel-mode').value;
     if (mode === 'native') Module.ccall('web_set_native', 'number', ['number'], [1]);
-    const hle = q.get("hle") || (mode ? 'all' : null), fps = q.get("fps");
+    const hle = q.get("hle") || (mode ? 'all' : null), fps = q.get("fps"), wide = q.get("wide");
     console.log('t2: mode ' + (mode || 'emulated') + (q.get("hle") ? ' (hle from the URL: ' + q.get("hle") + ')' : ''));
-    Module.callMain(fps ? [path, hle || "", fps] : hle ? [path, hle] : [path]);
+    const args = [path];
+    if (hle) args.push('hle=' + hle);
+    if (fps) args.push('fps=' + fps);
+    if (wide) args.push('wide=' + wide);
+    Module.callMain(args);
   } catch (e) {
     if (e !== 'unwind' && !(e && e.name === 'ExitStatus')) throw e;
   }
@@ -229,6 +235,28 @@ selRight.addEventListener('change', () => {
 });
 let pendingRight = null;
 
+// widescreen: kept in the ini by the C side; read once at start, so a change reloads the page. ?wide= wins.
+const selWide = $('sel-wide');
+selWide.addEventListener('change', () => {
+  const p = new URLSearchParams(location.search);
+  p.delete('wide');
+  const q = p.toString();
+  history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+  if (window.t2State === 'running') {
+    Module.ccall('web_set_option', 'number', ['string', 'string'], ['widescreen', selWide.value]);
+    setStatus('widescreen ' + selWide.value + ': reloading');
+    setTimeout(() => location.reload(), 900);
+  } else pendingWide = selWide.value;
+});
+let pendingWide = null;
+function loadWideSetting() {
+  const q = new URLSearchParams(location.search).get('wide');
+  if (q) { if ([...selWide.options].some(o => o.value === q)) selWide.value = q; return; }
+  try {
+    const m = /^widescreen\s*=\s*(\S+)/mi.exec(Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' }));
+    if (m && [...selWide.options].some(o => o.value === m[1])) selWide.value = m[1];
+  } catch (e) { /* no ini yet */ }
+}
 // frame rate: 60 Hz, or interpolated pictures on every display refresh (kept in the ini by the C side)
 const selFps = $('sel-fps');
 selFps.addEventListener('change', () => {

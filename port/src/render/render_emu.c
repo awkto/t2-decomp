@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 
 #include "gx.h"
+#include "render_wide.h"
 #include "hifps.h"
 
 static render_mode g_mode = RENDER_GPGX;
@@ -30,7 +31,7 @@ static int g_dumps;
 
 static render_vdp live_view(void)
 {
-	render_vdp v;
+	render_vdp v = { 0 };
 	v.vram = (const uint16_t *)gx_vram();
 	v.cram = (const uint16_t *)gx_cram();
 	v.vsram = (const uint16_t *)gx_vsram();
@@ -51,7 +52,9 @@ static void on_line(int line)
 		hifps_line0(&v, gx_viewport_h());      /* high frame rate: the scene of this frame (docs/hifps.md) */
 	else
 		hifps_line(&v, line);
+	uint8_t masking = g_rc.spr_masking;
 	render_line_pixels(&g_rc, &v, line);
+	render_wide_line(&g_rc, masking, &v, line);      /* widescreen (#13): the same line, wider; no-op when off */
 }
 
 static void on_parse(int line)
@@ -67,6 +70,7 @@ static void on_remap(int line)
 		return;
 	render_vdp v = live_view();
 	render_line_colors(&g_rc, &v, g_fb + (size_t)line * RENDER_MAX_W);
+	render_wide_remap(&v, line, g_fb + (size_t)line * RENDER_MAX_W);
 	if (!g_line_done[line]) {
 		g_line_done[line] = true;
 		g_lines_done++;
@@ -102,6 +106,8 @@ bool render_emu_configure(const char *name)
 		m = RENDER_COMPARE;
 	else
 		return false;
+	if (m == RENDER_GPGX && render_wide_enabled())
+		m = RENDER_C;          /* the widescreen view (#13) is drawn by the C renderer */
 	g_mode = m;
 	if (m != RENDER_GPGX && !g_hooked) {
 		render_tables_init();
@@ -163,6 +169,7 @@ void render_emu_frame_end(long frame, uint16_t *px, unsigned w, unsigned h)
 	/* a frame the C renderer drew completely, at the size GPGX presented */
 	bool complete = (unsigned)g_fb_w == w && (unsigned)g_fb_h == h && g_lines_done == (int)h;
 	g_have_frame = complete;
+	render_wide_frame_end(frame, complete ? (int)h : -1);
 	if (hifps_enabled()) {
 		/* the C renderer's frame is the whole frame R(k); it must be in px (c mode) or checked (compare) */
 		if (g_mode == RENDER_C && complete)

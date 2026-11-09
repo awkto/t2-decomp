@@ -46,6 +46,7 @@ static struct {
 	int screen, unknown;         /* unknown: frames since the 68k was last seen waiting for vblank */
 	int mx, my;
 	bool inside, down[4];
+	bool margin;                 /* widescreen: the pointer is over a side margin (docs/widescreen.md) */
 	int hover_row;               /* row under the mouse as of its last move (-1 none) */
 	int target;                  /* menu / options row the cursor should go to (-1 none) */
 	bool start_after;            /* press Start once the cursor is there (or at once if no cursor) */
@@ -164,6 +165,7 @@ static void screen_changed(int scr)
 
 void mouse_move(int gx, int gy)
 {
+	M.margin = false;
 	gun_move(gx, gy);
 	M.mx = gx;
 	M.my = gy;
@@ -177,6 +179,22 @@ void mouse_move(int gx, int gy)
 		}
 	}
 }
+
+/* The pointer is at pixel (fx, fy) of the shown frame, which is the 320-pixel picture with `margin` extra
+ * pixels on each side when widescreen is on. The Menacer cannot aim outside the game's own 320 pixels
+ * (its X comes from the light-gun counter, and the game's hit test only knows that range), so over a
+ * margin the crosshair waits at the nearest edge and the trigger / missile are held back (mouse_frame):
+ * a shot there would hit what is at the edge, not what the player sees under the pointer. */
+void mouse_move_frame(int fx, int fy, int margin)
+{
+	int gx = fx - margin;
+	bool m = gx < 0 || gx > 319;
+	gx = gx < 0 ? 0 : gx > 319 ? 319 : gx;
+	mouse_move(gx, fy);
+	M.margin = m;
+}
+
+bool mouse_in_margin(void) { return M.margin; }
 
 void mouse_leave(void)
 {
@@ -320,6 +338,8 @@ unsigned mouse_frame(void)
 	 * continue screen ignores (and a dead gun player in a 2P game waits for Start too) */
 	unsigned mode = emu_ram8(RAM_CONTROL_MODE);
 	bool gun_p1 = !(mode & 1) && mode < 4 + 4;
+	if (M.margin && M.screen == SCR_GAME && M.inside)
+		b &= ~(unsigned)(GUN_A | GUN_B | GUN_C);       /* widescreen: no shots from over a margin */
 	if (M.down[MOUSE_LEFT] && (M.screen == SCR_CONTINUE || (gun_p1 && emu_ram16(RAM_P1_STATE) == 7)))
 		b |= GUN_START;
 	if (gun_enabled())
