@@ -430,7 +430,7 @@ static void render_work(const rec *r, uint16_t *out)
 {
 	render_ctx rc;
 	render_ctx_reset(&rc);
-	render_scene s;
+	render_scene s = { 0 };
 	s.vdp.vram = w_vram;
 	s.vdp.cram = r->cram;
 	s.vdp.vsram = w_vsram;

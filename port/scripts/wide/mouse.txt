@@ -9,7 +9,7 @@ fmouse 40 112
 run 8
 crosshair left-edge
 fmouse 356 112
-run 8
+run 20
 crosshair right-edge
 fmouse 100 150
 run 8
