@@ -36,6 +36,15 @@ or, for one visit, the URL parameter, which wins over the ini:
 `app.js` passes the parameter to `main` as `argv[2]`. An unknown name is reported on the console and the
 run falls back to `none`. The console prints `hle: N active`; `web_hle_count()` (exported) returns N.
 
+## Widescreen
+
+`index.html?wide=16:9` (also `21:9`, `W:H`, a width, `off`) shows the wider view of the scrolling levels for
+one visit; the "Widescreen" menu in the header keeps the choice in the ini (`widescreen = 16:9`, applied
+after a reload, `?wide=` wins). `app.js` passes the parameter to `main` as `argv[3]` (`argv[2]` is the `hle`
+set, empty when only `?wide=` is given). The canvas is then 400 x 224 (the 320-pixel screens are
+pillarboxed in it, so the size never changes); the mouse mapping subtracts the margin and is the same code as the host's
+(`mouse_move_frame`). See docs/widescreen.md for what is shown wide and how the gun behaves over a margin.
+
 ## The main loop
 
 `emscripten_set_main_loop(web_frame, 0, 1)`: the browser calls `web_frame` on every

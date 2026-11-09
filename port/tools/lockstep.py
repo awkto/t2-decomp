@@ -80,7 +80,7 @@ def run(binary, script, outdir, hle, hashfile, env):
     cmd = [binary, "--script", script, "--outdir", outdir, "--mute", "--no-vsync",
            "--hle", hle, "--framehash", hashfile]
     r = subprocess.run(cmd, cwd=ROOT, env=env, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.PIPE, timeout=120)
+                       stderr=subprocess.PIPE, timeout=int(os.environ.get("LOCKSTEP_TIMEOUT", "120")))
     if r.returncode != 0:
         sys.stderr.write(r.stderr.decode(errors="replace"))
         raise RuntimeError("%s failed (hle=%s)" % (binary, hle))

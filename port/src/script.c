@@ -2,6 +2,7 @@
 #include "emu.h"
 #include "gun.h"
 #include "mouse.h"
+#include "render/render_wide.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -106,6 +107,9 @@ bool script_step(script *s, unsigned *pad)
 			mouse_leave();
 		} else if (!strcmp(cmd, "mouse") && sscanf(line, "%*s %511s %511s", a1, a2) == 2) {
 			mouse_move(atoi(a1), atoi(a2));
+		} else if (!strcmp(cmd, "fmouse") && sscanf(line, "%*s %511s %511s", a1, a2) == 2) {
+			/* a pixel of the shown frame (the wide frame under widescreen), like the window's mouse */
+			mouse_move_frame(atoi(a1), atoi(a2), render_wide_margin());
 		} else if (!strcmp(cmd, "click") && sscanf(line, "%*s %511s", a1) == 1) {
 			int b = a1[0] == 'R' || a1[0] == 'r' ? MOUSE_RIGHT : a1[0] == 'M' || a1[0] == 'm' ? MOUSE_MIDDLE :
 			        a1[0] == 'L' || a1[0] == 'l' ? MOUSE_LEFT : 0;

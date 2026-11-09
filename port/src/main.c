@@ -26,6 +26,7 @@
 #include "mouse.h"
 #include "options.h"
 #include "render/render_emu.h"
+#include "render/render_wide.h"
 #include "overlay.h"
 #include "romfind.h"
 #include "script.h"
@@ -66,6 +67,7 @@ static void usage(const char *argv0)
 	       "  --hle SPEC              run 68k functions as C: none (default), all, or a list of names\n"
 	       "                          separated by ',' or '+' (-name off, +name on); see docs/porting.md\n"
 	       "  --render MODE           gpgx (default), c (the C renderer, docs/render.md) or compare; env T2_RENDER too\n"
+	       "  --widescreen SPEC       wider view of the scrolling levels: off (default), 16:9, 21:9, W:H or a width (docs/widescreen.md)\n"
 	       "  --hle-list              print the active C replacements and exit\n"
 	       "Headless: SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy %s --script s.txt --screenshot out.ppm\n",
 	       argv0, argv0);
@@ -162,7 +164,7 @@ typedef struct {
 static bool video_init(video_t *v, int scale, bool fullscreen, bool vsync)
 {
 	v->win = SDL_CreateWindow("T2: The Arcade Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-	                          320 * scale, 224 * scale,
+	                          (render_wide_enabled() ? render_wide_width() : 320) * scale, 224 * scale,
 	                          SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
 	if (!v->win)
 		return false;
@@ -273,7 +275,8 @@ static void mouse_from_window(video_t *v, int x, int y)
 		mouse_leave();
 		SDL_ShowCursor(SDL_ENABLE);       /* outside the image: the OS cursor is useful again */
 	} else if (on > 0) {
-		mouse_move(gx, gy);
+		/* widescreen: the frame is wider than the game's 320 pixels (docs/widescreen.md) */
+		mouse_move_frame(gx, gy, render_wide_enabled() && v->tw > 320 ? (v->tw - 320) / 2 : 0);
 		SDL_ShowCursor(gun_enabled() ? SDL_DISABLE : SDL_ENABLE);
 	}
 }
@@ -330,6 +333,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(s, "--no-mouse")) SETOPT("mouse", "off");
 		else if (!strcmp(s, "--hle")) a.hle = NEXT();
 		else if (!strcmp(s, "--render")) SETOPT("render", NEXT());
+		else if (!strcmp(s, "--widescreen")) SETOPT("widescreen", NEXT());
 		else if (!strcmp(s, "--hle-list")) a.hle_list = true;
 		else if (!strcmp(s, "-h") || !strcmp(s, "--help")) { usage(argv[0]); return 0; }
 		else { fprintf(stderr, "unknown option %s\n", s); usage(argv[0]); return 2; }
@@ -345,6 +349,11 @@ int main(int argc, char **argv)
 	gun_set_right(options_str("mouse_right")[0]);
 	mouse_set_aim_correct(options_bool("aim_correct"));
 	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));
+	if (!render_wide_configure(getenv("T2_WIDE") ? NULL : options_str("widescreen"))) {
+		fprintf(stderr, "widescreen: bad value '%s' (off, 16:9, 21:9, W:H or a width 320..%d)\n",
+		        getenv("T2_WIDE") ? getenv("T2_WIDE") : options_str("widescreen"), RENDER_MAX_W);
+		return 2;
+	}
 
 	/* C replacements for 68k functions: --hle overrides the hle option (default none). Every
 	 * replacement starts disabled, so plain t2port and --hle none run the original 68k code. */

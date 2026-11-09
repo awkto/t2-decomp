@@ -29,7 +29,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define RENDER_MAX_W 320          /* widest output today (H40); a wider view raises this (#13) */
+#define RENDER_W43 320            /* the VDP's own widest line (H40) */
+#define RENDER_MAX_W 640          /* widest output: the widescreen view (render_wide.c, #13) */
 #define RENDER_MAX_H 240
 
 /* The VDP state the renderer reads. All pointers are read-only. */
@@ -42,6 +43,15 @@ typedef struct render_vdp {
 	                         * (y) and word 1 (size, link) are used; x and attribute come from VRAM.
 	                         * It is updated by VRAM writes that hit the sprite table. */
 	int width;              /* active width latched for this frame: 256 (H32) or 320 (H40) */
+	/* wide view (#13): out_w > 0 draws out_w pixels per line, the VDP's own line sitting at
+	 * x = xbias (output pixel 0 = screen x -xbias): both planes are scrolled xbias more, sprites
+	 * are placed xbias further right. Sprite selection, the per-line limits and masking stay those
+	 * of `width`. Both zero for the normal view. */
+	int out_w, xbias;
+	const uint32_t *wide_hist;   /* wide view: [2 planes][32 rows][64 cells]; a non-zero entry (bit 16 set,
+	                              * low 16 bits = the name-table word) replaces that cell of plane A / B where it
+	                              * is in the left margin: p >= wide_lz cells right of the picture's first cell */
+	int wide_lz;
 } render_vdp;
 
 /* Everything one frame needs (frame mode). Widescreen and interpolation (#13, #14) add fields
@@ -52,7 +62,7 @@ typedef struct render_scene {
 } render_scene;
 
 /* Renderer state that lives across lines and frames, like the VDP's internal state. */
-typedef struct render_sprite { uint16_t y, x, attr, size; } render_sprite;
+typedef struct render_sprite { uint16_t y, x, attr, size, xfull; } render_sprite;   /* xfull: the whole x word, x = its low 9 bits */
 typedef struct render_ctx {
 	render_sprite obj[2][20];   /* sprites of the next line / this line (parity of the line) */
 	uint8_t obj_count[2];

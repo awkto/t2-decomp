@@ -26,6 +26,7 @@
 #include "emu.h"
 #include "gun.h"
 #include "hle.h"
+#include "render/render_wide.h"
 #include "mouse.h"
 #include "options.h"
 #include "overlay.h"
@@ -281,8 +282,8 @@ static void mouse_from_window(int x, int y)
 	int gx, gy, on = window_to_game(x, y, &gx, &gy);
 	if (on == 0)
 		mouse_leave();
-	else if (on > 0)
-		mouse_move(gx, gy);
+	else if (on > 0)       /* widescreen (docs/widescreen.md): the frame is wider than the game's 320 pixels */
+		mouse_move_frame(gx, gy, render_wide_enabled() && V.tw > 320 ? (V.tw - 320) / 2 : 0);
 }
 
 static uint32_t rgba_from_565(uint16_t p)
@@ -543,7 +544,8 @@ static void web_frame(void)
 }
 
 /* argv[1]: the ROM's path in the page's file system; argv[2] (optional): the HLE set from the page's
- * ?hle= parameter, which overrides the ini's `hle` option for this run (default none) */
+ * ?hle= parameter, which overrides the ini's `hle` option for this run (default none); argv[3] (optional):
+ * the ?wide= parameter (off, 16:9, 21:9, W:H, a width), which overrides the ini's `widescreen` option */
 int main(int argc, char **argv)
 {
 	const char *rom = argc > 1 ? argv[1] : WEB_DIR "/rom/baserom.md";
@@ -564,6 +566,11 @@ int main(int argc, char **argv)
 	mouse_set_aim_correct(options_bool("aim_correct"));
 	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));    /* read once: a change needs a reload */
 
+	const char *wide_spec = argc > 3 && argv[3][0] ? argv[3] : options_str("widescreen");
+	if (!render_wide_configure(wide_spec)) {
+		fprintf(stderr, "widescreen: bad value '%s', running without\n", wide_spec);
+		render_wide_configure("off");
+	}
 	const char *hle_spec = argc > 2 && argv[2][0] ? argv[2] : options_str("hle");
 	if (!hle_configure(hle_spec)) {
 		fprintf(stderr, "hle: unknown function in '%s', running with none\n", hle_spec);

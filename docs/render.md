@@ -77,7 +77,8 @@ Not implemented because the game never uses them: interlace, modes 4 and below, 
 
 ## Next steps (#13 widescreen, #14 high fps) - designed for, not implemented
 
-- **Wider viewport**: `render_vdp.width` is a parameter of every stage and the line buffers have margins
+- **Wider viewport** (done in #13, see docs/widescreen.md: `render_vdp.out_w / xbias / wide_hist`, `RENDER_MAX_W` is 640 now;
+  the original plan follows): `render_vdp.width` is a parameter of every stage and the line buffers have margins
   (`RENDER_MAX_W` is 320 now; raise it with the wider view). A widescreen scene adds a viewport rectangle in
   plane coordinates (output pixel 0 = screen x `x0`, shift the h-scroll by `-x0`, draw `width >> 4`
   columns); the planes wrap in 64-cell name tables, sprites need their x range opened (the 0x80 offset and

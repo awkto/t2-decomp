@@ -181,6 +181,29 @@ static inline void draw_column(uint8_t *dst, const render_vdp *v, uint32_t nt, i
 	draw_cell(dst + 8, v, vram_w(v, nt + 2), row);
 }
 
+/* a plane column (plane 0 = A, 1 = B) of the 64 x 32 layout: like draw_column, but the wide view (#13)
+ * replaces a cell that is in the left margin (the cells just left of the 4:3 picture: p >= wide_lz, p = the
+ * cell's distance in cells from the picture's first cell) by what it held when it last scrolled off
+ * (render_vdp.wide_hist, render_wide.c). `col2` is the 2-cell column index, `vl` the line's plane row
+ * (pixels), `hs` the line's h-scroll of this plane including the wide view's bias; p is worked out from it,
+ * so a scroll change in the middle of the frame is seen on its own line like everything else. */
+static inline void draw_column_p(uint8_t *dst, const render_vdp *v, int plane, uint32_t nt, uint32_t col2,
+                                 uint32_t col_mask, uint32_t vl, uint32_t hs)
+{
+	uint16_t a0 = vram_w(v, nt), a1 = vram_w(v, nt + 2);
+	if (v->wide_hist) {
+		uint32_t c0 = (col2 & col_mask) << 1;
+		uint32_t first = ((0u - (hs - (uint32_t)v->xbias)) & 0x3FF) >> 3;      /* the picture's first cell */
+		const uint32_t *h = v->wide_hist + plane * 2048 + ((vl >> 3) & 31) * 64 + c0;
+		if (h[0] && ((c0 - first) & 63) >= (uint32_t)v->wide_lz)
+			a0 = (uint16_t)h[0];
+		if (h[1] && ((c0 + 1 - first) & 63) >= (uint32_t)v->wide_lz)
+			a1 = (uint16_t)h[1];
+	}
+	draw_cell(dst, v, a0, (int)(vl & 7));
+	draw_cell(dst + 8, v, a1, (int)(vl & 7));
+}
+
 /* ------------------------------------------------------------------ planes */
 static void render_planes(const render_vdp *v, const uint8_t *reg, const uint16_t *vsram,
                           int line, int width, uint8_t *out)
@@ -199,7 +222,7 @@ static void render_planes(const render_vdp *v, const uint8_t *reg, const uint16_
 	bool vs_cells = reg[11] & 4;
 
 	uint32_t hs_off = hscb + (((uint32_t)line & hscroll_mask_tbl[reg[11] & 3]) << 2);
-	uint16_t hs_a = vram_w(v, hs_off), hs_b = vram_w(v, hs_off + 2);
+	uint16_t hs_a = (uint16_t)(vram_w(v, hs_off) + v->xbias), hs_b = (uint16_t)(vram_w(v, hs_off + 2) + v->xbias);
 	int columns = width >> 4;
 #define VS_COL(c) ((c) < 20 ? (c) : 19)    /* 2-cell v-scroll entries exist for 20 columns */
 
@@ -213,13 +236,13 @@ static void render_planes(const render_vdp *v, const uint8_t *reg, const uint16_
 	if (shift) {
 		uint32_t vl = (line + (vs_cells ? edge_vs : vsram[1])) & row_mask;
 		uint32_t nt = ntbb + (((vl >> 3) << pf_shift) & 0x1FC0);
-		draw_column(bufB + 0x10 + shift, v, nt + (((index - 1) & col_mask) << 2), (int)(vl & 7));
+		draw_column_p(bufB + 0x10 + shift, v, 1, nt + (((index - 1) & col_mask) << 2), index - 1, col_mask, vl, hs_b);
 	}
 	dst = bufB + 0x20 + shift;
 	for (int col = 0; col < columns; col++, index++, dst += 16) {
 		uint32_t vl = (line + vsram[vs_cells ? 2 * VS_COL(col) + 1 : 1]) & row_mask;
 		uint32_t nt = ntbb + (((vl >> 3) << pf_shift) & 0x1FC0);
-		draw_column(dst, v, nt + ((index & col_mask) << 2), (int)(vl & 7));
+		draw_column_p(dst, v, 1, nt + ((index & col_mask) << 2), index, col_mask, vl, hs_b);
 	}
 
 	/* plane A and the window */
@@ -238,6 +261,8 @@ static void render_planes(const render_vdp *v, const uint8_t *reg, const uint16_
 	if (a_on) {
 		start = clip[0].left;
 		end = clip[0].right;
+		if (end == (h40 ? 20 : 16))
+			end = columns;              /* the wide view (#13): plane A runs to the end of the wide line */
 		shift = hs_a & 0x0F;
 		index = col_mask + (uint32_t)start + 1 - ((hs_a >> 4) & col_mask);
 		if (shift) {
@@ -246,13 +271,13 @@ static void render_planes(const render_vdp *v, const uint8_t *reg, const uint16_
 			/* the VDP's "window bug": next to the window the partial column is fetched one
 			 * column too far right */
 			uint32_t idx = start ? index : index - 1;
-			draw_column(bufA + 0x10 + shift + (start << 4), v, nt + ((idx & col_mask) << 2), (int)(vl & 7));
+			draw_column_p(bufA + 0x10 + shift + (start << 4), v, 0, nt + ((idx & col_mask) << 2), idx, col_mask, vl, hs_a);
 		}
 		dst = bufA + 0x20 + shift + (start << 4);
 		for (int col = start; col < end; col++, index++, dst += 16) {
 			uint32_t vl = (line + vsram[vs_cells ? 2 * VS_COL(col) : 0]) & row_mask;
 			uint32_t nt = ntab + (((vl >> 3) << pf_shift) & 0x1FC0);
-			draw_column(dst, v, nt + ((index & col_mask) << 2), (int)(vl & 7));
+			draw_column_p(dst, v, 0, nt + ((index & col_mask) << 2), index, col_mask, vl, hs_a);
 		}
 		start = clip[1].left;
 		end = clip[1].right;
@@ -286,7 +311,8 @@ static inline int sprite_tile(int c, int r, int size, uint16_t attr)
 static void render_sprites(render_ctx *rc, const render_vdp *v, const uint8_t *reg, int line,
                            int width, uint8_t *out)
 {
-	int screen_w = width;          /* the VDP's width (sprite masking carry-over) */
+	int screen_w = v->width;       /* the VDP's width (sprite masking carry-over) */
+	int xbias = v->xbias;
 	bool sh = reg[12] & 8;
 	int max_pixels = (reg[12] & 1) ? 320 : 256;
 	uint8_t sline[0x20 + RENDER_MAX_W + 0x40];
@@ -312,6 +338,12 @@ static void render_sprites(render_ctx *rc, const render_vdp *v, const uint8_t *r
 		xpos -= 0x80;
 		int w = 8 + ((o->size & 0x0C) << 1);
 		pixels += w;
+		/* wide view: the game writes the whole 16-bit x word and the VDP keeps 9 bits. Where the VDP shows
+		 * such a sprite inside the normal picture, so does the wide view; otherwise it goes where the game
+		 * put it, which may be in a margin (and not the phantom the 9 bits would make) */
+		if (xbias && (o->xfull & ~0x1FFu) && (xpos + w <= 0 || xpos >= screen_w))
+			xpos = (int16_t)o->xfull - 0x80;
+		xpos += xbias;
 		if (xpos + w > 0 && xpos < width && !masked) {
 			uint16_t attr = o->attr;
 			uint8_t atex = (uint8_t)((attr >> 9) & 0x70);
@@ -363,7 +395,8 @@ void render_parse_sprites(render_ctx *rc, const render_vdp *v, int line)
 				if (count == max)
 					break;                              /* sprite overflow */
 				o->attr = vram_w(v, satb + 2 * (uint32_t)(link + 2));
-				o->x = vram_w(v, satb + 2 * (uint32_t)(link + 3)) & 0x1FF;
+				o->xfull = vram_w(v, satb + 2 * (uint32_t)(link + 3));
+				o->x = o->xfull & 0x1FF;
 				o->y = (uint16_t)dy;
 				o->size = (uint16_t)(size & 0x0F);
 				count++;
@@ -380,7 +413,9 @@ void render_parse_sprites(render_ctx *rc, const render_vdp *v, int line)
 /* ------------------------------------------------------------------ the line */
 void render_line_pixels(render_ctx *rc, const render_vdp *v, int line)
 {
-	int width = v->width > RENDER_MAX_W ? RENDER_MAX_W : v->width;
+	int width = v->out_w ? v->out_w : v->width;
+	if (width > (v->out_w ? RENDER_MAX_W : RENDER_W43))
+		width = v->out_w ? RENDER_MAX_W : RENDER_W43;
 	uint8_t out[0x20 + RENDER_MAX_W + 0x40];
 	const uint8_t *reg = v->reg;
 	rc->width = width;
@@ -391,7 +426,7 @@ void render_line_pixels(render_ctx *rc, const render_vdp *v, int line)
 	render_planes(v, reg, v->vsram, line, width, out);
 	render_sprites(rc, v, reg, line, width, out);
 	if (reg[0] & 0x20)
-		memset(out + 0x20, 0x40, 8);                     /* left column blanking */
+		memset(out + 0x20 + v->xbias, 0x40, 8);          /* left column blanking */
 	memcpy(rc->idx, out + 0x20, (size_t)width);
 }
 

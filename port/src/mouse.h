@@ -35,6 +35,8 @@ void mouse_set_aim_correct(bool on);    /* option aim_correct (default on) */
 void mouse_host_reset(void);                 /* forget plans and the screen (after a state load / reset) */
 
 void mouse_move(int gx, int gy);        /* game pixel under the mouse */
+void mouse_move_frame(int fx, int fy, int margin);   /* pixel of the shown frame; margin = widescreen pixels per side */
+bool mouse_in_margin(void);             /* the last mouse_move_frame was over a margin */
 void mouse_leave(void);
 void mouse_button(int button, bool down);   /* MOUSE_LEFT / MOUSE_RIGHT / MOUSE_MIDDLE */
 void mouse_wheel(int dy);               /* dy > 0 = wheel up */

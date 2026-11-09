@@ -27,6 +27,8 @@ const watchdog = setTimeout(async () => {
   console.log('WATCHDOG: timed out');
   process.exit(3);
 }, 300000);
+// WEB_FW=400 with WEB_QUERY='?wide=16:9': the shown frame is FW wide (docs/widescreen.md); game pixels sit WM further right
+const FW = Number(process.env.WEB_FW || 320), WM = (FW - 320) / 2;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSON.stringify(info); };
 
@@ -112,10 +114,10 @@ const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSO
     const r = document.getElementById('canvas').getBoundingClientRect();
     return { x: r.x, y: r.y, w: r.width, h: r.height };
   });
-  const s = Math.min(Math.floor(g.w / 320), Math.floor(g.h / 224));
-  const x0 = Math.floor((g.w - 320 * s) / 2), y0 = Math.floor((g.h - 224 * s) / 2);
+  const s = Math.min(Math.floor(g.w / FW), Math.floor(g.h / 224));
+  const x0 = Math.floor((g.w - FW * s) / 2), y0 = Math.floor((g.h - 224 * s) / 2);
   res.canvas = { css: g, scale: s, x0, y0 };
-  const at = (gx, gy) => [g.x + x0 + (gx + 0.5) * s, g.y + y0 + (gy + 0.5) * s];
+  const at = (gx, gy) => [g.x + x0 + (gx + WM + 0.5) * s, g.y + y0 + (gy + 0.5) * s];
   const moveTo = async (gx, gy) => { const [x, y] = at(gx, gy); await page.mouse.move(x, y); await sleep(120); };
 
   // the gun's Start (middle button) skips the intro text
@@ -222,8 +224,8 @@ const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSO
     } finally { await page.keyboard.up('Tab'); }
   };
   const g2 = await page.evaluate(() => { const r = document.getElementById('canvas').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
-  const s2 = Math.min(Math.floor(g2.w / 320), Math.floor(g2.h / 224));
-  const at2 = (gx, gy) => [g2.x + Math.floor((g2.w - 320 * s2) / 2) + (gx + 0.5) * s2, g2.y + Math.floor((g2.h - 224 * s2) / 2) + (gy + 0.5) * s2];
+  const s2 = Math.min(Math.floor(g2.w / FW), Math.floor(g2.h / 224));
+  const at2 = (gx, gy) => [g2.x + Math.floor((g2.w - FW * s2) / 2) + (gx + WM + 0.5) * s2, g2.y + Math.floor((g2.h - 224 * s2) / 2) + (gy + 0.5) * s2];
   const mv = async (gx, gy) => { await page.mouse.move(...at2(gx, gy)); await sleep(100); };
   const clickAt = async (gx, gy, button = 'left') => { await mv(gx, gy); await page.mouse.click(...at2(gx, gy), { button }); await sleep(100); };
   await mv(160, 112);

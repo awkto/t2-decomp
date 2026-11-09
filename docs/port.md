@@ -73,12 +73,13 @@ ones; `--options --json` lists all of them. Precedence: default, ini, command li
 | `mute`, `volume` | off, 100 | audio |
 | `rom` | | ROM path, remembered automatically |
 | `hle` | none | run 68k functions as C: none, all, or a list of names (`+`-separated when given through `--options`, which splits on commas); see docs/porting.md |
+| `widescreen` | off | wider view of the scrolling levels: off, 16:9, 21:9, `W:H` or a width; presentation only, implies `render = c` (docs/widescreen.md; `T2_WIDE` overrides) |
 | `key_up` ... `key_start` | | SDL key names, several joined with `\|` |
 
 Command line: `--rom`, `--options`, `--config`, `--scale`, `--fullscreen`, `--no-vsync`, `--mute`,
 `--no-mouse`, `--overlay`, `--script`, `--realtime-script`, `--frames N`, `--screenshot FILE.ppm`,
 `--window-shot FILE.ppm`, `--outdir`, `--savedir` (quick states; default `~/.local/share/t2-decomp`),
-`--dump-ram`, `--no-throttle`, `--hle SPEC`, `--hle-list`, `--help`.
+`--dump-ram`, `--no-throttle`, `--hle SPEC`, `--widescreen SPEC`, `--hle-list`, `--help`.
 
 ## Headless scripts
 
@@ -93,6 +94,7 @@ One command per line, `#` starts a comment. Mouse coordinates are game pixels (0
 | `press BTNS N` | hold pad buttons (letters `UDLRABCS`) for N frames, then release |
 | `hold BTNS` / `hold -` | set / clear pad buttons held during `run` |
 | `mouse X Y` | aim the Menacer at game pixel X,Y |
+| `fmouse X Y` | aim at pixel X,Y of the shown frame (the wide frame with `--widescreen`; docs/widescreen.md) |
 | `mouse leave` | point it off screen |
 | `wheel N` | mouse wheel (N > 0 up) |
 | `untilscreen NAME MAX` | run until the mouse logic sees screen `logo`, `intro`, `title`, `menu`, `options`, `continue` or `game` (at most MAX frames) |

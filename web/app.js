@@ -59,13 +59,14 @@ var Module = window.Module = {
       Module.removeRunDependency('idbfs');
     });
   }],
-  onRuntimeInitialized: () => { loadRightSetting(); findRom(); },
+  onRuntimeInitialized: () => { loadRightSetting(); loadWideSetting(); findRom(); },
   // called from C
   t2Sync: () => { clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 300); },
   t2Status: t => setStatus(t),
   t2Started: () => {
     window.t2State = 'running';
     if (pendingRight) Module.ccall('web_set_option', 'number', ['string', 'string'], ['mouse_right', pendingRight]);
+    if (pendingWide) Module.ccall('web_set_option', 'number', ['string', 'string'], ['widescreen', pendingWide]);
   },
   t2Fatal: t => showFatal('Cannot start the game', t),
 };
@@ -99,7 +100,9 @@ function startNow(path, source) {
   try {
     // ?hle=all|none|NAME+NAME overrides the ini's hle option for this visit (docs/web.md)
     const hle = new URLSearchParams(location.search).get("hle");
-    Module.callMain(hle ? [path, hle] : [path]);
+    // ?wide=off|16:9|21:9|W:H|WIDTH overrides the ini's widescreen option for this visit (docs/widescreen.md)
+    const wide = new URLSearchParams(location.search).get("wide");
+    Module.callMain(wide ? [path, hle || '', wide] : hle ? [path, hle] : [path]);
   } catch (e) {
     if (e !== 'unwind' && !(e && e.name === 'ExitStatus')) throw e;
   }
@@ -221,6 +224,29 @@ selRight.addEventListener('change', () => {
   $('canvas').focus();
 });
 let pendingRight = null;
+
+// widescreen: kept in the ini by the C side; read once at start, so a change reloads the page. ?wide= wins.
+const selWide = $('sel-wide');
+selWide.addEventListener('change', () => {
+  const p = new URLSearchParams(location.search);
+  p.delete('wide');
+  const q = p.toString();
+  history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+  if (window.t2State === 'running') {
+    Module.ccall('web_set_option', 'number', ['string', 'string'], ['widescreen', selWide.value]);
+    setStatus('widescreen ' + selWide.value + ': reloading');
+    setTimeout(() => location.reload(), 900);
+  } else pendingWide = selWide.value;
+});
+let pendingWide = null;
+function loadWideSetting() {
+  const q = new URLSearchParams(location.search).get('wide');
+  if (q) { if ([...selWide.options].some(o => o.value === q)) selWide.value = q; return; }
+  try {
+    const m = /^widescreen\s*=\s*(\S+)/mi.exec(Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' }));
+    if (m && [...selWide.options].some(o => o.value === m[1])) selWide.value = m[1];
+  } catch (e) { /* no ini yet */ }
+}
 function loadRightSetting() {
   try {
     const m = /^mouse_right\s*=\s*([ABC])/mi.exec(Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' }));

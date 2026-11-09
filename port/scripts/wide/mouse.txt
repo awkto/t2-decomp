@@ -1,0 +1,44 @@
+# widescreen mouse mapping (port/tools/widetest.sh; run with --widescreen 16:9, margin 40 px each side).
+# fmouse X Y = a pixel of the shown 400-wide frame; the game's 320 pixels are frame x 40..359 (the gun does not report exactly 318 right after a move: a quirk of the game, also without widescreen).
+load states/gun_05.state
+run 700
+fmouse 200 112
+run 8
+crosshair centre
+fmouse 40 112
+run 8
+crosshair left-edge
+fmouse 356 112
+run 8
+crosshair right-edge
+fmouse 100 150
+run 8
+crosshair inside-100-150
+# over the left margin: the crosshair waits at the edge, the trigger and the missile do nothing
+fmouse 10 112
+run 8
+crosshair left-margin
+peek shot-before FF9E94 4
+peek missiles-before FF8018 2
+click L 8
+run 4
+peek shot-after-margin-click FF9E94 4
+click R 8
+run 4
+peek missiles-after-margin-right-click FF8018 2
+fmouse 395 112
+run 8
+crosshair right-margin
+click L 8
+run 4
+peek shot-after-right-margin-click FF9E94 4
+# the same click over the playfield does fire
+fmouse 200 112
+run 8
+click L 8
+run 2
+peek shot-after-field-click FF9E94 4
+click R 8
+run 4
+peek missiles-after-field-right-click FF8018 2
+shot mouse

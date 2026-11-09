@@ -34,6 +34,7 @@ static opt_t opts[] = {
 	OPT("rom", T_STR, "", "", 0, "path of the ROM to run (remembered automatically)"),
 	OPT("hle", T_STR, "none", "", 1, "C replacements for 68k functions: none, all, or a comma list of names (-name off, +name on); see docs/porting.md"),
 	OPT("render", T_ENUM, "gpgx", "gpgx|c|compare", 0, "renderer: gpgx = the emulator's picture, c = the C renderer (docs/render.md), compare = draw both, show gpgx's and report differences (T2_RENDER overrides)"),
+	OPT("widescreen", T_STR, "off", "", 0, "wider view of the scrolling levels (presentation only, docs/widescreen.md): off, 16:9, 21:9, W:H or a width in pixels (320..640); implies the C renderer (T2_WIDE overrides)"),
 	/* keybindings: SDL key names, several separated by | */
 	OPT("key_up", T_KEYS, "Up", "", 0, "D-pad up"),
 	OPT("key_down", T_KEYS, "Down", "", 0, "D-pad down"),
