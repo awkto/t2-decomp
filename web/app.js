@@ -66,6 +66,7 @@ var Module = window.Module = {
   t2Started: () => {
     window.t2State = 'running';
     if (pendingRight) Module.ccall('web_set_option', 'number', ['string', 'string'], ['mouse_right', pendingRight]);
+    if (pendingFps) Module.ccall('web_set_option', 'number', ['string', 'string'], ['fps', pendingFps]);
   },
   t2Fatal: t => showFatal('Cannot start the game', t),
 };
@@ -98,8 +99,10 @@ function startNow(path, source) {
   $('canvas').focus();
   try {
     // ?hle=all|none|NAME+NAME overrides the ini's hle option for this visit (docs/web.md)
-    const hle = new URLSearchParams(location.search).get("hle");
-    Module.callMain(hle ? [path, hle] : [path]);
+    // ?fps=off|on|120 overrides the ini's fps option (interpolated high frame rate, docs/hifps.md)
+    const q = new URLSearchParams(location.search);
+    const hle = q.get("hle"), fps = q.get("fps");
+    Module.callMain(fps ? [path, hle || "", fps] : hle ? [path, hle] : [path]);
   } catch (e) {
     if (e !== 'unwind' && !(e && e.name === 'ExitStatus')) throw e;
   }
@@ -221,10 +224,24 @@ selRight.addEventListener('change', () => {
   $('canvas').focus();
 });
 let pendingRight = null;
+
+// frame rate: 60 Hz, or interpolated pictures on every display refresh (kept in the ini by the C side)
+const selFps = $('sel-fps');
+selFps.addEventListener('change', () => {
+  if (window.t2State === 'running') Module.ccall('web_set_option', 'number', ['string', 'string'], ['fps', selFps.value]);
+  else pendingFps = selFps.value;
+  $('canvas').focus();
+});
+let pendingFps = null;
 function loadRightSetting() {
   try {
-    const m = /^mouse_right\s*=\s*([ABC])/mi.exec(Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' }));
+    const ini = Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' });
+    const m = /^mouse_right\s*=\s*([ABC])/mi.exec(ini);
     if (m) selRight.value = m[1].toUpperCase();
+    const f = /^fps\s*=\s*(\S+)/mi.exec(ini);
+    if (f) selFps.value = /^(off|0)$/i.test(f[1]) ? 'off' : 'on';
+    const qf = new URLSearchParams(location.search).get("fps");
+    if (qf) selFps.value = /^(off|0)$/i.test(qf) ? 'off' : 'on';
   } catch (e) { /* no ini yet */ }
 }
 

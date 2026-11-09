@@ -24,7 +24,7 @@ if(EMSCRIPTEN)
   set(WEB_SDL -sUSE_SDL=2)
   file(GLOB GAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/game/*.c")
   add_executable(t2_web src/web/main_web.c src/emu.c src/gun.c src/mouse.c src/options.c src/overlay.c src/sha1.c
-    src/render/render.c src/render/render_emu.c
+    src/render/render.c src/render/render_emu.c src/render/hifps.c
     hle/hle.c hle/sandbox.c hle/gx.c hle/native.c ${GAME_SOURCES})
   target_link_libraries(t2_web PRIVATE gpgx_core)
   target_include_directories(t2_web PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/hle"
@@ -47,7 +47,7 @@ endif()
 file(GLOB GAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/game/*.c")
 add_library(t2_common OBJECT
   src/emu.c src/sha1.c src/script.c src/mouse.c src/gun.c src/capture.c src/ipprof.c
-  src/render/render.c src/render/render_emu.c
+  src/render/render.c src/render/render_emu.c src/render/hifps.c
   hle/hle.c hle/sandbox.c hle/gx.c hle/native.c
   ${GAME_SOURCES})
 target_link_libraries(t2_common PUBLIC gpgx_core)

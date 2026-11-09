@@ -34,6 +34,7 @@ static opt_t opts[] = {
 	OPT("rom", T_STR, "", "", 0, "path of the ROM to run (remembered automatically)"),
 	OPT("hle", T_STR, "none", "", 1, "C replacements for 68k functions: none, all, or a comma list of names (-name off, +name on); see docs/porting.md"),
 	OPT("render", T_ENUM, "gpgx", "gpgx|c|compare", 0, "renderer: gpgx = the emulator's picture, c = the C renderer (docs/render.md), compare = draw both, show gpgx's and report differences (T2_RENDER overrides)"),
+	OPT("fps", T_STR, "off", "off|auto|61..1000", 0, "high frame rate (docs/hifps.md): the game logic stays at 60 Hz, interpolated pictures are shown at this rate in Hz (120, 144, 240), auto = the display's refresh rate if over 60 Hz, off = 60 Hz. Needs the C renderer (selected automatically). F4 toggles"),
 	/* keybindings: SDL key names, several separated by | */
 	OPT("key_up", T_KEYS, "Up", "", 0, "D-pad up"),
 	OPT("key_down", T_KEYS, "Down", "", 0, "D-pad down"),

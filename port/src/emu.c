@@ -9,6 +9,7 @@
 #include "gx.h"
 #include "hle.h"
 #include "native.h"
+#include "render/hifps.h"
 #include "render/render_emu.h"
 #include "sha1.h"
 
@@ -456,6 +457,7 @@ long emu_frame_count(void) { return g_frames; }
 void emu_reset(void)
 {
 	hle_state_reset();
+	hifps_reset();
 	/* restore the power-on snapshot: retro_reset() is a soft reset that keeps RAM, so runs
 	 * after it are not reproducible */
 	if (g_boot)
@@ -485,7 +487,7 @@ double emu_sample_rate(void) { return g_av.timing.sample_rate; }
 /* ------------------------------------------------------------------ state */
 size_t emu_state_size(void) { return retro_serialize_size(); }
 bool emu_state_save(void *buf, size_t size) { return retro_serialize(buf, size); }
-bool emu_state_load(const void *buf, size_t size) { hle_state_reset(); return retro_unserialize(buf, size); }
+bool emu_state_load(const void *buf, size_t size) { hle_state_reset(); hifps_reset(); return retro_unserialize(buf, size); }
 
 bool emu_state_save_file(const char *path)
 {
