@@ -15,7 +15,7 @@
 #include "emu.h"
 #include "gx.h"
 
-#define W_MAX RENDER_MAX_W
+#define W_MAX RENDER_W43           /* the in-betweens are 320 wide (not combined with widescreen) */
 #define H_MAX RENDER_MAX_H
 #define LOGIC_HZ 59.92
 
