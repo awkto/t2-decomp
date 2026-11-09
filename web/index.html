@@ -16,6 +16,8 @@
     <select id="sel-wide"><option value="off">off</option><option value="16:9">16:9</option><option value="21:9">21:9</option></select></label>
   <label title="Menacer button on the right mouse button">Right click:
     <select id="sel-right"><option>A</option><option selected>B</option><option>C</option></select></label>
+  <label title="High frame rate: the game logic stays at 60 Hz, in-between pictures are interpolated on every display refresh (docs/hifps.md)">Frame rate:
+    <select id="sel-fps"><option value="off" selected>60 Hz</option><option value="on">display rate</option></select></label>
   <button id="btn-sound" hidden title="Browsers start sound only after a click or key press">Enable sound</button>
   <button id="btn-fullscreen" title="Fullscreen (F11)">Fullscreen</button>
   <button id="btn-forget" hidden title="Remove the ROM stored in this browser">Forget ROM</button>
@@ -43,6 +45,12 @@
     <h2>T2: The Arcade Game</h2>
     <p>The ROM is ready. Browsers only allow sound after a click, so the game starts when you press play.</p>
     <p>At the title menu pick <strong>1 PLAYER - USE MENACER</strong> (the default): the mouse is the gun.</p>
+    <p><label title="Which code runs the game. All three play the same game; the C modes are the decompiled code (docs/web.md)">Mode:
+      <select id="sel-mode">
+        <option value="" selected>Emulated 68k (original code)</option>
+        <option value="all">C replacements (68k emulated where not replaced)</option>
+        <option value="native">Native C (no 68k code)</option>
+      </select></label></p>
     <p><button id="btn-play" class="big">&#9654; Click to play</button></p>
   </section>
 

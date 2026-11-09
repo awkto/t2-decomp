@@ -14,6 +14,7 @@
 
 #include "gx.h"
 #include "render_wide.h"
+#include "hifps.h"
 
 static render_mode g_mode = RENDER_GPGX;
 static bool g_atexit, g_hooked;
@@ -47,6 +48,10 @@ static void on_line(int line)
 	if (line == 0)
 		g_lines_done = 0, memset(g_line_done, 0, sizeof g_line_done);
 	render_vdp v = live_view();
+	if (line == 0)
+		hifps_line0(&v, gx_viewport_h());      /* high frame rate: the scene of this frame (docs/hifps.md) */
+	else
+		hifps_line(&v, line);
 	uint8_t masking = g_rc.spr_masking;
 	render_line_pixels(&g_rc, &v, line);
 	render_wide_line(&g_rc, masking, &v, line);      /* widescreen (#13): the same line, wider; no-op when off */
@@ -55,6 +60,7 @@ static void on_line(int line)
 static void on_parse(int line)
 {
 	render_vdp v = live_view();
+	hifps_parse(&v, line);
 	render_parse_sprites(&g_rc, &v, line);
 }
 
@@ -71,6 +77,8 @@ static void on_remap(int line)
 	}
 	g_fb_w = g_rc.width;
 	g_fb_h = gx_viewport_h();
+	if (line == g_fb_h - 1)
+		hifps_lastline();
 }
 
 static void report(void)
@@ -162,6 +170,14 @@ void render_emu_frame_end(long frame, uint16_t *px, unsigned w, unsigned h)
 	bool complete = (unsigned)g_fb_w == w && (unsigned)g_fb_h == h && g_lines_done == (int)h;
 	g_have_frame = complete;
 	render_wide_frame_end(frame, complete ? (int)h : -1);
+	if (hifps_enabled()) {
+		/* the C renderer's frame is the whole frame R(k); it must be in px (c mode) or checked (compare) */
+		if (g_mode == RENDER_C && complete)
+			for (unsigned y = 0; y < h; y++)
+				for (unsigned x = 0; x < w; x++)
+					px[y * w + x] = render_rgba_to_565(g_fb[y * RENDER_MAX_W + x]);
+		hifps_frame_end(px, w, h, complete);
+	}
 	if (g_mode == RENDER_C) {
 		if (complete)
 			for (unsigned y = 0; y < h; y++)

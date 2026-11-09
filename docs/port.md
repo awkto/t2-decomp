@@ -46,6 +46,7 @@ the window" screen. A ROM that worked is remembered in the ini.
 | Arrows, Z/A, X/S, C/D, Enter | Pad on port 1: D-pad, A, B, C, Start (menus, 2 PLAYER pad) |
 | Gamepad | D-pad / left stick, X/Y = A, A = B, B/RB = C, Start; Back = pause |
 | F1 | Debug overlay (frame, FPS, gun position and buttons, pad, audio queue) |
+| F4 | High frame rate on / off (docs/hifps.md) |
 | F5 / F9, F6 / F7 | Save / load quick state, previous / next slot (0-9) |
 | P, N or `.` | Pause, frame advance |
 | Tab (hold) | Fast forward |
@@ -74,12 +75,14 @@ ones; `--options --json` lists all of them. Precedence: default, ini, command li
 | `rom` | | ROM path, remembered automatically |
 | `hle` | none | run 68k functions as C: none, all, or a list of names (`+`-separated when given through `--options`, which splits on commas); see docs/porting.md |
 | `widescreen` | off | wider view of the scrolling levels: off, 16:9, 21:9, `W:H` or a width; presentation only, implies `render = c` (docs/widescreen.md; `T2_WIDE` overrides) |
+| `fps` | off | high frame rate (docs/hifps.md): `off`, `auto` (the display's refresh rate if over 60 Hz) or a rate in Hz (120, 144, 240). The game stays at 60 Hz; in-between pictures are interpolated. Selects the C renderer. F4 toggles |
 | `key_up` ... `key_start` | | SDL key names, several joined with `\|` |
 
 Command line: `--rom`, `--options`, `--config`, `--scale`, `--fullscreen`, `--no-vsync`, `--mute`,
 `--no-mouse`, `--overlay`, `--script`, `--realtime-script`, `--frames N`, `--screenshot FILE.ppm`,
 `--window-shot FILE.ppm`, `--outdir`, `--savedir` (quick states; default `~/.local/share/t2-decomp`),
 `--dump-ram`, `--no-throttle`, `--hle SPEC`, `--widescreen SPEC`, `--hle-list`, `--help`.
+`--dump-ram`, `--no-throttle`, `--hle SPEC`, `--fps RATE`, `--hle-list`, `--help`.
 
 ## Headless scripts
 

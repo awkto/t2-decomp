@@ -84,13 +84,19 @@ const check = (name, ok, info) => { res.checks[name] = ok ? 'ok' : 'FAIL ' + JSO
   res.need_rom_ms = Date.now() - t0;
   const input = await page.$('#rom-file');
   await input.uploadFile(rom);
-  // a ROM the player has just chosen starts the game (the choice was the gesture) ...
+  // a ROM the player has just chosen is kept, then the play panel (with its Mode menu) is shown ...
+  await page.waitForFunction(() => !document.getElementById('play-panel').hidden, { timeout: 30000 });
+  // WEB_MODE='' | all | native picks the play panel's Mode menu (the page remembers it per browser)
+  const mode = process.env.WEB_MODE || '';
+  await page.select('#sel-mode', mode);
+  await page.click('#btn-play');
   await waitState('running', 30000);
-  // the HLE set (?hle= in the URL; default none): none -> 0 active, anything else -> some active
-  res.hle = new URL(url).searchParams.get('hle') || 'none';
+  // the HLE set (?hle= in the URL, else the Mode menu; default none): none -> 0 active, anything else -> some active
+  res.mode = mode || 'emulated';
+  res.hle = new URL(url).searchParams.get('hle') || (mode ? 'all' : 'none');
   res.hle_active = await page.evaluate(() => Module._web_hle_count());
   check('hle=' + res.hle + ' active count', res.hle === 'none' ? res.hle_active === 0 : res.hle_active > 0, res.hle_active);
-  check('ROM from the file input starts the game', true);
+  check('ROM from the file input starts the game after the click', true);
   await sleep(1000);                            // the debounced IndexedDB sync
   // ... a later visit finds it in IndexedDB and waits for "Click to play" (the AudioContext gate)
   await page.reload({ waitUntil: 'load' });

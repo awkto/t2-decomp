@@ -67,6 +67,7 @@ var Module = window.Module = {
     window.t2State = 'running';
     if (pendingRight) Module.ccall('web_set_option', 'number', ['string', 'string'], ['mouse_right', pendingRight]);
     if (pendingWide) Module.ccall('web_set_option', 'number', ['string', 'string'], ['widescreen', pendingWide]);
+    if (pendingFps) Module.ccall('web_set_option', 'number', ['string', 'string'], ['fps', pendingFps]);
   },
   t2Fatal: t => showFatal('Cannot start the game', t),
 };
@@ -82,7 +83,8 @@ function romOk(path) {
 // Browsers only let a page make sound after a user gesture. A ROM kept from an earlier visit would
 // start the game without one, so the page waits for "Click to play" first: SDL creates its
 // AudioContext inside callMain, so creating it in the click handler means it starts 'running'
-// instead of silently 'suspended'. A ROM the player has just chosen or dropped starts at once.
+// instead of silently 'suspended'. A ROM the player has just chosen or dropped also goes through it, so
+// the Mode menu on the panel can be set first.
 function clickToPlay(path, source = 'cached') {
   $('rom-panel').hidden = true;
   $('play-panel').hidden = false;
@@ -99,10 +101,19 @@ function startNow(path, source) {
   $('canvas').focus();
   try {
     // ?hle=all|none|NAME+NAME overrides the ini's hle option for this visit (docs/web.md)
-    const hle = new URLSearchParams(location.search).get("hle");
-    // ?wide=off|16:9|21:9|W:H|WIDTH overrides the ini's widescreen option for this visit (docs/widescreen.md)
-    const wide = new URLSearchParams(location.search).get("wide");
-    Module.callMain(wide ? [path, hle || '', wide] : hle ? [path, hle] : [path]);
+    // ?fps=off|on|120 (docs/hifps.md) and ?wide=off|16:9|21:9|W:H|WIDTH (docs/widescreen.md) override the ini's options for
+    // this visit; they go to main as key=value arguments after the ROM path
+    const q = new URLSearchParams(location.search);
+    // the play panel's Mode menu: '' = the ini's hle option (default none, the emulated 68k), all, native
+    const mode = $('sel-mode').value;
+    if (mode === 'native') Module.ccall('web_set_native', 'number', ['number'], [1]);
+    const hle = q.get("hle") || (mode ? 'all' : null), fps = q.get("fps"), wide = q.get("wide");
+    console.log('t2: mode ' + (mode || 'emulated') + (q.get("hle") ? ' (hle from the URL: ' + q.get("hle") + ')' : ''));
+    const args = [path];
+    if (hle) args.push('hle=' + hle);
+    if (fps) args.push('fps=' + fps);
+    if (wide) args.push('wide=' + wide);
+    Module.callMain(args);
   } catch (e) {
     if (e !== 'unwind' && !(e && e.name === 'ExitStatus')) throw e;
   }
@@ -155,8 +166,7 @@ async function takeRomFile(file) {
   }
   FS.rename(tmp, ROM_CACHED);
   syncNow();
-  startNow(ROM_CACHED, 'cached');
-  resumeAudio();
+  clickToPlay(ROM_CACHED);
 }
 
 $('rom-file').addEventListener('change', e => takeRomFile(e.target.files[0]));
@@ -247,10 +257,28 @@ function loadWideSetting() {
     if (m && [...selWide.options].some(o => o.value === m[1])) selWide.value = m[1];
   } catch (e) { /* no ini yet */ }
 }
+// frame rate: 60 Hz, or interpolated pictures on every display refresh (kept in the ini by the C side)
+const selFps = $('sel-fps');
+selFps.addEventListener('change', () => {
+  if (window.t2State === 'running') Module.ccall('web_set_option', 'number', ['string', 'string'], ['fps', selFps.value]);
+  else pendingFps = selFps.value;
+  $('canvas').focus();
+});
+let pendingFps = null;
+
+// Mode menu on the play panel: remembered in this browser only
+const selMode = $('sel-mode');
+try { const m = localStorage.getItem('t2-mode'); if (m !== null && [...selMode.options].some(o => o.value === m)) selMode.value = m; } catch (e) { /* no storage */ }
+selMode.addEventListener('change', () => { try { localStorage.setItem('t2-mode', selMode.value); } catch (e) { /* no storage */ } });
 function loadRightSetting() {
   try {
-    const m = /^mouse_right\s*=\s*([ABC])/mi.exec(Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' }));
+    const ini = Module.FS.readFile('/t2/t2.ini', { encoding: 'utf8' });
+    const m = /^mouse_right\s*=\s*([ABC])/mi.exec(ini);
     if (m) selRight.value = m[1].toUpperCase();
+    const f = /^fps\s*=\s*(\S+)/mi.exec(ini);
+    if (f) selFps.value = /^(off|0)$/i.test(f[1]) ? 'off' : 'on';
+    const qf = new URLSearchParams(location.search).get("fps");
+    if (qf) selFps.value = /^(off|0)$/i.test(qf) ? 'off' : 'on';
   } catch (e) { /* no ini yet */ }
 }
 

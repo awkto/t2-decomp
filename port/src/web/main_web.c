@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 
 #include "emu.h"
@@ -30,6 +31,8 @@
 #include "mouse.h"
 #include "options.h"
 #include "overlay.h"
+#include "render/hifps.h"
+#include "render/render_emu.h"
 #include "sha1.h"
 
 #define WEB_DIR "/t2"                       /* IDBFS mount (web/app.js) */
@@ -82,8 +85,31 @@ EMSCRIPTEN_KEEPALIVE int web_gun_state(int which)
 /* the screen the mouse logic sees (SCR_* of mouse.h): 0 game, 1 logo, 2 title, 3 menu, 4 options, 5 continue, 6 story intro */
 EMSCRIPTEN_KEEPALIVE int web_screen(void) { return mouse_screen(); }
 
+/* the page's "Mode" menu picks the native runner (docs/native.md) before main runs: same as T2_NATIVE=1 */
+EMSCRIPTEN_KEEPALIVE int web_set_native(int on) { return setenv("T2_NATIVE", on ? "1" : "0", 1); }
+
 /* how many C replacements (HLE, docs/porting.md) are active */
 EMSCRIPTEN_KEEPALIVE int web_hle_count(void) { return hle_count_active(); }
+
+/* high frame rate (docs/hifps.md): "off", "on"/"auto" (interpolated pictures on every display refresh,
+ * the logic stays at 59.92 Hz) or a rate in Hz. Needs the C renderer's scene, which it selects. */
+static void web_apply_fps(const char *val)
+{
+	int hz = 0;
+	if (!strcasecmp(val, "off") || !strcmp(val, "0") || !*val)
+		hz = 0;
+	else if (!strcasecmp(val, "on") || !strcasecmp(val, "auto"))
+		hz = 120;
+	else
+		hz = atoi(val) >= 61 ? atoi(val) : 0;
+	if (hz && render_wide_enabled()) {      /* exclusive with widescreen (docs/widescreen.md) */
+		fprintf(stderr, "fps: not combined with widescreen, high frame rate off\n");
+		hz = 0;
+	}
+	if (hz && render_emu_mode() == RENDER_GPGX)
+		render_emu_configure("c");
+	hifps_configure(hz);
+}
 
 /* the page's settings (right button): set an option, keep it in the ini */
 EMSCRIPTEN_KEEPALIVE int web_set_option(const char *key, const char *val)
@@ -95,6 +121,8 @@ EMSCRIPTEN_KEEPALIVE int web_set_option(const char *key, const char *val)
 		mouse_set_aim_correct(options_bool("aim_correct"));
 	if (!strcmp(key, "mouse_right"))
 		gun_set_right(options_str("mouse_right")[0]);
+	if (!strcmp(key, "fps"))
+		web_apply_fps(val);
 	if (options_save(WEB_INI))
 		web_sync();
 	return 1;
@@ -463,6 +491,13 @@ static bool logic_frame(void)
 		return false;
 	emu_set_pad(0, live_pad());
 	emu_set_pad(0, emu_get_pad(0) | mouse_frame());
+	if (hifps_enabled() && gun_enabled()) {
+		int gx, gy;
+		bool off;
+		unsigned gb;
+		gun_state(&gx, &gy, &off, &gb);
+		hifps_note_mouse(gx, gy, off);
+	}
 	emu_run_frame();
 	mouse_frame_end();
 	S.step = false;
@@ -526,7 +561,26 @@ static void web_frame(void)
 	}
 
 	int w, h;
-	if ((ran || S.paused || !V.tex) && game_frame(&w, &h)) {
+	if (hifps_enabled() && !S.paused && !S.ff && hifps_ready()) {
+		/* high frame rate: every display refresh shows the scene at the fraction of the logic step that
+		 * has gone by, the pointer at its position now (the whole frame is shown as the step ends) */
+		double f = S.acc / S.frame_ms;
+		int gx, gy;
+		bool off;
+		unsigned gb;
+		gun_state(&gx, &gy, &off, &gb);
+		hifps_mouse_now(gx, gy, off);
+		unsigned pw, ph;
+		int kind;
+		const uint16_t *px = hifps_picture(f < 0 ? 0 : f > 1 ? 1 : f, &pw, &ph, &kind);
+		if (px && pw * ph <= sizeof V.buf / sizeof V.buf[0]) {
+			for (unsigned i = 0; i < pw * ph; i++)
+				V.buf[i] = rgba_from_565(px[i]);
+			draw_overlays((int)pw, (int)ph);
+			video_present(V.buf, (int)pw, (int)ph);
+			S.n_present++;
+		}
+	} else if ((ran || S.paused || !V.tex) && game_frame(&w, &h)) {
 		draw_overlays(w, h);
 		video_present(V.buf, w, h);
 		S.n_present++;
@@ -538,14 +592,29 @@ static void web_frame(void)
 		S.n_logic = S.n_present = 0;
 		S.t_fps = now;
 		char st[160];
-		snprintf(st, sizeof st, "%.1f frames/s%s", S.fps_logic, S.paused ? ", paused" : "");
+		if (hifps_enabled())
+			snprintf(st, sizeof st, "%.1f frames/s, %.0f shown/s%s", S.fps_logic, S.fps_present, S.paused ? ", paused" : "");
+		else
+			snprintf(st, sizeof st, "%.1f frames/s%s", S.fps_logic, S.paused ? ", paused" : "");
 		web_status(st);
 	}
 }
 
-/* argv[1]: the ROM's path in the page's file system; argv[2] (optional): the HLE set from the page's
- * ?hle= parameter, which overrides the ini's `hle` option for this run (default none); argv[3] (optional):
- * the ?wide= parameter (off, 16:9, 21:9, W:H, a width), which overrides the ini's `widescreen` option */
+/* argv[1]: the ROM's path in the page's file system. The page's URL parameters follow as key=value
+ * arguments, each overriding the ini's option of that name for this run: hle=all|none|NAMES (default none),
+ * fps=off|on|Hz (docs/hifps.md), wide=off|16:9|21:9|W:H|width (docs/widescreen.md). Old style: a bare argv[2]
+ * is hle, a bare argv[3] is fps. */
+static const char *arg_value(int argc, char **argv, const char *key, int legacy_pos)
+{
+	size_t n = strlen(key);
+	for (int i = 2; i < argc; i++)
+		if (!strncmp(argv[i], key, n) && argv[i][n] == '=')
+			return argv[i] + n + 1;
+	if (legacy_pos < argc && !strchr(argv[legacy_pos], '='))
+		return argv[legacy_pos];
+	return "";
+}
+
 int main(int argc, char **argv)
 {
 	const char *rom = argc > 1 ? argv[1] : WEB_DIR "/rom/baserom.md";
@@ -566,12 +635,14 @@ int main(int argc, char **argv)
 	mouse_set_aim_correct(options_bool("aim_correct"));
 	emu_set_aim_fast(!strcmp(options_str("aim"), "fast"));    /* read once: a change needs a reload */
 
-	const char *wide_spec = argc > 3 && argv[3][0] ? argv[3] : options_str("widescreen");
+	const char *wide_arg = arg_value(argc, argv, "wide", 99);
+	const char *wide_spec = wide_arg[0] ? wide_arg : options_str("widescreen");
 	if (!render_wide_configure(wide_spec)) {
 		fprintf(stderr, "widescreen: bad value '%s', running without\n", wide_spec);
 		render_wide_configure("off");
 	}
-	const char *hle_spec = argc > 2 && argv[2][0] ? argv[2] : options_str("hle");
+	const char *hle_arg = arg_value(argc, argv, "hle", 2);
+	const char *hle_spec = hle_arg[0] ? hle_arg : options_str("hle");
 	if (!hle_configure(hle_spec)) {
 		fprintf(stderr, "hle: unknown function in '%s', running with none\n", hle_spec);
 		hle_configure("none");
@@ -583,6 +654,10 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	keys_configure();
+	{
+		const char *fps_arg = arg_value(argc, argv, "fps", 3);
+		web_apply_fps(fps_arg[0] ? fps_arg : options_str("fps"));
+	}
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) != 0) {
 		fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());

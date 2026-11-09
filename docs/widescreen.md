@@ -151,6 +151,9 @@ x 320 for the crosshair). Look at `wide_gun_04_aim.png` (the crosshair under the
 
 ## Known limits
 
+- **Not combined with high frame rate** (docs/hifps.md): its in-between pictures are drawn from 320-pixel scenes. With both
+  requested widescreen wins, the frame rate stays 60 Hz (message on stderr; F4 says so; web: `fps` is ignored).
+
 - Actors appear (are spawned) by the game at its own x; in the 16:9 margin an enemy can pop in 20-40 px inside
   the view. Nothing in the game's logic knows about the margins (no gameplay mode).
 - Over a margin the crosshair stops at the edge and the buttons are held back (above).

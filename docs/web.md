@@ -21,6 +21,20 @@ Link settings (`port/CMakeLists.txt`): `-O3`, `-sUSE_SDL=2`, `-sINVOKE_RUN=0` (t
 once it has the ROM), `-sEXIT_RUNTIME=0`, memory growth from 64 MB, a 1 MB stack, IDBFS. No ASYNCIFY:
 the browser build has no blocking loop.
 
+## Mode menu
+
+The play panel ("Click to play") has a **Mode** menu, remembered per browser (localStorage `t2-mode`):
+
+| Mode | What runs | Same as |
+|---|---|---|
+| Emulated 68k (original code), the default | the ini's `hle` option, default `none` | `?hle=none` |
+| C replacements | `hle all`: the C code for every replaced routine, the 68k core for the rest | `?hle=all` |
+| Native C | `hle all` plus the native runner: no 68k instruction runs (docs/native.md); a gap is fatal and shows the error panel | `T2_NATIVE=1` on the desktop |
+
+`?hle=` in the URL wins over the menu's HLE set. A ROM chosen with the picker now also stops at the play panel, so the
+mode can be picked before the first start. `tools/vm/webtest.sh` runs the page test for the menu's `all` and `native` too
+(`WEB_MODE=all|native tools/web_test.sh`).
+
 ## C replacements (HLE)
 
 The page runs the same HLE layer as the desktop (docs/porting.md; `port/hle`, `port/game/*.c`, 1128
@@ -40,10 +54,10 @@ run falls back to `none`. The console prints `hle: N active`; `web_hle_count()` 
 
 `index.html?wide=16:9` (also `21:9`, `W:H`, a width, `off`) shows the wider view of the scrolling levels for
 one visit; the "Widescreen" menu in the header keeps the choice in the ini (`widescreen = 16:9`, applied
-after a reload, `?wide=` wins). `app.js` passes the parameter to `main` as `argv[3]` (`argv[2]` is the `hle`
-set, empty when only `?wide=` is given). The canvas is then 400 x 224 (the 320-pixel screens are
+after a reload, `?wide=` wins). `app.js` passes the URL parameters to `main` as `key=value` arguments after the ROM path (`hle=`, `fps=`,
+`wide=`; a bare argv[2] / argv[3] still means hle / fps). The canvas is then 400 x 224 (the 320-pixel screens are
 pillarboxed in it, so the size never changes); the mouse mapping subtracts the margin and is the same code as the host's
-(`mouse_move_frame`). See docs/widescreen.md for what is shown wide and how the gun behaves over a margin.
+(`mouse_move_frame`). Widescreen and high frame rate are exclusive (with both, the frame rate stays 60 Hz). See docs/widescreen.md for what is shown wide and how the gun behaves over a margin.
 
 ## The main loop
 
